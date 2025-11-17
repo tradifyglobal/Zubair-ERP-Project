@@ -1,0 +1,426 @@
+{% load static %}
+{% block sidebar%}
+            <div class="topnav">
+                <div class="container-fluid">
+                    <nav class="navbar navbar-light navbar-expand-lg topnav-menu">
+
+                        <div class="collapse navbar-collapse" id="topnav-menu-content">
+                            <ul class="navbar-nav">
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="/dashboard/" id="topnav-dashboard" role="button">
+                                        <i data-feather="home"></i><span data-key="t-dashboards">Dashboard</span>
+                                    </a>
+                                </li>
+                                
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-uielement" role="button">
+                                        <i data-feather="briefcase"></i>
+                                        <span data-key="t-elements">Elements</span> 
+                                        <div class="arrow-down"></div>
+                                    </a>
+
+                                    <div class="dropdown-menu mega-dropdown-menu px-2 dropdown-mega-menu-xl" aria-labelledby="topnav-uielement">
+                                        <div class="ps-2 p-lg-0">
+                                            <div class="row">
+                                                <div class="col-lg-8">
+                                                    <div>
+                                                        <div class="menu-title">Elements</div>
+                                                        <div class="row g-0">
+                                                            <div class="col-lg-5">
+                                                                <div>
+                                                                    <a href="{% url 'elements:elements.components.alerts' %}" class="dropdown-item" data-key="t-alerts">Alerts</a>
+                                                                    <a href="{% url 'elements:elements.components.buttons' %}" class="dropdown-item" data-key="t-buttons">Buttons</a>
+                                                                    <a href="{% url 'elements:elements.components.cards' %}" class="dropdown-item" data-key="t-cards">Cards</a>
+                                                                    <a href="{% url 'elements:elements.components.carousel' %}" class="dropdown-item" data-key="t-carousel">Carousel</a>
+                                                                    <a href="{% url 'elements:elements.components.dropdowns' %}" class="dropdown-item" data-key="t-dropdowns">Dropdowns</a>
+                                                                    <a href="{% url 'elements:elements.components.grid' %}" class="dropdown-item" data-key="t-grid">Grid</a>
+                                                                    <a href="{% url 'elements:elements.components.images' %}" class="dropdown-item" data-key="t-images">Images</a>
+                                                                    <a href="{% url 'elements:elements.components.modals' %}" class="dropdown-item" data-key="t-modals">Modals</a>
+                                                                    <a href="{% url 'elements:elements.components.offcanvas' %}" class="dropdown-item" data-key="t-offcanvas">Offcanvas</a>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-5">
+                                                                <div>                                                                    
+                                                                    <a href="{% url 'elements:elements.components.progressbars' %}" class="dropdown-item" data-key="t-progress-bars">Progress Bars</a>
+                                                                    <a href="{% url 'elements:elements.components.tabs' %}" class="dropdown-item" data-key="t-tabs-accordions">Tabs & Accordions</a>
+                                                                    <a href="{% url 'elements:elements.components.typography' %}" class="dropdown-item" data-key="t-typography">Typography</a>
+                                                                    <a href="{% url 'elements:elements.components.toasts' %}" class="dropdown-item" data-key="t-toasts">Toasts</a>
+                                                                    <a href="{% url 'elements:elements.components.video' %}" class="dropdown-item" data-key="t-video">Video</a>
+                                                                    <a href="{% url 'elements:elements.components.general' %}" class="dropdown-item" data-key="t-general">General</a>
+                                                                    <a href="{% url 'elements:elements.components.colors' %}" class="dropdown-item" data-key="t-colors">Colors</a>
+                                                                    <a href="{% url 'elements:elements.components.utilities' %}" class="dropdown-item" data-key="t-utilities">Colors</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                    
+                                                <div class="col-lg-4">
+                                                    <div>
+                                                        <div class="menu-title">Extended</div>
+                                                        <div>
+                                                            <a href="{% url 'elements:elements.extended.lightbox' %}" class="dropdown-item" data-key="t-lightbox">Lightbox</a>
+                                                            <a href="{% url 'elements:elements.extended.rangeslider' %}" class="dropdown-item" data-key="t-range-slider">Range Slider</a>
+                                                            <a href="{% url 'elements:elements.extended.sweetalerts2' %}" class="dropdown-item" data-key="t-sweet-alert">SweetAlert 2</a>
+                                                            <a href="{% url 'elements:elements.extended.sessiontimeout' %}" class="dropdown-item" data-key="t-session-timeout">Session Timeout</a>
+                                                            <a href="{% url 'elements:elements.extended.rating' %}  " class="dropdown-item" data-key="t-rating">Rating</a>
+                                                            <a href="{% url 'elements:elements.extended.notifications' %}" class="dropdown-item" data-key="t-notifications">Notifications</a>
+                                                        </div>
+                                                    </div>
+                                                </div>  
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-accounting" role="button">
+                                        <i data-feather="book"></i><span data-key="t-accounting">Accounting</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-accounting">
+                                        <div class="dropdown-header">Financial Reports</div>
+                                        <a href="{% url 'accounting:gl_dashboard' %}" class="dropdown-item">General Ledger Dashboard</a>
+                                        <a href="{% url 'accounting:account_list' %}" class="dropdown-item">Accounts</a>
+                                        <a href="{% url 'accounting:ledger_entry_list' %}" class="dropdown-item">Ledger Entries</a>
+                                        <a href="{% url 'accounting:trial_balance_list' %}" class="dropdown-item">Trial Balances</a>
+                                        <a href="{% url 'accounting:profit_loss_list' %}" class="dropdown-item">Profit & Loss Reports</a>
+                                        <a href="{% url 'accounting:balance_sheet_list' %}" class="dropdown-item">Balance Sheets</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Transactions</div>
+                                        <a href="{% url 'accounting:customer_list' %}" class="dropdown-item">Customers</a>
+                                        <a href="{% url 'accounting:vendor_list' %}" class="dropdown-item">Vendors</a>
+                                        <a href="{% url 'accounting:vendor_invoice_list' %}" class="dropdown-item">Vendor Invoices</a>
+                                        <a href="{% url 'accounting:vendor_payments_list' %}" class="dropdown-item">Vendor Payments</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Assets</div>
+                                        <a href="{% url 'accounting:fixed_asset_list' %}" class="dropdown-item">Fixed Assets</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Banking</div>
+                                        <a href="{% url 'accounting:bank_profiles_list' %}" class="dropdown-item">Bank Profiles</a>
+                                        <a href="{% url 'accounting:bank_statements_list' %}" class="dropdown-item">Bank Statements</a>
+                                        <a href="{% url 'accounting:cash_transactions_list' %}" class="dropdown-item">Cash Transactions</a>
+                                        <a href="{% url 'accounting:cash_flow_forecast_list' %}" class="dropdown-item">Cash Flow Forecast</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Reconciliation</div>
+                                        <a href="{% url 'accounting:reconciliation_entries_list' %}" class="dropdown-item">Reconciliation Entries</a>
+                                        <a href="{% url 'accounting:reconciliation_records_list' %}" class="dropdown-item">Reconciliation Records</a>
+                                        <a href="{% url 'accounting:reconciliation_matches_list' %}" class="dropdown-item">Reconciliation Matches</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Tax Management</div>
+                                        <a href="{% url 'accounting:tax_rates_list' %}" class="dropdown-item">Tax Rates</a>
+                                        <a href="{% url 'accounting:tax_transactions_list' %}" class="dropdown-item">Tax Transactions</a>
+                                        <a href="{% url 'accounting:tax_summaries_list' %}" class="dropdown-item">Tax Summaries</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Deferred Items</div>
+                                        <a href="{% url 'accounting:deferred_expenses_list' %}" class="dropdown-item">Deferred Expenses</a>
+                                        <a href="{% url 'accounting:deferred_revenues_list' %}" class="dropdown-item">Deferred Revenues</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Administration</div>
+                                        <a href="{% url 'accounting:entities_list' %}" class="dropdown-item">Entities</a>
+                                        <a href="{% url 'accounting:currencies_list' %}" class="dropdown-item">Currencies</a>
+                                        <a href="{% url 'accounting:period_locks_list' %}" class="dropdown-item">Period Locks</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Audit & Control</div>
+                                        <a href="{% url 'accounting:audit_log_list' %}" class="dropdown-item">Audit Logs</a>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-shareholder" role="button">
+                                        <i data-feather="users"></i><span data-key="t-shareholder">Shareholder Management</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-shareholder">
+                                        <div class="dropdown-header">Stakeholder Management</div>
+                                        <a href="{% url 'shareholder:stakeholder-list' %}" class="dropdown-item">All Shareholders</a>
+                                        <a href="{% url 'shareholder:stakeholder-create' %}" class="dropdown-item">Add New Shareholder</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Capital Contributions</div>
+                                        <a href="{% url 'shareholder:capital-contribution-list' %}" class="dropdown-item">All Contributions</a>
+                                        <a href="{% url 'shareholder:capital-contribution-create' %}" class="dropdown-item">Record Contribution</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Share Holdings</div>
+                                        <a href="{% url 'shareholder:shareholding-list' %}" class="dropdown-item">All Shareholdings</a>
+                                        <a href="{% url 'shareholder:shareholding-create' %}" class="dropdown-item">Add Shares</a>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-hr" role="button">
+                                        <i data-feather="users"></i><span data-key="t-hr">HR Management</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-hr">
+                                        <div class="dropdown-header">Employee Management</div>
+                                        <a href="{% url 'hr:employee-list' %}" class="dropdown-item">All Employees</a>
+                                        <a href="{% url 'hr:employee-create' %}" class="dropdown-item">Add Employee</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Payroll Management</div>
+                                        <a href="{% url 'hr:payroll-list' %}" class="dropdown-item">All Payroll Runs</a>
+                                        <a href="{% url 'hr:payroll-create' %}" class="dropdown-item">Create Payroll</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Leave Management</div>
+                                        <a href="{% url 'hr:leave-request-list' %}" class="dropdown-item">Leave Requests</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Performance & Discipline</div>
+                                        <a href="{% url 'hr:performance-list' %}" class="dropdown-item">Performance Reviews</a>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-manufacturing" role="button">
+                                        <i data-feather="settings"></i><span data-key="t-manufacturing">Manufacturing</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-manufacturing">
+                                        <div class="dropdown-header">Dashboard</div>
+                                        <a href="{% url 'manufacturing:dashboard' %}" class="dropdown-item">Manufacturing Dashboard</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Product Management</div>
+                                        <a href="{% url 'manufacturing:product_list' %}" class="dropdown-item">Products</a>
+                                        <a href="{% url 'manufacturing:product_create' %}" class="dropdown-item">Add Product</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Bill of Materials</div>
+                                        <a href="{% url 'manufacturing:bom_list' %}" class="dropdown-item">All BOMs</a>
+                                        <a href="{% url 'manufacturing:bom_create' %}" class="dropdown-item">Create BOM</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Routing</div>
+                                        <a href="{% url 'manufacturing:routing_list' %}" class="dropdown-item">All Routings</a>
+                                        <a href="{% url 'manufacturing:routing_create' %}" class="dropdown-item">Create Routing</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Production</div>
+                                        <a href="{% url 'manufacturing:productionorder_list' %}" class="dropdown-item">Production Orders</a>
+                                        <a href="{% url 'manufacturing:productionorder_create' %}" class="dropdown-item">New Production Order</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Quality Control</div>
+                                        <a href="{% url 'manufacturing:qualityinspection_list' %}" class="dropdown-item">Inspections</a>
+                                        <a href="{% url 'manufacturing:qualityinspection_create' %}" class="dropdown-item">New Inspection</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Resources</div>
+                                        <a href="{% url 'manufacturing:workcenter_list' %}" class="dropdown-item">Work Centers</a>
+                                        <a href="{% url 'manufacturing:equipment_list' %}" class="dropdown-item">Equipment</a>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-sales" role="button">
+                                        <i data-feather="shopping-cart"></i><span data-key="t-sales">Sales</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-sales">
+                                        <div class="dropdown-header">Dashboard</div>
+                                        <a href="{% url 'sales:dashboard' %}" class="dropdown-item">Sales Dashboard</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Customers</div>
+                                        <a href="{% url 'sales:customer_list' %}" class="dropdown-item">All Customers</a>
+                                        <a href="{% url 'sales:customer_create' %}" class="dropdown-item">Add Customer</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Sales Orders</div>
+                                        <a href="{% url 'sales:salesorder_list' %}" class="dropdown-item">All Orders</a>
+                                        <a href="{% url 'sales:salesorder_create' %}" class="dropdown-item">New Order</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Invoicing</div>
+                                        <a href="{% url 'sales:invoice_list' %}" class="dropdown-item">Invoices</a>
+                                        <a href="{% url 'sales:invoice_create' %}" class="dropdown-item">Create Invoice</a>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-inventory" role="button">
+                                        <i data-feather="box"></i><span data-key="t-inventory">Inventory</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-inventory">
+                                        <div class="dropdown-header">Dashboard</div>
+                                        <a href="{% url 'inventory:dashboard' %}" class="dropdown-item">Inventory Dashboard</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Products</div>
+                                        <a href="{% url 'inventory:product_list' %}" class="dropdown-item">All Products</a>
+                                        <a href="{% url 'inventory:product_create' %}" class="dropdown-item">Add Product</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Stock Management</div>
+                                        <a href="{% url 'inventory:stock_list' %}" class="dropdown-item">Stock Levels</a>
+                                        <a href="{% url 'inventory:warehouse_list' %}" class="dropdown-item">Warehouses</a>
+                                        <a href="{% url 'inventory:stock_movement_list' %}" class="dropdown-item">Stock Movements</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Purchase Orders</div>
+                                        <a href="{% url 'inventory:purchase_order_list' %}" class="dropdown-item">All Orders</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Reports</div>
+                                        <a href="{% url 'inventory:low_stock_report' %}" class="dropdown-item">Low Stock Report</a>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-pages" role="button">
+                                        <i data-feather="grid"></i><span data-key="t-apps">Apps</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-pages">
+
+                                        <a href="{% url 'apps:calendar' %}" class="dropdown-item" data-key="t-calendar">Calendar</a>
+                                        <a href="{% url 'apps:chat' %}" class="dropdown-item" data-key="t-chat">Chat</a>
+                            
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-email"
+                                                role="button">
+                                                <span data-key="t-email">Email</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-email">
+                                                <a href="{% url 'apps:email.inbox' %}" class="dropdown-item" data-key="t-inbox">Inbox</a>
+                                                <a href="{% url 'apps:email.read' %}" class="dropdown-item" data-key="t-read-email">Read Email</a>
+                                            </div>
+                                        </div>
+                            
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-invoice"
+                                                role="button">
+                                                <span data-key="t-invoices">Invoices</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-invoice">
+                                                <a href="{% url 'apps:invoice.list' %}" class="dropdown-item" data-key="t-invoice-list">Invoice List</a>
+                                                <a href="{% url 'apps:invoice.details' %}" class="dropdown-item" data-key="t-invoice-detail">Invoice Detail</a>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-contact"
+                                                role="button">
+                                                <span data-key="t-contacts">Contacts</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-contact">
+                                                <a href="{% url 'apps:contacts.usergrid' %}" class="dropdown-item" data-key="t-user-grid">User Grid</a>
+                                                <a href="{% url 'apps:contacts.userlist' %}" class="dropdown-item" data-key="t-user-list">User List</a>
+                                                <a href="{% url 'apps:contacts.profile' %}" class="dropdown-item" data-key="t-profile">Profile</a>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle d-flex justify-content-between align-items-center" href="#" id="topnav-contact"
+                                                role="button">
+                                                <span data-key="t-contacts" class="">Blog</span> 
+                                                <span class="badge bg-danger-subtle text-danger">New</span>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-contact">
+                                                <a href="{% url 'apps:blogs.grid' %}" class="dropdown-item" data-key="t-blog-grid">Blog Grid</a>
+                                                <a href="{% url 'apps:blogs.list' %}" class="dropdown-item" data-key="t-blog-list">Blog List</a>
+                                                <a href="{% url 'apps:blogs.details' %}" class="dropdown-item" data-key="t-blog-details">Blog Details</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-components" role="button">
+                                        <i data-feather="box"></i><span data-key="t-components">Components</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-components">
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-form"
+                                                role="button">
+                                                <span data-key="t-forms">Forms</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-form">
+                                                <a href="{% url 'elements:elements.forms.basic_elements' %}" class="dropdown-item" data-key="t-form-elements">Basic Elements</a>
+                                                <a href="{% url 'elements:elements.forms.validation' %}" class="dropdown-item" data-key="t-form-validation">Validation</a>
+                                                <a href="{% url 'elements:elements.forms.advancedplugins' %}" class="dropdown-item" data-key="t-form-advanced">Advanced Plugins</a>
+                                                <a href="{% url 'elements:elements.forms.editors' %}" class="dropdown-item" data-key="t-form-editors">Editors</a>
+                                                <a href="{% url 'elements:elements.forms.fileupload' %}" class="dropdown-item" data-key="t-form-upload">File Upload</a>
+                                                <a href="{% url 'elements:elements.forms.wizard' %}" class="dropdown-item" data-key="t-form-wizard">Wizard</a>
+                                                <a href="{% url 'elements:elements.forms.mask' %}" class="dropdown-item" data-key="t-form-mask">Mask</a>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-table"
+                                                role="button">
+                                                <span data-key="t-tables">Tables</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-table">
+                                                <a href="{% url 'elements:elements.tables.bootstrap_basic' %}" class="dropdown-item" data-key="t-basic-tables">Bootstrap Basic</a>
+                                                <a href="{% url 'elements:elements.tables.datatables' %}" class="dropdown-item" data-key="t-data-tables">Data Tables</a>
+                                                <a href="{% url 'elements:elements.tables.responsive_tables' %}" class="dropdown-item" data-key="t-responsive-table">Responsive</a>
+                                                <a href="{% url 'elements:elements.tables.editable_tables' %}" class="dropdown-item" data-key="t-editable-table">Editable</a>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-charts"
+                                                role="button">
+                                                <span data-key="t-charts">Charts</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-charts">
+                                                <a href="{% url 'elements:elements.charts.apexcharts' %}" class="dropdown-item" data-key="t-apex-charts">Apex charts</a>
+                                                <a href="{% url 'elements:elements.charts.echarts' %}" class="dropdown-item" data-key="t-e-charts">E charts</a>
+                                                <a href="{% url 'elements:elements.charts.chartjs' %}" class="dropdown-item" data-key="t-chartjs-charts">Chartjs</a>
+                                                <a href="{% url 'elements:elements.charts.jqueryknob' %}" class="dropdown-item" data-key="t-knob-charts">Jquery Knob</a>
+                                                <a href="{% url 'elements:elements.charts.sparkline' %}" class="dropdown-item" data-key="t-sparkline-charts">Sparkline</a>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-icons"
+                                                role="button">
+                                                <span data-key="t-icons">Icons</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-icons">
+                                                <a href="{% url 'elements:elements.icons.boxicons' %}" class="dropdown-item" data-key="t-boxicons">Boxicons</a>
+                                                <a href="{% url 'elements:elements.icons.materialdesign' %}" class="dropdown-item" data-key="t-material-design">Material Design</a>
+                                                <a href="{% url 'elements:elements.icons.dripicons' %}" class="dropdown-item" data-key="t-dripicons">Dripicons</a>
+                                                <a href="{% url 'elements:elements.icons.fontawesome' %}" class="dropdown-item" data-key="t-font-awesome">Font Awesome 5</a>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-map" role="button">
+                                                <span data-key="t-maps">Maps</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-map">
+                                                <a href="{% url 'elements:elements.maps.googlemaps' %}" class="dropdown-item" data-key="t-g-maps">Google Maps</a>
+                                                <a href="{% url 'elements:elements.maps.vectormaps' %}" class="dropdown-item" data-key="t-v-maps">Vector Maps</a>
+                                                <a href="{% url 'elements:elements.maps.leaflet' %}" class="dropdown-item" data-key="t-l-maps">Leaflet Maps</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-more" role="button">
+                                        <i data-feather="file-text"></i><span data-key="t-extra-pages">Extra Pages</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-more">
+
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-auth" role="button">
+                                                <span data-key="t-authentication">Authentication</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-auth">
+                                                <a href="{% url 'apps:authentication.auth-login' %}" class="dropdown-item" data-key="t-login">Login</a>
+                                                <a href="{% url 'apps:authentication.auth-register' %}" class="dropdown-item" data-key="t-register">Register</a>
+                                                <a href="{% url 'apps:authentication.auth-recoverpassword' %}" class="dropdown-item" data-key="t-recover-password">Recover Password</a>
+                                                <a href="{% url 'apps:authentication.auth-lockscreen' %}" class="dropdown-item" data-key="t-lock-screen">Lock Screen</a>
+                                                <a href="{% url 'apps:authentication.auth-logout' %}" class="dropdown-item" data-key="t-logout">Log Out</a>
+                                                <a href="{% url 'apps:authentication.auth-confirm-mail' %}" class="dropdown-item" data-key="t-confirm-mail">Confirm Mail</a>
+                                                <a href="{% url 'apps:authentication.auth-email-verification' %}" class="dropdown-item" data-key="t-email-verification">Email verification</a>
+                                                <a href="{% url 'apps:authentication.auth-two-step-verification' %}" class="dropdown-item" data-key="t-two-step-verification">Two step verification</a>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <a class="dropdown-item dropdown-toggle arrow-none" href="#" id="topnav-utility" role="button">
+                                                <span data-key="t-utility">Utility</span> <div class="arrow-down"></div>
+                                            </a>
+                                            <div class="dropdown-menu" aria-labelledby="topnav-utility">
+                                                <a href="{% url 'pages:pages.starterpage' %}" class="dropdown-item" data-key="t-starter-page">Starter Page</a>
+                                                <a href="{% url 'pages:pages.maintenance' %}" class="dropdown-item" data-key="t-maintenance">Maintenance</a>
+                                                <a href="{% url 'pages:pages.comingsoon' %}" class="dropdown-item" data-key="t-coming-soon">Coming Soon</a>
+                                                <a href="{% url 'pages:pages.timeline' %}" class="dropdown-item" data-key="t-timeline">Timeline</a>
+                                                <a href="{% url 'pages:pages.faqs' %}" class="dropdown-item" data-key="t-faqs">FAQs</a>
+                                                <a href="{% url 'pages:pages.pricing' %}" class="dropdown-item" data-key="t-pricing">Pricing</a>
+                                                <a href="{% url 'pages:pages.404error' %}" class="dropdown-item" data-key="t-error-404">Error 404</a>
+                                                <a href="{% url 'pages:pages.500error' %}" class="dropdown-item" data-key="t-error-500">Error 500</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="{% url 'apps:horizontal' %}" role="button">
+                                        <i data-feather="layout"></i><span data-key="t-horizontal">Horizontal</span>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+{% endblock %}

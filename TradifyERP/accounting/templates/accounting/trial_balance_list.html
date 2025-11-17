@@ -1,0 +1,202 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Trial Balance | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Trial Balance</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Trial Balance</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Trial Balances List -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Trial Balances ({{ trial_balances|length }})</h4>
+                        </div>
+                        <div class="card-body px-0">
+                            {% if trial_balances %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>As Of Date</th>
+                                            <th>Total Debits</th>
+                                            <th>Total Credits</th>
+                                            <th>Difference</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for tb in trial_balances %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ tb.as_of_date|date:"d M Y" }}</strong>
+                                            </td>
+                                            <td>
+                                                <span class="text-danger">{{ tb.total_debits }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-success">{{ tb.total_credits }}</span>
+                                            </td>
+                                            <td>
+                                                {% with diff=tb.total_debits|add:tb.total_credits %}
+                                                    {% if diff == 0 %}
+                                                        <span class="badge bg-success-subtle text-success">0.00</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger-subtle text-danger">{{ diff }}</span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                {% if tb.is_balanced %}
+                                                    <span class="badge bg-success-subtle text-success">
+                                                        <i class="mdi mdi-check-circle"></i> Balanced
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger">
+                                                        <i class="mdi mdi-alert-circle"></i> Out of Balance
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small>{{ tb.created_at|date:"d M Y H:i" }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary-subtle text-primary">
+                                                    {% if tb.is_balanced %}
+                                                        <i class="mdi mdi-check"></i> OK
+                                                    {% else %}
+                                                        <i class="mdi mdi-alert"></i> Review
+                                                    {% endif %}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <nav class="d-flex justify-content-center mt-4">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+
+                            <!-- Summary Stats -->
+                            <div class="row mt-4 px-3">
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Latest Trial Balance</h6>
+                                            {% with latest=trial_balances|first %}
+                                                {% if latest %}
+                                                    <h5 class="mb-2">{{ latest.as_of_date|date:"d M Y" }}</h5>
+                                                    <p class="text-muted mb-0">
+                                                        {% if latest.is_balanced %}
+                                                            <span class="badge bg-success">Balanced</span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger">Out of Balance</span>
+                                                        {% endif %}
+                                                    </p>
+                                                {% else %}
+                                                    <p class="text-muted">No trial balance created yet</p>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Total Debits</h6>
+                                            {% with total_debits=trial_balances|first %}
+                                                {% if total_debits %}
+                                                    <h5 class="mb-0 text-danger">{{ total_debits.total_debits }}</h5>
+                                                {% else %}
+                                                    <h5 class="mb-0">0.00</h5>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Total Credits</h6>
+                                            {% with total_credits=trial_balances|first %}
+                                                {% if total_credits %}
+                                                    <h5 class="mb-0 text-success">{{ total_credits.total_credits }}</h5>
+                                                {% else %}
+                                                    <h5 class="mb-0">0.00</h5>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info m-3" role="alert">
+                                <i class="mdi mdi-information-outline"></i> No trial balances found. Trial balances are automatically generated from ledger entries.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}

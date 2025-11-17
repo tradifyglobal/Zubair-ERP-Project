@@ -1,0 +1,287 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Bank Statements | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Bank Statements</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:gl_dashboard' %}">Accounting</a></li>
+                                <li class="breadcrumb-item active">Bank Statements</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Summary Cards -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Statements</span>
+                                    <h4 class="mb-3">{{ object_list|length }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-file-document-outline font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Inflows</span>
+                                    <h4 class="mb-3">{{ total_inflows|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-trending-up font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Outflows</span>
+                                    <h4 class="mb-3">{{ total_outflows|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-danger-subtle text-danger rounded">
+                                            <i class="mdi mdi-trending-down font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Net Flow</span>
+                                    <h4 class="mb-3">{{ net_flow|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-info-subtle text-info rounded">
+                                            <i class="mdi mdi-calculator font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Bank Statements List -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Bank Statements</h4>
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'admin:accounting_bankstatement_add' %}" class="btn btn-sm btn-primary">
+                                    <i class="mdi mdi-plus"></i> New Statement
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Search and Filter -->
+                        <div class="card-body border-bottom">
+                            <form method="get" class="row g-3">
+                                <div class="col-md-3">
+                                    <select name="bank" class="form-select">
+                                        <option value="">All Banks</option>
+                                        {% for bank in banks %}
+                                            <option value="{{ bank.id }}" 
+                                                {% if request.GET.bank == bank.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ bank.bank_name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" name="from_date" class="form-control" 
+                                        value="{{ request.GET.from_date }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" name="to_date" class="form-control" 
+                                        value="{{ request.GET.to_date }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="mdi mdi-magnify"></i> Filter
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="table-responsive">
+                            {% if object_list %}
+                            <table class="table table-hover table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Bank Account</th>
+                                        <th>Statement Date</th>
+                                        <th>Opening Balance</th>
+                                        <th>Closing Balance</th>
+                                        <th>Total Inflows</th>
+                                        <th>Total Outflows</th>
+                                        <th>No. of Transactions</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for statement in object_list %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ statement.bank_account.bank_name }}</strong><br>
+                                            <small class="text-muted">{{ statement.bank_account.account_number }}</small>
+                                        </td>
+                                        <td>{{ statement.statement_date|date:"d M Y" }}</td>
+                                        <td>{{ statement.opening_balance|floatformat:2 }}</td>
+                                        <td>
+                                            <strong class="text-primary">{{ statement.closing_balance|floatformat:2 }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success">{{ statement.total_inflows|floatformat:2 }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger-subtle text-danger">{{ statement.total_outflows|floatformat:2 }}</span>
+                                        </td>
+                                        <td>{{ statement.transaction_count|default:0 }}</td>
+                                        <td>
+                                            {% if statement.status == 'DRAFT' %}
+                                                <span class="badge bg-secondary-subtle text-secondary">Draft</span>
+                                            {% elif statement.status == 'RECONCILED' %}
+                                                <span class="badge bg-success-subtle text-success">Reconciled</span>
+                                            {% elif statement.status == 'PENDING' %}
+                                                <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light dropdown-toggle" type="button" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="mdi mdi-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'admin:accounting_bankstatement_change' statement.id %}">
+                                                            <i class="mdi mdi-pencil"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'admin:accounting_bankstatement_change' statement.id %}">
+                                                            <i class="mdi mdi-reconcile"></i> Reconcile
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="{% url 'admin:accounting_bankstatement_delete' statement.id %}">
+                                                            <i class="mdi mdi-trash-can"></i> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="alert alert-info m-4" role="alert">
+                                <i class="mdi mdi-information"></i> No bank statements found. 
+                                <a href="{% url 'admin:accounting_bankstatement_add' %}" class="alert-link">Create a new statement</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav>
+                        <ul class="pagination pagination-separated mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+            <!-- end row -->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory Dashboard{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+    <h4 class="mb-sm-0 font-size-18">Inventory Dashboard</h4>
+    <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+            <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Inventory</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <span class="text-muted mb-3 lh-1 d-block text-truncate">Active Products</span>
+                        <h4 class="mb-3">{{ total_products }}</h4>
+                    </div>
+                    <div class="col-6 text-end">
+                        <i class="bx bx-package" style="font-size: 32px; color: #5156be;"></i>
+                    </div>
+                </div>
+                <div class="text-nowrap">
+                    <a href="{% url 'inventory:product_list' %}" class="badge bg-primary-subtle text-primary">View Products</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <span class="text-muted mb-3 lh-1 d-block text-truncate">Warehouses</span>
+                        <h4 class="mb-3">{{ total_warehouses }}</h4>
+                    </div>
+                    <div class="col-6 text-end">
+                        <i class="bx bx-buildings" style="font-size: 32px; color: #5156be;"></i>
+                    </div>
+                </div>
+                <div class="text-nowrap">
+                    <a href="{% url 'inventory:warehouse_list' %}" class="badge bg-primary-subtle text-primary">View Warehouses</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <span class="text-muted mb-3 lh-1 d-block text-truncate">Low Stock Items</span>
+                        <h4 class="mb-3">{{ low_stock_items }}</h4>
+                    </div>
+                    <div class="col-6 text-end">
+                        <i class="bx bx-bell-off" style="font-size: 32px; color: #dc3545;"></i>
+                    </div>
+                </div>
+                <div class="text-nowrap">
+                    <a href="{% url 'inventory:low_stock_report' %}" class="badge bg-danger-subtle text-danger">View Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <span class="text-muted mb-3 lh-1 d-block text-truncate">Pending Orders</span>
+                        <h4 class="mb-3">{{ pending_orders }}</h4>
+                    </div>
+                    <div class="col-6 text-end">
+                        <i class="bx bx-cart" style="font-size: 32px; color: #5156be;"></i>
+                    </div>
+                </div>
+                <div class="text-nowrap">
+                    <a href="{% url 'inventory:purchase_order_list' %}" class="badge bg-primary-subtle text-primary">View Orders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <a href="{% url 'inventory:product_create' %}" class="btn btn-primary w-100">
+                            <i class="bx bx-plus"></i> Add Product
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'inventory:stock_list' %}" class="btn btn-info w-100">
+                            <i class="bx bx-list-check"></i> View Stock
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'inventory:purchase_order_list' %}" class="btn btn-warning w-100">
+                            <i class="bx bx-file"></i> Purchase Orders
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'inventory:stock_movement_list' %}" class="btn btn-secondary w-100">
+                            <i class="bx bx-transfer"></i> Movements
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

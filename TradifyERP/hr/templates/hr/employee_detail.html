@@ -1,0 +1,195 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ employee.first_name }} {{ employee.last_name }} - Employee Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">{{ employee.first_name }} {{ employee.last_name }}</h1>
+            <p class="text-muted">{{ employee.employee_id }} • {{ employee.position.title }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:employee-update' employee.id %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'hr:employee-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Personal Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <th class="w-40">Email:</th>
+                            <td><a href="mailto:{{ employee.email }}">{{ employee.email }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>{{ employee.phone|default:"N/A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date of Birth:</th>
+                            <td>{{ employee.date_of_birth|date:"M d, Y"|default:"N/A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Nationality:</th>
+                            <td>{{ employee.nationality|default:"N/A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                <span class="badge bg-{% if employee.status == 'ACTIVE' %}success{% elif employee.status == 'ON_LEAVE' %}warning{% else %}secondary{% endif %}">
+                                    {{ employee.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employment Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Employment Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <th class="w-40">Department:</th>
+                            <td>{{ employee.department.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Position:</th>
+                            <td>{{ employee.position.title }}</td>
+                        </tr>
+                        <tr>
+                            <th>Manager:</th>
+                            <td>{{ employee.manager.first_name }} {{ employee.manager.last_name|default:"N/A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Hire Date:</th>
+                            <td>{{ employee.hire_date|date:"M d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Base Salary:</th>
+                            <td>{{ employee.base_salary|floatformat:2 }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Balances -->
+    {% if leave_balances %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Leave Balances</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for balance in leave_balances %}
+                        <div class="col-md-3 mb-3">
+                            <div class="border-start border-success ps-3">
+                                <h6 class="mb-1">{{ balance.leave_type.name }}</h6>
+                                <p class="mb-0 text-muted">
+                                    Available: <strong>{{ balance.available }}</strong> / {{ balance.total_days }} days
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Salary History -->
+    {% if salary_history %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Salary History</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Effective Date</th>
+                                <th>Base Salary</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for history in salary_history %}
+                            <tr>
+                                <td>{{ history.effective_date|date:"M d, Y" }}</td>
+                                <td>{{ history.new_salary|floatformat:2 }}</td>
+                                <td>{{ history.reason|default:"N/A" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Payroll -->
+    {% if recent_payroll %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Recent Payroll</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Payroll Date</th>
+                                <th>Gross Amount</th>
+                                <th>Net Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_payroll %}
+                            <tr>
+                                <td>{{ record.payroll.payroll_date|date:"M d, Y" }}</td>
+                                <td>{{ record.gross_amount|floatformat:2 }}</td>
+                                <td>{{ record.net_amount|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if record.payroll.status == 'APPROVED' %}success{% elif record.payroll.status == 'DRAFT' %}warning{% else %}secondary{% endif %}">
+                                        {{ record.payroll.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

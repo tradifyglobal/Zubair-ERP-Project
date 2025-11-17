@@ -1,0 +1,286 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Cash Flow Forecast | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Cash Flow Forecast</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:gl_dashboard' %}">Accounting</a></li>
+                                <li class="breadcrumb-item active">Cash Flow Forecast</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Summary Cards -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Forecasts</span>
+                                    <h4 class="mb-3">{{ object_list|length }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-chart-line font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Avg Inflow Forecast</span>
+                                    <h4 class="mb-3">{{ avg_inflow|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-trending-up font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Avg Outflow Forecast</span>
+                                    <h4 class="mb-3">{{ avg_outflow|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-danger-subtle text-danger rounded">
+                                            <i class="mdi mdi-trending-down font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Avg Net Forecast</span>
+                                    <h4 class="mb-3">{{ avg_net|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-info-subtle text-info rounded">
+                                            <i class="mdi mdi-calculator-variant font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Cash Flow Forecast List -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Cash Flow Forecasts</h4>
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'admin:accounting_cashflowforecast_add' %}" class="btn btn-sm btn-primary">
+                                    <i class="mdi mdi-plus"></i> New Forecast
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Search and Filter -->
+                        <div class="card-body border-bottom">
+                            <form method="get" class="row g-3">
+                                <div class="col-md-3">
+                                    <input type="text" name="search" class="form-control" 
+                                        placeholder="Search forecast name..." value="{{ request.GET.search }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" name="from_date" class="form-control" 
+                                        value="{{ request.GET.from_date }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" name="to_date" class="form-control" 
+                                        value="{{ request.GET.to_date }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="mdi mdi-magnify"></i> Filter
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="table-responsive">
+                            {% if object_list %}
+                            <table class="table table-hover table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Forecast Name</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Forecasted Inflow</th>
+                                        <th>Forecasted Outflow</th>
+                                        <th>Net Cash Position</th>
+                                        <th>Confidence Level</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for forecast in object_list %}
+                                    {% with net=forecast.forecasted_inflow|add:forecast.forecasted_outflow %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ forecast.name }}</strong>
+                                        </td>
+                                        <td>{{ forecast.forecast_start_date|date:"d M Y" }}</td>
+                                        <td>{{ forecast.forecast_end_date|date:"d M Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success">{{ forecast.forecasted_inflow|floatformat:2 }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger-subtle text-danger">{{ forecast.forecasted_outflow|floatformat:2 }}</span>
+                                        </td>
+                                        <td>
+                                            {% if net >= 0 %}
+                                                <strong class="text-success">{{ net|floatformat:2 }}</strong>
+                                            {% else %}
+                                                <strong class="text-danger">{{ net|floatformat:2 }}</strong>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if forecast.confidence_level %}
+                                                <span class="badge bg-light text-dark">{{ forecast.confidence_level }}%</span>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if forecast.status == 'DRAFT' %}
+                                                <span class="badge bg-secondary-subtle text-secondary">Draft</span>
+                                            {% elif forecast.status == 'APPROVED' %}
+                                                <span class="badge bg-success-subtle text-success">Approved</span>
+                                            {% elif forecast.status == 'ARCHIVED' %}
+                                                <span class="badge bg-dark-subtle text-dark">Archived</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light dropdown-toggle" type="button" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="mdi mdi-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'admin:accounting_cashflowforecast_change' forecast.id %}">
+                                                            <i class="mdi mdi-pencil"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="{% url 'admin:accounting_cashflowforecast_delete' forecast.id %}">
+                                                            <i class="mdi mdi-trash-can"></i> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="alert alert-info m-4" role="alert">
+                                <i class="mdi mdi-information"></i> No cash flow forecasts found. 
+                                <a href="{% url 'admin:accounting_cashflowforecast_add' %}" class="alert-link">Create a new forecast</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav>
+                        <ul class="pagination pagination-separated mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+            <!-- end row -->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}

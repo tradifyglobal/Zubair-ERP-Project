@@ -1,0 +1,311 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb d-print-none">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'admin:accounting_auditlog_changelist' %}">Audit Logs</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">List</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 bg-light-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-muted">Total Logs</h6>
+                            <h4 class="mb-0 mt-2">{{ object_list|length }}</h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="mdi mdi-file-document-outline text-primary" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 bg-light-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-muted">Creates</h6>
+                            <h4 class="mb-0 mt-2">
+                                {% with create_count=object_list|dictsort:"action"|length %}
+                                    {{ create_count }}
+                                {% endwith %}
+                            </h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="mdi mdi-plus-circle text-info" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 bg-light-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-muted">Updates</h6>
+                            <h4 class="mb-0 mt-2">
+                                {% with update_count=object_list|dictsort:"action"|length %}
+                                    {{ update_count }}
+                                {% endwith %}
+                            </h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="mdi mdi-pencil-circle text-warning" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 bg-light-danger">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-muted">Deletes</h6>
+                            <h4 class="mb-0 mt-2">
+                                {% with delete_count=object_list|dictsort:"action"|length %}
+                                    {{ delete_count }}
+                                {% endwith %}
+                            </h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="mdi mdi-delete-circle text-danger" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="search_model" class="form-label">Search by Model</label>
+                    <input type="text" class="form-control form-control-sm" id="search_model" placeholder="e.g., LedgerEntry">
+                </div>
+                <div class="col-md-3">
+                    <label for="search_user" class="form-label">Search by User</label>
+                    <input type="text" class="form-control form-control-sm" id="search_user" placeholder="e.g., admin">
+                </div>
+                <div class="col-md-3">
+                    <label for="filter_action" class="form-label">Filter by Action</label>
+                    <select class="form-select form-select-sm" id="filter_action">
+                        <option value="">All Actions</option>
+                        <option value="CREATE">Create</option>
+                        <option value="UPDATE">Update</option>
+                        <option value="DELETE">Delete</option>
+                        <option value="POST">Post</option>
+                        <option value="RECONCILE">Reconcile</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <button class="btn btn-sm btn-primary w-100" onclick="filterAuditLogs()">
+                        <i class="mdi mdi-magnify"></i> Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Model</th>
+                        <th>Object ID</th>
+                        <th>User</th>
+                        <th>Description</th>
+                        <th class="text-center">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if object_list %}
+                        {% for log in object_list %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted">{{ log.timestamp|date:"Y-m-d H:i:s" }}</small>
+                                </td>
+                                <td>
+                                    {% if log.action == 'CREATE' %}
+                                        <span class="badge bg-success">
+                                            <i class="mdi mdi-plus-circle"></i> Create
+                                        </span>
+                                    {% elif log.action == 'UPDATE' %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="mdi mdi-pencil-circle"></i> Update
+                                        </span>
+                                    {% elif log.action == 'DELETE' %}
+                                        <span class="badge bg-danger">
+                                            <i class="mdi mdi-delete-circle"></i> Delete
+                                        </span>
+                                    {% elif log.action == 'POST' %}
+                                        <span class="badge bg-info">
+                                            <i class="mdi mdi-send-circle"></i> Post
+                                        </span>
+                                    {% elif log.action == 'RECONCILE' %}
+                                        <span class="badge bg-primary">
+                                            <i class="mdi mdi-check-circle"></i> Reconcile
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ log.action }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ log.model_name }}</strong>
+                                </td>
+                                <td>
+                                    <code class="text-muted">{{ log.object_id }}</code>
+                                </td>
+                                <td>
+                                    {% if log.user %}
+                                        <span class="text-muted">{{ log.user }}</span>
+                                    {% else %}
+                                        <span class="text-muted text-secondary">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-muted text-truncate d-inline-block" style="max-width: 250px;" title="{{ log.description }}">
+                                        {{ log.description }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-link btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="mdi mdi-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'admin:accounting_auditlog_change' log.id %}">
+                                                    <i class="mdi mdi-eye"></i> View Details
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'admin:accounting_auditlog_change' log.id %}">
+                                                    <i class="mdi mdi-pencil"></i> Edit
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="{% url 'admin:accounting_auditlog_delete' log.id %}">
+                                                    <i class="mdi mdi-delete"></i> Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="mdi mdi-inbox-outline" style="font-size: 2rem; color: #ccc;"></i>
+                                <p class="text-muted mt-3">No audit logs found</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">First</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Last</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<script>
+    function filterAuditLogs() {
+        const searchModel = document.getElementById('search_model').value;
+        const searchUser = document.getElementById('search_user').value;
+        const filterAction = document.getElementById('filter_action').value;
+        let url = window.location.pathname + '?';
+
+        if (searchModel) {
+            url += 'model=' + encodeURIComponent(searchModel) + '&';
+        }
+        if (searchUser) {
+            url += 'user=' + encodeURIComponent(searchUser) + '&';
+        }
+        if (filterAction) {
+            url += 'action=' + encodeURIComponent(filterAction) + '&';
+        }
+
+        window.location.href = url;
+    }
+</script>
+{% endblock %}

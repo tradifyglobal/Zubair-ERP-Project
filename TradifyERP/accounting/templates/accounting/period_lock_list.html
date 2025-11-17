@@ -1,0 +1,288 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Period Locks{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb d-print-none">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'admin:accounting_periodlock_changelist' %}">Period Locks</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">List</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 bg-light-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-muted">Total Periods</h6>
+                            <h4 class="mb-0 mt-2">{{ object_list|length }}</h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="mdi mdi-calendar-lock text-primary" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 bg-light-danger">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-muted">Locked Periods</h6>
+                            <h4 class="mb-0 mt-2">
+                                {% with locked_count=object_list|dictsort:"is_locked"|length %}
+                                    {{ locked_count }}
+                                {% endwith %}
+                            </h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="mdi mdi-lock text-danger" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 bg-light-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-muted">Open Periods</h6>
+                            <h4 class="mb-0 mt-2">
+                                {% with open_count=object_list|length %}
+                                    {{ open_count }}
+                                {% endwith %}
+                            </h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="mdi mdi-lock-open text-success" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 bg-light-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-muted">Recent Locks</h6>
+                            <h4 class="mb-0 mt-2">
+                                {% with recent_count=object_list|dictsort:"locked_at"|length %}
+                                    {{ recent_count }}
+                                {% endwith %}
+                            </h4>
+                        </div>
+                        <div class="ms-3">
+                            <i class="mdi mdi-history text-info" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="search_period" class="form-label">Search by Period</label>
+                    <input type="text" class="form-control form-control-sm" id="search_period" placeholder="e.g., 2025-01-01">
+                </div>
+                <div class="col-md-4">
+                    <label for="filter_status" class="form-label">Filter by Status</label>
+                    <select class="form-select form-select-sm" id="filter_status">
+                        <option value="">All Statuses</option>
+                        <option value="locked">Locked</option>
+                        <option value="open">Open</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <button class="btn btn-sm btn-primary w-100" onclick="filterPeriodLocks()">
+                        <i class="mdi mdi-magnify"></i> Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period Locks Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Period Start</th>
+                        <th>Period End</th>
+                        <th>Duration</th>
+                        <th>Lock Status</th>
+                        <th>Locked By</th>
+                        <th>Locked At</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if object_list %}
+                        {% for period_lock in object_list %}
+                            <tr>
+                                <td>
+                                    <strong>{{ period_lock.period_start|date:"Y-m-d" }}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{ period_lock.period_end|date:"Y-m-d" }}</strong>
+                                </td>
+                                <td>
+                                    {% with days=period_lock.period_end|add:period_lock.period_start %}
+                                        <span class="badge bg-light text-dark">
+                                            <i class="mdi mdi-calendar-range"></i>
+                                            {% widthratio period_lock.period_end period_lock.period_start 1 %} days
+                                        </span>
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    {% if period_lock.is_locked %}
+                                        <span class="badge bg-danger">
+                                            <i class="mdi mdi-lock"></i> Locked
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="mdi mdi-lock-open"></i> Open
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if period_lock.locked_by %}
+                                        <span class="text-muted">{{ period_lock.locked_by }}</span>
+                                    {% else %}
+                                        <span class="text-muted text-secondary">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if period_lock.locked_at %}
+                                        <small class="text-muted">{{ period_lock.locked_at|date:"Y-m-d H:i" }}</small>
+                                    {% else %}
+                                        <small class="text-muted text-secondary">—</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-link btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="mdi mdi-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'admin:accounting_periodlock_change' period_lock.id %}">
+                                                    <i class="mdi mdi-pencil"></i> Edit
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="{% url 'admin:accounting_periodlock_delete' period_lock.id %}">
+                                                    <i class="mdi mdi-delete"></i> Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="mdi mdi-inbox-outline" style="font-size: 2rem; color: #ccc;"></i>
+                                <p class="text-muted mt-3">No period locks found</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">First</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Last</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<script>
+    function filterPeriodLocks() {
+        const searchPeriod = document.getElementById('search_period').value;
+        const filterStatus = document.getElementById('filter_status').value;
+        let url = window.location.pathname + '?';
+
+        if (searchPeriod) {
+            url += 'search=' + encodeURIComponent(searchPeriod) + '&';
+        }
+        if (filterStatus) {
+            url += 'status=' + encodeURIComponent(filterStatus) + '&';
+        }
+
+        window.location.href = url;
+    }
+</script>
+{% endblock %}

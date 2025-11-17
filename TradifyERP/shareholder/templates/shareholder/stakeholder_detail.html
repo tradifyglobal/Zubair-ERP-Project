@@ -1,0 +1,203 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ stakeholder.full_name }} - Shareholder Details{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{{ stakeholder.full_name }}</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'shareholder:stakeholder-edit' stakeholder.pk %}" class="btn btn-primary waves-effect waves-light">
+                            <i class="feather-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-secondary waves-effect waves-light">
+                            Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shareholder Info -->
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Basic Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Type:</strong></td>
+                                    <td><span class="badge badge-soft-info">{{ stakeholder.get_stakeholder_type_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        {% if stakeholder.status == 'ACTIVE' %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% elif stakeholder.status == 'INACTIVE' %}
+                                            <span class="badge bg-warning">Inactive</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ stakeholder.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>{{ stakeholder.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ stakeholder.phone_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Address:</strong></td>
+                                    <td>{{ stakeholder.city }}, {{ stakeholder.country }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Invested</h5>
+                                <h3 class="text-primary">${{ stakeholder.total_invested|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Shares</h5>
+                                <h3 class="text-success">{{ stakeholder.total_shares }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capital Contributions -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title">Capital Contributions</h4>
+                        <a href="{% url 'shareholder:capital-contribution-create-for-stakeholder' stakeholder.pk %}" class="btn btn-sm btn-primary">
+                            <i class="feather-plus"></i> Add Contribution
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Original Amount</th>
+                                        <th>Converted Amount</th>
+                                        <th>Currency</th>
+                                        <th>Payment Mode</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contribution in contributions %}
+                                    <tr>
+                                        <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
+                                        <td><span class="badge badge-soft-info">{{ contribution.get_status_display }}</span></td>
+                                        <td>{{ contribution.amount|floatformat:2 }}</td>
+                                        <td>{{ contribution.amount_company_currency|floatformat:2 }}</td>
+                                        <td>{{ contribution.currency_destination.code }}</td>
+                                        <td>{{ contribution.get_payment_mode_display }}</td>
+                                        <td>
+                                            <a href="{% url 'shareholder:capital-contribution-detail' contribution.pk %}" class="btn btn-sm btn-info" title="View">
+                                                <i class="feather-eye"></i>
+                                            </a>
+                                            <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-sm btn-primary" title="Edit">
+                                                <i class="feather-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">No contributions recorded</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shareholdings -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title">Share Holdings</h4>
+                        <a href="{% url 'shareholder:shareholding-create-for-stakeholder' stakeholder.pk %}" class="btn btn-sm btn-primary">
+                            <i class="feather-plus"></i> Add Shares
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Share Type</th>
+                                        <th>Share Class</th>
+                                        <th>Number of Shares</th>
+                                        <th>Acquisition Date</th>
+                                        <th>Voting Rights %</th>
+                                        <th>Ownership %</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for shareholding in shareholdings %}
+                                    <tr>
+                                        <td>{{ shareholding.get_share_type_display }}</td>
+                                        <td>{{ shareholding.share_class }}</td>
+                                        <td>{{ shareholding.number_of_shares }}</td>
+                                        <td>{{ shareholding.acquisition_date|date:"M d, Y" }}</td>
+                                        <td>{{ shareholding.voting_rights_percentage }}%</td>
+                                        <td>{{ shareholding.ownership_percentage|floatformat:2 }}%</td>
+                                        <td>
+                                            <a href="{% url 'shareholder:shareholding-detail' shareholding.pk %}" class="btn btn-sm btn-info" title="View">
+                                                <i class="feather-eye"></i>
+                                            </a>
+                                            <a href="{% url 'shareholder:shareholding-edit' shareholding.pk %}" class="btn btn-sm btn-primary" title="Edit">
+                                                <i class="feather-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">No shareholdings recorded</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Leave Requests - HR Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 d-inline-block">Leave Requests</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:leave-request-create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Request
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Submitted</h6>
+                    <h2 class="text-warning">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Approved</h6>
+                    <h2 class="text-success">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Rejected</h6>
+                    <h2 class="text-danger">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Cancelled</h6>
+                    <h2 class="text-secondary">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="SUBMITTED" {% if request.GET.status == 'SUBMITTED' %}selected{% endif %}>Submitted</option>
+                        <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                        <option value="REJECTED" {% if request.GET.status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leave Requests Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Duration</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in leave_requests %}
+                    <tr>
+                        <td>{{ request.employee.first_name }} {{ request.employee.last_name }}</td>
+                        <td>{{ request.leave_type.name }}</td>
+                        <td>{{ request.start_date|date:"M d, Y" }}</td>
+                        <td>{{ request.end_date|date:"M d, Y" }}</td>
+                        <td>{{ request.duration }} days</td>
+                        <td>{{ request.reason|truncatewords:5 }}</td>
+                        <td>
+                            <span class="badge bg-{% if request.status == 'APPROVED' %}success{% elif request.status == 'REJECTED' %}danger{% elif request.status == 'SUBMITTED' %}warning{% else %}secondary{% endif %}">
+                                {{ request.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-info" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if request.status == 'SUBMITTED' %}
+                            <a href="{% url 'hr:leave-request-approve' request.id %}" class="btn btn-sm btn-success" title="Approve">
+                                <i class="fas fa-check"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            No leave requests found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

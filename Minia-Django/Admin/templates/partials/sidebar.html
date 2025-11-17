@@ -1,0 +1,728 @@
+{% load static %}
+{% block sidebar %}
+            <!-- ========== Left Sidebar Start ========== -->
+            <div class="vertical-menu">
+
+                <div data-simplebar class="h-100">
+
+                    <!--- Sidemenu -->
+                    
+
+                    <div id="sidebar-menu">
+                        <!-- Left Menu Start -->
+                        <ul class="metismenu list-unstyled" id="side-menu">
+                        
+                            <li class="menu-title" data-key="t-menu">Menu</li>
+
+                            <li>
+                                <a href="{% url 'accounting:dashboard' %}">
+                                    <i data-feather="home"></i>
+                                    <span data-key="t-dashboard">Dashboard</span>
+                                </a>
+                            </li>
+                        
+                            <li class="menu-title" data-key="t-menu">Main</li>
+
+                            <li>
+                                <a href="{% url 'accounting:dashboard' %}">
+                                    <i data-feather="home"></i>
+                                    <span data-key="t-dashboard">Dashboard</span>
+                                </a>
+                            </li>
+                        
+                            <li class="menu-title" data-key="t-accounting-app">Accounting APP</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="book"></i>
+                                    <span data-key="t-accounting">Accounting</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Financial Reports -->
+                                    <li class="menu-title">Financial Reports</li>
+                                    <li>
+                                        <a href="{% url 'accounting:gl_dashboard' %}">
+                                            <span>General Ledger Dashboard</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:account_list' %}">
+                                            <span>Accounts</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:ledger_entry_list' %}">
+                                            <span>Ledger Entries</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:trial_balance_list' %}">
+                                            <span>Trial Balances</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:profit_loss_list' %}">
+                                            <span>Profit & Loss Reports</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:balance_sheet_list' %}">
+                                            <span>Balance Sheets</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Transactions -->
+                                    <li class="menu-title">Transactions</li>
+                                    <li>
+                                        <a href="{% url 'accounting:customer_list' %}">
+                                            <span>Customers</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:vendor_list' %}">
+                                            <span>Vendors</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:vendor_invoice_list' %}">
+                                            <span>Vendor Invoices</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:vendor_payments_list' %}">
+                                            <span>Vendor Payments</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Assets -->
+                                    <li class="menu-title">Assets</li>
+                                    <li>
+                                        <a href="{% url 'accounting:fixed_asset_list' %}">
+                                            <span>Fixed Assets</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Banking -->
+                                    <li class="menu-title">Banking</li>
+                                    <li>
+                                        <a href="{% url 'accounting:bank_profiles_list' %}">
+                                            <span>Bank Profiles</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:bank_statements_list' %}">
+                                            <span>Bank Statements</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:cash_transactions_list' %}">
+                                            <span>Cash Transactions</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:cash_flow_forecast_list' %}">
+                                            <span>Cash Flow Forecast</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Reconciliation -->
+                                    <li class="menu-title">Reconciliation</li>
+                                    <li>
+                                        <a href="{% url 'accounting:reconciliation_entries_list' %}">
+                                            <span>Reconciliation Entries</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:reconciliation_records_list' %}">
+                                            <span>Reconciliation Records</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:reconciliation_matches_list' %}">
+                                            <span>Reconciliation Matches</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Tax Management -->
+                                    <li class="menu-title">Tax Management</li>
+                                    <li>
+                                        <a href="{% url 'accounting:tax_rates_list' %}">
+                                            <span>Tax Rates</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:tax_transactions_list' %}">
+                                            <span>Tax Transactions</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:tax_summaries_list' %}">
+                                            <span>Tax Summaries</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Deferred Items -->
+                                    <li class="menu-title">Deferred Items</li>
+                                    <li>
+                                        <a href="{% url 'accounting:deferred_expenses_list' %}">
+                                            <span>Deferred Expenses</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:deferred_revenues_list' %}">
+                                            <span>Deferred Revenues</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Administration -->
+                                    <li class="menu-title">Administration</li>
+                                    <li>
+                                        <a href="{% url 'accounting:entities_list' %}">
+                                            <span>Entities</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:currencies_list' %}">
+                                            <span>Currencies</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:period_locks_list' %}">
+                                            <span>Period Locks</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Audit & Control -->
+                                    <li class="menu-title">Audit & Control</li>
+                                    <li>
+                                        <a href="{% url 'accounting:audit_log_list' %}">
+                                            <span>Audit Logs</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Analytics & Reports -->
+                                    <li class="menu-title">Analytics & Reports</li>
+                                    <li>
+                                        <a href="{% url 'accounting:financial_ratios' %}">
+                                            <span>Financial Ratios</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:ar_aging' %}">
+                                            <span>AR Aging Report</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:ap_aging' %}">
+                                            <span>AP Aging Report</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:variance_analysis' %}">
+                                            <span>Variance Analysis</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:cost_center_analysis' %}">
+                                            <span>Cost Center Analysis</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title" data-key="t-shareholder-app">Shareholder Management</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="users"></i>
+                                    <span data-key="t-shareholders">Shareholders</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Stakeholder Management -->
+                                    <li class="menu-title">Stakeholder Management</li>
+                                    <li>
+                                        <a href="{% url 'shareholder:stakeholder-list' %}">
+                                            <span>All Shareholders</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'shareholder:stakeholder-create' %}">
+                                            <span>Add New Shareholder</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Capital Contributions -->
+                                    <li class="menu-title">Capital Contributions</li>
+                                    <li>
+                                        <a href="{% url 'shareholder:capital-contribution-list' %}">
+                                            <span>All Contributions</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'shareholder:capital-contribution-create' %}">
+                                            <span>Record Contribution</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Share Holdings -->
+                                    <li class="menu-title">Share Holdings</li>
+                                    <li>
+                                        <a href="{% url 'shareholder:shareholding-list' %}">
+                                            <span>All Shareholdings</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'shareholder:shareholding-create' %}">
+                                            <span>Add Shares</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title" data-key="t-hr-app">HR Management</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="users"></i>
+                                    <span data-key="t-hr">Human Resources</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Employee Management -->
+                                    <li class="menu-title">Employee Management</li>
+                                    <li>
+                                        <a href="{% url 'hr:employee-list' %}">
+                                            <span>All Employees</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'hr:employee-create' %}">
+                                            <span>Add Employee</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Payroll Management -->
+                                    <li class="menu-title">Payroll Management</li>
+                                    <li>
+                                        <a href="{% url 'hr:payroll-list' %}">
+                                            <span>All Payroll Runs</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'hr:payroll-create' %}">
+                                            <span>Create Payroll</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Leave Management -->
+                                    <li class="menu-title">Leave Management</li>
+                                    <li>
+                                        <a href="{% url 'hr:leave-request-list' %}">
+                                            <span>Leave Requests</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Performance & Discipline -->
+                                    <li class="menu-title">Performance & Discipline</li>
+                                    <li>
+                                        <a href="{% url 'hr:performance-list' %}">
+                                            <span>Performance Reviews</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title" data-key="t-manufacturing-app">Manufacturing</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="settings"></i>
+                                    <span data-key="t-manufacturing">Manufacturing</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Dashboard -->
+                                    <li class="menu-title">Dashboard</li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:dashboard' %}">
+                                            <span>Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Product Management -->
+                                    <li class="menu-title">Product Management</li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:product_list' %}">
+                                            <span>Products</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:product_create' %}">
+                                            <span>Add Product</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:productcategory_list' %}">
+                                            <span>Categories</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:rawmaterial_list' %}">
+                                            <span>Raw Materials</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Bill of Materials -->
+                                    <li class="menu-title">Bill of Materials</li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:bom_list' %}">
+                                            <span>All BOMs</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:bom_create' %}">
+                                            <span>Create BOM</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Routing -->
+                                    <li class="menu-title">Routing</li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:routing_list' %}">
+                                            <span>All Routings</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:routing_create' %}">
+                                            <span>Create Routing</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Production -->
+                                    <li class="menu-title">Production</li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:productionorder_list' %}">
+                                            <span>Production Orders</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:productionorder_create' %}">
+                                            <span>New Production Order</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Quality Control -->
+                                    <li class="menu-title">Quality Control</li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:qualityinspection_list' %}">
+                                            <span>Inspections</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:qualityinspection_create' %}">
+                                            <span>New Inspection</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Resources -->
+                                    <li class="menu-title">Resources</li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:workcenter_list' %}">
+                                            <span>Work Centers</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:equipment_list' %}">
+                                            <span>Equipment</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title" data-key="t-sales-app">Sales</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="shopping-cart"></i>
+                                    <span data-key="t-sales">Sales</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Dashboard -->
+                                    <li class="menu-title">Dashboard</li>
+                                    <li>
+                                        <a href="{% url 'sales:dashboard' %}">
+                                            <span>Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Customers -->
+                                    <li class="menu-title">Customers</li>
+                                    <li>
+                                        <a href="{% url 'sales:customer_list' %}">
+                                            <span>All Customers</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:customer_create' %}">
+                                            <span>Add Customer</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Sales Orders -->
+                                    <li class="menu-title">Sales Orders</li>
+                                    <li>
+                                        <a href="{% url 'sales:salesorder_list' %}">
+                                            <span>All Orders</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:salesorder_create' %}">
+                                            <span>New Order</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Invoicing -->
+                                    <li class="menu-title">Invoicing</li>
+                                    <li>
+                                        <a href="{% url 'sales:invoice_list' %}">
+                                            <span>Invoices</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:invoice_create' %}">
+                                            <span>Create Invoice</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title" data-key="t-menu">Applications</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="grid"></i>
+                                    <span data-key="t-apps">Apps</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li>
+                                        <a href="{% url 'apps:calendar' %}">
+                                            <span data-key="t-calendar">Calendar</span>
+                                        </a>
+                                    </li>
+        
+                                    <li>
+                                        <a href="{% url 'apps:chat' %}">
+                                            <span data-key="t-chat">Chat</span>
+                                        </a>
+                                    </li>
+        
+                                    <li>
+                                        <a href="javascript: void(0);" class="has-arrow">
+                                            <span data-key="t-email">Email</span>
+                                        </a>
+                                        <ul class="sub-menu" aria-expanded="false">
+                                            <li><a href="{% url 'apps:email.inbox' %}" data-key="t-inbox">Inbox</a></li>
+                                            <li><a href="{% url 'apps:email.read' %}" data-key="t-read-email">Read Email</a></li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a href="javascript: void(0);" class="has-arrow">
+                                            <span data-key="t-invoices">Invoices</span>
+                                        </a>
+                                        <ul class="sub-menu" aria-expanded="false">
+                                            <li><a href="{% url 'apps:invoice.list' %}" data-key="t-invoice-list">Invoice List</a></li>
+                                            <li><a href="{% url 'apps:invoice.details' %}" data-key="t-invoice-detail">Invoice Detail</a></li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a href="javascript: void(0);" class="has-arrow">
+                                            <span data-key="t-contacts">Contacts</span>
+                                        </a>
+                                        <ul class="sub-menu" aria-expanded="false">
+                                            <li><a href="{% url 'apps:contacts.usergrid' %}" data-key="t-user-grid">User Grid</a></li>
+                                            <li><a href="{% url 'apps:contacts.userlist' %}" data-key="t-user-list">User List</a></li>
+                                            <li><a href="{% url 'apps:contacts.profile' %}" data-key="t-profile">Profile</a></li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a href="javascript: void(0);" class="">
+                                            <span data-key="t-blog">Blog</span>
+                                            <span class="badge rounded-pill badge-soft-danger float-end" key="t-new">New</span>
+                                        </a>
+                                        <ul class="sub-menu" aria-expanded="false">
+                                            <li><a href="{% url 'apps:blogs.grid' %}" data-key="t-blog-grid">Blog Grid</a></li>
+                                            <li><a href="{% url 'apps:blogs.list' %}" data-key="t-blog-list">Blog List</a></li>
+                                            <li><a href="{% url 'apps:blogs.details' %}" data-key="t-blog-details">Blog Details</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="users"></i>
+                                    <span data-key="t-authentication">Authentication</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'apps:authentication.auth-login' %}" data-key="t-login">Login</a></li>
+                                    <li><a href="{% url 'apps:authentication.auth-register' %}" data-key="t-register">Sign Up</a></li>
+                                    <li><a href="{% url 'apps:authentication.auth-recoverpassword' %}" data-key="t-recover-password">Recover Password</a></li>
+                                    <li><a href="{% url 'apps:authentication.auth-lockscreen' %}" data-key="t-lock-screen">Lock Screen</a></li>
+                                    <li><a href="{% url 'apps:authentication.auth-logout' %}" data-key="t-logout">Log Out</a></li>
+                                    <li><a href="{% url 'apps:authentication.auth-confirm-mail' %}" data-key="t-confirm-mail">Confirm Mail</a></li>
+                                    <li><a href="{% url 'apps:authentication.auth-email-verification' %}" data-key="t-email-verification">Email Verification</a></li>
+                                    <li><a href="{% url 'apps:authentication.auth-two-step-verification' %}" data-key="t-two-step-verification">Two Step Verification</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="file-text"></i>
+                                    <span data-key="t-pages">Pages</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'pages:pages.starterpage' %}" data-key="t-starter-page">Starter Page</a></li>
+                                    <li><a href="{% url 'pages:pages.maintenance' %}" data-key="t-maintenance">Maintenance</a></li>
+                                    <li><a href="{% url 'pages:pages.comingsoon' %}" data-key="t-coming-soon">Coming Soon</a></li>
+                                    <li><a href="{% url 'pages:pages.timeline' %}" data-key="t-timeline">Timeline</a></li>
+                                    <li><a href="{% url 'pages:pages.faqs' %}" data-key="t-faqs">FAQs</a></li>
+                                    <li><a href="{% url 'pages:pages.pricing' %}" data-key="t-pricing">Pricing</a></li>
+                                    <li><a href="{% url 'pages:pages.404error' %}" data-key="t-error-404">Error 404</a></li>
+                                    <li><a href="{% url 'pages:pages.500error' %}" data-key="t-error-500">Error 500</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title mt-2" data-key="t-components">Elements</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="briefcase"></i>
+                                    <span data-key="t-components">Components</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'elements:elements.components.alerts' %}" data-key="t-alerts">Alerts</a></li>
+                                    <li><a href="{% url 'elements:elements.components.buttons' %}" data-key="t-buttons">Buttons</a></li>
+                                    <li><a href="{% url 'elements:elements.components.cards' %}" data-key="t-cards">Cards</a></li>
+                                    <li><a href="{% url 'elements:elements.components.carousel' %}" data-key="t-carousel">Carousel</a></li>
+                                    <li><a href="{% url 'elements:elements.components.dropdowns' %}" data-key="t-dropdowns">Dropdowns</a></li>
+                                    <li><a href="{% url 'elements:elements.components.grid' %}" data-key="t-grid">Grid</a></li>
+                                    <li><a href="{% url 'elements:elements.components.images' %}" data-key="t-images">Images</a></li>
+                                    <li><a href="{% url 'elements:elements.components.modals' %}" data-key="t-modals">Modals</a></li>
+                                    <li><a href="{% url 'elements:elements.components.offcanvas' %}" data-key="t-offcanvas">Offcanvas</a></li>
+                                    <li><a href="{% url 'elements:elements.components.progressbars' %}" data-key="t-progress-bars">Progress Bars</a></li>
+                                    <li><a href="{% url 'elements:elements.components.tabs' %}" data-key="t-tabs-accordions">Tabs & Accordions</a></li>
+                                    <li><a href="{% url 'elements:elements.components.typography' %}" data-key="t-typography">Typography</a></li>
+                                    <li><a href="{% url 'elements:elements.components.toasts' %}" data-key="t-toasts">Toasts</a></li>
+                                    <li><a href="{% url 'elements:elements.components.video' %}" data-key="t-video">Video</a></li>
+                                    <li><a href="{% url 'elements:elements.components.general' %}" data-key="t-general">General</a></li>
+                                    <li><a href="{% url 'elements:elements.components.colors' %}" data-key="t-colors">Colors</a></li>
+                                    <li><a href="{% url 'elements:elements.components.utilities' %}" data-key="t-colors">Utilities</a></li>
+                                </ul>
+                            </li>   
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="gift"></i>
+                                    <span data-key="t-ui-elements">Extended</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'elements:elements.extended.lightbox' %}" data-key="t-lightbox">Lightbox</a></li>
+                                    <li><a href="{% url 'elements:elements.extended.rangeslider' %}" data-key="t-range-slider">Range Slider</a></li>
+                                    <li><a href="{% url 'elements:elements.extended.sweetalerts2' %}" data-key="t-sweet-alert">SweetAlert 2</a></li>
+                                    <li><a href="{% url 'elements:elements.extended.sessiontimeout' %}" data-key="t-session-timeout">Session Timeout</a></li>
+                                    <li><a href="{% url 'elements:elements.extended.rating' %}" data-key="t-rating">Rating</a></li>
+                                    <li><a href="{% url 'elements:elements.extended.notifications' %}" data-key="t-notifications">Notifications</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);">
+                                    <i data-feather="box"></i>
+                                    <span class="badge rounded-pill badge-soft-danger text-danger float-end">7</span>
+                                    <span data-key="t-forms">Forms</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'elements:elements.forms.basic_elements' %}" data-key="t-form-elements">Basic Elements</a></li>
+                                    <li><a href="{% url 'elements:elements.forms.validation' %}" data-key="t-form-validation">Validation</a></li>
+                                    <li><a href="{% url 'elements:elements.forms.advancedplugins' %}" data-key="t-form-advanced">Advanced Plugins</a></li>
+                                    <li><a href="{% url 'elements:elements.forms.editors' %}" data-key="t-form-editors">Editors</a></li>
+                                    <li><a href="{% url 'elements:elements.forms.fileupload' %}" data-key="t-form-upload">File Upload</a></li>
+                                    <li><a href="{% url 'elements:elements.forms.wizard' %}" data-key="t-form-wizard">Wizard</a></li>
+                                    <li><a href="{% url 'elements:elements.forms.mask' %}" data-key="t-form-mask">Mask</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="sliders"></i>
+                                    <span data-key="t-tables">Tables</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'elements:elements.tables.bootstrap_basic' %}" data-key="t-basic-tables">Bootstrap Basic</a></li>
+                                    <li><a href="{% url 'elements:elements.tables.datatables' %}" data-key="t-data-tables">DataTables</a></li>
+                                    <li><a href="{% url 'elements:elements.tables.responsive_tables' %}" data-key="t-responsive-table">Responsive</a></li>
+                                    <li><a href="{% url 'elements:elements.tables.editable_tables' %}" data-key="t-editable-table">Editable</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="pie-chart"></i>
+                                    <span data-key="t-charts">Charts</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'elements:elements.charts.apexcharts' %}" data-key="t-apex-charts">Apexcharts</a></li>
+                                    <li><a href="{% url 'elements:elements.charts.echarts' %}" data-key="t-e-charts">Echarts</a></li>
+                                    <li><a href="{% url 'elements:elements.charts.chartjs' %}" data-key="t-chartjs-charts">Chartjs</a></li>
+                                    <li><a href="{% url 'elements:elements.charts.jqueryknob' %}" data-key="t-knob-charts">Jquery Knob</a></li>
+                                    <li><a href="{% url 'elements:elements.charts.sparkline' %}" data-key="t-sparkline-charts">Sparkline</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="cpu"></i>
+                                    <span data-key="t-icons">Icons</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'elements:elements.icons.boxicons' %}" data-key="t-boxicons">Boxicons</a></li>
+                                    <li><a href="{% url 'elements:elements.icons.materialdesign' %}" data-key="t-material-design">Material Design</a></li>
+                                    <li><a href="{% url 'elements:elements.icons.dripicons' %}" data-key="t-dripicons">Dripicons</a></li>
+                                    <li><a href="{% url 'elements:elements.icons.fontawesome' %}" data-key="t-font-awesome">Font Awesome 5</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="map"></i>
+                                    <span data-key="t-maps">Maps</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <li><a href="{% url 'elements:elements.maps.googlemaps' %}" data-key="t-g-maps">Google Maps</a></li>
+                                    <li><a href="{% url 'elements:elements.maps.vectormaps' %}" data-key="t-v-maps">Vector Maps</a></li>
+                                    <li><a href="{% url 'elements:elements.maps.leaflet' %}" data-key="t-l-maps">Leaflet Maps</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="share-2"></i>
+                                    <span data-key="t-multi-level">Multi Level</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="true">
+                                    <li><a href="javascript: void(0);" data-key="t-level-1-1">Level 1.1</a></li>
+                                    <li>
+                                        <a href="javascript: void(0);" class="has-arrow" data-key="t-level-1-2">Level 1.2</a>
+                                        <ul class="sub-menu" aria-expanded="true">
+                                            <li><a href="javascript: void(0);" data-key="t-level-2-1">Level 2.1</a></li>
+                                            <li><a href="javascript: void(0);" data-key="t-level-2-2">Level 2.2</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+
+                        </ul>
+                    </div>
+                    <!-- Sidebar -->
+                </div>
+            </div>
+            <!-- Left Sidebar End -->
+{% endblock  %}

@@ -1,0 +1,278 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="utf-8" />
+        {% block head_title%}
+        
+        {% endblock %}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
+        <meta content="Themesbrand" name="author" />
+        <!-- App favicon -->
+        <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+        {% block css%}
+        {% block extra_css%}        
+        {% endblock %}
+        
+        <!-- preloader css -->
+        <link rel="stylesheet" href="{% static 'css/preloader.min.css' %}" type="text/css" />
+        
+        <!-- Bootstrap Css -->
+        <link href="{% static 'css/bootstrap.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+        
+        <!-- Icons Css -->
+        <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+        
+        <!-- App Css-->
+        <link href="{% static 'css/app.min.css' %}" id="app-style" rel="stylesheet" type="text/css" />
+
+        {% comment %} <link href="{% static 'css/bootstrap-rtl.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" /> {% endcomment %}
+        {% comment %} <link href="{% static 'css/app-rtl.min.css' %}" id="app-style" rel="stylesheet" type="text/css" /> {% endcomment %}
+        {% endblock%}
+
+    </head>
+
+   <body data-sidebar="light" data-layout-size="fluid" >
+
+    <!-- <body data-layout="horizontal"> -->
+    <script>
+        // CRITICAL: Initialize layout and theme mode from localStorage
+        (function() {
+            // 1. Read saved layout preference
+            const savedLayout = localStorage.getItem('minia-layout') || 'vertical';
+            const savedTheme = localStorage.getItem('minia-theme-mode') || 'light';
+            
+            console.log('[Layout Init] Saved layout from localStorage:', savedLayout);
+            console.log('[Layout Init] Saved theme from localStorage:', savedTheme);
+            
+            // 2. Set the body data-layout attribute BEFORE app.js reads it
+            if (savedLayout === 'horizontal') {
+                document.body.setAttribute('data-layout', 'horizontal');
+                console.log('[Layout Init] Applied data-layout=horizontal');
+            } else {
+                document.body.removeAttribute('data-layout');
+                console.log('[Layout Init] Applied data-layout removed (vertical)');
+            }
+            
+            // 3. Set the body data-bs-theme attribute for dark/light mode
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-bs-theme', 'dark');
+                console.log('[Layout Init] Applied dark theme');
+            } else {
+                document.body.setAttribute('data-bs-theme', 'light');
+                console.log('[Layout Init] Applied light theme');
+            }
+            
+            // 4. Override all redirect methods to block layout redirects
+            const blockLayoutRedirects = (targetUrl) => {
+                if (targetUrl && (targetUrl.includes('/apps/horizontal') || targetUrl === '/')) {
+                    console.log('[Layout Block] Redirect blocked:', targetUrl);
+                    return false; // Block redirect
+                }
+                return true; // Allow other redirects
+            };
+            
+            // Override href setter
+            Object.defineProperty(Location.prototype, 'href', {
+                set: function(url) {
+                    if (!blockLayoutRedirects(url)) return;
+                    window.history.pushState({}, '', url);
+                },
+                get: function() {
+                    return window.location.toString();
+                }
+            });
+            
+            // Override replace method
+            const originalReplace = window.location.replace;
+            window.location.replace = function(url) {
+                if (!blockLayoutRedirects(url)) return;
+                originalReplace.call(window.location, url);
+            };
+            
+            // Override assign method
+            const originalAssign = window.location.assign;
+            window.location.assign = function(url) {
+                if (!blockLayoutRedirects(url)) return;
+                originalAssign.call(window.location, url);
+            };
+        })();
+    </script>
+    <div id="layout-wrapper">
+        <!-- Begin page -->       
+        <!--Vertical View -->
+        {% block header %}
+        <div class="vertical-layout-header">
+            {% include 'partials/header.html' %}
+        </div>
+        {% endblock %}
+
+        {% block sidebar %}
+        <div class="vertical-layout-sidebar">
+            {% include 'partials/sidebar.html' %}
+        </div>
+        {% endblock %}   
+        <!--Horizontal View -->
+        {% block horizontal_header %}
+        <div class="horizontal-layout-header" style="display: none;">
+            {% include 'partials/hori-header.html' %}
+        </div>
+        {% endblock %}
+        
+        {% block horizontal_sidebar %}
+        <div class="horizontal-layout-sidebar" style="display: none;">
+            {% include 'partials/hori-sidebar.html' %}
+        </div>
+        {% endblock %}
+
+        {% block content %}
+        {% include 'partials/content.html' %}
+        {% endblock  %}
+        {% block footer %}
+        {% include 'partials/footer.html' %}          
+        {% endblock %}
+        </div>
+        <!-- end main content-->
+
+        </div>
+        <!-- END layout-wrapper -->
+        {% block rightsidebar %}
+        {% include 'partials/rightsidebar.html' %}          
+        {% endblock %}
+        
+        
+        {% block javascript %}
+        <script src="{% static 'libs/jquery/dist/jquery.min.js' %}"></script>
+        <script src="{% static 'libs/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{% static 'libs/metismenu/dist/metisMenu.min.js' %}"></script>
+        <script src="{% static 'libs/simplebar/dist/simplebar.min.js' %}"></script>
+        <script src="{% static 'libs/node-waves/dist/waves.min.js' %}"></script>
+        <script src="{% static 'libs/feather-icons/dist/feather.min.js' %}"></script>
+        <script src="{% static 'libs/pace-js/pace.min.js' %}"></script>
+
+        {% block extra_js %}
+
+        {% endblock %}
+        
+        <!-- Layout Persistence Script -->
+        <script src="{% static 'js/layout-persistence.js' %}"></script>
+        
+        <!-- App js -->
+        <script src="{% static 'js/app.js' %}"></script>
+        
+        <!-- Fix layout handler to actually apply changes -->
+        <script>
+            (function($) {
+                // Wait for app.js to load, then override the handlers
+                $(document).ready(function() {
+                    var body = document.body;
+                    
+                    // Function to toggle layout visually
+                    function applyLayoutView(layout) {
+                        if (layout === 'horizontal') {
+                            // Hide vertical, show horizontal
+                            $('.vertical-layout-header').hide();
+                            $('.vertical-layout-sidebar').hide();
+                            $('.horizontal-layout-header').show();
+                            $('.horizontal-layout-sidebar').show();
+                            console.log('[LayoutFix] Horizontal view applied');
+                        } else {
+                            // Show vertical, hide horizontal
+                            $('.vertical-layout-header').show();
+                            $('.vertical-layout-sidebar').show();
+                            $('.horizontal-layout-header').hide();
+                            $('.horizontal-layout-sidebar').hide();
+                            console.log('[LayoutFix] Vertical view applied');
+                        }
+                    }
+                    
+                    // Apply initial layout from data-layout attribute
+                    var currentLayout = $('body').attr('data-layout') || 'vertical';
+                    applyLayoutView(currentLayout);
+                    
+                    // ===== LAYOUT CHANGE HANDLER =====
+                    $("input[name='layout']").off('change').on('change', function() {
+                        var layout = $(this).val();
+                        
+                        console.log('[LayoutFix] Layout changed to:', layout);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-layout', layout);
+                        
+                        // Apply layout immediately to body
+                        if(layout == 'horizontal') {
+                            document.body.setAttribute('data-layout', 'horizontal');
+                            $(".sidebar-setting").hide();
+                        } else {
+                            document.body.removeAttribute('data-layout');
+                            $(".sidebar-setting").show();
+                        }
+                        
+                        // Apply visual changes
+                        applyLayoutView(layout);
+                        
+                        return false;
+                    });
+                    
+                    // ===== THEME MODE CHANGE HANDLER =====
+                    $("input[name='layout-mode']").off('change').on('change', function() {
+                        var theme = $(this).val();
+                        
+                        console.log('[LayoutFix] Theme changed to:', theme);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-theme-mode', theme);
+                        
+                        // Apply theme immediately to body
+                        if(theme == 'dark') {
+                            document.body.setAttribute('data-bs-theme', 'dark');
+                            console.log('[LayoutFix] Applied dark theme');
+                        } else {
+                            document.body.setAttribute('data-bs-theme', 'light');
+                            console.log('[LayoutFix] Applied light theme');
+                        }
+                        
+                        return false;
+                    });
+                    
+                    // ===== MODE BUTTON CLICK HANDLER (Header Button) =====
+                    // Override the original mode button click handler
+                    $(document).off('click', '#mode-setting-btn').on('click', '#mode-setting-btn', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        var body = document.body;
+                        var currentTheme = body.hasAttribute("data-bs-theme") ? body.getAttribute("data-bs-theme") : 'light';
+                        var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        
+                        console.log('[LayoutFix] Mode button clicked, changing from', currentTheme, 'to', newTheme);
+                        
+                        // Apply theme
+                        document.body.setAttribute('data-bs-theme', newTheme);
+                        document.body.setAttribute('data-topbar', newTheme);
+                        document.body.setAttribute('data-sidebar', newTheme);
+                        
+                        // Update the radio button in theme customizer
+                        $("input[name='layout-mode'][value='" + newTheme + "']").prop('checked', true);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-theme-mode', newTheme);
+                        
+                        console.log('[LayoutFix] Applied', newTheme, 'theme via button');
+                        
+                        return false;
+                    });
+                    
+                    console.log('[LayoutFix] Layout and theme handlers installed');
+                });
+            })(jQuery);
+        </script>
+        {% endblock %}
+        
+        
+    </body>
+</html> 

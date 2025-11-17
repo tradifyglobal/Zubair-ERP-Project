@@ -1,0 +1,249 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Manufacturing Dashboard | TradifyERP</title>
+{% endblock %}
+
+{% block extra_css %}
+    <link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Start Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Manufacturing Dashboard</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Overview</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Page Title -->
+
+            <!-- Key Metrics Row -->
+            <div class="row">
+                <!-- Total Production Orders -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Orders</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ total_orders }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-clipboard-list font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <span class="badge bg-light text-dark">Production Orders</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Open Production Orders -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Open Orders</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ open_orders }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-warning-subtle text-warning rounded">
+                                            <i class="mdi mdi-progress-clock font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <span class="badge bg-light text-dark">In Progress</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Production Orders -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Completed</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ completed_orders }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-check-circle font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <span class="badge bg-light text-dark">Success</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Failed Inspections -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Failed QC</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ failed_inspections }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-danger-subtle text-danger rounded">
+                                            <i class="mdi mdi-alert-circle font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <span class="badge bg-light text-dark">Inspections</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Row - Inventory & Cost -->
+            <div class="row">
+                <!-- Low Stock Materials -->
+                <div class="col-xl-6 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Low Stock Items</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ low_stock_materials }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-info-subtle text-info rounded">
+                                            <i class="mdi mdi-package-down font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <span class="badge bg-light text-dark">Reorder Required</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Production Cost -->
+                <div class="col-xl-6 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total PO Cost</span>
+                                    <h4 class="mb-3">
+                                        <span>{{ total_po_cost|floatformat:2 }}</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-secondary-subtle text-secondary rounded">
+                                            <i class="mdi mdi-currency-usd font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <span class="badge bg-light text-dark">Completed Orders</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Quick Actions</h5>
+                            <div class="btn-group btn-group-sm flex-wrap" role="group">
+                                <a href="{% url 'manufacturing:productionorder_create' %}" class="btn btn-primary">
+                                    <i class="mdi mdi-plus"></i> New Production Order
+                                </a>
+                                <a href="{% url 'manufacturing:product_create' %}" class="btn btn-info">
+                                    <i class="mdi mdi-plus"></i> Add Product
+                                </a>
+                                <a href="{% url 'manufacturing:bom_create' %}" class="btn btn-success">
+                                    <i class="mdi mdi-plus"></i> Create BOM
+                                </a>
+                                <a href="{% url 'manufacturing:qualityinspection_create' %}" class="btn btn-warning">
+                                    <i class="mdi mdi-plus"></i> New Inspection
+                                </a>
+                                <a href="{% url 'manufacturing:productionorder_list' %}" class="btn btn-secondary">
+                                    <i class="mdi mdi-eye"></i> View All Orders
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- Container Fluid Ends -->
+    </div>
+    <!-- Page Content Ends -->
+</div>
+<!-- Main Content Ends -->
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+    <script>
+        // Counter animation
+        document.querySelectorAll('.counter-value').forEach(el => {
+            const target = parseInt(el.getAttribute('data-target'));
+            const increment = target / 20;
+            let current = 0;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    el.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    el.textContent = Math.floor(current);
+                }
+            }, 50);
+        });
+    </script>
+{% endblock %}

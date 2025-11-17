@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Customers{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Customers</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sales:dashboard' %}">Sales</a></li>
+                        <li class="breadcrumb-item active">Customers</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-12 col-md-6">
+                            <form method="get" class="d-flex gap-2">
+                                <input type="text" name="search" class="form-control" placeholder="Search by name or code..." 
+                                       value="{{ request.GET.search }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="search" class="icon-sm"></i> Search
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-sm-12 col-md-6 text-end">
+                            <a href="{% url 'sales:customer_create' %}" class="btn btn-success">
+                                <i data-feather="plus" class="icon-sm"></i> Add Customer
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-sm-12 col-md-6">
+                            <form method="get" class="d-flex gap-2">
+                                <select name="status" class="form-select" onchange="this.form.submit()">
+                                    <option value="">All Statuses</option>
+                                    <option value="ACTIVE" {% if request.GET.status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                                    <option value="INACTIVE" {% if request.GET.status == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                                    <option value="SUSPENDED" {% if request.GET.status == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Customer Code</th>
+                                <th>Customer Name</th>
+                                <th>Type</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Credit Limit</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in object_list %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ customer.customer_code }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ customer.customer_name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info-subtle text-info">{{ customer.get_customer_type_display }}</span>
+                                </td>
+                                <td>{{ customer.email|default:"N/A" }}</td>
+                                <td>{{ customer.phone|default:"N/A" }}</td>
+                                <td>
+                                    <span class="text-primary">${{ customer.credit_limit|floatformat:2 }}</span>
+                                </td>
+                                <td>
+                                    {% if customer.status == 'ACTIVE' %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% elif customer.status == 'INACTIVE' %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Suspended</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            <a class="dropdown-item" href="{% url 'sales:customer_update' customer.id %}">
+                                                <i data-feather="edit-2" class="icon-sm"></i> Edit
+                                            </a>
+                                            <a class="dropdown-item" href="{% url 'sales:customer_delete' customer.id %}">
+                                                <i data-feather="trash-2" class="icon-sm"></i> Delete
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <p class="text-muted mb-0">No customers found. <a href="{% url 'sales:customer_create' %}">Create one now.</a></p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Page navigation" class="border-top">
+                    <ul class="pagination mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

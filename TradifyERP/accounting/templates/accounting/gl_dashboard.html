@@ -1,0 +1,412 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>General Ledger Dashboard | TradifyERP</title>
+{% endblock %}
+{% block extra_css %}
+    <!-- apexcharts css -->
+    <link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">General Ledger Dashboard</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">GL Dashboard</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            {% if entity %}
+            <!-- Key Metrics Row -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-h-100">
+                        <!-- card body -->
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Assets</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ total_assets|floatformat:2 }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-cash-multiple font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <span class="badge bg-light text-dark">Balance Sheet</span>
+                            </div>
+                        </div>
+                        <!-- end card body -->
+                    </div>
+                    <!-- end card -->
+                </div>
+                <!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-h-100">
+                        <!-- card body -->
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Accounts</span>
+                                    <h4 class="mb-3">
+                                        {{ accounts|length }}
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-book-multiple font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <a href="{% url 'accounting:account_list' %}" class="badge bg-light text-dark text-decoration-none">Chart of Accounts</a>
+                            </div>
+                        </div>
+                        <!-- end card body -->
+                    </div>
+                    <!-- end card -->
+                </div>
+                <!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-h-100">
+                        <!-- card body -->
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Latest Trial Balance</span>
+                                    <h5 class="mb-3">
+                                        {% if latest_trial_balance %}
+                                            {{ latest_trial_balance.as_of_date|date:"M d, Y" }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </h5>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-warning-subtle text-warning rounded">
+                                            <i class="mdi mdi-scale-balance font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                {% if latest_trial_balance %}
+                                    {% if latest_trial_balance.is_balanced %}
+                                        <span class="badge bg-success-subtle text-success">Balanced</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger">Out of Balance</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">No Data</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- end card body -->
+                    </div>
+                    <!-- end card -->
+                </div>
+                <!-- end col -->
+
+                <div class="col-xl-3 col-md-6">
+                    <!-- card -->
+                    <div class="card card-h-100">
+                        <!-- card body -->
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Entity</span>
+                                    <h5 class="mb-3">
+                                        {{ entity.code }}
+                                    </h5>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-info-subtle text-info rounded">
+                                            <i class="mdi mdi-office-building font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <span class="badge bg-success-subtle text-success">{{ entity.name }}</span>
+                            </div>
+                        </div>
+                        <!-- end card body -->
+                    </div>
+                    <!-- end card -->
+                </div>
+                <!-- end col -->
+            </div>
+            <!-- end row -->
+
+            <!-- Accounts by Type -->
+            <div class="row mt-4">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Chart of Accounts Summary</h4>
+                        </div>
+                        <div class="card-body px-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Account #</th>
+                                            <th>Account Name</th>
+                                            <th>Type</th>
+                                            <th>Currency</th>
+                                            <th>Opening Balance</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for account in accounts|slice:":10" %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ account.account_number }}</strong>
+                                            </td>
+                                            <td>{{ account.name }}</td>
+                                            <td>
+                                                {% if account.account_type == 'ASSET' %}
+                                                    <span class="badge bg-primary-subtle text-primary">{{ account.get_account_type_display }}</span>
+                                                {% elif account.account_type == 'LIABILITY' %}
+                                                    <span class="badge bg-warning-subtle text-warning">{{ account.get_account_type_display }}</span>
+                                                {% elif account.account_type == 'EQUITY' %}
+                                                    <span class="badge bg-info-subtle text-info">{{ account.get_account_type_display }}</span>
+                                                {% elif account.account_type == 'INCOME' %}
+                                                    <span class="badge bg-success-subtle text-success">{{ account.get_account_type_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger">{{ account.get_account_type_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ account.currency.code }}</td>
+                                            <td><strong>{{ account.opening_balance }}</strong></td>
+                                            <td>
+                                                {% if account.is_active %}
+                                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'accounting:account_detail' account.id %}" class="btn btn-sm btn-info">
+                                                    <i class="mdi mdi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Financial Reports Row -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0">Latest Trial Balance</h4>
+                        </div>
+                        <div class="card-body">
+                            {% if latest_trial_balance %}
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">As Of Date</label>
+                                    <h5>{{ latest_trial_balance.as_of_date|date:"d M Y" }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Total Debits</label>
+                                    <h5 class="text-danger">{{ latest_trial_balance.total_debits }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Total Credits</label>
+                                    <h5 class="text-success">{{ latest_trial_balance.total_credits }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Status</label>
+                                    {% if latest_trial_balance.is_balanced %}
+                                        <span class="badge bg-success-subtle text-success">Balanced</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger">Out of Balance</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'accounting:trial_balance_list' %}" class="btn btn-primary btn-sm w-100">View All</a>
+                            {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    No trial balance records found.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0">Latest P&L Report</h4>
+                        </div>
+                        <div class="card-body">
+                            {% if latest_pl_report %}
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Period</label>
+                                    <h5>{{ latest_pl_report.period_start|date:"M d" }} - {{ latest_pl_report.period_end|date:"M d, Y" }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Total Income</label>
+                                    <h5 class="text-success">{{ latest_pl_report.total_income }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Total Expenses</label>
+                                    <h5 class="text-danger">{{ latest_pl_report.total_expenses }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Net Profit</label>
+                                    {% if latest_pl_report.net_profit >= 0 %}
+                                        <h5 class="text-success">{{ latest_pl_report.net_profit }}</h5>
+                                    {% else %}
+                                        <h5 class="text-danger">{{ latest_pl_report.net_profit }}</h5>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'accounting:profit_loss_list' %}" class="btn btn-primary btn-sm w-100">View All</a>
+                            {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    No P&L reports found.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0">Latest Balance Sheet</h4>
+                        </div>
+                        <div class="card-body">
+                            {% if latest_balance_sheet %}
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">As Of Date</label>
+                                    <h5>{{ latest_balance_sheet.as_of_date|date:"d M Y" }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Total Assets</label>
+                                    <h5 class="text-primary">{{ latest_balance_sheet.total_assets }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Total Liabilities</label>
+                                    <h5 class="text-warning">{{ latest_balance_sheet.total_liabilities }}</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted mb-2">Total Equity</label>
+                                    <h5 class="text-info">{{ latest_balance_sheet.total_equity }}</h5>
+                                </div>
+                                <a href="{% url 'accounting:balance_sheet_list' %}" class="btn btn-primary btn-sm w-100">View All</a>
+                            {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    No balance sheets found.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Quick Links -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Quick Access</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-light btn-block w-100">
+                                        <i class="mdi mdi-book-open"></i> Ledger Entries
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'accounting:journal_entry_create' %}" class="btn btn-light btn-block w-100">
+                                        <i class="mdi mdi-plus-circle"></i> New Entry
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'accounting:trial_balance_list' %}" class="btn btn-light btn-block w-100">
+                                        <i class="mdi mdi-scale-balance"></i> Trial Balance
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'accounting:audit_log_list' %}" class="btn btn-light btn-block w-100">
+                                        <i class="mdi mdi-history"></i> Audit Logs
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            {% else %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>No Entity Found!</strong> Please create an entity first in the admin panel to start using the accounting module.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+    <!-- jquery.counterup -->
+    <script src="{% static 'libs/jquery.counterup/jquery.counterup.min.js' %}"></script>
+    <script src="{% static 'libs/jquery-waypoints/jquery.waypoints.min.js' %}"></script>
+    <script>
+        // Counter animation
+        if ($(".counter-value").length) {
+            $(".counter-value").counterUp({
+                delay: 100,
+                time: 1000
+            });
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sales Dashboard{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Sales Dashboard</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Sales</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row">
+        <!-- Total Customers -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Total Customers</h6>
+                            <h2 class="mb-0">{{ total_customers }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="users" class="text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Customers -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Active Customers</h6>
+                            <h2 class="mb-0">{{ active_customers }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="user-check" class="text-primary"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Total Orders</h6>
+                            <h2 class="mb-0">{{ total_orders }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="package" class="text-warning"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Pending Orders</h6>
+                            <h2 class="mb-0">{{ pending_orders }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="clock" class="text-info"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue & Financial KPIs -->
+    <div class="row">
+        <!-- Total Revenue -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Total Revenue</h6>
+                            <h2 class="mb-0">${{ total_revenue|floatformat:2 }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="trending-up" class="text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipped Orders -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Shipped Orders</h6>
+                            <h2 class="mb-0">{{ shipped_orders }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="truck" class="text-primary"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Invoices -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Total Invoices</h6>
+                            <h2 class="mb-0">{{ total_invoices }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="file-text" class="text-warning"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Outstanding AR -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Outstanding AR</h6>
+                            <h2 class="mb-0">${{ total_outstanding|floatformat:2 }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="alert-circle" class="text-danger"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Payment Status -->
+    <div class="row">
+        <!-- Paid Invoices -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Paid Invoices</h6>
+                            <h2 class="mb-0">{{ paid_invoices }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="check-circle" class="text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overdue Invoices -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h6 class="font-size-14 text-muted mb-2">Overdue Invoices</h6>
+                            <h2 class="mb-0 text-danger">{{ overdue_invoices }}</h2>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-light rounded-md font-size-24">
+                                <i data-feather="x-circle" class="text-danger"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'sales:customer_create' %}" class="btn btn-primary btn-sm">
+                            <i data-feather="plus" class="icon-sm"></i> New Customer
+                        </a>
+                        <a href="{% url 'sales:salesorder_create' %}" class="btn btn-primary btn-sm">
+                            <i data-feather="plus" class="icon-sm"></i> New Sales Order
+                        </a>
+                        <a href="{% url 'sales:invoice_create' %}" class="btn btn-primary btn-sm">
+                            <i data-feather="plus" class="icon-sm"></i> Create Invoice
+                        </a>
+                        <a href="{% url 'sales:customer_list' %}" class="btn btn-secondary btn-sm">
+                            <i data-feather="list" class="icon-sm"></i> View Customers
+                        </a>
+                        <a href="{% url 'sales:salesorder_list' %}" class="btn btn-secondary btn-sm">
+                            <i data-feather="list" class="icon-sm"></i> View Orders
+                        </a>
+                        <a href="{% url 'sales:invoice_list' %}" class="btn btn-secondary btn-sm">
+                            <i data-feather="list" class="icon-sm"></i> View Invoices
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Customers | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Customers</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Customers</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Filters -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="get" class="row g-2">
+                                <div class="col-md-4">
+                                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by name, code or email" value="{{ request.GET.search|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="status" class="form-select form-select-sm">
+                                        <option value="">All Status</option>
+                                        <option value="ACTIVE" {% if request.GET.status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                                        <option value="INACTIVE" {% if request.GET.status == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'accounting:customer_list' %}" class="btn btn-light btn-sm w-100">Reset</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Customers ({{ customers|length }})</h4>
+                        </div>
+                        <div class="card-body px-0">
+                            {% if customers %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Customer Code</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>City</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for customer in customers %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ customer.customer_code }}</strong>
+                                            </td>
+                                            <td>
+                                                {{ customer.name }}
+                                            </td>
+                                            <td>
+                                                <a href="mailto:{{ customer.email }}">{{ customer.email|default:"—" }}</a>
+                                            </td>
+                                            <td>
+                                                <a href="tel:{{ customer.phone }}">{{ customer.phone|default:"—" }}</a>
+                                            </td>
+                                            <td>
+                                                {{ customer.city|default:"—" }}
+                                            </td>
+                                            <td>
+                                                {% if customer.is_active %}
+                                                    <span class="badge bg-success-subtle text-success">
+                                                        <i class="mdi mdi-check-circle"></i> Active
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger">
+                                                        <i class="mdi mdi-close-circle"></i> Inactive
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small>{{ customer.created_at|date:"d M Y" }}</small>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <nav class="d-flex justify-content-center mt-4">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+
+                            <!-- Summary Stats -->
+                            <div class="row mt-4 px-3">
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Total Customers</h6>
+                                            <h5 class="mb-0">{{ customers|length }}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Active Customers</h6>
+                                            {% with active_count=customers|dictsort:"is_active"|length %}
+                                                <h5 class="mb-0 text-success">
+                                                    {% widthratio customers|length 1 100 as pct %}
+                                                    {{ customers|length }}
+                                                </h5>
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Last Added</h6>
+                                            {% with last=customers|first %}
+                                                {% if last %}
+                                                    <h6 class="mb-0">{{ last.created_at|date:"d M Y" }}</h6>
+                                                {% else %}
+                                                    <h6 class="mb-0">—</h6>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info m-3" role="alert">
+                                <i class="mdi mdi-information-outline"></i> No customers found.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}

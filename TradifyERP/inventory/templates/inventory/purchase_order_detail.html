@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Purchase Order Detail{% endblock %}
+
+{% block content %}
+<div class="page-title-box d-sm-flex align-items-center justify-content-between">
+    <h4 class="mb-sm-0 font-size-18">PO-{{ purchase_order.po_number }}</h4>
+    <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inventory:purchase_order_list' %}">Purchase Orders</a></li>
+            <li class="breadcrumb-item active">{{ purchase_order.po_number }}</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Order Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product SKU</th>
+                                <th>Product Name</th>
+                                <th>Qty Ordered</th>
+                                <th>Qty Received</th>
+                                <th>Unit Cost</th>
+                                <th>Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in lines %}
+                            <tr>
+                                <td><strong>{{ line.product.sku }}</strong></td>
+                                <td>{{ line.product.name }}</td>
+                                <td>{{ line.quantity_ordered }}</td>
+                                <td>{{ line.quantity_received }}</td>
+                                <td>${{ line.unit_cost }}</td>
+                                <td>${{ line.line_total }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">PO Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">PO Number:</td>
+                            <td>{{ purchase_order.po_number }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Supplier:</td>
+                            <td>{{ purchase_order.supplier }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Warehouse:</td>
+                            <td>{{ purchase_order.warehouse.name|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Status:</td>
+                            <td>
+                                {% if purchase_order.status == 'draft' %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                {% elif purchase_order.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif purchase_order.status == 'confirmed' %}
+                                    <span class="badge bg-info">Confirmed</span>
+                                {% elif purchase_order.status == 'received' %}
+                                    <span class="badge bg-success">Received</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Expected Delivery:</td>
+                            <td>{{ purchase_order.expected_delivery_date|date:"Y-m-d"|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Actual Delivery:</td>
+                            <td>{{ purchase_order.actual_delivery_date|date:"Y-m-d"|default:"-" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">Total Amount:</td>
+                            <td class="h5">${{ purchase_order.total_amount }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Created:</td>
+                            <td>{{ purchase_order.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

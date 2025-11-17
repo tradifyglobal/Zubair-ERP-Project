@@ -1,0 +1,22 @@
+# QUICK REVERT CARD
+
+**Checkpoint Created:** November 16, 2025
+
+If MySQL doesn't work:
+```
+Copy-Item -Path "g:\TradifyERP\BACKUPS\postgres_checkpoint_2025-11-16_09-14-23\settings_postgres.py" -Destination "g:\TradifyERP\TradifyERP\TradifyERP\settings.py" -Force
+```
+
+Then restart Django server.
+
+---
+
+**PostgreSQL Connection Details (if needed):**
+- Host: localhost
+- Port: 5432
+- Database: tradify
+- User: zubair
+- Password: zubair@0862
+
+**Backup Location:**
+g:\TradifyERP\BACKUPS\postgres_checkpoint_2025-11-16_09-14-23\

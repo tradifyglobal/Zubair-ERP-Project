@@ -1,0 +1,155 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ shareholding.stakeholder.full_name }} - Share Details{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{{ shareholding.stakeholder.full_name }} - Share Details</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'shareholder:shareholding-edit' shareholding.pk %}" class="btn btn-primary waves-effect waves-light">
+                            <i class="feather-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'shareholder:shareholding-list' %}" class="btn btn-secondary waves-effect waves-light">
+                            Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Info -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Share Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td width="30%"><strong>Shareholder:</strong></td>
+                                    <td>
+                                        <a href="{% url 'shareholder:stakeholder-detail' shareholding.stakeholder.pk %}">
+                                            {{ shareholding.stakeholder.full_name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Share Type:</strong></td>
+                                    <td>{{ shareholding.get_share_type_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Share Class:</strong></td>
+                                    <td>{{ shareholding.share_class }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Number of Shares:</strong></td>
+                                    <td>{{ shareholding.number_of_shares }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Par Value Per Share:</strong></td>
+                                    <td>{{ shareholding.par_value_per_share }} {{ shareholding.par_value_currency.code }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Acquisition Date:</strong></td>
+                                    <td>{{ shareholding.acquisition_date|date:"M d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Acquisition Price:</strong></td>
+                                    <td>{{ shareholding.acquisition_price }} {{ shareholding.acquisition_currency.code }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Ownership Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Voting Rights:</strong></td>
+                                    <td class="text-end">{{ shareholding.voting_rights_percentage }}%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dividend Rights:</strong></td>
+                                    <td class="text-end">{{ shareholding.dividend_rights_percentage }}%</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td><strong>Ownership %:</strong></td>
+                                    <td class="text-end">{{ shareholding.ownership_percentage|floatformat:2 }}%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Vesting Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Vesting Start:</strong></td>
+                                    <td class="text-end">{{ shareholding.vesting_start_date|date:"M d, Y"|default:"N/A" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Vesting End:</strong></td>
+                                    <td class="text-end">{{ shareholding.vesting_end_date|date:"M d, Y"|default:"N/A" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Schedule:</strong></td>
+                                    <td class="text-end">{{ shareholding.vesting_schedule_description|default:"N/A" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rights & Terms -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Rights & Terms</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td width="30%"><strong>Transfer Restrictions:</strong></td>
+                                    <td>{{ shareholding.transfer_restrictions|default:"None" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Redemption Options:</strong></td>
+                                    <td>{{ shareholding.redemption_options|default:"None" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Certificate Number:</strong></td>
+                                    <td>{{ shareholding.certificate_number|default:"Not assigned" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

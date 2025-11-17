@@ -1,0 +1,120 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>{{ form_title|default:"Form" }} | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">{{ form_title|default:"Form" }}</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:dashboard' %}">Manufacturing</a></li>
+                                <li class="breadcrumb-item active">{{ form_title|default:"Form" }}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">{{ form_title|default:"Form" }}</h4>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" class="needs-validation" novalidate>
+                                {% csrf_token %}
+
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <strong>Error:</strong>
+                                    {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                    {% endfor %}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                {% endif %}
+
+                                {% for field in form %}
+                                {% if field.widget.input_type == 'hidden' %}
+                                    {{ field }}
+                                {% else %}
+                                <div class="mb-3">
+                                    {{ field.label_tag }}
+                                    {% if field.widget.input_type == 'checkbox' %}
+                                        <div class="form-check">
+                                            {{ field }}
+                                            <label class="form-check-label">
+                                                {% if field.help_text %}
+                                                <small class="text-muted d-block">{{ field.help_text|safe }}</small>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    {% elif field.widget.input_type == 'textarea' %}
+                                        {% if field.errors %}
+                                            {{ field }}
+                                        {% else %}
+                                            {{ field }}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if field.errors %}
+                                            {{ field }}
+                                        {% else %}
+                                            {{ field }}
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in field.errors %}
+                                        {{ error }}<br>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if field.help_text %}
+                                    <small class="text-muted d-block">{{ field.help_text|safe }}</small>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+
+                                <!-- Buttons -->
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="mdi mdi-check"></i> Save
+                                    </button>
+                                    <a href="{{ cancel_url }}" class="btn btn-light">
+                                        <i class="mdi mdi-close"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select, textarea {
+    border-radius: 4px;
+    border: 1px solid #e3e6f0;
+}
+.form-control:focus, .form-select:focus, textarea:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+</style>
+{% endblock %}

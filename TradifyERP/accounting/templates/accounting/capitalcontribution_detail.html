@@ -1,0 +1,164 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Capital Contribution | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Capital Contribution Details</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:capital_contribution_list' %}">Contributions</a></li>
+                                <li class="breadcrumb-item active">Details</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title mb-0">Contribution Information</h5>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'accounting:capital_contribution_update' object.id %}" class="btn btn-sm btn-warning">
+                                    <i class="mdi mdi-pencil"></i> Edit
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">Stakeholder:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="{% url 'accounting:stakeholder_detail' object.stakeholder.id %}">
+                                        {{ object.stakeholder.full_name }}
+                                    </a>
+                                </dd>
+
+                                <dt class="col-sm-4">Contribution Date:</dt>
+                                <dd class="col-sm-8">{{ object.contribution_date|date:"M d, Y" }}</dd>
+
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8">
+                                    {% if object.status == 'COMPLETED' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif object.status == 'PENDING' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </dd>
+
+                                <dt class="col-sm-4">Reference Number:</dt>
+                                <dd class="col-sm-8">{{ object.reference_number }}</dd>
+
+                                <dt class="col-sm-4">Original Amount:</dt>
+                                <dd class="col-sm-8">
+                                    {{ object.amount_original|floatformat:2 }} {{ object.currency_origin.code }}
+                                </dd>
+
+                                <dt class="col-sm-4">Converted Amount:</dt>
+                                <dd class="col-sm-8">
+                                    {{ object.amount_converted|floatformat:2 }} {{ object.currency_destination.code }}
+                                </dd>
+
+                                <dt class="col-sm-4">Exchange Rate:</dt>
+                                <dd class="col-sm-8">{{ object.exchange_rate|floatformat:4 }}</dd>
+
+                                <dt class="col-sm-4">Amount in USD:</dt>
+                                <dd class="col-sm-8">
+                                    <strong>${{ object.amount_usd|floatformat:2 }}</strong>
+                                </dd>
+
+                                <dt class="col-sm-4">Payment Mode:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-light text-dark">{{ object.get_payment_mode_display }}</span>
+                                </dd>
+
+                                {% if object.bank_name %}
+                                <dt class="col-sm-4">Bank Name:</dt>
+                                <dd class="col-sm-8">{{ object.bank_name }}</dd>
+
+                                <dt class="col-sm-4">Bank Account Number:</dt>
+                                <dd class="col-sm-8">{{ object.bank_account_number }}</dd>
+
+                                <dt class="col-sm-4">Account Holder:</dt>
+                                <dd class="col-sm-8">{{ object.bank_account_holder_name }}</dd>
+                                {% endif %}
+
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">{{ object.created_at|date:"M d, Y H:i" }}</dd>
+
+                                <dt class="col-sm-4">Updated:</dt>
+                                <dd class="col-sm-8">{{ object.updated_at|date:"M d, Y H:i" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Amount Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <small class="text-muted">Original Amount</small>
+                                <h4 class="mb-0">{{ object.amount_original|floatformat:2 }} <small>{{ object.currency_origin.code }}</small></h4>
+                            </div>
+                            <hr>
+                            <div class="text-center mb-3">
+                                <small class="text-muted">Exchange Rate</small>
+                                <h6 class="mb-0">1 {{ object.currency_origin.code }} = {{ object.exchange_rate|floatformat:4 }} {{ object.currency_destination.code }}</h6>
+                            </div>
+                            <hr>
+                            <div class="text-center">
+                                <small class="text-muted">Converted Amount</small>
+                                <h4 class="mb-0">{{ object.amount_converted|floatformat:2 }} <small>{{ object.currency_destination.code }}</small></h4>
+                            </div>
+                            <hr>
+                            <div class="text-center">
+                                <small class="text-muted">Amount in USD</small>
+                                <h3 class="mb-0 text-success">${{ object.amount_usd|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if object.ledger_entry %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Accounting Entry</h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-6">Ledger Entry:</dt>
+                                <dd class="col-sm-6">
+                                    <a href="#" class="badge bg-primary">ID: {{ object.ledger_entry.id }}</a>
+                                </dd>
+                                <dt class="col-sm-6">Posted:</dt>
+                                <dd class="col-sm-6">
+                                    {% if object.ledger_entry.is_posted %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">No</span>
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

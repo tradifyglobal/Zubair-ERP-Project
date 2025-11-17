@@ -1,0 +1,164 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Variance Analysis | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title">Variance Analysis</h4>
+                    <p class="text-muted">Budget vs Actual for {{ period_name }}</p>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-2">Total Budget</h6>
+                            <h3 class="mb-0">${{ summary.total_budget|default:"0.00"|floatformat:2 }}</h3>
+                            <small class="text-muted">All accounts</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-2">Total Actual</h6>
+                            <h3 class="mb-0">${{ summary.total_actual|default:"0.00"|floatformat:2 }}</h3>
+                            <small class="text-muted">Year to date</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-2">Total Variance</h6>
+                            <h3 class="mb-0">${{ summary.total_variance|default:"0.00"|floatformat:2 }}</h3>
+                            <small class="text-muted">Difference</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-2">Variance %</h6>
+                            <h3 class="mb-0">{{ summary.variance_percentage|default:"0.0"|floatformat:1 }}%</h3>
+                            <small class="text-muted">Percentage of budget</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Variance Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Account-Level Variance Detail</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Account</th>
+                                            <th>Code</th>
+                                            <th>Budget</th>
+                                            <th>Actual</th>
+                                            <th>Variance</th>
+                                            <th>Variance %</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if variance_details %}
+                                            {% for item in variance_details %}
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ item.account_name }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">{{ item.account_code }}</span>
+                                                    </td>
+                                                    <td>${{ item.budget|default:"0.00"|floatformat:2 }}</td>
+                                                    <td>${{ item.actual|default:"0.00"|floatformat:2 }}</td>
+                                                    <td>
+                                                        {% if item.variance > 0 %}
+                                                            <span class="text-success fw-medium">${{ item.variance|floatformat:2 }}</span>
+                                                        {% elif item.variance < 0 %}
+                                                            <span class="text-danger fw-medium">${{ item.variance|floatformat:2 }}</span>
+                                                        {% else %}
+                                                            <span class="text-muted">${{ item.variance|floatformat:2 }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if item.variance_percentage > 0 %}
+                                                            <span class="text-success">{{ item.variance_percentage|floatformat:1 }}%</span>
+                                                        {% elif item.variance_percentage < 0 %}
+                                                            <span class="text-danger">{{ item.variance_percentage|floatformat:1 }}%</span>
+                                                        {% else %}
+                                                            <span class="text-muted">0.0%</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if item.variance_percentage > 10 %}
+                                                            <span class="badge bg-success">Favorable</span>
+                                                        {% elif item.variance_percentage < -10 %}
+                                                            <span class="badge bg-danger">Unfavorable</span>
+                                                        {% else %}
+                                                            <span class="badge bg-info">On Target</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="7" class="text-center py-4">
+                                                    <p class="text-muted mb-0">No variance data available</p>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interpretation Guide -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Variance Interpretation</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><span class="badge bg-success">Favorable Variance</span></h6>
+                                    <p>Positive variance indicates spending is LESS than budget. For expenses, this is good. For revenue, this might indicate lower sales than expected.</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><span class="badge bg-danger">Unfavorable Variance</span></h6>
+                                    <p>Negative variance indicates spending is MORE than budget. For expenses, this is bad. For revenue, this indicates higher sales than expected.</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <p class="mb-0"><strong>Interpretation Tip:</strong> Focus on variances > 10% from budget. Investigate significant deviations to understand root causes and adjust future budgets accordingly.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

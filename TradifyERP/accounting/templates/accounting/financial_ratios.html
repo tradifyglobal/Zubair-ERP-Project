@@ -1,0 +1,149 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Financial Ratios | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title">Financial Ratios Analysis</h4>
+                    <p class="text-muted">Key financial metrics for {{ entity.name }}</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Current Ratio -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="card-title mb-0">Current Ratio</h6>
+                                <span class="badge bg-info">Liquidity</span>
+                            </div>
+                            <h3 class="mb-2">
+                                {% if ratios.current_ratio %}
+                                    {{ ratios.current_ratio|floatformat:2 }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                            <p class="text-muted small mb-0">{{ ratio_interpretation.current_ratio }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Ratio -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="card-title mb-0">Quick Ratio</h6>
+                                <span class="badge bg-warning">Liquidity</span>
+                            </div>
+                            <h3 class="mb-2">
+                                {% if ratios.quick_ratio %}
+                                    {{ ratios.quick_ratio|floatformat:2 }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                            <p class="text-muted small mb-0">{{ ratio_interpretation.quick_ratio }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debt to Equity -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="card-title mb-0">Debt-to-Equity</h6>
+                                <span class="badge bg-danger">Leverage</span>
+                            </div>
+                            <h3 class="mb-2">
+                                {% if ratios.debt_to_equity %}
+                                    {{ ratios.debt_to_equity|floatformat:2 }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                            <p class="text-muted small mb-0">{{ ratio_interpretation.debt_to_equity }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debt Ratio -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="card-title mb-0">Debt Ratio</h6>
+                                <span class="badge bg-secondary">Solvency</span>
+                            </div>
+                            <h3 class="mb-2">
+                                {% if ratios.debt_ratio %}
+                                    {{ ratios.debt_ratio|floatformat:2 }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                            <p class="text-muted small mb-0">{{ ratio_interpretation.debt_ratio }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gross Profit Margin -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="card-title mb-0">Gross Profit Margin</h6>
+                                <span class="badge bg-success">Profitability</span>
+                            </div>
+                            <h3 class="mb-2">
+                                {% if ratios.gross_profit_margin %}
+                                    {{ ratios.gross_profit_margin|floatformat:1 }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                            <p class="text-muted small mb-0">{{ ratio_interpretation.gross_profit_margin }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Ratio Interpretation Guide</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Liquidity Ratios</h6>
+                                    <p><strong>Current Ratio:</strong> Measures ability to pay short-term debts. Ideal range: 1.5-3.0</p>
+                                    <p><strong>Quick Ratio:</strong> More conservative measure of immediate liquidity. Ideal: 0.5-1.0</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Solvency & Leverage Ratios</h6>
+                                    <p><strong>Debt-to-Equity:</strong> Shows financial leverage. Lower values indicate less risk.</p>
+                                    <p><strong>Debt Ratio:</strong> Percentage of assets financed by debt. Lower is generally better.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

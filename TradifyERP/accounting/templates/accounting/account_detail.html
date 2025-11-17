@@ -1,0 +1,264 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>{{ account.account_number }} - {{ account.name }} | TradifyERP</title>
+{% endblock %}
+{% block extra_css %}
+    <!-- apexcharts css -->
+    <link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Account: {{ account.account_number }} - {{ account.name }}</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:account_list' %}">Accounts</a></li>
+                                <li class="breadcrumb-item active">{{ account.account_number }}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Account Summary Row -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Account Type</span>
+                                    <h5 class="mb-3">
+                                        <span class="badge bg-primary-subtle text-primary">{{ account.get_account_type_display }}</span>
+                                    </h5>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-tag-multiple font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Debits</span>
+                                    <h4 class="mb-3">
+                                        {{ total_debits }}
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-danger-subtle text-danger rounded">
+                                            <i class="mdi mdi-arrow-bottom-right font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Credits</span>
+                                    <h4 class="mb-3">
+                                        {{ total_credits }}
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-arrow-top-left font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Current Balance</span>
+                                    <h4 class="mb-3">
+                                        <strong>{{ current_balance }}</strong>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-info-subtle text-info rounded">
+                                            <i class="mdi mdi-calculator font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Account Details -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Account Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="text-muted mb-2">
+                                        <strong>Account Number:</strong> {{ account.account_number }}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <strong>Account Name:</strong> {{ account.name }}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <strong>Account Type:</strong> {{ account.get_account_type_display }}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="text-muted mb-2">
+                                        <strong>Currency:</strong> {{ account.currency.code }}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <strong>Status:</strong>
+                                        {% if account.is_active %}
+                                            <span class="badge bg-success-subtle text-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <strong>Total Entries:</strong> {{ entry_count }}
+                                    </p>
+                                </div>
+                            </div>
+                            {% if account.description %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <p class="text-muted mb-2">
+                                        <strong>Description:</strong> {{ account.description }}
+                                    </p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Ledger Entries -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Ledger Entries ({{ entry_count }} total)</h4>
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-sm btn-primary">View All GL Entries</a>
+                            </div>
+                        </div>
+                        <div class="card-body px-0">
+                            {% if ledger_entries %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th>Type</th>
+                                            <th>Amount</th>
+                                            <th>Balance</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in ledger_entries %}
+                                        <tr>
+                                            <td><small>{{ item.entry.entry_date|date:"d M Y" }}</small></td>
+                                            <td>
+                                                <small>
+                                                    {% if item.entry.reference_number %}
+                                                        <strong>{{ item.entry.reference_number }}</strong><br>
+                                                    {% endif %}
+                                                    {{ item.entry.description|truncatewords:10 }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                {% if item.entry.entry_type == 'DEBIT' %}
+                                                    <span class="badge bg-danger-subtle text-danger">DEBIT</span>
+                                                {% else %}
+                                                    <span class="badge bg-success-subtle text-success">CREDIT</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><strong>{{ item.entry.amount }}</strong></td>
+                                            <td><strong class="text-info">{{ item.balance }}</strong></td>
+                                            <td>
+                                                {% if item.entry.is_posted %}
+                                                    <span class="badge bg-success-subtle text-success">Posted</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning-subtle text-warning">Draft</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info m-3" role="alert">
+                                <i class="mdi mdi-information-outline"></i> No ledger entries for this account.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+    <!-- jquery.counterup -->
+    <script src="{% static 'libs/jquery.counterup/jquery.counterup.min.js' %}"></script>
+    <script src="{% static 'libs/jquery-waypoints/jquery.waypoints.min.js' %}"></script>
+    <script>
+        // Counter animation
+        if ($(".counter-value").length) {
+            $(".counter-value").counterUp({
+                delay: 100,
+                time: 1000
+            });
+        }
+    </script>
+{% endblock %}

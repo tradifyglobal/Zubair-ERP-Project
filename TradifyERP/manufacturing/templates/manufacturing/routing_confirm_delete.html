@@ -1,0 +1,56 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title %}<title>Delete Routing | TradifyERP</title>{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Delete Routing</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">Warning!</h4>
+                        <p>Are you sure you want to delete this routing for <strong>{{ object.product.product_name }}</strong>?</p>
+                        <hr>
+                        <p class="mb-0">This action cannot be undone.</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Product:</dt>
+                                <dd class="col-sm-8">{{ object.product.product_name }}</dd>
+                                
+                                <dt class="col-sm-4">Version:</dt>
+                                <dd class="col-sm-8">{{ object.version }}</dd>
+                                
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8"><span class="badge badge-info">{% if object.is_active %}Active{% else %}Inactive{% endif %}</span></dd>
+                                
+                                <dt class="col-sm-4">Effective Date:</dt>
+                                <dd class="col-sm-8">{{ object.effective_date|date:"d M Y" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-group">
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="mdi mdi-delete"></i> Yes, Delete Routing
+                            </button>
+                            <a href="{% url 'manufacturing:routing_list' %}" class="btn btn-secondary">
+                                <i class="mdi mdi-cancel"></i> Cancel
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

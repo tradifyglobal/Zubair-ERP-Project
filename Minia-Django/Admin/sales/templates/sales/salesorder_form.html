@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.id %}Edit{% else %}Create{% endif %} Sales Order{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="font-size-18 mb-0">{% if form.instance.id %}Edit{% else %}Create New{% endif %} Sales Order</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="row">
+        <div class="col-12">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales:dashboard' %}">Sales</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales:salesorder_list' %}">Sales Orders</a></li>
+                <li class="breadcrumb-item active">{% if form.instance.id %}Edit{% else %}New{% endif %}</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Sales Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- SO Number -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.so_number.id_for_label }}" class="form-label">SO Number <span class="text-danger">*</span></label>
+                                {{ form.so_number }}
+                                {% if form.so_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.so_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Customer -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.customer.id_for_label }}" class="form-label">Customer <span class="text-danger">*</span></label>
+                                {{ form.customer }}
+                                {% if form.customer.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.customer.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Order Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.order_date.id_for_label }}" class="form-label">Order Date <span class="text-danger">*</span></label>
+                                {{ form.order_date }}
+                                {% if form.order_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.order_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Required Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.required_date.id_for_label }}" class="form-label">Required Date</label>
+                                {{ form.required_date }}
+                                {% if form.required_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.required_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Ship Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ship_date.id_for_label }}" class="form-label">Ship Date</label>
+                                {{ form.ship_date }}
+                                {% if form.ship_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.ship_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Delivery Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.delivery_date.id_for_label }}" class="form-label">Delivery Date</label>
+                                {{ form.delivery_date }}
+                                {% if form.delivery_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.delivery_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Shipping Method -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.shipping_method.id_for_label }}" class="form-label">Shipping Method</label>
+                                {{ form.shipping_method }}
+                                {% if form.shipping_method.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.shipping_method.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Tracking Number -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tracking_number.id_for_label }}" class="form-label">Tracking Number</label>
+                                {{ form.tracking_number }}
+                                {% if form.tracking_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.tracking_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- PO Reference -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.po_reference.id_for_label }}" class="form-label">PO Reference</label>
+                                {{ form.po_reference }}
+                                {% if form.po_reference.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.po_reference.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.status.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.notes.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Totals (Read-only) -->
+                        <h6 class="text-muted mt-4 mb-3">Order Totals (Auto-calculated)</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Subtotal</label>
+                                <div class="form-control-plaintext">${{ form.instance.subtotal|default:"0.00"|floatformat:2 }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tax Amount</label>
+                                <div class="form-control-plaintext">${{ form.instance.tax_amount|default:"0.00"|floatformat:2 }}</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Shipping Cost</label>
+                                <div class="form-control-plaintext">${{ form.instance.shipping_cost|default:"0.00"|floatformat:2 }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Total Amount</label>
+                                <div class="form-control-plaintext"><strong>${{ form.instance.total_amount|default:"0.00"|floatformat:2 }}</strong></div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="icon-sm"></i> Save Sales Order
+                                </button>
+                                <a href="{% url 'sales:salesorder_list' %}" class="btn btn-secondary">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

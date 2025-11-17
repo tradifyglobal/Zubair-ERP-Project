@@ -1,0 +1,58 @@
+{% extends "base/layout.html" %}
+{% load static %}
+
+{% block title %}Delete Work Center{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Delete Work Center</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">Warning!</h4>
+                        <p>Are you sure you want to delete this work center: <strong>{{ object.name }}</strong>?</p>
+                        <hr>
+                        <p class="mb-0">This action cannot be undone.</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Work Center Code:</dt>
+                                <dd class="col-sm-8">{{ object.workcenter_code }}</dd>
+                                
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8">{{ object.name }}</dd>
+                                
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8"><span class="badge badge-info">{{ object.get_status_display }}</span></dd>
+                                
+                                <dt class="col-sm-4">Description:</dt>
+                                <dd class="col-sm-8">{{ object.description|truncatewords:20 }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-group">
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="mdi mdi-delete"></i> Yes, Delete Work Center
+                            </button>
+                            <a href="{% url 'manufacturing:workcenter_list' %}" class="btn btn-secondary">
+                                <i class="mdi mdi-cancel"></i> Cancel
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

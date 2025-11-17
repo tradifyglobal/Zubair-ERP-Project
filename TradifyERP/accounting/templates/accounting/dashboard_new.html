@@ -1,0 +1,563 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Accounting Dashboard | TradifyERP</title>
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 400px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title">Accounting Dashboard</h4>
+                </div>
+            </div>
+
+            <!-- Metrics Cards -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Accounts</h6>
+                                    <h3 class="mb-0">{{ total_accounts }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-primary">
+                                        <i class="mdi mdi-bank"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Customers</h6>
+                                    <h3 class="mb-0">{{ total_customers }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-success">
+                                        <i class="mdi mdi-account-multiple"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Vendors</h6>
+                                    <h3 class="mb-0">{{ total_vendors }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-warning">
+                                        <i class="mdi mdi-briefcase"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Entity</h6>
+                                    <h3 class="mb-0">{{ entity.code|default:"N/A" }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-info">
+                                        <i class="mdi mdi-office-building"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shareholder Module Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3">
+                        <i class="mdi mdi-account-tie"></i> Shareholder Management
+                    </h5>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Stakeholders</h6>
+                                    <h3 class="mb-0">{{ total_stakeholders }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-primary">
+                                        <i class="mdi mdi-account-tie"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-sm btn-light w-100">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Capital Contributions</h6>
+                                    <h3 class="mb-0">{{ total_contributions }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-success">
+                                        <i class="mdi mdi-cash-multiple"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="{% url 'shareholder:capital-contribution-list' %}" class="btn btn-sm btn-light w-100">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Share Holdings</h6>
+                                    <h3 class="mb-0">{{ total_shareholdings }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-warning">
+                                        <i class="mdi mdi-percent"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="{% url 'shareholder:shareholding-list' %}" class="btn btn-sm btn-light w-100">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- HR Management Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3">
+                        <i class="mdi mdi-human-greeting-proximity"></i> HR Management
+                    </h5>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Employees</h6>
+                                    <h3 class="mb-0">{{ total_employees }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-info">
+                                        <i class="mdi mdi-account-multiple"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="{% url 'hr:employee-list' %}" class="btn btn-sm btn-light w-100">View Employees</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">On Leave</h6>
+                                    <h3 class="mb-0">{{ employees_on_leave }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-warning">
+                                        <i class="mdi mdi-calendar-clock"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="{% url 'hr:leave-request-list' %}" class="btn btn-sm btn-light w-100">View Requests</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Pending Payrolls</h6>
+                                    <h3 class="mb-0">{{ pending_payrolls }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-danger">
+                                        <i class="mdi mdi-cash-multiple"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="{% url 'hr:payroll-list' %}" class="btn btn-sm btn-light w-100">Process Payroll</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Leave Requests</h6>
+                                    <h3 class="mb-0">{{ pending_leave_requests }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-success">
+                                        <i class="mdi mdi-calendar-check"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="{% url 'hr:leave-request-list' %}" class="btn btn-sm btn-light w-100">Pending Approvals</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Analytics Quick Links -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3">Analytics & Reports</h5>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{% url 'accounting:financial_ratios' %}" class="card text-decoration-none">
+                        <div class="card-body text-center">
+                            <i class="mdi mdi-chart-line" style="font-size: 2rem; color: #0084d6;"></i>
+                            <h6 class="mt-2 mb-0">Financial Ratios</h6>
+                            <small class="text-muted">Key metrics & analysis</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{% url 'accounting:ar_aging' %}" class="card text-decoration-none">
+                        <div class="card-body text-center">
+                            <i class="mdi mdi-clock-outline" style="font-size: 2rem; color: #15aabf;"></i>
+                            <h6 class="mt-2 mb-0">AR Aging Report</h6>
+                            <small class="text-muted">Customer receivables</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{% url 'accounting:ap_aging' %}" class="card text-decoration-none">
+                        <div class="card-body text-center">
+                            <i class="mdi mdi-cash-multiple" style="font-size: 2rem; color: #40c057;"></i>
+                            <h6 class="mt-2 mb-0">AP Aging Report</h6>
+                            <small class="text-muted">Vendor payables</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{% url 'accounting:variance_analysis' %}" class="card text-decoration-none">
+                        <div class="card-body text-center">
+                            <i class="mdi mdi-scale-balance" style="font-size: 2rem; color: #fcc419;"></i>
+                            <h6 class="mt-2 mb-0">Variance Analysis</h6>
+                            <small class="text-muted">Budget vs Actual</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{% url 'accounting:cost_center_analysis' %}" class="card text-decoration-none">
+                        <div class="card-body text-center">
+                            <i class="mdi mdi-chart-pie" style="font-size: 2rem; color: #ff6b6b;"></i>
+                            <h6 class="mt-2 mb-0">Cost Center Analysis</h6>
+                            <small class="text-muted">Expense breakdown</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Debit vs Credit (6 Months)</h5>
+                        </div>
+                        <div class="card-body" style="padding: 10px;">
+                            <canvas id="debit_credit_chart" style="max-height: 200px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Account Type Distribution</h5>
+                        </div>
+                        <div class="card-body" style="padding: 10px;">
+                            <canvas id="account_type_chart" style="max-height: 200px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Customer & Vendor Growth (6 Months)</h5>
+                        </div>
+                        <div class="card-body" style="padding: 10px;">
+                            <canvas id="customer_vendor_chart" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Entries -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Ledger Entries</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_ledger_entries %}
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Account</th>
+                                            <th>Type</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for entry in recent_ledger_entries %}
+                                        <tr>
+                                            <td><small>{{ entry.entry_date|date:"d M Y" }}</small></td>
+                                            <td>
+                                                <small>
+                                                    <strong>{{ entry.account.code }}</strong><br>
+                                                    {{ entry.account.name }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                {% if entry.entry_type == 'DEBIT' %}
+                                                    <span class="badge bg-danger">DEBIT</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">CREDIT</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><strong>${{ entry.amount }}</strong></td>
+                                            <td>
+                                                {% if entry.is_posted %}
+                                                    <span class="badge bg-success">Posted</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Draft</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No ledger entries found.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Data from Django context with fallback
+        var chartMonths = {{ chart_months|safe }} || ['2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11'];
+        var chartDebits = {{ chart_debits|safe }} || [1000, 1500, 2000, 1800, 2200, 2500];
+        var chartCredits = {{ chart_credits|safe }} || [500, 750, 1000, 900, 1100, 1250];
+        var accountTypeLabels = {{ account_type_labels|safe }} || ['Asset', 'Liability', 'Equity'];
+        var accountTypeCounts = {{ account_type_counts|safe }} || [5, 2, 3];
+        var chartCustomers = {{ chart_customers|safe }} || [1, 2, 1, 3, 2, 1];
+        var chartVendors = {{ chart_vendors|safe }} || [2, 1, 2, 1, 2, 3];
+
+        // Chart 1: Debit vs Credit
+        var ctx1 = document.getElementById('debit_credit_chart');
+        if (ctx1) {
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: chartMonths,
+                    datasets: [
+                        {
+                            label: 'Debits',
+                            data: chartDebits,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#e74c3c'
+                        },
+                        {
+                            label: 'Credits',
+                            data: chartCredits,
+                            borderColor: '#27ae60',
+                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#27ae60'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 2: Account Types
+        var ctx2 = document.getElementById('account_type_chart');
+        if (ctx2) {
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: accountTypeLabels,
+                    datasets: [{
+                        data: accountTypeCounts,
+                        backgroundColor: [
+                            '#3498db',
+                            '#2ecc71',
+                            '#f39c12',
+                            '#e74c3c',
+                            '#9b59b6',
+                            '#1abc9c'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 3: Customer & Vendor Growth
+        var ctx3 = document.getElementById('customer_vendor_chart');
+        if (ctx3) {
+            new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: chartMonths,
+                    datasets: [
+                        {
+                            label: 'New Customers',
+                            data: chartCustomers,
+                            backgroundColor: '#3498db',
+                            borderColor: '#2980b9',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'New Vendors',
+                            data: chartVendors,
+                            backgroundColor: '#e74c3c',
+                            borderColor: '#c0392b',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return Math.floor(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sales Orders{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Sales Orders</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sales:dashboard' %}">Sales</a></li>
+                        <li class="breadcrumb-item active">Orders</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <form method="get" class="d-flex gap-2">
+                                <input type="text" name="search" class="form-control" placeholder="Search by SO number or customer..." value="{{ request.GET.search }}">
+                                <button type="submit" class="btn btn-primary">Search</button>
+                            </form>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="status" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Status</option>
+                                <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                                <option value="CONFIRMED" {% if request.GET.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                                <option value="PROCESSING" {% if request.GET.status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                                <option value="SHIPPED" {% if request.GET.status == 'SHIPPED' %}selected{% endif %}>Shipped</option>
+                                <option value="DELIVERED" {% if request.GET.status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{% url 'sales:salesorder_create' %}" class="btn btn-success">
+                                <i data-feather="plus"></i> New Sales Order
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">All Sales Orders</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>SO Number</th>
+                                <th>Customer</th>
+                                <th>Order Date</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Payment Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in object_list %}
+                            <tr>
+                                <td><strong>{{ order.so_number }}</strong></td>
+                                <td>{{ order.customer.customer_name }}</td>
+                                <td>{{ order.order_date|date:"M d, Y" }}</td>
+                                <td>${{ order.total_amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if order.status == 'DRAFT' %}
+                                        <span class="badge bg-secondary">Draft</span>
+                                    {% elif order.status == 'CONFIRMED' %}
+                                        <span class="badge bg-info">Confirmed</span>
+                                    {% elif order.status == 'PROCESSING' %}
+                                        <span class="badge bg-warning">Processing</span>
+                                    {% elif order.status == 'SHIPPED' %}
+                                        <span class="badge bg-primary">Shipped</span>
+                                    {% elif order.status == 'DELIVERED' %}
+                                        <span class="badge bg-success">Delivered</span>
+                                    {% elif order.status == 'INVOICED' %}
+                                        <span class="badge bg-info">Invoiced</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order.payment_status == 'UNPAID' %}
+                                        <span class="badge bg-danger">Unpaid</span>
+                                    {% elif order.payment_status == 'PARTIAL' %}
+                                        <span class="badge bg-warning">Partial</span>
+                                    {% elif order.payment_status == 'PAID' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'sales:salesorder_update' order.id %}" class="btn btn-sm btn-primary">
+                                        <i data-feather="edit-2"></i>
+                                    </a>
+                                    <a href="{% url 'sales:salesorder_delete' order.id %}" class="btn btn-sm btn-danger">
+                                        <i data-feather="trash-2"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">No sales orders found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if is_paginated %}
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

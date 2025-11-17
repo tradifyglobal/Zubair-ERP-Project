@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profit & Loss Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Profit & Loss Report</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'accounting:profit_loss_list' %}">Reports</a></li>
+                        <li class="breadcrumb-item active">P&L Detail</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" class="row g-3">
+                        {% csrf_token %}
+                        <div class="col-md-5">
+                            <label for="period_start" class="form-label">Period Start</label>
+                            <input type="date" class="form-control" id="period_start" name="period_start" 
+                                   value="{{ period_start|date:'Y-m-d' }}" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="period_end" class="form-label">Period End</label>
+                            <input type="date" class="form-control" id="period_end" name="period_end" 
+                                   value="{{ period_end|date:'Y-m-d' }}" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if has_data %}
+    <!-- P&L Report -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        {{ entity.name }} - P&L Report
+                        <small class="text-muted d-block">{{ period_start|date:"M d, Y" }} to {{ period_end|date:"M d, Y" }}</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Revenue Section -->
+                    <div class="table-responsive mb-4">
+                        <h6 class="fw-bold text-primary mb-3">Revenue</h6>
+                        
+                        {% if pl_data.lines.revenue %}
+                        <table class="table table-sm table-hover mb-0">
+                            <tbody>
+                                {% for item in pl_data.lines.revenue %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.account_number }}</strong><br>
+                                        <small class="text-muted">{{ item.account_name }}</small>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>${{ item.amount|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i data-feather="info"></i> No revenue transactions in this period
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Revenue Total -->
+                        <div class="border-top border-bottom py-3 mt-3 mb-3">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <strong class="font-size-16">Total Revenue</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <h5 class="text-success mb-0">${{ pl_data.subtotals.total_revenue|floatformat:2 }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expenses Section -->
+                    <div class="table-responsive mb-4">
+                        <h6 class="fw-bold text-danger mb-3">Expenses</h6>
+                        
+                        {% if pl_data.lines.expenses %}
+                        <table class="table table-sm table-hover mb-0">
+                            <tbody>
+                                {% for item in pl_data.lines.expenses %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.account_number }}</strong><br>
+                                        <small class="text-muted">{{ item.account_name }}</small>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>${{ item.amount|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i data-feather="info"></i> No expense transactions in this period
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Expenses Total -->
+                        <div class="border-top border-bottom py-3 mt-3 mb-3">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <strong class="font-size-16">Total Expenses</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <h5 class="text-danger mb-0">${{ pl_data.subtotals.total_expenses|floatformat:2 }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Net Profit -->
+                    <div class="bg-light p-3 rounded">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <h6 class="fw-bold mb-0">Net Income (Loss)</h6>
+                            </div>
+                            <div class="col-6 text-end">
+                                {% if pl_data.totals.net_profit >= 0 %}
+                                <h4 class="text-success mb-0">${{ pl_data.totals.net_profit|floatformat:2 }}</h4>
+                                {% else %}
+                                <h4 class="text-danger mb-0">-${{ pl_data.totals.net_profit|floatformat:2 }}</h4>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Metrics -->
+                    <div class="row mt-4 g-3">
+                        <div class="col-md-4">
+                            <div class="card border">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Profit Margin</h6>
+                                    <h4 class="text-primary mb-0">
+                                        {% if pl_data.metrics.profit_margin >= 0 %}
+                                        {{ pl_data.metrics.profit_margin|floatformat:1 }}%
+                                        {% else %}
+                                        -{{ pl_data.metrics.profit_margin|floatformat:1 }}%
+                                        {% endif %}
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Expense Ratio</h6>
+                                    <h4 class="text-warning mb-0">{{ pl_data.metrics.expense_ratio|floatformat:1 }}%</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Revenue Items</h6>
+                                    <h4 class="text-info mb-0">{{ pl_data.metrics.revenue_count }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Module Metrics -->
+    <div class="row mt-4">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Sales Revenue</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-success">${{ sales_revenue|floatformat:2 }}</h3>
+                    <small class="text-muted">From Sales Module</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Sales Tax Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="text-muted">Collected:</span>
+                        <span class="fw-bold">${{ tax_summary.tax_collected|floatformat:2 }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <span class="text-muted">Paid:</span>
+                        <span class="fw-bold">${{ tax_summary.tax_paid|floatformat:2 }}</span>
+                    </div>
+                    <div class="border-top pt-3">
+                        <span class="text-muted">Outstanding:</span>
+                        <span class="fw-bold text-warning">${{ tax_summary.tax_outstanding|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Accounts Receivable</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-info">${{ ar_balance|floatformat:2 }}</h3>
+                    <small class="text-muted">Outstanding Customer Invoices</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- No Data Message -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">No Data Available</h4>
+                <p>No transactions found for the selected period. Please:</p>
+                <ul class="mb-0">
+                    <li>Create sales invoices with status "ISSUED"</li>
+                    <li>Create GL entries manually in the Ledger</li>
+                    <li>Try a different date range</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Feather Icons
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+</script>
+{% endblock %}

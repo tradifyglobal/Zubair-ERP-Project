@@ -1,0 +1,298 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Tax Summaries | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Tax Summaries</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:gl_dashboard' %}">Accounting</a></li>
+                                <li class="breadcrumb-item active">Tax Summaries</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Summary Cards -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Summaries</span>
+                                    <h4 class="mb-3">{{ object_list|length }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-chart-box-outline font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Tax Collected</span>
+                                    <h4 class="mb-3">{{ total_collected|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-cash-multiple font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Tax Payable</span>
+                                    <h4 class="mb-3">{{ total_payable|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-warning-subtle text-warning rounded">
+                                            <i class="mdi mdi-currency-usd font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Pending Periods</span>
+                                    <h4 class="mb-3">{{ pending_periods }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-info-subtle text-info rounded">
+                                            <i class="mdi mdi-clock-outline font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Tax Summaries List -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Tax Summaries by Period</h4>
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'admin:accounting_taxsummary_add' %}" class="btn btn-sm btn-primary">
+                                    <i class="mdi mdi-plus"></i> New Summary
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Search and Filter -->
+                        <div class="card-body border-bottom">
+                            <form method="get" class="row g-3">
+                                <div class="col-md-3">
+                                    <input type="date" name="from_date" class="form-control" 
+                                        value="{{ request.GET.from_date }}" placeholder="From Date">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" name="to_date" class="form-control" 
+                                        value="{{ request.GET.to_date }}" placeholder="To Date">
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="status" class="form-select">
+                                        <option value="">All Status</option>
+                                        <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                                        <option value="SUBMITTED" {% if request.GET.status == 'SUBMITTED' %}selected{% endif %}>Submitted</option>
+                                        <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                                        <option value="PAID" {% if request.GET.status == 'PAID' %}selected{% endif %}>Paid</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="mdi mdi-magnify"></i> Filter
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="table-responsive">
+                            {% if object_list %}
+                            <table class="table table-hover table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Period</th>
+                                        <th>Period Start</th>
+                                        <th>Period End</th>
+                                        <th>Tax Type</th>
+                                        <th>Total Taxable</th>
+                                        <th>Tax Collected</th>
+                                        <th>Tax Payable</th>
+                                        <th>Balance</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for summary in object_list %}
+                                    {% with balance=summary.tax_collected|add:summary.tax_payable %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ summary.period_name }}</strong>
+                                        </td>
+                                        <td>{{ summary.period_start|date:"d M Y" }}</td>
+                                        <td>{{ summary.period_end|date:"d M Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ summary.get_tax_type_display }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info">{{ summary.total_taxable_amount|floatformat:2 }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success">{{ summary.tax_collected|floatformat:2 }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning-subtle text-warning">{{ summary.tax_payable|floatformat:2 }}</span>
+                                        </td>
+                                        <td>
+                                            {% if balance >= 0 %}
+                                                <strong class="text-success">{{ balance|floatformat:2 }}</strong>
+                                            {% else %}
+                                                <strong class="text-danger">{{ balance|floatformat:2 }}</strong>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if summary.status == 'DRAFT' %}
+                                                <span class="badge bg-secondary-subtle text-secondary">Draft</span>
+                                            {% elif summary.status == 'SUBMITTED' %}
+                                                <span class="badge bg-info-subtle text-info">Submitted</span>
+                                            {% elif summary.status == 'APPROVED' %}
+                                                <span class="badge bg-primary-subtle text-primary">Approved</span>
+                                            {% elif summary.status == 'PAID' %}
+                                                <span class="badge bg-success-subtle text-success">Paid</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light dropdown-toggle" type="button" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="mdi mdi-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'admin:accounting_taxsummary_change' summary.id %}">
+                                                            <i class="mdi mdi-pencil"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'admin:accounting_taxsummary_change' summary.id %}">
+                                                            <i class="mdi mdi-eye"></i> View Details
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="{% url 'admin:accounting_taxsummary_delete' summary.id %}">
+                                                            <i class="mdi mdi-trash-can"></i> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="alert alert-info m-4" role="alert">
+                                <i class="mdi mdi-information"></i> No tax summaries found. 
+                                <a href="{% url 'admin:accounting_taxsummary_add' %}" class="alert-link">Create a new summary</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav>
+                        <ul class="pagination pagination-separated mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+            <!-- end row -->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}

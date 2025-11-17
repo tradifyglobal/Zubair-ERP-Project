@@ -1,0 +1,184 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Shareholding Details | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Shareholding Details</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:shareholding_list' %}">Shareholdings</a></li>
+                                <li class="breadcrumb-item active">Details</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title mb-0">Shareholding Information</h5>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'accounting:shareholding_update' object.id %}" class="btn btn-sm btn-warning">
+                                    <i class="mdi mdi-pencil"></i> Edit
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">Stakeholder:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="{% url 'accounting:stakeholder_detail' object.stakeholder.id %}">
+                                        {{ object.stakeholder.full_name }}
+                                    </a>
+                                </dd>
+
+                                <dt class="col-sm-4">Share Type:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-light text-dark">{{ object.get_share_type_display }}</span>
+                                </dd>
+
+                                <dt class="col-sm-4">Share Class:</dt>
+                                <dd class="col-sm-8">{{ object.share_class }}</dd>
+
+                                <dt class="col-sm-4">Number of Shares:</dt>
+                                <dd class="col-sm-8">{{ object.number_of_shares|floatformat:0 }}</dd>
+
+                                <dt class="col-sm-4">Par Value per Share:</dt>
+                                <dd class="col-sm-8">{{ object.par_value_per_share|floatformat:2 }}</dd>
+
+                                <dt class="col-sm-4">Acquisition Date:</dt>
+                                <dd class="col-sm-8">{{ object.acquisition_date|date:"M d, Y" }}</dd>
+
+                                <dt class="col-sm-4">Acquisition Price per Share:</dt>
+                                <dd class="col-sm-8">{{ object.acquisition_price_per_share|floatformat:2 }} {{ object.currency.code }}</dd>
+
+                                <dt class="col-sm-4">Total Acquisition Value:</dt>
+                                <dd class="col-sm-8">
+                                    <strong>{{ object.total_acquisition_value|floatformat:2 }} {{ object.currency.code }}</strong>
+                                </dd>
+
+                                {% if object.vesting_schedule_description %}
+                                <dt class="col-sm-4">Vesting Schedule:</dt>
+                                <dd class="col-sm-8">{{ object.vesting_schedule_description }}</dd>
+
+                                <dt class="col-sm-4">Vesting Start Date:</dt>
+                                <dd class="col-sm-8">
+                                    {% if object.vesting_start_date %}
+                                        {{ object.vesting_start_date|date:"M d, Y" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </dd>
+
+                                <dt class="col-sm-4">Vesting End Date:</dt>
+                                <dd class="col-sm-8">
+                                    {% if object.vesting_end_date %}
+                                        {{ object.vesting_end_date|date:"M d, Y" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </dd>
+                                {% endif %}
+
+                                <dt class="col-sm-4">Voting Rights %:</dt>
+                                <dd class="col-sm-8">{{ object.voting_rights_percentage }}%</dd>
+
+                                <dt class="col-sm-4">Dividend Rights %:</dt>
+                                <dd class="col-sm-8">{{ object.dividend_rights_percentage }}%</dd>
+
+                                {% if object.transfer_restrictions %}
+                                <dt class="col-sm-4">Transfer Restrictions:</dt>
+                                <dd class="col-sm-8">{{ object.transfer_restrictions }}</dd>
+                                {% endif %}
+
+                                {% if object.redemption_option %}
+                                <dt class="col-sm-4">Redemption Option:</dt>
+                                <dd class="col-sm-8">{{ object.redemption_option }}</dd>
+                                {% endif %}
+
+                                {% if object.certificate_number %}
+                                <dt class="col-sm-4">Certificate Number:</dt>
+                                <dd class="col-sm-8">{{ object.certificate_number }}</dd>
+                                {% endif %}
+
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">{{ object.created_at|date:"M d, Y H:i" }}</dd>
+
+                                <dt class="col-sm-4">Updated:</dt>
+                                <dd class="col-sm-8">{{ object.updated_at|date:"M d, Y H:i" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Share Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <small class="text-muted">Number of Shares</small>
+                                <h4 class="mb-0">{{ object.number_of_shares|floatformat:0 }}</h4>
+                            </div>
+                            <hr>
+                            <div class="text-center mb-3">
+                                <small class="text-muted">Par Value per Share</small>
+                                <h6 class="mb-0">{{ object.par_value_per_share|floatformat:2 }}</h6>
+                            </div>
+                            <hr>
+                            <div class="text-center">
+                                <small class="text-muted">Total Acquisition Value</small>
+                                <h3 class="mb-0 text-primary">{{ object.total_acquisition_value|floatformat:2 }}</h3>
+                                <small class="text-muted">{{ object.currency.code }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Rights</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Voting Rights</small>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ object.voting_rights_percentage }}%"
+                                         aria-valuenow="{{ object.voting_rights_percentage }}" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        {{ object.voting_rights_percentage }}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Dividend Rights</small>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ object.dividend_rights_percentage }}%"
+                                         aria-valuenow="{{ object.dividend_rights_percentage }}" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        {{ object.dividend_rights_percentage }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

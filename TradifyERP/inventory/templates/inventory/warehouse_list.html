@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Warehouses{% endblock %}
+
+{% block content %}
+<div class="page-title-box d-sm-flex align-items-center justify-content-between">
+    <h4 class="mb-sm-0 font-size-18">Warehouses</h4>
+    <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+            <li class="breadcrumb-item"><a href="{% url 'inventory:dashboard' %}">Inventory</a></li>
+            <li class="breadcrumb-item active">Warehouses</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    {% for warehouse in warehouses %}
+    <div class="col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ warehouse.name }}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">Location:</td>
+                            <td>{{ warehouse.location }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Contact:</td>
+                            <td>{{ warehouse.contact_person|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Phone:</td>
+                            <td>{{ warehouse.phone|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Products:</td>
+                            <td>{{ warehouse.total_products }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Status:</td>
+                            <td>
+                                {% if warehouse.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">No warehouses found.</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

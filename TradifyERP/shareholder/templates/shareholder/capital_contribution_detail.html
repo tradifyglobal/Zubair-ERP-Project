@@ -1,0 +1,167 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ contribution.stakeholder.full_name }} - Capital Contribution Detail{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Capital Contribution - {{ contribution.stakeholder.full_name }}</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-primary waves-effect waves-light">
+                            <i class="feather-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'shareholder:capital-contribution-list' %}" class="btn btn-secondary waves-effect waves-light">
+                            Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contribution Info -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Contribution Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td width="30%"><strong>Shareholder:</strong></td>
+                                    <td>
+                                        <a href="{% url 'shareholder:stakeholder-detail' contribution.stakeholder.pk %}">
+                                            {{ contribution.stakeholder.full_name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Contribution Date:</strong></td>
+                                    <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        {% if contribution.status == 'COMPLETED' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif contribution.status == 'PENDING' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ contribution.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Reference Number:</strong></td>
+                                    <td>{{ contribution.reference_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Description:</strong></td>
+                                    <td>{{ contribution.description }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Amount Summary</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Original Amount:</strong></td>
+                                    <td class="text-end">{{ contribution.original_amount }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Origin Currency:</strong></td>
+                                    <td class="text-end">{{ contribution.origin_currency.code }}</td>
+                                </tr>
+                                <tr class="table-info">
+                                    <td><strong>Exchange Rate:</strong></td>
+                                    <td class="text-end">{{ contribution.exchange_rate }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Converted Amount:</strong></td>
+                                    <td class="text-end">{{ contribution.converted_amount }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Destination Currency:</strong></td>
+                                    <td class="text-end">{{ contribution.destination_currency.code }}</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td><strong>USD Amount:</strong></td>
+                                    <td class="text-end">{{ contribution.usd_amount }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Payment Method</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td width="30%"><strong>Payment Mode:</strong></td>
+                                    <td>{{ contribution.get_payment_mode_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Payment Method Details:</strong></td>
+                                    <td>{{ contribution.payment_method_details }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Bank Name:</strong></td>
+                                    <td>{{ contribution.bank_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Bank Account Number:</strong></td>
+                                    <td>{{ contribution.bank_account_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Account Holder:</strong></td>
+                                    <td>{{ contribution.bank_account_holder }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounting Entry -->
+        {% if contribution.ledger_entry %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Accounting Entry</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Journal Entry:</strong> <a href="{% url 'accounting:ledger_entry_detail' contribution.ledger_entry.pk %}">View Entry</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

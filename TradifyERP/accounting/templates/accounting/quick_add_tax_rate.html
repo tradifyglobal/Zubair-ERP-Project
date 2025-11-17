@@ -1,0 +1,204 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Quick Add Tax Rate | Dashboard</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Quick Add Tax Rate</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:tax_rates_list' %}">Tax Rates</a></li>
+                                <li class="breadcrumb-item active">Add Tax Rate</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-xl-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" class="needs-validation">
+                                {% csrf_token %}
+
+                                <!-- Tax Name -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="col-md-3 col-form-label">
+                                        Tax Name <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.name.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Tax Rate (%) -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.rate.id_for_label }}" class="col-md-3 col-form-label">
+                                        Tax Rate (%) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.rate }}
+                                        {% if form.rate.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.rate.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <!-- Tax Type -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.tax_type.id_for_label }}" class="col-md-3 col-form-label">
+                                        Tax Type
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.tax_type }}
+                                        {% if form.tax_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.tax_type.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Effective Date -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.effective_date.id_for_label }}" class="col-md-3 col-form-label">
+                                        Effective Date
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.effective_date }}
+                                        {% if form.effective_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.effective_date.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <!-- Description -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="col-md-3 col-form-label">
+                                        Description
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.description }}
+                                        {% if form.description.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.description.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Form Errors -->
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <h4 class="alert-heading">Error!</h4>
+                                    {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Buttons -->
+                                <div class="row">
+                                    <div class="col-md-9 offset-md-3">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ri-save-line me-2"></i>Save Tax Rate
+                                        </button>
+                                        <a href="{% url 'accounting:dashboard' %}" class="btn btn-secondary">
+                                            <i class="ri-close-line me-2"></i>Cancel
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Card -->
+                <div class="col-xl-4">
+                    <div class="card">
+                        <div class="card-header bg-light-subtle">
+                            <h5 class="card-title mb-0">Create Tax Rate</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted font-size-13">
+                                Define tax rates for use in transactions and tax calculations across your accounting system.
+                            </p>
+                            <h6>Required Fields:</h6>
+                            <ul class="ps-3 font-size-13">
+                                <li>Tax Name</li>
+                                <li>Tax Rate (%)</li>
+                            </ul>
+                            <h6>Optional Fields:</h6>
+                            <ul class="ps-3 font-size-13">
+                                <li>Tax Type (Sales Tax, VAT, GST, etc.)</li>
+                                <li>Effective Date</li>
+                                <li>Description</li>
+                            </ul>
+                            <div class="alert alert-info mt-3" role="alert">
+                                <small>
+                                    <strong>Tip:</strong> Tax rates can be applied to invoices and transactions automatically.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-color: #dee2e6;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

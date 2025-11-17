@@ -1,0 +1,564 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="utf-8" />
+        {% block head_title%}
+        
+        {% endblock %}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
+        <meta content="Themesbrand" name="author" />
+        <!-- App favicon -->
+        <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+        {% block css%}
+        {% block extra_css%}        
+        {% endblock %}
+        
+        <!-- preloader css -->
+        <link rel="stylesheet" href="{% static 'css/preloader.min.css' %}" type="text/css" />
+        
+        <!-- Bootstrap Css -->
+        <link href="{% static 'css/bootstrap.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+        
+        <!-- Icons Css -->
+        <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+        
+        <!-- App Css-->
+        <link href="{% static 'css/app.min.css' %}" id="app-style" rel="stylesheet" type="text/css" />
+
+        {% comment %} <link href="{% static 'css/bootstrap-rtl.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" /> {% endcomment %}
+        {% comment %} <link href="{% static 'css/app-rtl.min.css' %}" id="app-style" rel="stylesheet" type="text/css" /> {% endcomment %}
+        {% endblock%}
+
+    </head>
+
+   <body data-sidebar="light" data-layout-size="fluid" >
+
+    <!-- <body data-layout="horizontal"> -->
+    <style>
+        /* Ensure layout elements don't overflow */
+        .vertical-layout-header,
+        .horizontal-layout-header {
+            width: 100%;
+            box-sizing: border-box;
+            overflow: visible;
+        }
+        
+        .vertical-layout-sidebar,
+        .horizontal-layout-sidebar {
+            box-sizing: border-box;
+            overflow: auto;
+        }
+        
+        /* Ensure main content adapts to layout */
+        #layout-wrapper {
+            width: 100%;
+            overflow: visible;
+        }
+        
+        /* Fix vertical sidebar overflow */
+        body:not([data-layout="horizontal"]) .vertical-layout-sidebar {
+            max-width: 250px;
+            max-height: calc(100vh - 70px);
+            width: 250px;
+        }
+        
+        body:not([data-layout="horizontal"]) .vertical-menu {
+            max-width: 250px;
+            max-height: calc(100vh - 70px);
+        }
+        
+        /* Constrain navbar-brand-box and logo */
+        .navbar-brand-box {
+            max-height: 70px;
+            overflow: hidden;
+        }
+        
+        .navbar-brand-box .logo-lg img {
+            max-height: 24px;
+            max-width: 100%;
+        }
+        
+        .navbar-brand-box .logo-sm img {
+            max-height: 24px;
+            max-width: 100%;
+        }
+        
+        /* Hide logo text in horizontal layout */
+        body[data-layout="horizontal"] .logo-txt {
+            display: none !important;
+        }
+        
+        /* Horizontal layout specific */
+        body[data-layout="horizontal"] .vertical-layout-header,
+        body[data-layout="horizontal"] .vertical-layout-sidebar {
+            display: none !important;
+        }
+        
+        body[data-layout="horizontal"] .horizontal-layout-header,
+        body[data-layout="horizontal"] .horizontal-layout-sidebar {
+            display: block !important;
+        }
+        
+        /* Vertical layout specific */
+        body:not([data-layout="horizontal"]) .horizontal-layout-header,
+        body:not([data-layout="horizontal"]) .horizontal-layout-sidebar {
+            display: none !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .vertical-layout-header,
+        body:not([data-layout="horizontal"]) .vertical-layout-sidebar {
+            display: block !important;
+        }
+    </style>
+    <script>
+        // CRITICAL: Initialize layout and theme mode from localStorage
+        (function() {
+            // 1. Read saved preferences
+            const savedLayout = localStorage.getItem('minia-layout') || 'vertical';
+            const savedTheme = localStorage.getItem('minia-theme-mode') || 'light';
+            const savedSidebarSize = localStorage.getItem('minia-sidebar-size') || 'lg';
+            const savedLayoutPosition = localStorage.getItem('minia-layout-position') || 'fixed';
+            const savedLayoutWidth = localStorage.getItem('minia-layout-width') || 'fuild';
+            const savedTopbarColor = localStorage.getItem('minia-topbar-color') || 'light';
+            const savedSidebarColor = localStorage.getItem('minia-sidebar-color') || 'light';
+            const savedDirection = localStorage.getItem('minia-layout-direction') || 'ltr';
+            
+            console.log('[Layout Init] Restoring all preferences from localStorage:', {
+                layout: savedLayout,
+                theme: savedTheme,
+                sidebarSize: savedSidebarSize,
+                layoutPosition: savedLayoutPosition,
+                layoutWidth: savedLayoutWidth,
+                topbarColor: savedTopbarColor,
+                sidebarColor: savedSidebarColor,
+                direction: savedDirection
+            });
+            
+            // 2. Set the body data-layout attribute BEFORE app.js reads it
+            if (savedLayout === 'horizontal') {
+                document.body.setAttribute('data-layout', 'horizontal');
+                console.log('[Layout Init] Applied data-layout=horizontal');
+            } else {
+                document.body.removeAttribute('data-layout');
+                console.log('[Layout Init] Applied data-layout removed (vertical)');
+            }
+            
+            // 3. Set the body data-bs-theme attribute for dark/light mode
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-bs-theme', 'dark');
+                console.log('[Layout Init] Applied dark theme');
+            } else {
+                document.body.setAttribute('data-bs-theme', 'light');
+                console.log('[Layout Init] Applied light theme');
+            }
+            
+            // 4. Set sidebar size (scrollable vs fixed)
+            document.body.setAttribute('data-sidebar-size', savedSidebarSize);
+            console.log('[Layout Init] Applied sidebar size:', savedSidebarSize);
+            
+            // 5. Set layout position (fixed vs scrollable)
+            if (savedLayoutPosition === 'scrollable') {
+                document.body.setAttribute('data-layout-scrollable', 'true');
+                console.log('[Layout Init] Applied scrollable layout position');
+            } else {
+                document.body.setAttribute('data-layout-scrollable', 'false');
+                console.log('[Layout Init] Applied fixed layout position');
+            }
+            
+            // 6. Set layout width (fluid vs boxed)
+            if (savedLayoutWidth === 'boxed') {
+                document.body.setAttribute('data-layout-size', 'boxed');
+                console.log('[Layout Init] Applied boxed layout width');
+            } else {
+                document.body.setAttribute('data-layout-size', 'fluid');
+                console.log('[Layout Init] Applied fluid layout width');
+            }
+            
+            // 7. Set topbar color
+            document.body.setAttribute('data-topbar', savedTopbarColor);
+            console.log('[Layout Init] Applied topbar color:', savedTopbarColor);
+            
+            // 8. Set sidebar color
+            document.body.setAttribute('data-sidebar', savedSidebarColor);
+            console.log('[Layout Init] Applied sidebar color:', savedSidebarColor);
+            
+            // 9. Set direction (LTR/RTL)
+            if (savedDirection === 'rtl') {
+                document.documentElement.dir = 'rtl';
+                document.body.classList.add('rtl');
+                console.log('[Layout Init] Applied RTL direction');
+            } else {
+                document.documentElement.dir = 'ltr';
+                document.body.classList.remove('rtl');
+                console.log('[Layout Init] Applied LTR direction');
+            }
+            
+            // 5. Override all redirect methods to block layout redirects
+            const blockLayoutRedirects = (targetUrl) => {
+                if (targetUrl && (targetUrl.includes('/apps/horizontal') || targetUrl === '/')) {
+                    console.log('[Layout Block] Redirect blocked:', targetUrl);
+                    return false; // Block redirect
+                }
+                return true; // Allow other redirects
+            };
+            
+            // Override href setter
+            Object.defineProperty(Location.prototype, 'href', {
+                set: function(url) {
+                    if (!blockLayoutRedirects(url)) return;
+                    window.history.pushState({}, '', url);
+                },
+                get: function() {
+                    return window.location.toString();
+                }
+            });
+            
+            // Override replace method
+            const originalReplace = window.location.replace;
+            window.location.replace = function(url) {
+                if (!blockLayoutRedirects(url)) return;
+                originalReplace.call(window.location, url);
+            };
+            
+            // Override assign method
+            const originalAssign = window.location.assign;
+            window.location.assign = function(url) {
+                if (!blockLayoutRedirects(url)) return;
+                originalAssign.call(window.location, url);
+            };
+        })();
+    </script>
+    <div id="layout-wrapper">
+        <!-- Begin page -->       
+        <!--Vertical View -->
+        {% block header %}
+        <div class="vertical-layout-header" style="display: block;">
+            {% include 'partials/header.html' %}
+        </div>
+        {% endblock %}
+
+        {% block sidebar %}
+        <div class="vertical-layout-sidebar" style="display: block;">
+            {% include 'partials/sidebar.html' %}
+        </div>
+        {% endblock %}   
+        <!--Horizontal View -->
+        {% block horizontal_header %}
+        <div class="horizontal-layout-header" style="display: none;">
+            {% include 'partials/hori-header.html' %}
+        </div>
+        {% endblock %}
+        
+        {% block horizontal_sidebar %}
+        <div class="horizontal-layout-sidebar" style="display: none;">
+            {% include 'partials/hori-sidebar.html' %}
+        </div>
+        {% endblock %}
+
+        {% block content %}
+        {% include 'partials/content.html' %}
+        {% endblock  %}
+        {% block footer %}
+        {% include 'partials/footer.html' %}          
+        {% endblock %}
+        </div>
+        <!-- end main content-->
+
+        </div>
+        <!-- END layout-wrapper -->
+        {% block rightsidebar %}
+        {% include 'partials/rightsidebar.html' %}          
+        {% endblock %}
+        
+        
+        {% block javascript %}
+        <script src="{% static 'libs/jquery/dist/jquery.min.js' %}"></script>
+        <script src="{% static 'libs/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{% static 'libs/metismenu/dist/metisMenu.min.js' %}"></script>
+        <script src="{% static 'libs/simplebar/dist/simplebar.min.js' %}"></script>
+        <script src="{% static 'libs/node-waves/dist/waves.min.js' %}"></script>
+        <script src="{% static 'libs/feather-icons/dist/feather.min.js' %}"></script>
+        <script src="{% static 'libs/pace-js/pace.min.js' %}"></script>
+
+        {% block extra_js %}
+
+        {% endblock %}
+        
+        <!-- Layout Persistence Script -->
+        <script src="{% static 'js/layout-persistence.js' %}"></script>
+        
+        <!-- App js -->
+        <script src="{% static 'js/app.js' %}"></script>
+        
+        <!-- Fix layout handler to actually apply changes -->
+        <script>
+            (function($) {
+                // Wait for app.js to load, then override the handlers
+                $(document).ready(function() {
+                    var body = document.body;
+                    
+                    // Function to toggle layout visually
+                    function applyLayoutView(layout) {
+                        if (layout === 'horizontal') {
+                            // Horizontal: hide vertical, show horizontal
+                            console.log('[LayoutFix] Switching to Horizontal view');
+                            document.body.setAttribute('data-layout', 'horizontal');
+                        } else {
+                            // Vertical: hide horizontal, show vertical
+                            console.log('[LayoutFix] Switching to Vertical view');
+                            document.body.removeAttribute('data-layout');
+                        }
+                        
+                        // Force reflow
+                        setTimeout(function() {
+                            window.dispatchEvent(new Event('resize'));
+                        }, 50);
+                    }
+                    
+                    // Apply initial layout from data-layout attribute
+                    var currentLayout = $('body').attr('data-layout') || 'vertical';
+                    applyLayoutView(currentLayout);
+
+                    // ===== RESTORE ALL PREFERENCES FROM LOCALSTORAGE AND SELECT RADIO BUTTONS =====
+                    
+                    // 1. Restore layout selection
+                    $("input[name='layout'][value='" + (localStorage.getItem('minia-layout') || 'vertical') + "']").prop('checked', true);
+                    
+                    // 2. Restore theme mode selection
+                    $("input[name='layout-mode'][value='" + (localStorage.getItem('minia-theme-mode') || 'light') + "']").prop('checked', true);
+                    
+                    // 3. Restore layout position selection
+                    var position = localStorage.getItem('minia-layout-position') || 'fixed';
+                    $("input[name='layout-position'][value='" + position + "']").prop('checked', true);
+                    
+                    // 4. Restore layout width selection
+                    var width = localStorage.getItem('minia-layout-width') || 'fuild';
+                    $("input[name='layout-width'][value='" + width + "']").prop('checked', true);
+                    
+                    // 5. Restore topbar color selection
+                    var topbarColor = localStorage.getItem('minia-topbar-color') || 'light';
+                    $("input[name='topbar-color'][value='" + topbarColor + "']").prop('checked', true);
+                    
+                    // 6. Restore sidebar size selection
+                    var sidebarSize = localStorage.getItem('minia-sidebar-size') || 'lg';
+                    var sizeLabel = {
+                        'lg': 'default',
+                        'md': 'compact',
+                        'sm': 'small'
+                    };
+                    $("input[name='sidebar-size'][value='" + (sizeLabel[sidebarSize] || 'default') + "']").prop('checked', true);
+                    
+                    // 7. Restore sidebar color selection
+                    var sidebarColor = localStorage.getItem('minia-sidebar-color') || 'light';
+                    $("input[name='sidebar-color'][value='" + sidebarColor + "']").prop('checked', true);
+                    
+                    // 8. Restore direction selection
+                    var direction = localStorage.getItem('minia-layout-direction') || 'ltr';
+                    $("input[name='layout-direction'][value='" + direction + "']").prop('checked', true);
+                    
+                    console.log('[LayoutFix] All preferences restored from localStorage');
+                    
+                    // ===== LAYOUT CHANGE HANDLER =====
+                    $("input[name='layout']").off('change').on('change', function() {
+                        var layout = $(this).val();
+                        
+                        console.log('[LayoutFix] Layout changed to:', layout);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-layout', layout);
+                        
+                        // Apply layout visually
+                        applyLayoutView(layout);
+                        
+                        // Toggle sidebar settings visibility
+                        if(layout === 'horizontal') {
+                            $(".sidebar-setting").hide();
+                        } else {
+                            $(".sidebar-setting").show();
+                        }
+                        
+                        return false;
+                    });
+                    
+                    // ===== LAYOUT POSITION CHANGE HANDLER (Fixed/Scrollable) =====
+                    $("input[name='layout-position']").off('change').on('change', function() {
+                        var position = $(this).val();
+                        
+                        console.log('[LayoutFix] Layout Position changed to:', position);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-layout-position', position);
+                        
+                        // Apply position immediately to body
+                        if(position === 'scrollable') {
+                            document.body.setAttribute('data-layout-scrollable', 'true');
+                            console.log('[LayoutFix] Applied scrollable layout');
+                        } else {
+                            document.body.setAttribute('data-layout-scrollable', 'false');
+                            console.log('[LayoutFix] Applied fixed layout');
+                        }
+                        
+                        return false;
+                    });
+
+                    // ===== LAYOUT WIDTH CHANGE HANDLER (Fluid/Boxed) =====
+                    $("input[name='layout-width']").off('change').on('change', function() {
+                        var width = $(this).val();
+                        
+                        console.log('[LayoutFix] Layout Width changed to:', width);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-layout-width', width);
+                        
+                        // Apply width immediately to body
+                        if(width === 'boxed') {
+                            document.body.setAttribute('data-layout-size', 'boxed');
+                            console.log('[LayoutFix] Applied boxed layout');
+                        } else {
+                            document.body.setAttribute('data-layout-size', 'fluid');
+                            console.log('[LayoutFix] Applied fluid layout');
+                        }
+                        
+                        return false;
+                    });
+
+                    // ===== TOPBAR COLOR CHANGE HANDLER =====
+                    $("input[name='topbar-color']").off('change').on('change', function() {
+                        var color = $(this).val();
+                        
+                        console.log('[LayoutFix] Topbar color changed to:', color);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-topbar-color', color);
+                        
+                        // Apply color immediately to body
+                        document.body.setAttribute('data-topbar', color);
+                        console.log('[LayoutFix] Applied topbar color:', color);
+                        
+                        return false;
+                    });
+
+                    // ===== SIDEBAR SIZE CHANGE HANDLER =====
+                    $("input[name='sidebar-size']").off('change').on('change', function() {
+                        var size = $(this).val();
+                        var sizeMap = {
+                            'default': 'lg',
+                            'compact': 'md',
+                            'small': 'sm'
+                        };
+                        var sizeValue = sizeMap[size] || 'lg';
+                        
+                        console.log('[LayoutFix] Sidebar size changed to:', size, '(' + sizeValue + ')');
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-sidebar-size', sizeValue);
+                        
+                        // Apply size immediately to body
+                        document.body.setAttribute('data-sidebar-size', sizeValue);
+                        console.log('[LayoutFix] Applied sidebar size:', sizeValue);
+                        
+                        return false;
+                    });
+
+                    // ===== SIDEBAR COLOR CHANGE HANDLER =====
+                    $("input[name='sidebar-color']").off('change').on('change', function() {
+                        var color = $(this).val();
+                        
+                        console.log('[LayoutFix] Sidebar color changed to:', color);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-sidebar-color', color);
+                        
+                        // Apply color immediately to body
+                        document.body.setAttribute('data-sidebar', color);
+                        console.log('[LayoutFix] Applied sidebar color:', color);
+                        
+                        return false;
+                    });
+
+                    // ===== DIRECTION CHANGE HANDLER =====
+                    $("input[name='layout-direction']").off('change').on('change', function() {
+                        var direction = $(this).val();
+                        
+                        console.log('[LayoutFix] Direction changed to:', direction);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-layout-direction', direction);
+                        
+                        // Apply direction immediately to html element
+                        if(direction === 'rtl') {
+                            document.documentElement.dir = 'rtl';
+                            document.body.classList.add('rtl');
+                            console.log('[LayoutFix] Applied RTL direction');
+                        } else {
+                            document.documentElement.dir = 'ltr';
+                            document.body.classList.remove('rtl');
+                            console.log('[LayoutFix] Applied LTR direction');
+                        }
+                        
+                        return false;
+                    });
+                    
+                    // ===== THEME MODE CHANGE HANDLER =====
+                    $("input[name='layout-mode']").off('change').on('change', function() {
+                        var theme = $(this).val();
+                        
+                        console.log('[LayoutFix] Theme changed to:', theme);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-theme-mode', theme);
+                        
+                        // Apply theme immediately to body
+                        if(theme == 'dark') {
+                            document.body.setAttribute('data-bs-theme', 'dark');
+                            console.log('[LayoutFix] Applied dark theme');
+                        } else {
+                            document.body.setAttribute('data-bs-theme', 'light');
+                            console.log('[LayoutFix] Applied light theme');
+                        }
+                        
+                        return false;
+                    });
+                    
+                    // ===== MODE BUTTON CLICK HANDLER (Header Button) =====
+                    // Override the original mode button click handler
+                    $(document).off('click', '#mode-setting-btn').on('click', '#mode-setting-btn', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        var body = document.body;
+                        var currentTheme = body.hasAttribute("data-bs-theme") ? body.getAttribute("data-bs-theme") : 'light';
+                        var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        
+                        console.log('[LayoutFix] Mode button clicked, changing from', currentTheme, 'to', newTheme);
+                        
+                        // Apply theme
+                        document.body.setAttribute('data-bs-theme', newTheme);
+                        document.body.setAttribute('data-topbar', newTheme);
+                        document.body.setAttribute('data-sidebar', newTheme);
+                        
+                        // Update the radio button in theme customizer
+                        $("input[name='layout-mode'][value='" + newTheme + "']").prop('checked', true);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('minia-theme-mode', newTheme);
+                        
+                        console.log('[LayoutFix] Applied', newTheme, 'theme via button');
+                        
+                        return false;
+                    });
+                    
+                    console.log('[LayoutFix] Layout and theme handlers installed');
+                });
+            })(jQuery);
+        </script>
+        {% endblock %}
+        
+        
+    </body>
+</html> 

@@ -1,0 +1,64 @@
+{% extends "base/layout.html" %}
+{% load static %}
+
+{% block title %}Delete Production Order{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Delete Production Order</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">Warning!</h4>
+                        <p>Are you sure you want to delete this production order: <strong>{{ object.po_number }}</strong>?</p>
+                        <hr>
+                        <p class="mb-0">This action cannot be undone.</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">PO Number:</dt>
+                                <dd class="col-sm-8">{{ object.po_number }}</dd>
+                                
+                                <dt class="col-sm-4">Product:</dt>
+                                <dd class="col-sm-8">{{ object.product.product_name }}</dd>
+                                
+                                <dt class="col-sm-4">Quantity:</dt>
+                                <dd class="col-sm-8">{{ object.quantity_ordered }}</dd>
+                                
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8"><span class="badge badge-info">{{ object.get_status_display }}</span></dd>
+                                
+                                <dt class="col-sm-4">Start Date:</dt>
+                                <dd class="col-sm-8">{{ object.start_date|date:"d M Y" }}</dd>
+                                
+                                <dt class="col-sm-4">Due Date:</dt>
+                                <dd class="col-sm-8">{{ object.due_date|date:"d M Y" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-group">
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="mdi mdi-delete"></i> Yes, Delete Production Order
+                            </button>
+                            <a href="{% url 'manufacturing:productionorder_list' %}" class="btn btn-secondary">
+                                <i class="mdi mdi-cancel"></i> Cancel
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

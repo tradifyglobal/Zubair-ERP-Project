@@ -1,0 +1,130 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Quick Add Currency | Dashboard</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Quick Add Currency</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Add Currency</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-xl-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" class="needs-validation">
+                                {% csrf_token %}
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.code.id_for_label }}" class="col-md-3 col-form-label">
+                                        Currency Code <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.code }}
+                                        {% if form.code.errors %}<div class="invalid-feedback d-block">{{ form.code.errors.0 }}</div>{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="col-md-3 col-form-label">
+                                        Currency Name <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.name }}
+                                        {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.symbol.id_for_label }}" class="col-md-3 col-form-label">
+                                        Symbol <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.symbol }}
+                                        {% if form.symbol.errors %}<div class="invalid-feedback d-block">{{ form.symbol.errors.0 }}</div>{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.exchange_rate.id_for_label }}" class="col-md-3 col-form-label">
+                                        Exchange Rate
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.exchange_rate }}
+                                        {% if form.exchange_rate.errors %}<div class="invalid-feedback d-block">{{ form.exchange_rate.errors.0 }}</div>{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="{{ form.is_active.id_for_label }}" class="col-md-3 col-form-label">
+                                        Active
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="form-check">
+                                            {{ form.is_active }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+
+                                <div class="row">
+                                    <div class="col-md-9 offset-md-3">
+                                        <button type="submit" class="btn btn-primary"><i class="ri-save-line me-2"></i>Save</button>
+                                        <a href="{% url 'accounting:dashboard' %}" class="btn btn-secondary"><i class="ri-close-line me-2"></i>Cancel</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4">
+                    <div class="card">
+                        <div class="card-header bg-light-subtle">
+                            <h5 class="card-title mb-0">Add Currency</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted font-size-13">Create new currency for your accounting system.</p>
+                            <h6>Examples:</h6>
+                            <ul class="ps-3 font-size-13">
+                                <li>USD - US Dollar</li>
+                                <li>EUR - Euro</li>
+                                <li>GBP - British Pound</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

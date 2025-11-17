@@ -1,0 +1,226 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Balance Sheet | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Balance Sheet</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Balance Sheet</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Balance Sheets List -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Balance Sheets ({{ balance_sheets|length }})</h4>
+                        </div>
+                        <div class="card-body px-0">
+                            {% if balance_sheets %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>As Of Date</th>
+                                            <th>Total Assets</th>
+                                            <th>Total Liabilities</th>
+                                            <th>Total Equity</th>
+                                            <th>Liabilities + Equity</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for bs in balance_sheets %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ bs.as_of_date|date:"d M Y" }}</strong>
+                                            </td>
+                                            <td>
+                                                <span class="text-primary">{{ bs.total_assets }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-warning">{{ bs.total_liabilities }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-info">{{ bs.total_equity }}</span>
+                                            </td>
+                                            <td>
+                                                {% with liab_equity=bs.total_liabilities|add:bs.total_equity %}
+                                                    <span class="text-success">{{ liab_equity }}</span>
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                {% with assets=bs.total_assets %}
+                                                    {% with liab_equity=bs.total_liabilities|add:bs.total_equity %}
+                                                        {% if assets == liab_equity %}
+                                                            <span class="badge bg-success-subtle text-success">
+                                                                <i class="mdi mdi-check-circle"></i> Balanced
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger-subtle text-danger">
+                                                                <i class="mdi mdi-alert-circle"></i> Out of Balance
+                                                            </span>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                <small>{{ bs.created_at|date:"d M Y H:i" }}</small>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <nav class="d-flex justify-content-center mt-4">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+
+                            <!-- Summary Stats -->
+                            <div class="row mt-4 px-3">
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Latest Date</h6>
+                                            {% with latest=balance_sheets|first %}
+                                                {% if latest %}
+                                                    <h5 class="mb-2">{{ latest.as_of_date|date:"d M Y" }}</h5>
+                                                    <p class="text-muted mb-0">
+                                                        {% with assets=latest.total_assets %}
+                                                            {% with liab_equity=latest.total_liabilities|add:latest.total_equity %}
+                                                                {% if assets == liab_equity %}
+                                                                    <span class="badge bg-success">Balanced</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-danger">Out of Balance</span>
+                                                                {% endif %}
+                                                            {% endwith %}
+                                                        {% endwith %}
+                                                    </p>
+                                                {% else %}
+                                                    <p class="text-muted">No balance sheet created yet</p>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Total Assets</h6>
+                                            {% with assets=balance_sheets|first %}
+                                                {% if assets %}
+                                                    <h5 class="mb-0 text-primary">{{ assets.total_assets }}</h5>
+                                                {% else %}
+                                                    <h5 class="mb-0">0.00</h5>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Total Liabilities</h6>
+                                            {% with liabilities=balance_sheets|first %}
+                                                {% if liabilities %}
+                                                    <h5 class="mb-0 text-warning">{{ liabilities.total_liabilities }}</h5>
+                                                {% else %}
+                                                    <h5 class="mb-0">0.00</h5>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted mb-3">Total Equity</h6>
+                                            {% with equity=balance_sheets|first %}
+                                                {% if equity %}
+                                                    <h5 class="mb-0 text-info">{{ equity.total_equity }}</h5>
+                                                {% else %}
+                                                    <h5 class="mb-0">0.00</h5>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accounting Equation Info -->
+                            <div class="row mt-4 px-3">
+                                <div class="col-12">
+                                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                                        <i class="mdi mdi-information-outline me-2"></i>
+                                        <div>
+                                            <strong>Accounting Equation:</strong> Assets = Liabilities + Equity
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info m-3" role="alert">
+                                <i class="mdi mdi-information-outline"></i> No balance sheets found. Balance sheets are automatically generated from account balances.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}

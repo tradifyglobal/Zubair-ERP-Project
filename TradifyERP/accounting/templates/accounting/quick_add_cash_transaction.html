@@ -1,0 +1,204 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Quick Add Cash Transaction | Dashboard</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Quick Add Cash Transaction</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:cash_transactions_list' %}">Cash Transactions</a></li>
+                                <li class="breadcrumb-item active">Add Transaction</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-xl-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" class="needs-validation">
+                                {% csrf_token %}
+
+                                <!-- Transaction Date -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.transaction_date.id_for_label }}" class="col-md-3 col-form-label">
+                                        Transaction Date <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.transaction_date }}
+                                        {% if form.transaction_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.transaction_date.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Transaction Type -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.transaction_type.id_for_label }}" class="col-md-3 col-form-label">
+                                        Transaction Type <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.transaction_type }}
+                                        {% if form.transaction_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.transaction_type.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <!-- Amount -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.amount.id_for_label }}" class="col-md-3 col-form-label">
+                                        Amount <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.amount }}
+                                        {% if form.amount.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.amount.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Category -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.category.id_for_label }}" class="col-md-3 col-form-label">
+                                        Category
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.category }}
+                                        {% if form.category.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.category.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <!-- Description -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="col-md-3 col-form-label">
+                                        Description
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.description }}
+                                        {% if form.description.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.description.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Form Errors -->
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <h4 class="alert-heading">Error!</h4>
+                                    {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Buttons -->
+                                <div class="row">
+                                    <div class="col-md-9 offset-md-3">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ri-save-line me-2"></i>Save Transaction
+                                        </button>
+                                        <a href="{% url 'accounting:dashboard' %}" class="btn btn-secondary">
+                                            <i class="ri-close-line me-2"></i>Cancel
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Card -->
+                <div class="col-xl-4">
+                    <div class="card">
+                        <div class="card-header bg-light-subtle">
+                            <h5 class="card-title mb-0">Create Cash Transaction</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted font-size-13">
+                                Record cash transactions quickly from the dashboard for immediate cash flow tracking.
+                            </p>
+                            <h6>Required Fields:</h6>
+                            <ul class="ps-3 font-size-13">
+                                <li>Transaction Date</li>
+                                <li>Transaction Type (Inflow/Outflow)</li>
+                                <li>Amount</li>
+                            </ul>
+                            <h6>Optional Fields:</h6>
+                            <ul class="ps-3 font-size-13">
+                                <li>Category</li>
+                                <li>Description</li>
+                            </ul>
+                            <div class="alert alert-info mt-3" role="alert">
+                                <small>
+                                    <strong>Tip:</strong> Specify whether this is a cash inflow or outflow for accurate cash management.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-color: #dee2e6;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

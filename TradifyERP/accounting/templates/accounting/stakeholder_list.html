@@ -1,0 +1,200 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title%}
+    <title>Stakeholders | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Stakeholders</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:gl_dashboard' %}">Accounting</a></li>
+                                <li class="breadcrumb-item active">Stakeholders</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Summary Cards -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Stakeholders</span>
+                                    <h4 class="mb-3">{{ object_list|length }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-account-multiple font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Capital</span>
+                                    <h4 class="mb-3">{{ total_capital|floatformat:2 }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-cash-multiple font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Shares</span>
+                                    <h4 class="mb-3">{{ total_shares }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-info-subtle text-info rounded">
+                                            <i class="mdi mdi-chart-pie font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Active</span>
+                                    <h4 class="mb-3">{{ active_count }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-warning-subtle text-warning rounded">
+                                            <i class="mdi mdi-check-circle font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title mb-0">Stakeholder List</h5>
+                            <a href="{% url 'accounting:stakeholder_create' %}" class="btn btn-primary btn-sm">
+                                <i class="mdi mdi-plus"></i> Add Stakeholder
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if object_list %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Status</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Total Invested</th>
+                                            <th>Shares</th>
+                                            <th>Ownership %</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stakeholder in object_list %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'accounting:stakeholder_detail' stakeholder.id %}">
+                                                    {{ stakeholder.full_name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">{{ stakeholder.get_stakeholder_type_display }}</span>
+                                            </td>
+                                            <td>
+                                                {% if stakeholder.status == 'ACTIVE' %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% elif stakeholder.status == 'INACTIVE' %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                {% elif stakeholder.status == 'SUSPENDED' %}
+                                                    <span class="badge bg-warning">Suspended</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Withdrawn</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ stakeholder.email }}</td>
+                                            <td>{{ stakeholder.phone }}</td>
+                                            <td class="text-end">{{ stakeholder.total_invested|floatformat:2 }}</td>
+                                            <td class="text-end">{{ stakeholder.total_shares }}</td>
+                                            <td class="text-end">{{ stakeholder.ownership_percentage|floatformat:2 }}%</td>
+                                            <td>{{ stakeholder.created_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'accounting:stakeholder_detail' stakeholder.id %}" 
+                                                       class="btn btn-sm btn-info" title="View">
+                                                        <i class="mdi mdi-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'accounting:stakeholder_update' stakeholder.id %}" 
+                                                       class="btn btn-sm btn-warning" title="Edit">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </a>
+                                                    <a href="{% url 'accounting:stakeholder_delete' stakeholder.id %}" 
+                                                       class="btn btn-sm btn-danger" title="Delete"
+                                                       onclick="return confirm('Are you sure?')">
+                                                        <i class="mdi mdi-delete"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info mb-0">
+                                <i class="mdi mdi-information"></i> No stakeholders found. <a href="{% url 'accounting:stakeholder_create' %}">Create one</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

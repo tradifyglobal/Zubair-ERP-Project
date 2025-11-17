@@ -1,0 +1,52 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Delete Shareholder - Confirmation{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Delete Shareholder</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation -->
+        <div class="row">
+            <div class="col-lg-6 offset-lg-3">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger">
+                        <h4 class="card-title text-white mb-0">Confirm Deletion</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <strong>Warning:</strong> This action cannot be undone.
+                        </div>
+                        <p>Are you sure you want to delete the shareholder <strong>{{ object.full_name }}</strong>?</p>
+                        
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <button type="submit" class="btn btn-danger waves-effect waves-light w-100">
+                                        <i class="feather-trash-2"></i> Yes, Delete
+                                    </button>
+                                </div>
+                                <div class="col-sm-6">
+                                    <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-secondary waves-effect waves-light w-100">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

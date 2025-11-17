@@ -1,0 +1,62 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add New{% endif %} Shareholder{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{% if form.instance.pk %}Edit Shareholder{% else %}Add New Shareholder{% endif %}</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-secondary waves-effect waves-light">
+                            Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Shareholder Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                            {% endif %}
+
+                            {% crispy form %}
+
+                            <div class="row mt-3">
+                                <div class="col-sm-6">
+                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                        <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Add{% endif %}
+                                    </button>
+                                </div>
+                                <div class="col-sm-6 text-end">
+                                    <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-secondary waves-effect waves-light">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Capital Contributions - Shareholder Management{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Capital Contributions</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'shareholder:capital-contribution-create' %}" class="btn btn-primary waves-effect waves-light">
+                            <i class="feather-plus"></i> Record Contribution
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Contributions</h5>
+                        <p class="text-muted">{{ total_contributions }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Pending Amount</h5>
+                        <p class="text-muted">${{ pending_total|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Completed Amount</h5>
+                        <p class="text-muted">${{ completed_total|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contributions Table -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">All Contributions</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Shareholder</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Original Amount</th>
+                                        <th>Converted Amount</th>
+                                        <th>Currency</th>
+                                        <th>Payment Mode</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contribution in contributions %}
+                                    <tr>
+                                        <td><strong>{{ contribution.stakeholder.full_name }}</strong></td>
+                                        <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if contribution.status == 'COMPLETED' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif contribution.status == 'PENDING' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ contribution.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ contribution.amount|floatformat:2 }}</td>
+                                        <td>{{ contribution.amount_company_currency|floatformat:2 }}</td>
+                                        <td>{{ contribution.currency_destination.code }}</td>
+                                        <td>{{ contribution.get_payment_mode_display }}</td>
+                                        <td>
+                                            <a href="{% url 'shareholder:capital-contribution-detail' contribution.pk %}" class="btn btn-sm btn-info" title="View">
+                                                <i class="feather-eye"></i>
+                                            </a>
+                                            <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-sm btn-primary" title="Edit">
+                                                <i class="feather-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">No contributions recorded</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete Customer{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="font-size-18 mb-0">Delete Customer</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="row">
+        <div class="col-12">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales:dashboard' %}">Sales</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales:customer_list' %}">Customers</a></li>
+                <li class="breadcrumb-item active">Delete</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation -->
+    <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <div class="alert alert-danger d-flex align-items-center" role="alert">
+                        <i data-feather="alert-triangle" class="me-3"></i>
+                        <div>
+                            <h4 class="alert-heading">Warning!</h4>
+                            <p class="mb-0">This action cannot be undone. Please confirm you want to delete this customer.</p>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Customer Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">Customer Code:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-secondary">{{ object.customer_code }}</span>
+                                </dd>
+
+                                <dt class="col-sm-4">Customer Name:</dt>
+                                <dd class="col-sm-8">{{ object.customer_name }}</dd>
+
+                                <dt class="col-sm-4">Type:</dt>
+                                <dd class="col-sm-8">{{ object.get_customer_type_display }}</dd>
+
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8">{{ object.email|default:"N/A" }}</dd>
+
+                                <dt class="col-sm-4">Phone:</dt>
+                                <dd class="col-sm-8">{{ object.phone|default:"N/A" }}</dd>
+
+                                <dt class="col-sm-4">Credit Limit:</dt>
+                                <dd class="col-sm-8">${{ object.credit_limit|floatformat:2 }}</dd>
+
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8">
+                                    {% if object.status == 'ACTIVE' %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% elif object.status == 'INACTIVE' %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Suspended</span>
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Confirmation Form -->
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                            <button type="submit" class="btn btn-danger">
+                                <i data-feather="trash-2" class="icon-sm"></i> Yes, Delete Customer
+                            </button>
+                            <a href="{% url 'sales:customer_list' %}" class="btn btn-secondary">
+                                <i data-feather="x" class="icon-sm"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
