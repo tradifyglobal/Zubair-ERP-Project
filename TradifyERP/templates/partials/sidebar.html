@@ -1,4 +1,5 @@
 {% load static %}
+{% load permission_tags %}
 {% block sidebar %}
             <!-- ========== Left Sidebar Start ========== -->
             <div class="vertical-menu">
@@ -29,9 +30,20 @@
                                     <span data-key="t-dashboard">Dashboard</span>
                                 </a>
                             </li>
+
+                            <!-- User Management (Superuser Only) -->
+                            {% if user.is_superuser %}
+                            <li>
+                                <a href="{% url 'accounting:user_list' %}">
+                                    <i data-feather="users"></i>
+                                    <span data-key="t-users">ERP User Management</span>
+                                </a>
+                            </li>
+                            {% endif %}
                         
                             <li class="menu-title" data-key="t-accounting-app">Accounting APP</li>
 
+                            {% if user|has_module_permission:'accounting' %}
                             <li>
                                 <a href="javascript: void(0);" class="has-arrow">
                                     <i data-feather="book"></i>
@@ -262,7 +274,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
+                            {% if user|has_module_permission:'shareholder' %}
                             <li class="menu-title" data-key="t-shareholder-app">Shareholder Management</li>
 
                             <li>
@@ -311,7 +325,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
+                            {% if user|has_module_permission:'hr' %}
                             <li class="menu-title" data-key="t-hr-app">HR Management</li>
 
                             <li>
@@ -363,7 +379,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
+                            {% if user|has_module_permission:'manufacturing' %}
                             <li class="menu-title" data-key="t-manufacturing-app">Manufacturing</li>
 
                             <li>
@@ -502,7 +520,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
+                            {% if user|has_module_permission:'sales' %}
                             <li class="menu-title" data-key="t-sales-app">Sales</li>
 
                             <li>
@@ -559,7 +579,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
+                            {% if user|has_module_permission:'inventory' %}
                             <li class="menu-title" data-key="t-inventory-app">Inventory</li>
 
                             <li>
@@ -624,7 +646,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
+                            {% if user|has_module_permission:'crm' %}
                             <li class="menu-title" data-key="t-crm-app">CRM & Sales</li>
 
                             <li>
@@ -682,7 +706,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
+                            {% if user|has_module_permission:'maintenance' %}
                             <li class="menu-title" data-key="t-maintenance-app">Site Maintenance</li>
 
                             <li>
@@ -796,7 +822,9 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
+                            {% if user|has_module_permission:'projects' %}
                             <li class="menu-title" data-key="t-projects-app">Projects</li>
 
                             <li>
@@ -838,6 +866,7 @@
                                     </li>
                                 </ul>
                             </li>
+                            {% endif %}
 
                             <li class="menu-title" data-key="t-menu">Applications</li>
 

@@ -3,6 +3,8 @@ from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.decorators import method_decorator
+from accounting.permission_utils import module_permission_required
 from django.urls import reverse_lazy
 from django.db.models import Q
 from django.contrib import messages
@@ -86,6 +88,7 @@ class MaintenanceAssetUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class MaintenanceAssetDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a maintenance asset."""
     model = MaintenanceAsset
@@ -161,6 +164,7 @@ class MaintenanceTaskUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class MaintenanceTaskDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a maintenance task."""
     model = MaintenanceTask
@@ -253,6 +257,7 @@ class WorkOrderUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class WorkOrderDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a work order."""
     model = WorkOrder
@@ -328,6 +333,7 @@ class SparePartUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class SparePartDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a spare part."""
     model = SparePart
@@ -408,6 +414,7 @@ class MaintenanceVendorUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class MaintenanceVendorDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a maintenance vendor."""
     model = MaintenanceVendor
@@ -483,6 +490,7 @@ class VendorContractUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class VendorContractDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a vendor contract."""
     model = VendorContract
@@ -558,6 +566,7 @@ class ComplianceStandardUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class ComplianceStandardDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a compliance standard."""
     model = ComplianceStandard
@@ -633,6 +642,7 @@ class ComplianceAuditUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class ComplianceAuditDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a compliance audit."""
     model = ComplianceAudit
@@ -707,6 +717,7 @@ class MaintenanceCostUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class MaintenanceCostDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a maintenance cost."""
     model = MaintenanceCost
@@ -782,6 +793,7 @@ class DowntimeRecordUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
 class DowntimeRecordDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a downtime record."""
     model = DowntimeRecord
@@ -830,3 +842,4 @@ class MaintenanceDashboardView(LoginRequiredMixin, TemplateView):
         ).count()
         
         return context
+

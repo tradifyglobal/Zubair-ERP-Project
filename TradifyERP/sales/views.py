@@ -5,6 +5,7 @@ Complete CRUD operations with RBAC and multi-entity support.
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from accounting.permission_utils import module_permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -111,6 +112,7 @@ class CustomerUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("sales", "delete"), name='dispatch')
 class CustomerDeleteView(LoginRequiredMixin, DeleteView):
     model = Customer
     template_name = 'sales/customer_confirm_delete.html'
@@ -192,6 +194,7 @@ class SalesOrderUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("sales", "delete"), name='dispatch')
 class SalesOrderDeleteView(LoginRequiredMixin, DeleteView):
     model = SalesOrder
     template_name = 'sales/salesorder_confirm_delete.html'
@@ -312,6 +315,7 @@ class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("sales", "delete"), name='dispatch')
 class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
     model = Invoice
     template_name = 'sales/invoice_confirm_delete.html'
@@ -386,3 +390,4 @@ class SalesDashboardView(LoginRequiredMixin, TemplateView):
         }
         
         return context
+

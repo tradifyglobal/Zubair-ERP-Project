@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 
 {% block head_title %}
 <title>Leads | CRM</title>
@@ -13,7 +14,19 @@
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="page-title mb-0">Leads</h4>
-                        <a href="{% url 'crm:lead_create' %}" class="btn btn-primary btn-sm">Add Lead</a>
+                        {% if user|has_action_permission:'crm:add' %}
+                            {% if user|has_action_permission:'crm:add' %}
+                            <a href="{% url 'crm:lead_create' %}" class="btn btn-primary btn-sm">Add Lead</a>
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
                     </div>
                 </div>
             </div>

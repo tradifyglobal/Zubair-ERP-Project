@@ -1,0 +1,249 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>User Management | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">User Management</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Users</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block">Total Users</span>
+                                    <h4 class="mb-3">{{ total_users }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-account-group font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block">Active Users</span>
+                                    <h4 class="mb-3">{{ active_users }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-account-check font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block">Inactive</span>
+                                    <h4 class="mb-3">{{ total_users|add:"-"|add:active_users }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-danger-subtle text-danger rounded">
+                                            <i class="mdi mdi-account-off font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <a href="{% url 'accounting:user_create' %}" class="btn btn-primary w-100">
+                                <i class="mdi mdi-plus me-1"></i> Add New User
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-sm-6">
+                                    <h4 class="card-title">All Users</h4>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="text-sm-end">
+                                        <form method="get" class="d-inline-block">
+                                            <div class="input-group">
+                                                <input type="text" name="search" class="form-control" 
+                                                       placeholder="Search users..." value="{{ request.GET.search }}">
+                                                <button class="btn btn-primary" type="submit">
+                                                    <i class="mdi mdi-magnify"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Full Name</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Modules Access</th>
+                                            <th>Last Login</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user_obj in users %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ user_obj.username }}</strong>
+                                                {% if user_obj.is_superuser %}
+                                                <span class="badge bg-danger-subtle text-danger ms-1">Superuser</span>
+                                                {% elif user_obj.is_staff %}
+                                                <span class="badge bg-warning-subtle text-warning ms-1">Staff</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user_obj.get_full_name|default:"-" }}</td>
+                                            <td>{{ user_obj.email|default:"-" }}</td>
+                                            <td>
+                                                {% if user_obj.is_active %}
+                                                <span class="badge bg-success-subtle text-success">Active</span>
+                                                {% else %}
+                                                <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info-subtle text-info">
+                                                    {{ user_obj.permission_count }} modules
+                                                </span>
+                                                {% if user_obj.module_list %}
+                                                <div class="small text-muted mt-1">
+                                                    {% for module in user_obj.module_list|slice:":3" %}
+                                                    {{ module }}{% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                    {% if user_obj.module_list|length > 3 %}...{% endif %}
+                                                </div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user_obj.last_login %}
+                                                {{ user_obj.last_login|date:"M d, Y H:i" }}
+                                                {% else %}
+                                                <span class="text-muted">Never</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group">
+                                                    <a href="{% url 'accounting:user_detail' user_obj.pk %}" 
+                                                       class="btn btn-sm btn-info" title="View Details">
+                                                        <i class="mdi mdi-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'accounting:user_edit' user_obj.pk %}" 
+                                                       class="btn btn-sm btn-primary" title="Edit">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </a>
+                                                    <form method="post" action="{% url 'accounting:user_toggle_status' user_obj.pk %}" 
+                                                          class="d-inline" onsubmit="return confirm('Toggle user status?');">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-sm btn-warning" 
+                                                                title="{% if user_obj.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                                            <i class="mdi mdi-{% if user_obj.is_active %}account-off{% else %}account-check{% endif %}"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                <i class="mdi mdi-alert-circle-outline font-size-24 d-block mb-2"></i>
+                                                No users found.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <nav>
+                                        <ul class="pagination justify-content-center">
+                                            {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">First</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Previous</a>
+                                            </li>
+                                            {% endif %}
+
+                                            <li class="page-item active">
+                                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                            </li>
+
+                                            {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Next</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Last</a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

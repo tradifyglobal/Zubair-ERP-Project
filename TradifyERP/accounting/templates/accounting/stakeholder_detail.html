@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 {% block head_title%}
     <title>{{ object.full_name }} | TradifyERP</title>
 {% endblock %}
@@ -63,10 +64,12 @@
                                 <a href="{% url 'accounting:stakeholder_update' object.id %}" class="btn btn-warning btn-sm">
                                     <i class="mdi mdi-pencil"></i> Edit
                                 </a>
+                                {% if user|has_action_permission:'accounting:delete' %}
                                 <a href="{% url 'accounting:stakeholder_delete' object.id %}" class="btn btn-danger btn-sm"
                                    onclick="return confirm('Are you sure?')">
                                     <i class="mdi mdi-delete"></i> Delete
                                 </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

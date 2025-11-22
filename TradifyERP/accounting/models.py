@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from decimal import Decimal
+from django.contrib.auth.models import User
 
 
 class Entity(models.Model):
@@ -977,3 +978,4 @@ class Shareholding(models.Model):
 
 # Import RBAC models to register them with Django ORM
 from .role_models import Role, UserRole, Permission, UserPermissionLog  # noqa: F401
+from .module_permissions import ModulePermission, UserModuleAccessLog  # noqa: F401

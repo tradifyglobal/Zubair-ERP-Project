@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 {% block head_title%}
     <title>Customers | TradifyERP</title>
 {% endblock %}
@@ -57,6 +58,9 @@
                     <div class="card">
                         <div class="card-header align-items-center d-flex">
                             <h4 class="card-title mb-0 flex-grow-1">Customers ({{ customers|length }})</h4>
+                            <div class="flex-shrink-0">
+                                {% include 'accounting/components/import_export_toolbar.html' with module_name='accounting' model_name='Customer' import_url='accounting:customer_import' export_url='accounting:customer_export' template_url='accounting:customer_import_template' %}
+                            </div>
                         </div>
                         <div class="card-body px-0">
                             {% if customers %}

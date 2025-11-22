@@ -1,0 +1,380 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>{% if object %}Edit{% else %}Create{% endif %} User | TradifyERP</title>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .module-permission-row {
+        padding: 12px;
+        margin-bottom: 10px;
+        border-left: 4px solid #556ee6;
+        background: #f8f9fa;
+    }
+    .permission-checkbox-group {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .permission-checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .select-all-btn {
+        font-size: 0.875rem;
+    }
+    /* Fixed bottom action bar */
+    .fixed-bottom-actions {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 15px 0;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+        border-top: 2px solid #556ee6;
+    }
+    /* Add padding to bottom of content to prevent overlap */
+    .content-wrapper {
+        padding-bottom: 100px;
+    }
+    /* Responsive table */
+    .table-responsive {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid content-wrapper">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">
+                            {% if object %}Edit User: {{ object.username }}{% else %}Create New User{% endif %}
+                        </h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:user_list' %}">Users</a></li>
+                                <li class="breadcrumb-item active">{% if object %}Edit{% else %}Create{% endif %}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" id="user-form">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- User Information -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="mdi mdi-account-circle me-2"></i>User Information</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.username.label }}</label>
+                                    {{ form.username }}
+                                    {% if form.username.errors %}
+                                    <div class="text-danger small">{{ form.username.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">{{ form.first_name.label }}</label>
+                                        {{ form.first_name }}
+                                        {% if form.first_name.errors %}
+                                        <div class="text-danger small">{{ form.first_name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">{{ form.last_name.label }}</label>
+                                        {{ form.last_name }}
+                                        {% if form.last_name.errors %}
+                                        <div class="text-danger small">{{ form.last_name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.email.label }}</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                {% if not object %}
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.password1.label }}</label>
+                                    {{ form.password1 }}
+                                    {% if form.password1.errors %}
+                                    <div class="text-danger small">{{ form.password1.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.password2.label }}</label>
+                                    {{ form.password2 }}
+                                    {% if form.password2.errors %}
+                                    <div class="text-danger small">{{ form.password2.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-3">
+                                            {{ form.is_staff }}
+                                            <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
+                                                {{ form.is_staff.label }}
+                                            </label>
+                                            <div class="small text-muted">{{ form.is_staff.help_text }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-3">
+                                            {{ form.is_active }}
+                                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                {{ form.is_active.label }}
+                                            </label>
+                                            <div class="small text-muted">{{ form.is_active.help_text }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Permission Templates -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="mdi mdi-flash me-2"></i>Quick Access Templates</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Apply Permission Template</label>
+                                    {{ template_form.template }}
+                                    <div class="small text-muted mt-1">
+                                        Select a template to quickly assign common permission sets, or choose "Custom" to manually select permissions below.
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <strong><i class="mdi mdi-information me-1"></i> Template Options:</strong>
+                                    <ul class="mb-0 mt-2 small">
+                                        <li><strong>Full Administrator:</strong> Access to all modules with all permissions</li>
+                                        <li><strong>Accountant:</strong> Full access to accounting modules, view only for others</li>
+                                        <li><strong>HR Manager:</strong> Full HR access, view only for other modules</li>
+                                        <li><strong>Sales Manager:</strong> Full sales & CRM, view inventory & accounting</li>
+                                        <li><strong>Read Only:</strong> View-only access to all modules</li>
+                                        <li><strong>Custom:</strong> Manually select permissions below</li>
+                                    </ul>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-outline-primary select-all-btn" onclick="selectAllModules()">
+                                        <i class="mdi mdi-check-all me-1"></i> Select All Modules
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary select-all-btn" onclick="clearAllModules()">
+                                        <i class="mdi mdi-close-box-multiple me-1"></i> Clear All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module Permissions -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="mdi mdi-shield-account me-2"></i>Module Permissions</h5>
+                                <p class="mb-0 small">Select which modules this user can access and what actions they can perform</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 25%;">Module</th>
+                                                <th class="text-center" style="width: 12.5%;">
+                                                    <i class="mdi mdi-eye"></i> View
+                                                </th>
+                                                <th class="text-center" style="width: 12.5%;">
+                                                    <i class="mdi mdi-plus"></i> Add
+                                                </th>
+                                                <th class="text-center" style="width: 12.5%;">
+                                                    <i class="mdi mdi-pencil"></i> Edit
+                                                </th>
+                                                <th class="text-center" style="width: 12.5%;">
+                                                    <i class="mdi mdi-delete"></i> Delete
+                                                </th>
+                                                <th class="text-center" style="width: 12.5%;">
+                                                    <i class="mdi mdi-check-decagram"></i> Approve
+                                                </th>
+                                                <th class="text-center" style="width: 12.5%;">
+                                                    <i class="mdi mdi-file-export"></i> Export
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for module_code, module_name in modules %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ module_name }}</strong>
+                                                    <div class="small text-muted">{{ module_code }}</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    {% for field in permission_form %}
+                                                        {% if field.name == module_code|add:"_can_view" %}
+                                                            {{ field }}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% for field in permission_form %}
+                                                        {% if field.name == module_code|add:"_can_add" %}
+                                                            {{ field }}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% for field in permission_form %}
+                                                        {% if field.name == module_code|add:"_can_edit" %}
+                                                            {{ field }}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% for field in permission_form %}
+                                                        {% if field.name == module_code|add:"_can_delete" %}
+                                                            {{ field }}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% for field in permission_form %}
+                                                        {% if field.name == module_code|add:"_can_approve" %}
+                                                            {{ field }}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% for field in permission_form %}
+                                                        {% if field.name == module_code|add:"_can_export" %}
+                                                            {{ field }}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="mdi mdi-information me-2"></i>
+                            After setting permissions, scroll down or click the floating save button at the bottom of the page.
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Fixed Bottom Action Bar -->
+<div class="fixed-bottom-actions">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{% url 'accounting:user_list' %}" class="btn btn-secondary">
+                <i class="mdi mdi-arrow-left me-1"></i> Cancel
+            </a>
+            <button type="submit" form="user-form" class="btn btn-primary btn-lg">
+                <i class="mdi mdi-content-save me-1"></i> 
+                {% if object %}Update User{% else %}Create User{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Apply permission template
+    document.getElementById('permission-template').addEventListener('change', function() {
+        const template = this.value;
+        
+        if (template === 'custom' || template === '') {
+            return; // Don't change anything for custom
+        }
+        
+        // Apply template logic here or submit to server
+        if (confirm('This will override current permissions. Continue?')) {
+            // You can add AJAX call here to apply template
+            applyTemplate(template);
+        }
+    });
+    
+    function selectAllModules() {
+        document.querySelectorAll('input[type="checkbox"][data-permission="view"]').forEach(cb => {
+            cb.checked = true;
+        });
+        document.querySelectorAll('input[type="checkbox"][data-permission="add"]').forEach(cb => {
+            cb.checked = true;
+        });
+        document.querySelectorAll('input[type="checkbox"][data-permission="edit"]').forEach(cb => {
+            cb.checked = true;
+        });
+        document.querySelectorAll('input[type="checkbox"][data-permission="delete"]').forEach(cb => {
+            cb.checked = true;
+        });
+        document.querySelectorAll('input[type="checkbox"][data-permission="approve"]').forEach(cb => {
+            cb.checked = true;
+        });
+        document.querySelectorAll('input[type="checkbox"][data-permission="export"]').forEach(cb => {
+            cb.checked = true;
+        });
+    }
+    
+    function clearAllModules() {
+        document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    }
+    
+    function applyTemplate(template) {
+        // This would typically be an AJAX call to apply the template
+        // For now, we'll just alert
+        alert('Template "' + template + '" will be applied on form submission');
+    }
+</script>
+{% endblock %}

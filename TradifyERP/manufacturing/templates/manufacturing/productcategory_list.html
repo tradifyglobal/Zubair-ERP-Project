@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 
 {% block head_title %}
     <title>Product Categories | TradifyERP</title>
@@ -35,7 +36,13 @@
                                     <button type="submit" class="btn btn-primary btn-sm w-100">Search</button>
                                 </div>
                                 <div class="col-md-2">
-                                    <a href="{% url 'manufacturing:productcategory_create' %}" class="btn btn-success btn-sm w-100"><i class="mdi mdi-plus"></i> Add</a>
+                                    {% if user|has_action_permission:'manufacturing:add' %}
+                            <a href="{% url 'manufacturing:productcategory_create' %}" class="btn btn-success btn-sm w-100"><i class="mdi mdi-plus"></i> Add</a>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
                                 </div>
                             </form>
                         </div>

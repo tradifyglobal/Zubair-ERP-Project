@@ -1,54 +1,83 @@
-{% extends "base/layout.html" %}
+{% extends "partials/base.html" %}
 {% load static %}
 
-{% block title %}Delete Product{% endblock %}
+{% block head_title %}
+    <title>Delete Product | TradifyERP</title>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Delete Product</h4>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-danger" role="alert">
-                        <h4 class="alert-heading">Warning!</h4>
-                        <p>Are you sure you want to delete this product: <strong>{{ object.product_name }}</strong>?</p>
-                        <hr>
-                        <p class="mb-0">This action cannot be undone. All related data will be affected.</p>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Product Code:</dt>
-                                <dd class="col-sm-8">{{ object.product_code }}</dd>
-                                
-                                <dt class="col-sm-4">Product Name:</dt>
-                                <dd class="col-sm-8">{{ object.product_name }}</dd>
-                                
-                                <dt class="col-sm-4">Category:</dt>
-                                <dd class="col-sm-8">{{ object.category.name }}</dd>
-                                
-                                <dt class="col-sm-4">Status:</dt>
-                                <dd class="col-sm-8"><span class="badge badge-info">{{ object.get_status_display }}</span></dd>
-                            </dl>
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Delete Product</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:dashboard' %}">Manufacturing</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:product_list' %}">Products</a></li>
+                                <li class="breadcrumb-item active">Delete</li>
+                            </ol>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <hr>
+            <!-- Delete Confirmation -->
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h4 class="card-title mb-0 text-white">
+                                <i class="mdi mdi-alert-circle-outline"></i> Delete Product
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-danger" role="alert">
+                                <h4 class="alert-heading">
+                                    <i class="mdi mdi-alert"></i> Warning!
+                                </h4>
+                                <p>Are you sure you want to delete this product: <strong>{{ object.product_name }}</strong>?</p>
+                                <hr>
+                                <p class="mb-0">This action cannot be undone. All related data will be affected.</p>
+                            </div>
 
-                    <div class="form-group">
-                        <form method="post" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">
-                                <i class="mdi mdi-delete"></i> Yes, Delete Product
-                            </button>
-                            <a href="{% url 'manufacturing:product_list' %}" class="btn btn-secondary">
-                                <i class="mdi mdi-cancel"></i> Cancel
-                            </a>
-                        </form>
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-5">Product Code:</dt>
+                                        <dd class="col-sm-7">{{ object.product_code }}</dd>
+                                        
+                                        <dt class="col-sm-5">Product Name:</dt>
+                                        <dd class="col-sm-7">{{ object.product_name }}</dd>
+                                        
+                                        <dt class="col-sm-5">Category:</dt>
+                                        <dd class="col-sm-7">{{ object.category.name|default:"-" }}</dd>
+                                        
+                                        <dt class="col-sm-5">Status:</dt>
+                                        <dd class="col-sm-7">
+                                            <span class="badge bg-info">{{ object.get_status_display }}</span>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'manufacturing:product_list' %}" class="btn btn-light">
+                                    <i class="mdi mdi-cancel"></i> Cancel
+                                </a>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="mdi mdi-delete"></i> Yes, Delete Product
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

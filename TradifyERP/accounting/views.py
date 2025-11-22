@@ -85,27 +85,45 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             from django.utils import timezone
             from datetime import timedelta
             import json
+            from calendar import monthrange
             
+            # Get current date and calculate 6 months back
             end_date = timezone.now().date()
-            start_date = end_date - timedelta(days=180)
+            current_year = end_date.year
+            current_month = end_date.month
             
-            # Create monthly entries
+            # Calculate start month (6 months ago)
+            start_month = current_month - 5
+            start_year = current_year
+            if start_month < 1:
+                start_month += 12
+                start_year -= 1
+            
+            # Create monthly entries for the last 6 months
             monthly_data = {}
-            current_date = start_date
-            while current_date <= end_date:
-                month_key = current_date.strftime('%Y-%m')
-                if month_key not in monthly_data:
-                    monthly_data[month_key] = {'debits': 0, 'credits': 0}
-                current_date += timedelta(days=1)
+            
+            year = start_year
+            month = start_month
+            for _ in range(6):
+                month_key = f'{year:04d}-{month:02d}'
+                monthly_data[month_key] = {'debits': 0, 'credits': 0}
+                month += 1
+                if month > 12:
+                    month = 1
+                    year += 1
+            
+            # Calculate the actual start date
+            start_date = timezone.datetime(start_year, start_month, 1).date()
             
             # Aggregate debit/credit amounts by month
             entries = entity.ledger_entries.filter(entry_date__gte=start_date, entry_date__lte=end_date)
             for entry in entries:
                 month_key = entry.entry_date.strftime('%Y-%m')
-                if entry.entry_type == 'DEBIT':
-                    monthly_data[month_key]['debits'] += float(entry.amount)
-                else:
-                    monthly_data[month_key]['credits'] += float(entry.amount)
+                if month_key in monthly_data:
+                    if entry.entry_type == 'DEBIT':
+                        monthly_data[month_key]['debits'] += float(entry.amount)
+                    else:
+                        monthly_data[month_key]['credits'] += float(entry.amount)
             
             # Sort by month and extract data
             sorted_months = sorted(monthly_data.keys())
@@ -132,6 +150,79 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             
             context['chart_customers'] = [monthly_customers.get(m, 0) for m in sorted_months]
             context['chart_vendors'] = [monthly_vendors.get(m, 0) for m in sorted_months]
+            
+            # Sales by Country data
+            from sales.models import SalesOrder, Customer
+            from django.db.models import Sum
+            
+            # Define target countries
+            target_countries = ['India', 'Oman', 'UAE', 'KSA', 'Canada']
+            country_sales = []
+            
+            # Calculate total sales to get percentages
+            total_sales = SalesOrder.objects.filter(
+                entity=entity,
+                status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
+            ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+            
+            for country in target_countries:
+                # Get sales for this country
+                sales_amount = SalesOrder.objects.filter(
+                    entity=entity,
+                    customer__country__iexact=country,
+                    status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
+                ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+                
+                # Calculate percentage
+                if total_sales > 0:
+                    percentage = int((sales_amount / total_sales) * 100)
+                else:
+                    percentage = 0
+                
+                country_sales.append({
+                    'country': country,
+                    'percentage': percentage,
+                    'amount': float(sales_amount)
+                })
+            
+            context['country_sales'] = country_sales
+            
+            # Sales by India State data
+            india_states = [
+                'Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Gujarat',
+                'Uttar Pradesh', 'West Bengal', 'Rajasthan', 'Kerala', 'Punjab'
+            ]
+            state_sales = []
+            
+            # Calculate total India sales to get percentages
+            total_india_sales = SalesOrder.objects.filter(
+                entity=entity,
+                customer__country__iexact='India',
+                status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
+            ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+            
+            for state in india_states:
+                # Get sales for this state
+                sales_amount = SalesOrder.objects.filter(
+                    entity=entity,
+                    customer__country__iexact='India',
+                    customer__state__iexact=state,
+                    status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
+                ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+                
+                # Calculate percentage
+                if total_india_sales > 0:
+                    percentage = int((sales_amount / total_india_sales) * 100)
+                else:
+                    percentage = 0
+                
+                state_sales.append({
+                    'state': state,
+                    'percentage': percentage,
+                    'amount': float(sales_amount)
+                })
+            
+            context['state_sales'] = state_sales
         else:
             # Provide default empty data if no entity
             context['total_stakeholders'] = 0
@@ -148,6 +239,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['chart_credits'] = []
             context['chart_customers'] = []
             context['chart_vendors'] = []
+            context['country_sales'] = []
+            context['state_sales'] = []
         
         return context
 

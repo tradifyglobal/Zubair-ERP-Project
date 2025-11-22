@@ -1,0 +1,51 @@
+{% load permission_tags %}
+
+<div class="btn-toolbar" role="toolbar">
+    <div class="btn-group me-2" role="group">
+        {% can_perform_action request.user module_name 'add' as can_import %}
+        {% if can_import %}
+        <a href="{% url import_url %}" class="btn btn-info btn-sm" title="Import {{ model_name }} Data">
+            <i class="mdi mdi-upload"></i> Import
+        </a>
+        <a href="{% url template_url %}" class="btn btn-outline-info btn-sm" title="Download Import Template">
+            <i class="mdi mdi-download"></i> Template
+        </a>
+        {% else %}
+        <button type="button" class="btn btn-secondary btn-sm" disabled title="No permission to import">
+            <i class="mdi mdi-upload"></i> Import
+        </button>
+        {% endif %}
+    </div>
+    
+    <div class="btn-group" role="group">
+        {% can_perform_action request.user module_name 'export' as can_export %}
+        {% if can_export %}
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="mdi mdi-download"></i> Export
+            </button>
+            <ul class="dropdown-menu">
+                <li>
+                    <a class="dropdown-item" href="{% url export_url %}?format=csv">
+                        <i class="mdi mdi-file-delimited"></i> Export as CSV
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url export_url %}?format=excel">
+                        <i class="mdi mdi-file-excel"></i> Export as Excel
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url export_url %}?format=json">
+                        <i class="mdi mdi-code-braces"></i> Export as JSON
+                    </a>
+                </li>
+            </ul>
+        </div>
+        {% else %}
+        <button type="button" class="btn btn-secondary btn-sm" disabled title="No permission to export">
+            <i class="mdi mdi-download"></i> Export
+        </button>
+        {% endif %}
+    </div>
+</div>

@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 
 {% block head_title %}
     <title>Distributors | TradifyERP</title>
@@ -41,9 +42,15 @@
                                     <a href="?" class="btn btn-light btn-sm w-100">Reset</a>
                                 </div>
                                 <div class="col-md-2">
-                                    <a href="{% url 'manufacturing:distributor_create' %}" class="btn btn-success btn-sm w-100">
+                                    {% if user|has_action_permission:'manufacturing:add' %}
+                            <a href="{% url 'manufacturing:distributor_create' %}" class="btn btn-success btn-sm w-100">
                                         <i class="mdi mdi-plus"></i> Add Distributor
                                     </a>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
                                 </div>
                             </form>
                         </div>

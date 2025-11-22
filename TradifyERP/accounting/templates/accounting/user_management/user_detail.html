@@ -1,0 +1,194 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>User Details: {{ viewed_user.username }} | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">User Details: {{ viewed_user.username }}</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:user_list' %}">Users</a></li>
+                                <li class="breadcrumb-item active">{{ viewed_user.username }}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- User Info -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="mdi mdi-account-circle me-2"></i>User Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div class="avatar-xl mx-auto mb-3">
+                                    <span class="avatar-title rounded-circle bg-soft-primary text-primary font-size-24">
+                                        {{ viewed_user.first_name|slice:":1"|upper }}{{ viewed_user.last_name|slice:":1"|upper }}
+                                    </span>
+                                </div>
+                                <h5>{{ viewed_user.get_full_name|default:viewed_user.username }}</h5>
+                                <p class="text-muted">@{{ viewed_user.username }}</p>
+                                
+                                {% if viewed_user.is_superuser %}
+                                <span class="badge bg-danger">Superuser</span>
+                                {% elif viewed_user.is_staff %}
+                                <span class="badge bg-warning">Staff</span>
+                                {% endif %}
+                                
+                                {% if viewed_user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Email:</strong></td>
+                                            <td>{{ viewed_user.email|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Date Joined:</strong></td>
+                                            <td>{{ viewed_user.date_joined|date:"M d, Y" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Last Login:</strong></td>
+                                            <td>
+                                                {% if viewed_user.last_login %}
+                                                {{ viewed_user.last_login|date:"M d, Y H:i" }}
+                                                {% else %}
+                                                Never
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{% url 'accounting:user_edit' viewed_user.pk %}" class="btn btn-primary">
+                                    <i class="mdi mdi-pencil me-1"></i> Edit User
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module Permissions -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="mdi mdi-shield-account me-2"></i>Module Permissions</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if permissions %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Module</th>
+                                            <th class="text-center">View</th>
+                                            <th class="text-center">Add</th>
+                                            <th class="text-center">Edit</th>
+                                            <th class="text-center">Delete</th>
+                                            <th class="text-center">Approve</th>
+                                            <th class="text-center">Export</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for perm in permissions %}
+                                        <tr>
+                                            <td><strong>{{ perm.get_module_display }}</strong></td>
+                                            <td class="text-center">
+                                                {% if perm.can_view %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if perm.can_add %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if perm.can_edit %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if perm.can_delete %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if perm.can_approve %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if perm.can_export %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="mdi mdi-alert-circle-outline font-size-24 d-block mb-2"></i>
+                                No module permissions assigned
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Recent Access Logs -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="mdi mdi-history me-2"></i>Recent Activity</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_access_logs %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date/Time</th>
+                                            <th>Module</th>
+                                            <th>Action</th>
+                                            <th>Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for log in recent_access_logs %}
+                                        <tr>
+                                            <td>{{ log.timestamp|date:"M d, H:i" }}</td>
+                                            <td>{{ log.module }}</td>
+                                            <td>{{ log.action_attempted }}</td>
+                                            <td>
+                                                {% if log.result == 'ALLOWED' %}
+                                                <span class="badge bg-success-subtle text-success">{{ log.result }}</span>
+                                                {% else %}
+                                                <span class="badge bg-danger-subtle text-danger">{{ log.result }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted text-center">No activity logged yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

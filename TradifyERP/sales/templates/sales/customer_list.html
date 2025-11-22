@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load permission_tags %}
 
 {% block title %}Customers{% endblock %}
 
@@ -34,9 +35,15 @@
                             </form>
                         </div>
                         <div class="col-md-4 text-end">
+                            {% if user|has_action_permission:'sales:add' %}
                             <a href="{% url 'sales:customer_create' %}" class="btn btn-success">
                                 <i data-feather="plus"></i> Add Customer
                             </a>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

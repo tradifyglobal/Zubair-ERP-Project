@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 
 {% block head_title %}
     <title>Products | TradifyERP</title>
@@ -41,9 +42,7 @@
                                     <a href="?" class="btn btn-light btn-sm w-100">Reset</a>
                                 </div>
                                 <div class="col-md-2">
-                                    <a href="{% url 'manufacturing:product_create' %}" class="btn btn-success btn-sm w-100">
-                                        <i class="mdi mdi-plus"></i> Add Product
-                                    </a>
+                                    {% permission_button user 'manufacturing:add' 'manufacturing:product_create' 'btn-success btn-sm w-100' 'mdi mdi-plus' 'Add Product' %}
                                 </div>
                             </form>
                         </div>
