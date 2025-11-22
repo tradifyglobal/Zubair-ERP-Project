@@ -356,6 +356,151 @@ class VendorInvoiceDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class VendorInvoiceUpdateView(LoginRequiredMixin, FormView):
+    """Update vendor invoice."""
+    from .forms import QuickAddVendorInvoiceForm
+    form_class = QuickAddVendorInvoiceForm
+    template_name = 'accounting/vendor_invoice_form.html'
+
+    def get_object(self):
+        return get_object_or_404(VendorInvoice, pk=self.kwargs['pk'])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        entity = Entity.objects.filter(is_active=True).first()
+        kwargs['entity'] = entity
+        kwargs['instance'] = self.get_object()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['invoice'] = self.get_object()
+        context['entity'] = Entity.objects.filter(is_active=True).first()
+        return context
+
+    def form_valid(self, form):
+        entity = Entity.objects.filter(is_active=True).first()
+        invoice = self.get_object()
+        
+        if invoice.status not in ['DRAFT', 'SUBMITTED']:
+            messages.error(self.request, 'Cannot edit invoice in current status.')
+            return redirect('accounting:vendor_invoice_detail', pk=invoice.pk)
+        
+        try:
+            updated_invoice = form.save(commit=False)
+            updated_invoice.entity = entity
+            updated_invoice.save()
+            
+            AuditLog.objects.create(
+                entity=entity,
+                user=str(self.request.user),
+                action='UPDATE',
+                model_name='VendorInvoice',
+                object_id=str(updated_invoice.id),
+                description=f'Updated invoice: {updated_invoice.invoice_number}'
+            )
+            
+            messages.success(self.request, f'Vendor invoice {updated_invoice.invoice_number} updated successfully.')
+            return redirect('accounting:vendor_invoice_detail', pk=updated_invoice.pk)
+        except Exception as e:
+            messages.error(self.request, f'Error updating invoice: {str(e)}')
+            return self.form_invalid(form)
+
+
+class RecordVendorPaymentView(LoginRequiredMixin, FormView):
+    """Record payment for vendor invoice."""
+    from .forms import QuickAddVendorPaymentForm
+    form_class = QuickAddVendorPaymentForm
+    template_name = 'accounting/record_vendor_payment.html'
+
+    def get_invoice(self):
+        return get_object_or_404(VendorInvoice, pk=self.kwargs['pk'])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        entity = Entity.objects.filter(is_active=True).first()
+        kwargs['entity'] = entity
+        kwargs['initial'] = {'vendor_invoice': self.get_invoice()}
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['invoice'] = self.get_invoice()
+        context['entity'] = Entity.objects.filter(is_active=True).first()
+        return context
+
+    def form_valid(self, form):
+        entity = Entity.objects.filter(is_active=True).first()
+        invoice = self.get_invoice()
+        
+        try:
+            payment = form.save(commit=False)
+            payment.entity = entity
+            payment.vendor_invoice = invoice
+            payment.save()
+            
+            # Check if invoice is fully paid
+            if invoice.outstanding_amount <= 0:
+                invoice.status = 'PAID'
+                invoice.save()
+            
+            AuditLog.objects.create(
+                entity=entity,
+                user=str(self.request.user),
+                action='CREATE',
+                model_name='VendorPayment',
+                object_id=str(payment.id),
+                description=f'Recorded payment of ${payment.amount} for invoice {invoice.invoice_number}'
+            )
+            
+            messages.success(self.request, f'Payment of ${payment.amount} recorded successfully.')
+            return redirect('accounting:vendor_invoice_detail', pk=invoice.pk)
+        except Exception as e:
+            messages.error(self.request, f'Error recording payment: {str(e)}')
+            return self.form_invalid(form)
+
+
+class VendorInvoiceStatusUpdateView(LoginRequiredMixin, FormView):
+    """Update vendor invoice status."""
+    
+    def post(self, request, *args, **kwargs):
+        invoice = get_object_or_404(VendorInvoice, pk=kwargs['pk'])
+        new_status = request.POST.get('status')
+        entity = Entity.objects.filter(is_active=True).first()
+        
+        valid_transitions = {
+            'DRAFT': ['SUBMITTED', 'CANCELLED'],
+            'SUBMITTED': ['APPROVED', 'DRAFT', 'CANCELLED'],
+            'APPROVED': ['CANCELLED'],
+        }
+        
+        current_status = invoice.status
+        
+        if new_status not in valid_transitions.get(current_status, []):
+            messages.error(request, f'Cannot change status from {current_status} to {new_status}.')
+            return redirect('accounting:vendor_invoice_detail', pk=invoice.pk)
+        
+        try:
+            old_status = invoice.status
+            invoice.status = new_status
+            invoice.save()
+            
+            AuditLog.objects.create(
+                entity=entity,
+                user=str(request.user),
+                action='UPDATE',
+                model_name='VendorInvoice',
+                object_id=str(invoice.id),
+                description=f'Changed status from {old_status} to {new_status} for invoice {invoice.invoice_number}'
+            )
+            
+            messages.success(request, f'Invoice status updated to {new_status}.')
+        except Exception as e:
+            messages.error(request, f'Error updating status: {str(e)}')
+        
+        return redirect('accounting:vendor_invoice_detail', pk=invoice.pk)
+
+
 class FixedAssetListView(LoginRequiredMixin, ListView):
     """List fixed assets."""
     model = FixedAsset
@@ -801,11 +946,11 @@ class QuickAddLedgerEntryView(LoginRequiredMixin, FormView):
                 # Log the action
                 AuditLog.objects.create(
                     entity=entity,
-                    user=self.request.user,
+                    user=str(self.request.user),
                     action='CREATE',
                     model_name='LedgerEntry',
                     object_id=f'{debit_entry.id}, {credit_entry.id}',
-                    changes=f'Created double-entry: Debit {debit_entry.account} {debit_entry.amount}, Credit {credit_entry.account} {credit_entry.amount}'
+                    description=f'Created double-entry: Debit {debit_entry.account} {debit_entry.amount}, Credit {credit_entry.account} {credit_entry.amount}'
                 )
                 
                 messages.success(
@@ -985,11 +1130,11 @@ class QuickAddVendorInvoiceView(LoginRequiredMixin, FormView):
             
             AuditLog.objects.create(
                 entity=entity,
-                user=self.request.user,
+                user=str(self.request.user),
                 action='CREATE',
                 model_name='VendorInvoice',
-                object_id=invoice.id,
-                changes=f'Created invoice: {invoice.invoice_number} for {invoice.vendor.name}'
+                object_id=str(invoice.id),
+                description=f'Created invoice: {invoice.invoice_number} for {invoice.vendor.name}'
             )
             
             messages.success(self.request, f'Vendor invoice {invoice.invoice_number} created successfully.')
@@ -1033,11 +1178,11 @@ class QuickAddVendorPaymentView(LoginRequiredMixin, FormView):
             
             AuditLog.objects.create(
                 entity=entity,
-                user=self.request.user,
+                user=str(self.request.user),
                 action='CREATE',
                 model_name='VendorPayment',
-                object_id=payment.id,
-                changes=f'Created payment: {payment.amount} for {payment.vendor.name}'
+                object_id=str(payment.id),
+                description=f'Created payment: {payment.amount} for {payment.vendor_invoice.vendor.name}'
             )
             
             messages.success(self.request, f'Vendor payment created successfully.')
@@ -1084,11 +1229,11 @@ class QuickAddFixedAssetView(LoginRequiredMixin, FormView):
             
             AuditLog.objects.create(
                 entity=entity,
-                user=self.request.user,
+                user=str(self.request.user),
                 action='CREATE',
                 model_name='FixedAsset',
-                object_id=asset.id,
-                changes=f'Created fixed asset: {asset.name} with purchase amount {asset.purchase_cost}'
+                object_id=str(asset.id),
+                description=f'Created fixed asset: {asset.name} with purchase amount {asset.purchase_cost}'
             )
             
             messages.success(self.request, f'Fixed asset {asset.name} created successfully with ledger entry.')
@@ -1200,11 +1345,11 @@ class QuickAddCashTransactionView(LoginRequiredMixin, FormView):
             
             AuditLog.objects.create(
                 entity=entity,
-                user=self.request.user,
+                user=str(self.request.user),
                 action='CREATE',
                 model_name='CashTransaction',
-                object_id=transaction_record.id,
-                changes=f'Created cash transaction: {transaction_record.amount}'
+                object_id=str(transaction_record.id),
+                description=f'Created cash transaction: {transaction_record.amount}'
             )
             
             messages.success(self.request, f'Cash transaction created successfully.')
@@ -1248,11 +1393,11 @@ class QuickAddBankProfileView(LoginRequiredMixin, FormView):
             
             AuditLog.objects.create(
                 entity=entity,
-                user=self.request.user,
+                user=str(self.request.user),
                 action='CREATE',
                 model_name='BankProfile',
-                object_id=profile.id,
-                changes=f'Created bank profile: {profile.bank_name}'
+                object_id=str(profile.id),
+                description=f'Created bank profile: {profile.bank_name}'
             )
             
             messages.success(self.request, f'Bank profile {profile.bank_name} created successfully.')
@@ -1296,11 +1441,11 @@ class QuickAddTaxRateView(LoginRequiredMixin, FormView):
             
             AuditLog.objects.create(
                 entity=entity,
-                user=self.request.user,
+                user=str(self.request.user),
                 action='CREATE',
                 model_name='TaxRate',
-                object_id=tax_rate.id,
-                changes=f'Created tax rate: {tax_rate.name} - {tax_rate.rate}%'
+                object_id=str(tax_rate.id),
+                description=f'Created tax rate: {tax_rate.name} - {tax_rate.rate}%'
             )
             
             messages.success(self.request, f'Tax rate {tax_rate.name} created successfully.')
@@ -1344,11 +1489,11 @@ class QuickAddDeferredExpenseView(LoginRequiredMixin, FormView):
             
             AuditLog.objects.create(
                 entity=entity,
-                user=self.request.user,
+                user=str(self.request.user),
                 action='CREATE',
                 model_name='DeferredExpense',
-                object_id=expense.id,
-                changes=f'Created deferred expense: {expense.description}'
+                object_id=str(expense.id),
+                description=f'Created deferred expense: {expense.description}'
             )
             
             messages.success(self.request, f'Deferred expense created successfully.')
@@ -1392,11 +1537,11 @@ class QuickAddDeferredRevenueView(LoginRequiredMixin, FormView):
             
             AuditLog.objects.create(
                 entity=entity,
-                user=self.request.user,
+                user=str(self.request.user),
                 action='CREATE',
                 model_name='DeferredRevenue',
-                object_id=revenue.id,
-                changes=f'Created deferred revenue: {revenue.description}'
+                object_id=str(revenue.id),
+                description=f'Created deferred revenue: {revenue.description}'
             )
             
             messages.success(self.request, f'Deferred revenue created successfully.')

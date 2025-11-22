@@ -40,6 +40,149 @@
 
     <!-- <body data-layout="horizontal"> -->
     <style>
+        /* Full width header alignment for horizontal layout */
+        body[data-layout="horizontal"] .navbar-header {
+            max-width: 100% !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        body[data-layout="horizontal"] .container-fluid {
+            max-width: 100% !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        /* Adjust padding for all pages */
+        .container-fluid {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        .page-content {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        
+        /* Print Styles */
+        @media print {
+            /* Hide ALL navigation, sidebar, and layout wrappers */
+            .vertical-layout-header,
+            .vertical-layout-sidebar,
+            .horizontal-layout-header,
+            .horizontal-layout-sidebar,
+            .navbar,
+            .sidebar,
+            #page-topbar,
+            #sidebar-menu,
+            .vertical-menu,
+            .navbar-header,
+            .topnav,
+            .app-menu,
+            .menu-title,
+            .simplebar-wrapper,
+            .simplebar-content-wrapper,
+            .mm-active,
+            .right-bar,
+            .rightbar-overlay,
+            .no-print,
+            .btn,
+            button,
+            footer,
+            .footer {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                width: 0 !important;
+                overflow: hidden !important;
+            }
+            
+            /* Reset body for print */
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            
+            /* Full width for print */
+            #layout-wrapper {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .main-content {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                margin-left: 0 !important;
+                margin-top: 0 !important;
+            }
+            
+            .page-content {
+                padding: 0 !important;
+            }
+            
+            .container-fluid {
+                max-width: 100% !important;
+                padding: 10px !important;
+            }
+            
+            /* Table print optimization */
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            
+            table, th, td {
+                border: 1px solid #000 !important;
+                page-break-inside: avoid;
+            }
+            
+            th {
+                background-color: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* Card print styles */
+            .card {
+                border: 1px solid #ddd !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+            }
+            
+            /* Page breaks */
+            .page-break {
+                page-break-after: always;
+            }
+            
+            /* Show print header */
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+        }
+        
+        /* Print header - hidden by default */
+        .print-header {
+            display: none;
+        }
+        
+        /* Remove extra space in horizontal navigation */
+        body[data-layout="horizontal"] .topnav {
+            margin-top: 70px !important;
+            padding-top: 0 !important;
+        }
+        
+        body[data-layout="horizontal"] .page-content {
+            margin-top: 0 !important;
+            padding-top: calc(55px + 1.5rem) !important;
+        }
+        
         /* Ensure layout elements don't overflow */
         .vertical-layout-header,
         .horizontal-layout-header {
@@ -87,6 +230,52 @@
         .navbar-brand-box .logo {
             margin-left: 0 !important;
             padding-left: 0 !important;
+        }
+        
+        /* Fix logo size ONLY in vertical layout */
+        body:not([data-layout="horizontal"]) .navbar-brand-box .logo img {
+            max-height: 24px !important;
+            max-width: 100% !important;
+            object-fit: contain !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .navbar-brand-box .logo-txt {
+            font-size: 18px !important;
+            line-height: 24px !important;
+            vertical-align: middle !important;
+        }
+        
+        /* Horizontal layout specific - FORCE DISPLAY */
+        body[data-layout="horizontal"] .vertical-layout-header,
+        body[data-layout="horizontal"] .vertical-layout-sidebar {
+            display: none !important;
+        }
+        
+        body[data-layout="horizontal"] .horizontal-layout-header {
+            display: block !important;
+        }
+        
+        body[data-layout="horizontal"] .horizontal-layout-sidebar {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+        }
+        
+        /* Hide vertical header's #page-topbar in horizontal mode */
+        body[data-layout="horizontal"] .vertical-layout-header #page-topbar {
+            display: none !important;
+        }
+        
+        /* Vertical layout specific */
+        body:not([data-layout="horizontal"]) .horizontal-layout-header,
+        body:not([data-layout="horizontal"]) .horizontal-layout-sidebar {
+            display: none !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .vertical-layout-header,
+        body:not([data-layout="horizontal"]) .vertical-layout-sidebar {
+            display: block !important;
         }
         
         /* Horizontal layout logo styling */
@@ -701,6 +890,90 @@
         <script src="{% static 'libs/feather-icons/dist/feather.min.js' %}"></script>
         <script src="{% static 'libs/pace-js/pace.min.js' %}"></script>
 
+        <!-- Fix Feather icon visibility IMMEDIATELY after library loads -->
+        <script>
+            (function() {
+                console.log('[Icon Fix] Starting icon visibility fix');
+                
+                // First, manually call feather.replace() to ensure icons are rendered
+                if (typeof feather !== 'undefined') {
+                    try {
+                        // Remove any invalid data-feather attributes that might cause errors
+                        document.querySelectorAll('[data-feather]').forEach(function(el) {
+                            var iconName = el.getAttribute('data-feather');
+                            if (!iconName || iconName.trim() === '') {
+                                console.warn('[Icon Fix] Removing empty data-feather attribute from:', el);
+                                el.removeAttribute('data-feather');
+                            }
+                        });
+                        
+                        feather.replace();
+                        console.log('[Icon Fix] Called feather.replace()');
+                    } catch (e) {
+                        console.error('[Icon Fix] Error calling feather.replace():', e);
+                    }
+                }
+                
+                // Function to fix icon colors based on theme
+                function fixIconColors() {
+                    var fixed = 0;
+                    var isDark = document.body.getAttribute('data-bs-theme') === 'dark';
+                    var strokeColor = isDark ? '#ffffff' : '#000000';  // Changed to black for light mode
+                    
+                    console.log('[Icon Fix] Theme:', isDark ? 'dark' : 'light', 'Using color:', strokeColor);
+                    
+                    document.querySelectorAll('.header-item svg, .header-item i[data-feather]').forEach(function(el) {
+                        if (el.tagName === 'svg') {
+                            el.setAttribute('stroke', strokeColor);
+                            el.setAttribute('fill', 'none');
+                            el.setAttribute('style', 'stroke: ' + strokeColor + ' !important; fill: none !important; opacity: 1 !important; visibility: visible !important; display: inline-block !important; width: 20px !important; height: 20px !important;');
+                            fixed++;
+                        }
+                    });
+                    console.log('[Icon Fix] Fixed ' + fixed + ' icons');
+                    return fixed;
+                }
+                
+                // Fix icons immediately when DOM is ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        setTimeout(fixIconColors, 100);
+                        setTimeout(fixIconColors, 500);
+                        setTimeout(fixIconColors, 1000);
+                        setTimeout(fixIconColors, 2000);
+                    });
+                } else {
+                    setTimeout(fixIconColors, 100);
+                    setTimeout(fixIconColors, 500);
+                    setTimeout(fixIconColors, 1000);
+                    setTimeout(fixIconColors, 2000);
+                }
+                
+                // Watch for new SVGs being added and theme changes
+                var observer = new MutationObserver(function(mutations) {
+                    var shouldFix = false;
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'data-bs-theme') {
+                            shouldFix = true;
+                        }
+                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                            shouldFix = true;
+                        }
+                    });
+                    if (shouldFix) {
+                        setTimeout(fixIconColors, 50);
+                    }
+                });
+                
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['data-bs-theme']
+                });
+            })();
+        </script>
+
         {% block extra_js %}
 
         {% endblock %}
@@ -724,10 +997,63 @@
                             // Horizontal: hide vertical, show horizontal
                             console.log('[LayoutFix] Switching to Horizontal view');
                             document.body.setAttribute('data-layout', 'horizontal');
+                            
+                            // CRITICAL: Remove inline styles to show horizontal elements
+                            var horizHeader = document.querySelector('.horizontal-layout-header');
+                            var horizSidebar = document.querySelector('.horizontal-layout-sidebar');
+                            var vertHeader = document.querySelector('.vertical-layout-header');
+                            var vertSidebar = document.querySelector('.vertical-layout-sidebar');
+                            
+                            if (horizHeader) horizHeader.removeAttribute('style');
+                            if (horizSidebar) horizSidebar.removeAttribute('style');
+                            if (vertHeader) vertHeader.style.display = 'none';
+                            if (vertSidebar) vertSidebar.style.display = 'none';
+                            
+                            console.log('[LayoutFix] Horizontal elements shown, vertical elements hidden');
+                            
+                            // CRITICAL: Manually replace feather icons ONLY in horizontal header
+                            setTimeout(function() {
+                                if (typeof feather !== 'undefined') {
+                                    console.log('[LayoutFix] Replacing feather icons in horizontal header only');
+                                    
+                                    // Get all data-feather elements in horizontal header
+                                    var horizHeader = document.querySelector('.horizontal-layout-header');
+                                    if (horizHeader) {
+                                        var icons = horizHeader.querySelectorAll('[data-feather]');
+                                        console.log('[LayoutFix] Found ' + icons.length + ' data-feather elements');
+                                        
+                                        // Manually create SVG for each icon
+                                        icons.forEach(function(icon) {
+                                            var iconName = icon.getAttribute('data-feather');
+                                            if (iconName && feather.icons[iconName]) {
+                                                var svg = feather.icons[iconName].toSvg({
+                                                    class: icon.className,
+                                                    'stroke-width': 2
+                                                });
+                                                icon.outerHTML = svg;
+                                            }
+                                        });
+                                        console.log('[LayoutFix] Icons replaced successfully');
+                                    }
+                                }
+                            }, 100);
                         } else {
                             // Vertical: hide horizontal, show vertical
                             console.log('[LayoutFix] Switching to Vertical view');
                             document.body.removeAttribute('data-layout');
+                            
+                            // CRITICAL: Remove inline styles to show vertical elements
+                            var horizHeader = document.querySelector('.horizontal-layout-header');
+                            var horizSidebar = document.querySelector('.horizontal-layout-sidebar');
+                            var vertHeader = document.querySelector('.vertical-layout-header');
+                            var vertSidebar = document.querySelector('.vertical-layout-sidebar');
+                            
+                            if (horizHeader) horizHeader.style.display = 'none';
+                            if (horizSidebar) horizSidebar.style.display = 'none';
+                            if (vertHeader) vertHeader.removeAttribute('style');
+                            if (vertSidebar) vertSidebar.removeAttribute('style');
+                            
+                            console.log('[LayoutFix] Vertical elements shown, horizontal elements hidden');
                         }
                         
                         // Force reflow

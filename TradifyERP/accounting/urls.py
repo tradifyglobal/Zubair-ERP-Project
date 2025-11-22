@@ -5,7 +5,7 @@ from .views import (
     LedgerEntryListView, LedgerEntryCreateView, DoubleEntryJournalView,
     TrialBalanceListView, ProfitLossListView, BalanceSheetListView,
     CustomerListView, VendorListView,
-    VendorInvoiceListView, VendorInvoiceDetailView, VendorPaymentListView,
+    VendorInvoiceListView, VendorInvoiceDetailView, VendorInvoiceUpdateView, VendorInvoiceStatusUpdateView, RecordVendorPaymentView, VendorPaymentListView,
     FixedAssetListView,
     AuditLogListView,
     BankProfileListView, BankStatementListView,
@@ -94,6 +94,9 @@ urlpatterns = [
     # Invoices & Payments
     path('vendor-invoices/', VendorInvoiceListView.as_view(), name='vendor_invoice_list'),
     path('vendor-invoices/<int:pk>/', VendorInvoiceDetailView.as_view(), name='vendor_invoice_detail'),
+    path('vendor-invoices/<int:pk>/edit/', VendorInvoiceUpdateView.as_view(), name='vendor_invoice_edit'),
+    path('vendor-invoices/<int:pk>/update-status/', VendorInvoiceStatusUpdateView.as_view(), name='vendor_invoice_update_status'),
+    path('vendor-invoices/<int:pk>/record-payment/', RecordVendorPaymentView.as_view(), name='record_vendor_payment'),
     path('vendor-payments/', VendorPaymentListView.as_view(), name='vendor_payments_list'),
     
     # Fixed Assets

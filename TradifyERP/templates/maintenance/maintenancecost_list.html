@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Maintenance Costs{% endblock %}
 {% block content %}
-<div class="container-fluid py-4">
+<div class="py-4">
     <div class="row mb-3"><div class="col"><h1 class="h3">Maintenance Costs</h1></div><div class="col text-end"><a href="{% url 'maintenance:cost-create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> New</a></div></div>
     <div class="card"><div class="card-body">
         {% if costs %}<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Work Order</th><th>Type</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead><tbody>{% for c in costs %}<tr><td>{{ c.work_order.work_order_number }}</td><td>{{ c.cost_type }}</td><td>${{ c.amount }}</td><td>{{ c.date|date:"M d, Y" }}</td><td><a href="{% url 'maintenance:cost-update' c.pk %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a> <a href="{% url 'maintenance:cost-delete' c.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Sure?')"><i class="fas fa-trash"></i></a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="alert alert-info">No costs found.</div>{% endif %}

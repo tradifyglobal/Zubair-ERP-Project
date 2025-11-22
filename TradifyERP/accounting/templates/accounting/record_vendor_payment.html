@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Record Payment for Invoice #{{ invoice.invoice_number }}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'accounting:vendor_invoice_detail' invoice.pk %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Invoice
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Payment Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <input type="hidden" name="vendor_invoice" value="{{ invoice.pk }}">
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.payment_date.label }}</label>
+                                {{ form.payment_date }}
+                                {% if form.payment_date.errors %}
+                                <div class="text-danger small">{{ form.payment_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                <div class="text-danger small">{{ form.amount.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Outstanding: ${{ invoice.outstanding_amount|floatformat:2 }}</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.payment_method.label }}</label>
+                                {{ form.payment_method }}
+                                {% if form.payment_method.errors %}
+                                <div class="text-danger small">{{ form.payment_method.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.reference_number.label }}</label>
+                                {{ form.reference_number }}
+                                {% if form.reference_number.errors %}
+                                <div class="text-danger small">{{ form.reference_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="text-danger small">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-credit-card"></i> Record Payment
+                            </button>
+                            <a href="{% url 'accounting:vendor_invoice_detail' invoice.pk %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Invoice Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Vendor:</strong> {{ invoice.vendor.name }}</p>
+                    <p class="mb-2"><strong>Invoice Date:</strong> {{ invoice.invoice_date|date:"M d, Y" }}</p>
+                    <p class="mb-2"><strong>Due Date:</strong> {{ invoice.due_date|date:"M d, Y" }}</p>
+                    <hr>
+                    <p class="mb-2"><strong>Subtotal:</strong> ${{ invoice.amount|floatformat:2 }}</p>
+                    <p class="mb-2"><strong>Tax:</strong> ${{ invoice.tax_amount|floatformat:2 }}</p>
+                    <p class="mb-2"><strong>Total Amount:</strong> ${{ invoice.total_amount|floatformat:2 }}</p>
+                    <p class="mb-2"><strong>Paid:</strong> <span class="text-success">${{ invoice.paid_amount|floatformat:2 }}</span></p>
+                    <hr>
+                    <p class="mb-0"><strong>Outstanding:</strong> 
+                        <span class="{% if invoice.outstanding_amount > 0 %}text-danger{% else %}text-success{% endif %} h5">
+                            ${{ invoice.outstanding_amount|floatformat:2 }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            {% if invoice.payments.exists %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Payment History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in invoice.payments.all %}
+                                <tr>
+                                    <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                    <td>${{ payment.amount|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

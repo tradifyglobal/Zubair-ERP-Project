@@ -405,6 +405,16 @@ class VendorInvoice(models.Model):
 
     def __str__(self):
         return f"Invoice {self.invoice_number} - {self.vendor.name}"
+    
+    @property
+    def paid_amount(self):
+        """Calculate total paid amount from related payments."""
+        return self.payments.aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    @property
+    def outstanding_amount(self):
+        """Calculate outstanding amount."""
+        return self.total_amount - self.paid_amount
 
 
 class VendorPayment(models.Model):

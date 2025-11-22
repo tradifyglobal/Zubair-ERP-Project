@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Vendor Invoice{% endblock %}
+
+{% block content %}
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Edit Vendor Invoice #{{ invoice.invoice_number }}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'accounting:vendor_invoice_detail' invoice.pk %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Invoice
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Invoice Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.vendor.label }}</label>
+                                {{ form.vendor }}
+                                {% if form.vendor.errors %}
+                                <div class="text-danger small">{{ form.vendor.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.invoice_number.label }}</label>
+                                {{ form.invoice_number }}
+                                {% if form.invoice_number.errors %}
+                                <div class="text-danger small">{{ form.invoice_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.invoice_date.label }}</label>
+                                {{ form.invoice_date }}
+                                {% if form.invoice_date.errors %}
+                                <div class="text-danger small">{{ form.invoice_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.due_date.label }}</label>
+                                {{ form.due_date }}
+                                {% if form.due_date.errors %}
+                                <div class="text-danger small">{{ form.due_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                <div class="text-danger small">{{ form.amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.tax_amount.label }}</label>
+                                {{ form.tax_amount }}
+                                {% if form.tax_amount.errors %}
+                                <div class="text-danger small">{{ form.tax_amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.total_amount.label }}</label>
+                                {{ form.total_amount }}
+                                {% if form.total_amount.errors %}
+                                <div class="text-danger small">{{ form.total_amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Invoice
+                            </button>
+                            <a href="{% url 'accounting:vendor_invoice_detail' invoice.pk %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Current Status</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Status:</strong> 
+                        {% if invoice.status == 'DRAFT' %}
+                            <span class="badge bg-secondary">Draft</span>
+                        {% elif invoice.status == 'SUBMITTED' %}
+                            <span class="badge bg-warning">Submitted</span>
+                        {% elif invoice.status == 'APPROVED' %}
+                            <span class="badge bg-info">Approved</span>
+                        {% elif invoice.status == 'PAID' %}
+                            <span class="badge bg-success">Paid</span>
+                        {% elif invoice.status == 'CANCELLED' %}
+                            <span class="badge bg-danger">Cancelled</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-2"><strong>Total Amount:</strong> ${{ invoice.total_amount|floatformat:2 }}</p>
+                    <p class="mb-2"><strong>Paid:</strong> ${{ invoice.paid_amount|floatformat:2 }}</p>
+                    <p class="mb-0"><strong>Outstanding:</strong> ${{ invoice.outstanding_amount|floatformat:2 }}</p>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> You can only edit invoices in Draft or Submitted status.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Loyalty Program{% endblock %}
+
+{% block content %}
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{% if object %}Edit{% else %}Create{% endif %} Loyalty Program</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Program Code*</label>
+                        {{ form.program_code }}
+                        {% if form.program_code.errors %}
+                            <div class="text-danger">{{ form.program_code.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Program Name*</label>
+                        {{ form.program_name }}
+                        {% if form.program_name.errors %}
+                            <div class="text-danger">{{ form.program_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Loyalty Type*</label>
+                        {{ form.loyalty_type }}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Status*</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Date*</label>
+                        {{ form.start_date }}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End Date</label>
+                        {{ form.end_date }}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="mdi mdi-content-save"></i> Save
+                    </button>
+                    <a href="{% url 'crm:loyaltyprogram_list' %}" class="btn btn-secondary">
+                        <i class="mdi mdi-cancel"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 0.375rem 0.75rem;
+    }
+</style>
+{% endblock %}

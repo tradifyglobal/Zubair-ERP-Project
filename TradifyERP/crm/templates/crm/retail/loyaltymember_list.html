@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Loyalty Members{% endblock %}
+
+{% block content %}
+<div class="print-header">
+    <h2>TradifyERP - Loyalty Members Report</h2>
+    <p>Generated: {{ request.user }} | Date: {% now "F j, Y" %}</p>
+</div>
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Loyalty Members</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-secondary me-2 no-print">
+                <i class="mdi mdi-printer"></i> Print
+            </button>
+            <a href="{% url 'crm:loyaltymember_create' %}" class="btn btn-primary">
+                <i class="mdi mdi-plus"></i> Add Member
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if members %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 120px;">Member ID</th>
+                            <th style="width: 180px;">Customer</th>
+                            <th style="width: 150px;">Program</th>
+                            <th style="width: 100px;">Points</th>
+                            <th style="width: 100px;">Tier</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 120px;">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in members %}
+                        <tr>
+                            <td><strong>{{ member.member_id }}</strong></td>
+                            <td>{{ member.customer }}</td>
+                            <td>{{ member.program.program_name }}</td>
+                            <td>{{ member.points_balance }}</td>
+                            <td>{{ member.current_tier }}</td>
+                            <td>
+                                <span class="badge {% if member.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ member.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ member.enrollment_date|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No loyalty members found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

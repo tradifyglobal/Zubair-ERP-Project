@@ -4,12 +4,19 @@
 {% block title %}Maintenance Tasks{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="print-header">
+    <h2>TradifyERP - Maintenance Tasks Report</h2>
+    <p>Generated: {{ request.user }} | Date: {% now "F j, Y" %}</p>
+</div>
+<div class="py-3">
     <div class="row mb-3">
         <div class="col-md-8">
             <h1 class="h3 mb-0">Maintenance Tasks</h1>
         </div>
         <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-secondary me-2 no-print">
+                <i class="fas fa-print"></i> Print
+            </button>
             <a href="{% url 'maintenance:task-create' %}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Add Task
             </a>

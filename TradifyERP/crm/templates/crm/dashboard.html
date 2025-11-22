@@ -364,20 +364,20 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="d-flex gap-2 flex-wrap">
-                                        <a href="/admin/crm/loyaltyprogram/" class="btn btn-sm btn-primary">
+                                        <a href="{% url 'crm:loyaltyprogram_list' %}" class="btn btn-sm btn-primary">
                                             <i class="mdi mdi-gift"></i> Loyalty Programs
                                         </a>
-                                        <a href="/admin/crm/loyaltymember/" class="btn btn-sm btn-success">
+                                        <a href="{% url 'crm:loyaltymember_list' %}" class="btn btn-sm btn-success">
                                             <i class="mdi mdi-account-group"></i> Loyalty Members
                                         </a>
-                                        <a href="/admin/crm/postransaction/" class="btn btn-sm btn-info">
+                                        <a href="{% url 'crm:postransaction_list' %}" class="btn btn-sm btn-info">
                                             <i class="mdi mdi-cash-register"></i> POS Transactions
                                         </a>
-                                        <a href="/admin/crm/promotion/" class="btn btn-sm btn-warning">
+                                        <a href="{% url 'crm:promotion_list' %}" class="btn btn-sm btn-warning">
                                             <i class="mdi mdi-tag-multiple"></i> Promotions
                                         </a>
-                                        <a href="/admin/crm/customersegment/" class="btn btn-sm btn-secondary">
-                                            <i class="mdi mdi-account-multiple"></i> Segments
+                                        <a href="{% url 'crm:customersegment_list' %}" class="btn btn-sm btn-secondary">
+                                            <i class="mdi mdi-account-multiple"></i> Customer Segments
                                         </a>
                                     </div>
                                 </div>
@@ -476,19 +476,19 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="d-flex gap-2 flex-wrap">
-                                        <a href="/admin/crm/distributor/" class="btn btn-sm btn-primary">
+                                        <a href="{% url 'crm:distributor_list' %}" class="btn btn-sm btn-primary">
                                             <i class="mdi mdi-factory"></i> Distributors
                                         </a>
-                                        <a href="/admin/crm/distributororder/" class="btn btn-sm btn-info">
+                                        <a href="{% url 'crm:distributororder_list' %}" class="btn btn-sm btn-info">
                                             <i class="mdi mdi-package-variant"></i> Orders
                                         </a>
-                                        <a href="/admin/crm/ordershipment/" class="btn btn-sm btn-secondary">
+                                        <a href="{% url 'crm:ordershipment_list' %}" class="btn btn-sm btn-secondary">
                                             <i class="mdi mdi-truck"></i> Shipments
                                         </a>
-                                        <a href="/admin/crm/aftersalesservice/" class="btn btn-sm btn-warning">
+                                        <a href="{% url 'crm:aftersalesservice_list' %}" class="btn btn-sm btn-warning">
                                             <i class="mdi mdi-wrench"></i> Service
                                         </a>
-                                        <a href="/admin/crm/warrantyregistration/" class="btn btn-sm btn-success">
+                                        <a href="{% url 'crm:warrantyregistration_list' %}" class="btn btn-sm btn-success">
                                             <i class="mdi mdi-shield-check"></i> Warranty
                                         </a>
                                     </div>

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Shipments{% endblock %}
+
+{% block content %}
+<div class="print-header">
+    <h2>TradifyERP - Order Shipments Report</h2>
+    <p>Generated: {{ request.user }} | Date: {% now "F j, Y" %}</p>
+</div>
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Order Shipments</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-secondary me-2 no-print">
+                <i class="mdi mdi-printer"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if shipments %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 150px;">Tracking #</th>
+                            <th style="width: 150px;">Order #</th>
+                            <th style="width: 150px;">Distributor</th>
+                            <th style="width: 120px;">Ship Date</th>
+                            <th style="width: 120px;">Delivery Date</th>
+                            <th style="width: 100px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for shipment in shipments %}
+                        <tr>
+                            <td><strong>{{ shipment.tracking_number }}</strong></td>
+                            <td>{{ shipment.order.order_number }}</td>
+                            <td>{{ shipment.order.distributor.distributor_name }}</td>
+                            <td>{{ shipment.shipped_date|date:"M d, Y" }}</td>
+                            <td>{{ shipment.delivery_date|date:"M d, Y"|default:"-" }}</td>
+                            <td><span class="badge bg-info">{{ shipment.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No shipments found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

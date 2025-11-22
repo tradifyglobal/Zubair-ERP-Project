@@ -11,7 +11,8 @@ from uuid import uuid4
 from .models import Lead, Opportunity, Quote, Activity, Campaign, SalesStage
 from .forms import LeadForm, OpportunityForm, QuoteForm, ActivityForm, CampaignForm
 from .retail_models import LoyaltyProgram, LoyaltyMember, POSTransaction, Promotion, CustomerSegment
-from manufacturing.models import Distributor, DistributorOrder, AfterSalesService, WarrantyRegistration
+from .retail_forms import LoyaltyProgramForm, LoyaltyMemberForm, POSTransactionForm, PromotionForm, CustomerSegmentForm
+from manufacturing.models import Distributor, DistributorOrder, AfterSalesService, WarrantyRegistration, OrderShipment
 from accounting.models import Entity
 
 
@@ -242,3 +243,145 @@ class CampaignCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.entity_id = 1  # Set default entity
         return super().form_valid(form)
+
+
+# ===== RETAIL & E-COMMERCE VIEWS =====
+
+class LoyaltyProgramListView(LoginRequiredMixin, ListView):
+    """List all loyalty programs."""
+    model = LoyaltyProgram
+    template_name = 'crm/retail/loyaltyprogram_list.html'
+    context_object_name = 'programs'
+    paginate_by = 20
+
+
+class LoyaltyProgramCreateView(LoginRequiredMixin, CreateView):
+    """Create loyalty program."""
+    model = LoyaltyProgram
+    form_class = LoyaltyProgramForm
+    template_name = 'crm/retail/loyaltyprogram_form.html'
+    success_url = reverse_lazy('crm:loyaltyprogram_list')
+    
+    def form_valid(self, form):
+        form.instance.entity_id = 1
+        return super().form_valid(form)
+
+
+class LoyaltyMemberListView(LoginRequiredMixin, ListView):
+    """List all loyalty members."""
+    model = LoyaltyMember
+    template_name = 'crm/retail/loyaltymember_list.html'
+    context_object_name = 'members'
+    paginate_by = 20
+
+
+class LoyaltyMemberCreateView(LoginRequiredMixin, CreateView):
+    """Create loyalty member."""
+    model = LoyaltyMember
+    form_class = LoyaltyMemberForm
+    template_name = 'crm/retail/loyaltymember_form.html'
+    success_url = reverse_lazy('crm:loyaltymember_list')
+
+
+class POSTransactionListView(LoginRequiredMixin, ListView):
+    """List POS transactions."""
+    model = POSTransaction
+    template_name = 'crm/retail/postransaction_list.html'
+    context_object_name = 'transactions'
+    paginate_by = 20
+    ordering = ['-created_at']
+
+
+class POSTransactionCreateView(LoginRequiredMixin, CreateView):
+    """Create POS transaction."""
+    model = POSTransaction
+    form_class = POSTransactionForm
+    template_name = 'crm/retail/postransaction_form.html'
+    success_url = reverse_lazy('crm:postransaction_list')
+    
+    def form_valid(self, form):
+        form.instance.entity_id = 1
+        return super().form_valid(form)
+
+
+class PromotionListView(LoginRequiredMixin, ListView):
+    """List promotions."""
+    model = Promotion
+    template_name = 'crm/retail/promotion_list.html'
+    context_object_name = 'promotions'
+    paginate_by = 20
+
+
+class PromotionCreateView(LoginRequiredMixin, CreateView):
+    """Create promotion."""
+    model = Promotion
+    form_class = PromotionForm
+    template_name = 'crm/retail/promotion_form.html'
+    success_url = reverse_lazy('crm:promotion_list')
+    
+    def form_valid(self, form):
+        form.instance.entity_id = 1
+        return super().form_valid(form)
+
+
+class CustomerSegmentListView(LoginRequiredMixin, ListView):
+    """List customer segments."""
+    model = CustomerSegment
+    template_name = 'crm/retail/customersegment_list.html'
+    context_object_name = 'segments'
+    paginate_by = 20
+
+
+class CustomerSegmentCreateView(LoginRequiredMixin, CreateView):
+    """Create customer segment."""
+    model = CustomerSegment
+    form_class = CustomerSegmentForm
+    template_name = 'crm/retail/customersegment_form.html'
+    success_url = reverse_lazy('crm:customersegment_list')
+    
+    def form_valid(self, form):
+        form.instance.entity_id = 1
+        return super().form_valid(form)
+
+
+# ===== MANUFACTURING CRM VIEWS =====
+
+class DistributorListView(LoginRequiredMixin, ListView):
+    """List distributors."""
+    model = Distributor
+    template_name = 'crm/manufacturing/distributor_list.html'
+    context_object_name = 'distributors'
+    paginate_by = 20
+
+
+class DistributorOrderListView(LoginRequiredMixin, ListView):
+    """List distributor orders."""
+    model = DistributorOrder
+    template_name = 'crm/manufacturing/distributororder_list.html'
+    context_object_name = 'orders'
+    paginate_by = 20
+    ordering = ['-order_date']
+
+
+class OrderShipmentListView(LoginRequiredMixin, ListView):
+    """List order shipments."""
+    model = OrderShipment
+    template_name = 'crm/manufacturing/ordershipment_list.html'
+    context_object_name = 'shipments'
+    paginate_by = 20
+
+
+class AfterSalesServiceListView(LoginRequiredMixin, ListView):
+    """List after-sales service tickets."""
+    model = AfterSalesService
+    template_name = 'crm/manufacturing/aftersalesservice_list.html'
+    context_object_name = 'services'
+    paginate_by = 20
+
+
+class WarrantyRegistrationListView(LoginRequiredMixin, ListView):
+    """List warranty registrations."""
+    model = WarrantyRegistration
+    template_name = 'crm/manufacturing/warrantyregistration_list.html'
+    context_object_name = 'warranties'
+    paginate_by = 20

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Promotions{% endblock %}
+
+{% block content %}
+<div class="print-header">
+    <h2>TradifyERP - Promotions Report</h2>
+    <p>Generated: {{ request.user }} | Date: {% now "F j, Y" %}</p>
+</div>
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Promotions</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-secondary me-2 no-print">
+                <i class="mdi mdi-printer"></i> Print
+            </button>
+            <a href="{% url 'crm:promotion_create' %}" class="btn btn-primary">
+                <i class="mdi mdi-plus"></i> New Promotion
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if promotions %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 120px;">Code</th>
+                            <th style="width: 200px;">Name</th>
+                            <th style="width: 120px;">Type</th>
+                            <th style="width: 100px;">Discount</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 120px;">Start Date</th>
+                            <th style="width: 120px;">End Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for promo in promotions %}
+                        <tr>
+                            <td><strong>{{ promo.promotion_code }}</strong></td>
+                            <td>{{ promo.promotion_name }}</td>
+                            <td>{{ promo.get_discount_type_display }}</td>
+                            <td>{% if promo.discount_type == 'PERCENTAGE' %}{{ promo.discount_value }}%{% else %} ${{ promo.discount_value }}{% endif %}</td>
+                            <td>
+                                <span class="badge {% if promo.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ promo.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ promo.start_date|date:"M d, Y" }}</td>
+                            <td>{{ promo.end_date|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No promotions found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

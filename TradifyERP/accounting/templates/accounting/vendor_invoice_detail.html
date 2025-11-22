@@ -1,0 +1,506 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vendor Invoice Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        /* FORCE HIDE ALL NAVIGATION - DO NOT PRINT */
+        .vertical-layout-header,
+        .vertical-layout-sidebar,
+        .horizontal-layout-header,
+        .horizontal-layout-sidebar,
+        .navbar,
+        .sidebar,
+        #page-topbar,
+        #sidebar-menu,
+        .vertical-menu,
+        .navbar-header,
+        .topnav,
+        .app-menu,
+        .mm-active,
+        .simplebar-wrapper,
+        .right-bar,
+        footer,
+        .footer,
+        .no-print,
+        button,
+        .btn,
+        a.btn {
+            display: none !important;
+            visibility: hidden !important;
+            position: absolute !important;
+            left: -9999px !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+        }
+        
+        /* Reset everything for clean print */
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        html, body {
+            width: 100% !important;
+            height: auto !important;
+        }
+        
+        /* Full width layout - force override */
+        #layout-wrapper {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: relative !important;
+        }
+        
+        .main-content {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
+        }
+        
+        .page-content {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        /* Company logo watermark */
+        .invoice-wrapper {
+            position: relative;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 auto;
+            padding: 5px;
+            background: white;
+        }
+        
+        .invoice-wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('{% static "images/logo.png" %}');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 40%;
+            opacity: 0.05;
+            z-index: -1;
+            transform: rotate(-45deg);
+        }
+        
+        /* Print header with logo */
+        .print-header {
+            display: block !important;
+            text-align: center;
+            padding: 5px 0;
+            border-bottom: 2px solid #000;
+            margin-bottom: 8px;
+        }
+        
+        .print-logo {
+            max-height: 40px;
+            margin-bottom: 5px;
+        }
+        
+        .print-header h2 {
+            margin: 5px 0 3px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .print-header p {
+            margin: 0;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        /* Layout adjustments for print */
+        .row {
+            display: block !important;
+        }
+        
+        .col-md-8, .col-md-4, .col-md-6, .col-12 {
+            width: 100% !important;
+            float: none !important;
+            padding: 0 !important;
+        }
+        
+        .card {
+            border: 1px solid #ddd !important;
+            margin-bottom: 5px !important;
+            page-break-inside: avoid;
+        }
+        
+        .card-header {
+            background-color: #f8f9fa !important;
+            border-bottom: 1px solid #dee2e6 !important;
+            padding: 5px 10px !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .card-header h5 {
+            font-size: 14px !important;
+            margin: 0 !important;
+        }
+        
+        .card-body {
+            padding: 10px !important;
+            font-size: 12px !important;
+        }
+        
+        .card-body h6 {
+            font-size: 12px !important;
+        }
+        
+        .card-body p {
+            font-size: 11px !important;
+            margin-bottom: 5px !important;
+        }
+        
+        /* Amount summary - make it prominent */
+        .amount-summary-print {
+            border: 2px solid #000 !important;
+            padding: 8px !important;
+            margin: 5px 0 !important;
+            background-color: #f8f9fa !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .amount-summary-print .total-amount {
+            font-size: 14px !important;
+            font-weight: bold !important;
+        }
+        
+        .amount-summary-print .outstanding {
+            font-size: 13px !important;
+            font-weight: bold !important;
+            color: #dc3545 !important;
+        }
+        
+        .amount-summary-print .d-flex {
+            font-size: 11px !important;
+        }
+        
+        .amount-summary-print hr {
+            margin: 5px 0 !important;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 11px !important;
+        }
+        
+        table th, table td {
+            border: 1px solid #000 !important;
+            padding: 4px 6px !important;
+        }
+        
+        table th {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            font-weight: bold !important;
+            font-size: 11px !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        table tbody tr {
+            background-color: #ffffff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        /* Badges */
+        .badge {
+            border: 1px solid #000 !important;
+            padding: 5px 10px !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        /* Footer */
+        .print-footer {
+            display: block !important;
+            text-align: center;
+            margin-top: 8px;
+            padding-top: 5px;
+            border-top: 1px solid #000;
+            font-size: 9px;
+            color: #666;
+        }
+        
+        .print-footer p {
+            margin: 1px 0 !important;
+            line-height: 1.2 !important;
+        }
+    }
+    
+    /* Screen-only styles */
+    .print-header {
+        display: none;
+    }
+    
+    .print-footer {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="invoice-wrapper">
+    <!-- Print Header with Logo -->
+    <div class="print-header">
+        <img src="{% static 'images/logo.png' %}" alt="TradifyERP" class="print-logo">
+        <h2>VENDOR INVOICE</h2>
+        <p>Invoice #{{ invoice.invoice_number }} | Date: {{ invoice.invoice_date|date:"F j, Y" }}</p>
+        <p style="margin-top: 5px;">TradifyERP - Enterprise Resource Planning System</p>
+    </div>
+
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Vendor Invoice #{{ invoice.invoice_number }}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-secondary me-2 no-print">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a href="{% url 'accounting:vendor_invoice_list' %}" class="btn btn-outline-secondary no-print">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Invoice Details Card -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Invoice Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Vendor</p>
+                            <h6>{{ invoice.vendor.name }}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Status</p>
+                            <h6>
+                                {% if invoice.status == 'DRAFT' %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                {% elif invoice.status == 'SUBMITTED' %}
+                                    <span class="badge bg-warning">Submitted</span>
+                                {% elif invoice.status == 'APPROVED' %}
+                                    <span class="badge bg-info">Approved</span>
+                                {% elif invoice.status == 'PAID' %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% elif invoice.status == 'CANCELLED' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </h6>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Invoice Date</p>
+                            <h6>{{ invoice.invoice_date|date:"F j, Y" }}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Due Date</p>
+                            <h6>{{ invoice.due_date|date:"F j, Y" }}</h6>
+                        </div>
+                    </div>
+                    
+                    {% if invoice.description %}
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="mb-1 text-muted">Description</p>
+                            <p>{{ invoice.description }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment History Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Payment History</h5>
+                </div>
+                <div class="card-body">
+                    {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Payment Date</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Reference</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                    <td><strong>${{ payment.amount|floatformat:2 }}</strong></td>
+                                    <td>{{ payment.get_payment_method_display }}</td>
+                                    <td>{{ payment.reference_number|default:"-" }}</td>
+                                    <td>{{ payment.notes|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        No payments recorded for this invoice.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Sidebar -->
+        <div class="col-md-4">
+            <div class="card amount-summary-print">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Amount Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal:</span>
+                        <strong>${{ invoice.amount|floatformat:2 }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tax:</span>
+                        <strong>${{ invoice.tax_amount|floatformat:2 }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span><strong>Total Amount:</strong></span>
+                        <h5 class="mb-0 text-primary total-amount">${{ invoice.total_amount|floatformat:2 }}</h5>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Paid:</span>
+                        <strong class="text-success">${{ invoice.paid_amount|floatformat:2 }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span><strong>Outstanding:</strong></span>
+                        <h5 class="mb-0 outstanding {% if invoice.outstanding_amount > 0 %}text-danger{% else %}text-success{% endif %}">
+                            ${{ invoice.outstanding_amount|floatformat:2 }}
+                        </h5>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="card mt-3 no-print">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if invoice.status == 'DRAFT' %}
+                        <form method="post" action="{% url 'accounting:vendor_invoice_update_status' invoice.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="SUBMITTED">
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-paper-plane"></i> Submit Invoice
+                            </button>
+                        </form>
+                        {% endif %}
+                        
+                        {% if invoice.status == 'SUBMITTED' %}
+                        <form method="post" action="{% url 'accounting:vendor_invoice_update_status' invoice.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="APPROVED">
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-check"></i> Approve Invoice
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'accounting:vendor_invoice_update_status' invoice.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="DRAFT">
+                            <button type="submit" class="btn btn-warning btn-sm w-100">
+                                <i class="fas fa-undo"></i> Return to Draft
+                            </button>
+                        </form>
+                        {% endif %}
+                        
+                        {% if invoice.status != 'PAID' and invoice.status != 'CANCELLED' %}
+                        <a href="{% url 'accounting:record_vendor_payment' invoice.pk %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-credit-card"></i> Record Payment
+                        </a>
+                        {% endif %}
+                        
+                        {% if invoice.status == 'DRAFT' or invoice.status == 'SUBMITTED' %}
+                        <a href="{% url 'accounting:vendor_invoice_edit' invoice.pk %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-edit"></i> Edit Invoice
+                        </a>
+                        {% endif %}
+                        
+                        {% if invoice.status != 'CANCELLED' and invoice.status != 'PAID' %}
+                        <form method="post" action="{% url 'accounting:vendor_invoice_update_status' invoice.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this invoice?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="CANCELLED">
+                            <button type="submit" class="btn btn-danger btn-sm w-100">
+                                <i class="fas fa-times"></i> Cancel Invoice
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata Card -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Metadata</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1 text-muted small">Created</p>
+                    <p class="mb-2">{{ invoice.created_at|date:"M d, Y H:i" }}</p>
+                    
+                    <p class="mb-1 text-muted small">Last Updated</p>
+                    <p class="mb-0">{{ invoice.updated_at|date:"M d, Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Print Footer -->
+    <div class="print-footer">
+        <p><strong>TradifyERP</strong> - Enterprise Resource Planning System</p>
+        <p>This is a computer-generated document. No signature required.</p>
+        <p>Printed on: {% now "F j, Y \a\\t H:i" %}</p>
+    </div>
+</div>
+{% endblock %}

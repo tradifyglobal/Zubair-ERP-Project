@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Distributor Orders{% endblock %}
+
+{% block content %}
+<div class="print-header">
+    <h2>TradifyERP - Distributor Orders Report</h2>
+    <p>Generated: {{ request.user }} | Date: {% now "F j, Y" %}</p>
+</div>
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Distributor Orders</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-secondary me-2 no-print">
+                <i class="mdi mdi-printer"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if orders %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 120px;">Order #</th>
+                            <th style="width: 200px;">Distributor</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 120px;">Order Date</th>
+                            <th style="width: 120px;">Required Date</th>
+                            <th style="width: 120px;">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td><strong>{{ order.order_number }}</strong></td>
+                            <td>{{ order.distributor.distributor_name }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if order.status == 'CONFIRMED' %}bg-success
+                                    {% elif order.status == 'SHIPPED' %}bg-info
+                                    {% elif order.status == 'DELIVERED' %}bg-primary
+                                    {% elif order.status == 'CANCELLED' %}bg-danger
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ order.order_date|date:"M d, Y" }}</td>
+                            <td>{{ order.required_delivery_date|date:"M d, Y" }}</td>
+                            <td>${{ order.total_amount|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No orders found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Customer Segment{% endblock %}
+
+{% block content %}
+<div class="py-3 px-2">
+    <div class="card">
+        <div class="card-header"><h5>Create Customer Segment</h5></div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'crm:customersegment_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

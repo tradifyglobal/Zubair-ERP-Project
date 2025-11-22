@@ -185,9 +185,7 @@
                                         <td><strong>{{ invoice.amount|floatformat:2 }}</strong></td>
                                         <td>{{ invoice.paid_amount|floatformat:2 }}</td>
                                         <td>
-                                            {% with outstanding=invoice.amount|add:invoice.paid_amount %}
-                                                <strong class="text-danger">{{ outstanding|floatformat:2 }}</strong>
-                                            {% endwith %}
+                                            <strong class="text-danger">{{ invoice.outstanding_amount|floatformat:2 }}</strong>
                                         </td>
                                         <td>
                                             {% if invoice.status == 'PENDING' %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}After Sales Service{% endblock %}
+
+{% block content %}
+<div class="print-header">
+    <h2>TradifyERP - After Sales Service Report</h2>
+    <p>Generated: {{ request.user }} | Date: {% now "F j, Y" %}</p>
+</div>
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">After Sales Service</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-secondary me-2 no-print">
+                <i class="mdi mdi-printer"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if services %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 120px;">Ticket #</th>
+                            <th style="width: 180px;">Distributor</th>
+                            <th style="width: 120px;">Service Type</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 120px;">Created</th>
+                            <th style="width: 120px;">Resolved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for service in services %}
+                        <tr>
+                            <td><strong>{{ service.service_ticket_number }}</strong></td>
+                            <td>{{ service.distributor.distributor_name }}</td>
+                            <td>{{ service.get_service_type_display }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if service.status == 'CLOSED' %}bg-success
+                                    {% elif service.status == 'OPEN' %}bg-warning
+                                    {% elif service.status == 'IN_PROGRESS' %}bg-info
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ service.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ service.created_at|date:"M d, Y" }}</td>
+                            <td>{{ service.resolved_date|date:"M d, Y"|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No service tickets found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

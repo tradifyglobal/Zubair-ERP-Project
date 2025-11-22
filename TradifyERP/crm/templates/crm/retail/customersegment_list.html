@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Customer Segments{% endblock %}
+
+{% block content %}
+<div class="print-header">
+    <h2>TradifyERP - Customer Segments Report</h2>
+    <p>Generated: {{ request.user }} | Date: {% now "F j, Y" %}</p>
+</div>
+<div class="py-3 px-2">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Customer Segments</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-secondary me-2 no-print">
+                <i class="mdi mdi-printer"></i> Print
+            </button>
+            <a href="{% url 'crm:customersegment_create' %}" class="btn btn-primary">
+                <i class="mdi mdi-plus"></i> New Segment
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if segments %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 120px;">Code</th>
+                            <th style="width: 200px;">Name</th>
+                            <th style="width: 150px;">Type</th>
+                            <th style="width: 100px;">Customers</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 120px;">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for segment in segments %}
+                        <tr>
+                            <td><strong>{{ segment.segment_code }}</strong></td>
+                            <td>{{ segment.segment_name }}</td>
+                            <td>{{ segment.get_segment_type_display }}</td>
+                            <td>{{ segment.customers.count }}</td>
+                            <td>
+                                <span class="badge {% if segment.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if segment.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ segment.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No customer segments found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
