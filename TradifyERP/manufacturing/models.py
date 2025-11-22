@@ -795,3 +795,665 @@ class Equipment(models.Model):
     
     def __str__(self):
         return f"{self.name} ({self.equipment_code})"
+
+
+# ============================================================================
+# DISTRIBUTOR MANAGEMENT & AFTER-SALES SERVICE
+# ============================================================================
+
+
+class Distributor(models.Model):
+    """Distributor master record."""
+    
+    STATUS_CHOICES = [
+        ('ACTIVE', 'Active'),
+        ('INACTIVE', 'Inactive'),
+        ('SUSPENDED', 'Suspended'),
+        ('PROSPECTIVE', 'Prospective'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='distributors'
+    )
+    
+    # Distributor Info
+    distributor_code = models.CharField(max_length=50, unique=True, db_index=True)
+    distributor_name = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PROSPECTIVE')
+    
+    # Contact Details
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    website = models.URLField(blank=True)
+    
+    # Address
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
+    
+    # Account Manager
+    account_manager = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='managed_distributors'
+    )
+    
+    # Territory/Region
+    region = models.CharField(max_length=100, blank=True)
+    territory = models.CharField(max_length=100, blank=True)
+    
+    # Relationship Details
+    date_onboarded = models.DateField(default=timezone.now)
+    contract_start_date = models.DateField(null=True, blank=True)
+    contract_end_date = models.DateField(null=True, blank=True)
+    
+    # Performance
+    credit_limit = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    annual_sales_target = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    ytd_sales = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    
+    # Products Authorized
+    authorized_products = models.TextField(blank=True, help_text="Comma-separated product codes")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_distributor'
+        ordering = ['distributor_name']
+        indexes = [
+            models.Index(fields=['entity', 'status']),
+            models.Index(fields=['distributor_code']),
+            models.Index(fields=['region']),
+        ]
+    
+    def __str__(self):
+        return f"{self.distributor_name} ({self.distributor_code})"
+
+
+class DistributorContact(models.Model):
+    """Key contacts at distributor organizations."""
+    
+    distributor = models.ForeignKey(
+        Distributor,
+        on_delete=models.CASCADE,
+        related_name='contacts'
+    )
+    
+    # Contact Details
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    job_title = models.CharField(max_length=100)
+    department = models.CharField(max_length=100, blank=True)
+    
+    # Communication
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    mobile = models.CharField(max_length=20, blank=True)
+    
+    # Relationship
+    is_primary_contact = models.BooleanField(default=False)
+    preferred_contact_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('EMAIL', 'Email'),
+            ('PHONE', 'Phone'),
+            ('MOBILE', 'Mobile'),
+            ('WHATSAPP', 'WhatsApp'),
+        ]
+    )
+    
+    # Activity
+    last_contact_date = models.DateField(null=True, blank=True)
+    next_follow_up = models.DateField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_distributor_contact'
+        ordering = ['-is_primary_contact', 'last_name']
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.distributor.distributor_name}"
+
+
+class DistributorOrder(models.Model):
+    """Orders placed by distributors."""
+    
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('SUBMITTED', 'Submitted'),
+        ('CONFIRMED', 'Confirmed'),
+        ('SHIPPED', 'Shipped'),
+        ('DELIVERED', 'Delivered'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='distributor_orders'
+    )
+    
+    # Order Identification
+    order_number = models.CharField(max_length=50, unique=True, db_index=True)
+    distributor = models.ForeignKey(
+        Distributor,
+        on_delete=models.CASCADE,
+        related_name='orders'
+    )
+    
+    # Dates
+    order_date = models.DateField(default=timezone.now)
+    required_delivery_date = models.DateField()
+    actual_delivery_date = models.DateField(null=True, blank=True)
+    
+    # Order Details
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    description = models.TextField(blank=True)
+    
+    # Amount
+    subtotal = models.DecimalField(max_digits=18, decimal_places=2)
+    discount_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    
+    # Terms
+    payment_terms = models.CharField(max_length=50, blank=True)
+    
+    # Tracking
+    is_posted = models.BooleanField(default=False)
+    sales_order_reference = models.CharField(max_length=50, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_distributor_order'
+        ordering = ['-order_date']
+        indexes = [
+            models.Index(fields=['entity', 'status']),
+            models.Index(fields=['distributor', 'order_date']),
+            models.Index(fields=['order_number']),
+        ]
+    
+    def __str__(self):
+        return f"Order {self.order_number} - {self.distributor.distributor_name}"
+
+
+class Courier(models.Model):
+    """Courier/Carrier service providers."""
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='couriers'
+    )
+    
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_courier'
+        ordering = ['name']
+        unique_together = ('entity', 'code')
+    
+    def __str__(self):
+        return self.name
+
+
+class OrderShipment(models.Model):
+    """Track shipments for distributor orders."""
+    
+    order = models.ForeignKey(
+        DistributorOrder,
+        on_delete=models.CASCADE,
+        related_name='shipments'
+    )
+    
+    # Shipment Details
+    shipment_number = models.CharField(max_length=50, unique=True)
+    shipment_date = models.DateField(default=timezone.now)
+    expected_delivery = models.DateField()
+    actual_delivery = models.DateField(null=True, blank=True)
+    
+    # Carrier & Tracking
+    courier = models.ForeignKey(
+        Courier,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='shipments'
+    )
+    tracking_number = models.CharField(max_length=100, blank=True)
+    shipping_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Status
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('PENDING', 'Pending'),
+            ('IN_TRANSIT', 'In Transit'),
+            ('DELIVERED', 'Delivered'),
+            ('DELAYED', 'Delayed'),
+            ('RETURNED', 'Returned'),
+        ]
+    )
+    
+    # Notes
+    notes = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_order_shipment'
+        ordering = ['-shipment_date']
+        indexes = [
+            models.Index(fields=['order', 'status']),
+            models.Index(fields=['tracking_number']),
+        ]
+    
+    def __str__(self):
+        return f"Shipment {self.shipment_number}"
+
+
+class AfterSalesService(models.Model):
+    """After-sales service cases and support tickets."""
+    
+    SERVICE_TYPE = [
+        ('WARRANTY_CLAIM', 'Warranty Claim'),
+        ('REPAIR', 'Repair'),
+        ('MAINTENANCE', 'Maintenance'),
+        ('REPLACEMENT', 'Replacement'),
+        ('TECHNICAL_SUPPORT', 'Technical Support'),
+        ('TRAINING', 'Training'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('OPEN', 'Open'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('WAITING', 'Waiting for Customer'),
+        ('RESOLVED', 'Resolved'),
+        ('CLOSED', 'Closed'),
+    ]
+    
+    PRIORITY_CHOICES = [
+        (1, 'Low'),
+        (2, 'Medium'),
+        (3, 'High'),
+        (4, 'Critical'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='after_sales_services'
+    )
+    
+    # Service Identification
+    service_ticket_number = models.CharField(max_length=50, unique=True, db_index=True)
+    distributor = models.ForeignKey(
+        Distributor,
+        on_delete=models.CASCADE,
+        related_name='after_sales_services'
+    )
+    
+    # Service Details
+    service_type = models.CharField(max_length=30, choices=SERVICE_TYPE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPEN')
+    priority = models.IntegerField(choices=PRIORITY_CHOICES, default=2)
+    
+    # Product Reference
+    product_code = models.CharField(max_length=100, blank=True)
+    serial_number = models.CharField(max_length=100, blank=True)
+    purchase_date = models.DateField(null=True, blank=True)
+    
+    # Issue Details
+    issue_description = models.TextField()
+    issue_date = models.DateField(default=timezone.now)
+    
+    # Resolution
+    resolution_description = models.TextField(blank=True)
+    resolution_date = models.DateField(null=True, blank=True)
+    
+    # Warranty
+    is_under_warranty = models.BooleanField(default=True)
+    warranty_expiry_date = models.DateField(null=True, blank=True)
+    
+    # Cost
+    service_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    warranty_covered = models.BooleanField(default=True)
+    
+    # Tracking
+    assigned_to = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='assigned_services'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_after_sales_service'
+        ordering = ['-issue_date']
+        indexes = [
+            models.Index(fields=['entity', 'status']),
+            models.Index(fields=['distributor']),
+            models.Index(fields=['service_ticket_number']),
+        ]
+    
+    def __str__(self):
+        return f"Ticket {self.service_ticket_number} - {self.distributor.distributor_name}"
+
+
+class ServiceActivity(models.Model):
+    """Activity log for after-sales service cases."""
+    
+    ACTIVITY_TYPE = [
+        ('COMMENT', 'Comment'),
+        ('STATUS_CHANGE', 'Status Change'),
+        ('ASSIGNMENT', 'Assignment'),
+        ('FOLLOW_UP', 'Follow Up'),
+        ('RESOLUTION', 'Resolution'),
+        ('ESCALATION', 'Escalation'),
+    ]
+    
+    service = models.ForeignKey(
+        AfterSalesService,
+        on_delete=models.CASCADE,
+        related_name='activities'
+    )
+    
+    # Activity Details
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPE)
+    description = models.TextField()
+    notes = models.TextField(blank=True)
+    
+    # Reference
+    previous_status = models.CharField(max_length=20, blank=True)
+    new_status = models.CharField(max_length=20, blank=True)
+    
+    # Tracking
+    performed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='service_activities'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'manufacturing_service_activity'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.activity_type} on {self.service.service_ticket_number}"
+
+
+class WarrantyRegistration(models.Model):
+    """Product warranty registration and tracking."""
+    
+    WARRANTY_TYPE = [
+        ('STANDARD', 'Standard'),
+        ('EXTENDED', 'Extended'),
+        ('PREMIUM', 'Premium'),
+    ]
+    
+    # Warranty Details
+    warranty_number = models.CharField(max_length=50, unique=True, db_index=True)
+    warranty_type = models.CharField(max_length=20, choices=WARRANTY_TYPE, default='STANDARD')
+    
+    # Product Information
+    product_code = models.CharField(max_length=100)
+    serial_number = models.CharField(max_length=100)
+    
+    # Customer/Distributor
+    distributor = models.ForeignKey(
+        Distributor,
+        on_delete=models.CASCADE,
+        related_name='warranty_registrations'
+    )
+    
+    end_customer_name = models.CharField(max_length=255, blank=True)
+    end_customer_email = models.EmailField(blank=True)
+    end_customer_phone = models.CharField(max_length=20, blank=True)
+    
+    # Warranty Coverage
+    purchase_date = models.DateField()
+    coverage_start_date = models.DateField(default=timezone.now)
+    coverage_end_date = models.DateField()
+    
+    # Coverage Details
+    coverage_description = models.TextField()
+    terms_and_conditions = models.TextField(blank=True)
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    is_claimed = models.BooleanField(default=False)
+    
+    # Tracking
+    claims_count = models.IntegerField(default=0)
+    total_claims_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_warranty_registration'
+        ordering = ['-coverage_start_date']
+        indexes = [
+            models.Index(fields=['serial_number']),
+            models.Index(fields=['distributor', 'is_active']),
+        ]
+    
+    def __str__(self):
+        return f"Warranty {self.warranty_number} - {self.serial_number}"
+
+
+class DistributorPerformance(models.Model):
+    """Track distributor performance metrics."""
+    
+    distributor = models.ForeignKey(
+        Distributor,
+        on_delete=models.CASCADE,
+        related_name='performance_metrics'
+    )
+    
+    # Period
+    performance_date = models.DateField(default=timezone.now)
+    performance_month = models.IntegerField()  # 1-12
+    performance_year = models.IntegerField()
+    
+    # Sales Metrics
+    orders_count = models.IntegerField(default=0)
+    total_sales = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    average_order_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Fulfillment
+    on_time_delivery_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    order_accuracy_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    
+    # Service Quality
+    return_rate_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    complaint_count = models.IntegerField(default=0)
+    
+    # Payment
+    payment_on_time_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    
+    # Rating
+    RATING_CHOICES = [
+        (1, '1 - Poor'),
+        (2, '2 - Fair'),
+        (3, '3 - Good'),
+        (4, '4 - Very Good'),
+        (5, '5 - Excellent'),
+    ]
+    overall_rating = models.IntegerField(
+        choices=RATING_CHOICES,
+        default=3,
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    @classmethod
+    def calculate_metrics_for_month(cls, distributor, year, month):
+        """
+        Calculate all performance metrics for a distributor for a specific month.
+        Returns a dictionary with all calculated metrics.
+        """
+        from django.db.models import Sum, Count, Q, F, Case, When, DecimalField
+        from datetime import date
+        
+        # Get all orders for this distributor in the specified month
+        orders = DistributorOrder.objects.filter(
+            distributor=distributor,
+            order_date__year=year,
+            order_date__month=month
+        )
+        
+        # Calculate basic sales metrics
+        total_sales = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
+        orders_count = orders.count()
+        average_order_value = (
+            total_sales / orders_count if orders_count > 0 else Decimal('0')
+        )
+        
+        # Get shipments for these orders
+        shipments = OrderShipment.objects.filter(
+            order__in=orders
+        )
+        
+        # Calculate on-time delivery percentage
+        total_shipments = shipments.count()
+        on_time_shipments = shipments.filter(
+            actual_delivery__lte=F('expected_delivery')
+        ).count()
+        on_time_delivery_percentage = (
+            (on_time_shipments / total_shipments * 100) 
+            if total_shipments > 0 else Decimal('0')
+        )
+        
+        # Calculate order accuracy (assuming all orders are accurate by default)
+        # This can be enhanced with actual accuracy tracking
+        order_accuracy_percentage = Decimal('100') if orders_count > 0 else Decimal('0')
+        
+        # Get after-sales services
+        services = AfterSalesService.objects.filter(
+            distributor=distributor,
+            issue_date__year=year,
+            issue_date__month=month
+        )
+        
+        # Calculate return rate and complaint count
+        return_rate_percentage = Decimal('0')  # Can be enhanced with return tracking
+        complaint_count = services.filter(
+            service_type__in=['WARRANTY_CLAIM', 'REPAIR']
+        ).count()
+        
+        # Payment metrics (can be integrated with AR module)
+        # For now, assume on-time payment
+        payment_on_time_percentage = Decimal('100') if orders_count > 0 else Decimal('0')
+        
+        # Calculate overall rating (1-5 scale)
+        # Based on weighted average of metrics
+        overall_rating = cls._calculate_overall_rating(
+            on_time_delivery_percentage,
+            order_accuracy_percentage,
+            return_rate_percentage,
+            complaint_count,
+            orders_count
+        )
+        
+        return {
+            'orders_count': orders_count,
+            'total_sales': total_sales,
+            'average_order_value': average_order_value,
+            'on_time_delivery_percentage': on_time_delivery_percentage,
+            'order_accuracy_percentage': order_accuracy_percentage,
+            'return_rate_percentage': return_rate_percentage,
+            'complaint_count': complaint_count,
+            'payment_on_time_percentage': payment_on_time_percentage,
+            'overall_rating': overall_rating,
+        }
+    
+    @staticmethod
+    def _calculate_overall_rating(on_time_pct, accuracy_pct, return_pct, complaints, orders):
+        """
+        Calculate overall rating (1-5) based on performance metrics.
+        Weighted average calculation.
+        """
+        if orders == 0:
+            return 3  # Default rating
+        
+        # Weights for each metric
+        weights = {
+            'on_time': 0.3,
+            'accuracy': 0.3,
+            'returns': 0.2,
+            'complaints': 0.2,
+        }
+        
+        # Normalize metrics to 0-5 scale
+        on_time_score = (on_time_pct / 100) * 5
+        accuracy_score = (accuracy_pct / 100) * 5
+        return_score = max(0, 5 - (return_pct / 100) * 5)  # Lower return % = higher score
+        complaint_score = max(0, 5 - min(complaints, 5))  # Max 5 deduction
+        
+        # Weighted average
+        overall = (
+            on_time_score * weights['on_time'] +
+            accuracy_score * weights['accuracy'] +
+            return_score * weights['returns'] +
+            complaint_score * weights['complaints']
+        )
+        
+        return min(5, max(1, int(round(overall))))
+    
+    class Meta:
+        db_table = 'manufacturing_distributor_performance'
+        ordering = ['-performance_date']
+        unique_together = ('distributor', 'performance_month', 'performance_year')
+        indexes = [
+            models.Index(fields=['distributor', 'performance_date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.distributor.distributor_name} - {self.performance_month}/{self.performance_year}"
+

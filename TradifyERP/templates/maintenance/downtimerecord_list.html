@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Downtime Records{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-3"><div class="col"><h1 class="h3">Downtime Records</h1></div><div class="col text-end"><a href="{% url 'maintenance:downtime-create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> New</a></div></div>
+    <div class="card"><div class="card-body">
+        {% if downtime_records %}<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Asset</th><th>Start</th><th>End</th><th>Duration</th><th>Reason</th><th>Actions</th></tr></thead><tbody>{% for d in downtime_records %}<tr><td>{{ d.asset.asset_name }}</td><td>{{ d.start_time|date:"M d H:i" }}</td><td>{{ d.end_time|date:"M d H:i" }}</td><td>{{ d.duration_minutes }} min</td><td>{{ d.reason }}</td><td><a href="{% url 'maintenance:downtime-update' d.pk %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a> <a href="{% url 'maintenance:downtime-delete' d.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Sure?')"><i class="fas fa-trash"></i></a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="alert alert-info">No downtime records found.</div>{% endif %}
+    </div></div>
+</div>
+{% endblock %}

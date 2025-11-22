@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class ArConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'ar'
+    verbose_name = 'Accounts Receivable'

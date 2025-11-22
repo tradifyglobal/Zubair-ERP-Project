@@ -1,0 +1,346 @@
+<form method="post" enctype="multipart/form-data" style="display: block;">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="HaJlwo3MIeAl0RO1M4cAeKcJBHLxWBYRMI698aAjhhyf4eo5jlTQBYuoWgCMdeGv">
+                                
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_distributor_code" class="form-label">
+                                                Distributor code
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="text" name="distributor_code" class="form-control" placeholder="Distributor code" required maxlength="50" id="id_distributor_code">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_distributor_name" class="form-label">
+                                                Distributor name
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="text" name="distributor_name" class="form-control" placeholder="Company name" required maxlength="255" id="id_distributor_name">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_status" class="form-label">
+                                                Status
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <select name="status" class="form-select" required="required" id="id_status">
+  <option value="ACTIVE">Active</option>
+
+  <option value="INACTIVE">Inactive</option>
+
+  <option value="SUSPENDED">Suspended</option>
+
+  <option value="PROSPECTIVE" selected>Prospective</option>
+
+</select>
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_email" class="form-label">
+                                                Email
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="email" name="email" class="form-control" placeholder="Email" required maxlength="254" id="id_email">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_phone" class="form-label">
+                                                Phone
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="tel" name="phone" class="form-control" placeholder="Phone" required maxlength="20" id="id_phone">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_website" class="form-label">
+                                                Website
+                                                
+                                            </label>
+                                            
+                                            
+                                                <input type="url" name="website" class="form-control" placeholder="Website" maxlength="200" id="id_website">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_address" class="form-label">
+                                                Address
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <textarea name="address" cols="40" rows="2" class="form-control" placeholder="Street address" required id="id_address">
+</textarea>
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_city" class="form-label">
+                                                City
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="text" name="city" class="form-control" placeholder="City" required maxlength="100" id="id_city">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_state" class="form-label">
+                                                State
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="text" name="state" class="form-control" placeholder="State/Province" required maxlength="100" id="id_state">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_postal_code" class="form-label">
+                                                Postal code
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="text" name="postal_code" class="form-control" placeholder="Postal code" required maxlength="20" id="id_postal_code">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_country" class="form-label">
+                                                Country
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="text" name="country" class="form-control" placeholder="Country" required maxlength="100" id="id_country">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_account_manager" class="form-label">
+                                                Account manager
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <select name="account_manager" class="form-select" required id="id_account_manager">
+  <option value="" selected>---------</option>
+
+  <option value="1">zubair</option>
+
+  <option value="2">Admin</option>
+
+  <option value="3">Burhan</option>
+
+  <option value="4">Sameer</option>
+
+  <option value="5">admin</option>
+
+  <option value="6">testuser</option>
+
+</select>
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_region" class="form-label">
+                                                Region
+                                                
+                                            </label>
+                                            
+                                            
+                                                <input type="text" name="region" class="form-control" placeholder="Region" maxlength="100" id="id_region">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_territory" class="form-label">
+                                                Territory
+                                                
+                                            </label>
+                                            
+                                            
+                                                <input type="text" name="territory" class="form-control" placeholder="Territory" maxlength="100" id="id_territory">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_contract_start_date" class="form-label">
+                                                Contract start date
+                                                
+                                            </label>
+                                            
+                                            
+                                                <input type="date" name="contract_start_date" class="form-control" id="id_contract_start_date">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_contract_end_date" class="form-label">
+                                                Contract end date
+                                                
+                                            </label>
+                                            
+                                            
+                                                <input type="date" name="contract_end_date" class="form-control" id="id_contract_end_date">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_credit_limit" class="form-label">
+                                                Credit limit
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="number" name="credit_limit" value="0" class="form-control" placeholder="0.00" step="0.01" required id="id_credit_limit">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_annual_sales_target" class="form-label">
+                                                Annual sales target
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            
+                                            
+                                                <input type="number" name="annual_sales_target" value="0" class="form-control" placeholder="0.00" step="0.01" required id="id_annual_sales_target">
+                                            
+                                            
+                                            
+                                            
+                                        </div>
+                                    
+                                
+                                    
+                                        <div class="mb-3">
+                                            <label for="id_authorized_products" class="form-label">
+                                                Authorized products
+                                                
+                                            </label>
+                                            
+                                            
+                                                <textarea name="authorized_products" cols="40" rows="2" class="form-control" placeholder="Product codes (comma-separated)" aria-describedby="id_authorized_products_helptext" id="id_authorized_products">
+</textarea>
+                                            
+                                            
+                                            
+                                            
+                                                <small class="form-text text-muted">Comma-separated product codes</small>
+                                            
+                                        </div>
+                                    
+                                
+
+                                <div class="mt-4" style="display: flex; gap: 10px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+                                    <button type="submit" class="btn btn-primary" style="min-width: 120px;">
+                                        <i class="mdi mdi-content-save"></i> Save
+                                    </button>
+                                    <a href="/manufacturing/distributors/" class="btn btn-light">
+                                        <i class="mdi mdi-close"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>

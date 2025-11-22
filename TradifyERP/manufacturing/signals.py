@@ -7,7 +7,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 from decimal import Decimal
-from .models import ProductionOrder, QualityInspection
+from .models import ProductionOrder, QualityInspection, DistributorOrder
 
 
 @receiver(post_save, sender=ProductionOrder)
@@ -87,3 +87,80 @@ def quality_inspection_post_save(sender, instance, created, **kwargs):
         # Track failed inspection
         # Could create rework production order or notify supervisor
         pass
+
+
+# ==================== DISTRIBUTOR PERFORMANCE SIGNALS ====================
+
+@receiver(post_save, sender=DistributorOrder)
+def update_distributor_ytd_sales(sender, instance, created, **kwargs):
+    """
+    When an order is created or updated, update the distributor's YTD sales.
+    This keeps the ytd_sales field current with all posted orders.
+    """
+    try:
+        from django.db.models import Sum
+        
+        distributor = instance.distributor
+        
+        # Calculate total sales for current year (only posted orders)
+        current_year = timezone.now().year
+        
+        ytd_total = DistributorOrder.objects.filter(
+            distributor=distributor,
+            order_date__year=current_year,
+            is_posted=True
+        ).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
+        
+        # Update distributor's YTD sales
+        distributor.ytd_sales = ytd_total
+        distributor.save(update_fields=['ytd_sales', 'updated_at'])
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        action = "created" if created else "updated"
+        logger.info(
+            f'Updated YTD sales for {distributor.distributor_name} after order {action}. '
+            f'New YTD: ${ytd_total}'
+        )
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Error updating distributor YTD sales: {str(e)}')
+
+
+@receiver(post_delete, sender=DistributorOrder)
+def recalculate_distributor_ytd_sales_on_delete(sender, instance, **kwargs):
+    """
+    When an order is deleted, recalculate the distributor's YTD sales.
+    Ensures accuracy of YTD metrics.
+    """
+    try:
+        from django.db.models import Sum
+        
+        distributor = instance.distributor
+        
+        # Recalculate total sales for current year
+        current_year = timezone.now().year
+        
+        ytd_total = DistributorOrder.objects.filter(
+            distributor=distributor,
+            order_date__year=current_year,
+            is_posted=True
+        ).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
+        
+        # Update distributor's YTD sales
+        distributor.ytd_sales = ytd_total
+        distributor.save(update_fields=['ytd_sales', 'updated_at'])
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f'Recalculated YTD sales for {distributor.distributor_name} after order deletion. '
+            f'New YTD: ${ytd_total}'
+        )
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Error recalculating distributor YTD sales: {str(e)}')

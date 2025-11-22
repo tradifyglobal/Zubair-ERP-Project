@@ -1,0 +1,92 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Cash Positions | Cash Management</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Cash Positions</h4>
+                        <a href="#" class="btn btn-primary btn-sm">Add Position</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Position Date</th>
+                                            <th>Bank Account</th>
+                                            <th>Opening Balance</th>
+                                            <th>Closing Balance</th>
+                                            <th>Currency</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for position in positions %}
+                                        <tr>
+                                            <td>{{ position.position_date|date:"M d, Y" }}</td>
+                                            <td>{{ position.bank_account.account_number }}</td>
+                                            <td>{{ position.opening_balance|floatformat:2 }}</td>
+                                            <td>{{ position.closing_balance|floatformat:2 }}</td>
+                                            <td>{{ position.currency.code }}</td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-info">View</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">No cash positions found</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {% if is_paginated %}
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

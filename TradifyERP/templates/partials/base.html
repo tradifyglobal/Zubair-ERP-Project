@@ -258,6 +258,9 @@
             z-index: 1001 !important;
             top: 100% !important;
             left: 0 !important;
+            max-height: 70vh !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
         
         body[data-layout="horizontal"] .dropdown-menu.show {
@@ -341,9 +344,11 @@
             padding-top: 0 !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
+            overflow-y: auto !important;
             overflow-x: hidden !important;
             width: 100% !important;
             box-sizing: border-box !important;
+            height: calc(100vh - 70px) !important;
         }
         
         /* Vertical layout main-content flex structure */
@@ -451,18 +456,21 @@
         /* Main content wrapper */
         body:not([data-layout="horizontal"]) .main-content {
             display: block !important;
-            overflow: auto !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
             margin-top: 0 !important;
             width: 100% !important;
+            height: calc(100vh - 70px) !important;
         }
         
         body[data-layout="horizontal"] .main-content {
             flex: 1 !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
-            margin-top: 120px !important;
+            margin-top: 0 !important;
+            padding-top: 140px !important;
             width: 100% !important;
-            height: calc(100vh - 120px) !important;
+            height: calc(100vh - 70px) !important;
         }
         
         /* Vertical sidebar */
@@ -471,8 +479,12 @@
             width: 250px;
             overflow-y: auto;
             overflow-x: hidden;
-            height: 100% !important;
+            height: calc(100vh - 70px) !important;
             max-height: calc(100vh - 70px) !important;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            z-index: 1000;
         }
         
         /* Content area */
@@ -480,14 +492,15 @@
             overflow-y: auto !important;
             overflow-x: hidden !important;
             width: 100% !important;
-            height: 100% !important;
+            height: auto !important;
+            min-height: calc(100vh - 70px) !important;
         }
         
         body[data-layout="horizontal"] .page-content {
             overflow-y: auto !important;
             overflow-x: hidden !important;
             width: 100% !important;
-            height: 100% !important;
+            height: auto !important;
             display: flex !important;
             flex-direction: column !important;
         }
@@ -517,12 +530,6 @@
         body:not([data-layout="horizontal"]) .vertical-layout-header,
         body:not([data-layout="horizontal"]) .vertical-layout-sidebar {
             display: block !important;
-        }
-        
-        /* Force horizontal layout only */
-        .vertical-layout-header,
-        .vertical-layout-sidebar {
-            display: none !important;
         }
     </style>
     <script>

@@ -58,12 +58,14 @@
 
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="layout-position"
-                            id="layout-position-fixed" value="fixed">
+                            id="layout-position-fixed" value="fixed" 
+                            onchange="document.body.setAttribute('data-layout-scrollable', 'false'); localStorage.setItem('minia-layout-position', 'fixed');">
                         <label class="form-check-label" for="layout-position-fixed">Fixed</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="layout-position"
-                            id="layout-position-scrollable" value="scrollable">
+                            id="layout-position-scrollable" value="scrollable"
+                            onchange="document.body.setAttribute('data-layout-scrollable', 'true'); localStorage.setItem('minia-layout-position', 'scrollable');">
                         <label class="form-check-label" for="layout-position-scrollable">Scrollable</label>
                     </div>
 

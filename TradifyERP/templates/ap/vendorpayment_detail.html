@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}Payment {{ vendor_payment.payment_number }} - Accounts Payable{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title with Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Vendor Payment: {{ vendor_payment.payment_number }}</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'ap:payment_list' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Summary Card -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Payment Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Payment Information</label>
+                                <p class="mb-2">
+                                    <strong>Payment Date:</strong> {{ vendor_payment.payment_date|date:"M d, Y" }}<br>
+                                    <strong>Payment Method:</strong> {{ vendor_payment.get_payment_method_display }}<br>
+                                    {% if vendor_payment.payment_method == 'CHECK' %}
+                                    <strong>Check Number:</strong> {{ vendor_payment.check_number }}<br>
+                                    {% endif %}
+                                    <strong>Reference Number:</strong> {{ vendor_payment.reference_number|default:"-" }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Vendor Details</label>
+                                <p class="mb-2">
+                                    <strong>{{ vendor_payment.vendor.name }}</strong><br>
+                                    {% if vendor_payment.vendor.city %}
+                                    {{ vendor_payment.vendor.city }}, {{ vendor_payment.vendor.state }} {{ vendor_payment.vendor.zip_code }}<br>
+                                    {% endif %}
+                                    {% if vendor_payment.vendor.email %}
+                                    <small class="text-muted">{{ vendor_payment.vendor.email }}</small>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Payment Notes</label>
+                                <p class="mb-2">
+                                    {{ vendor_payment.notes|default:"No notes" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bills Paid -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Bills Paid ({{ vendor_payment.bills.count }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if vendor_payment.bills.all %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Bill Number</th>
+                                        <th>Bill Date</th>
+                                        <th>Bill Amount</th>
+                                        <th>Previously Paid</th>
+                                        <th>Payment Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bill in vendor_payment.bills.all %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'ap:bill_detail' bill.id %}">
+                                                {{ bill.bill_number }}
+                                            </a>
+                                        </td>
+                                        <td>{{ bill.bill_date|date:"M d, Y" }}</td>
+                                        <td>${{ bill.total_amount }}</td>
+                                        <td>${{ bill.amount_paid }}</td>
+                                        <td><strong>${{ bill.total_amount|add:"-"bill.amount_paid }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No bills associated with this payment.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amount Summary Sidebar -->
+            <div class="col-lg-4">
+                <!-- Amount Summary Card -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Amount Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Payment Amount:</span>
+                                <strong class="text-success">${{ vendor_payment.payment_amount }}</strong>
+                            </div>
+                            <hr>
+                            <div class="alert alert-success mb-0">
+                                <small>Payment has been successfully recorded.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GL Entry Info Card -->
+                {% if vendor_payment.gl_entry %}
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">GL Entry</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>GL Entry ID:</strong> {{ vendor_payment.gl_entry.id }}<br>
+                            <small class="text-muted">{{ vendor_payment.gl_entry.created_date|date:"M d, Y g:i A" }}</small>
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Payment Audit Info -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Audit Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <small>
+                            <strong>Created By:</strong> {{ vendor_payment.created_by.first_name }} {{ vendor_payment.created_by.last_name }}<br>
+                            <strong>Date:</strong> {{ vendor_payment.created_date|date:"M d, Y g:i A" }}<br>
+                            {% if vendor_payment.modified_date != vendor_payment.created_date %}
+                            <strong>Last Modified:</strong> {{ vendor_payment.modified_date|date:"M d, Y g:i A" }}<br>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

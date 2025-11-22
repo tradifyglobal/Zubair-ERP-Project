@@ -22,13 +22,19 @@ from .models import (
     ProductCategory, Product, RawMaterial,
     BillOfMaterials, BOMLine,
     WorkCenter, Routing, RoutingLine,
-    ProductionOrder, QualityInspection, Equipment
+    ProductionOrder, QualityInspection, Equipment,
+    Distributor, DistributorContact, DistributorOrder,
+    OrderShipment, AfterSalesService, WarrantyRegistration,
+    DistributorPerformance
 )
 from .forms import (
     ProductCategoryForm, ProductForm, RawMaterialForm,
     BillOfMaterialsForm, BOMLineForm,
     WorkCenterForm, RoutingForm, RoutingLineForm,
-    ProductionOrderForm, QualityInspectionForm, EquipmentForm
+    ProductionOrderForm, QualityInspectionForm, EquipmentForm,
+    DistributorForm, DistributorContactForm, DistributorOrderForm,
+    OrderShipmentForm, AfterSalesServiceForm, WarrantyRegistrationForm,
+    DistributorPerformanceForm
 )
 
 
@@ -802,3 +808,294 @@ class ManufacturingDashboardView(LoginRequiredMixin, TemplateView):
         }
         
         return context
+
+
+# ==================== Distributor Management Views ====================
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorListView(LoginRequiredMixin, ListView):
+    model = Distributor
+    template_name = 'manufacturing/distributor_list.html'
+    context_object_name = 'distributors'
+    paginate_by = 25
+    
+    def get_queryset(self):
+        qs = get_filtered_queryset(Distributor, self.request.user)
+        search = self.request.GET.get('search', '')
+        if search:
+            qs = qs.filter(Q(name__icontains=search) | Q(code__icontains=search))
+        return qs.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorCreateView(LoginRequiredMixin, CreateView):
+    model = Distributor
+    form_class = DistributorForm
+    template_name = 'manufacturing/distributor_form.html'
+    success_url = reverse_lazy('manufacturing:distributor_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorUpdateView(LoginRequiredMixin, UpdateView):
+    model = Distributor
+    form_class = DistributorForm
+    template_name = 'manufacturing/distributor_form.html'
+    success_url = reverse_lazy('manufacturing:distributor_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorDeleteView(LoginRequiredMixin, DeleteView):
+    model = Distributor
+    template_name = 'manufacturing/distributor_confirm_delete.html'
+    success_url = reverse_lazy('manufacturing:distributor_list')
+
+
+# ==================== Distributor Order Views ====================
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorOrderListView(LoginRequiredMixin, ListView):
+    model = DistributorOrder
+    template_name = 'manufacturing/distributororder_list.html'
+    context_object_name = 'orders'
+    paginate_by = 25
+    
+    def get_queryset(self):
+        qs = get_filtered_queryset(DistributorOrder, self.request.user)
+        search = self.request.GET.get('search', '')
+        if search:
+            qs = qs.filter(Q(distributor__name__icontains=search) | Q(order_number__icontains=search))
+        return qs.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorOrderCreateView(LoginRequiredMixin, CreateView):
+    model = DistributorOrder
+    form_class = DistributorOrderForm
+    template_name = 'manufacturing/distributororder_form.html'
+    success_url = reverse_lazy('manufacturing:distributororder_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorOrderUpdateView(LoginRequiredMixin, UpdateView):
+    model = DistributorOrder
+    form_class = DistributorOrderForm
+    template_name = 'manufacturing/distributororder_form.html'
+    success_url = reverse_lazy('manufacturing:distributororder_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorOrderDeleteView(LoginRequiredMixin, DeleteView):
+    model = DistributorOrder
+    template_name = 'manufacturing/distributororder_confirm_delete.html'
+    success_url = reverse_lazy('manufacturing:distributororder_list')
+
+
+# ==================== Order Shipment Views ====================
+
+@method_decorator(csrf_protect, name='dispatch')
+class OrderShipmentListView(LoginRequiredMixin, ListView):
+    model = OrderShipment
+    template_name = 'manufacturing/ordershipment_list.html'
+    context_object_name = 'shipments'
+    paginate_by = 25
+    
+    def get_queryset(self):
+        # Filter through order relationship to entity
+        user_entities = get_user_entities(self.request.user)
+        qs = OrderShipment.objects.filter(order__distributor__entity_id__in=user_entities)
+        search = self.request.GET.get('search', '')
+        if search:
+            qs = qs.filter(Q(tracking_number__icontains=search))
+        return qs.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class OrderShipmentCreateView(LoginRequiredMixin, CreateView):
+    model = OrderShipment
+    form_class = OrderShipmentForm
+    template_name = 'manufacturing/ordershipment_form.html'
+    success_url = reverse_lazy('manufacturing:ordershipment_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class OrderShipmentUpdateView(LoginRequiredMixin, UpdateView):
+    model = OrderShipment
+    form_class = OrderShipmentForm
+    template_name = 'manufacturing/ordershipment_form.html'
+    success_url = reverse_lazy('manufacturing:ordershipment_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class OrderShipmentDeleteView(LoginRequiredMixin, DeleteView):
+    model = OrderShipment
+    template_name = 'manufacturing/ordershipment_confirm_delete.html'
+    success_url = reverse_lazy('manufacturing:ordershipment_list')
+
+
+# ==================== After-Sales Service Views ====================
+
+@method_decorator(csrf_protect, name='dispatch')
+class AfterSalesServiceListView(LoginRequiredMixin, ListView):
+    model = AfterSalesService
+    template_name = 'manufacturing/aftersalesservice_list.html'
+    context_object_name = 'services'
+    paginate_by = 25
+    
+    def get_queryset(self):
+        qs = get_filtered_queryset(AfterSalesService, self.request.user)
+        search = self.request.GET.get('search', '')
+        if search:
+            qs = qs.filter(Q(service_ticket_number__icontains=search) | Q(subject__icontains=search))
+        return qs.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class AfterSalesServiceCreateView(LoginRequiredMixin, CreateView):
+    model = AfterSalesService
+    form_class = AfterSalesServiceForm
+    template_name = 'manufacturing/aftersalesservice_form.html'
+    success_url = reverse_lazy('manufacturing:aftersalesservice_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class AfterSalesServiceUpdateView(LoginRequiredMixin, UpdateView):
+    model = AfterSalesService
+    form_class = AfterSalesServiceForm
+    template_name = 'manufacturing/aftersalesservice_form.html'
+    success_url = reverse_lazy('manufacturing:aftersalesservice_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class AfterSalesServiceDeleteView(LoginRequiredMixin, DeleteView):
+    model = AfterSalesService
+    template_name = 'manufacturing/aftersalesservice_confirm_delete.html'
+    success_url = reverse_lazy('manufacturing:aftersalesservice_list')
+
+
+# ==================== Warranty Registration Views ====================
+
+@method_decorator(csrf_protect, name='dispatch')
+class WarrantyRegistrationListView(LoginRequiredMixin, ListView):
+    model = WarrantyRegistration
+    template_name = 'manufacturing/warrantyregistration_list.html'
+    context_object_name = 'warranties'
+    paginate_by = 25
+    
+    def get_queryset(self):
+        # Filter through distributor relationship to entity
+        user_entities = get_user_entities(self.request.user)
+        qs = WarrantyRegistration.objects.filter(distributor__entity_id__in=user_entities)
+        search = self.request.GET.get('search', '')
+        if search:
+            qs = qs.filter(Q(warranty_number__icontains=search) | Q(product_code__icontains=search))
+        return qs.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class WarrantyRegistrationCreateView(LoginRequiredMixin, CreateView):
+    model = WarrantyRegistration
+    form_class = WarrantyRegistrationForm
+    template_name = 'manufacturing/warrantyregistration_form.html'
+    success_url = reverse_lazy('manufacturing:warrantyregistration_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class WarrantyRegistrationUpdateView(LoginRequiredMixin, UpdateView):
+    model = WarrantyRegistration
+    form_class = WarrantyRegistrationForm
+    template_name = 'manufacturing/warrantyregistration_form.html'
+    success_url = reverse_lazy('manufacturing:warrantyregistration_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class WarrantyRegistrationDeleteView(LoginRequiredMixin, DeleteView):
+    model = WarrantyRegistration
+    template_name = 'manufacturing/warrantyregistration_confirm_delete.html'
+    success_url = reverse_lazy('manufacturing:warrantyregistration_list')
+
+
+# ==================== Distributor Performance Views ====================
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorPerformanceListView(LoginRequiredMixin, ListView):
+    model = DistributorPerformance
+    template_name = 'manufacturing/distributorperformance_list.html'
+    context_object_name = 'performances'
+    paginate_by = 25
+    
+    def get_queryset(self):
+        # Filter through distributor relationship to entity
+        user_entities = get_user_entities(self.request.user)
+        qs = DistributorPerformance.objects.filter(distributor__entity_id__in=user_entities)
+        search = self.request.GET.get('search', '')
+        if search:
+            qs = qs.filter(Q(distributor__distributor_name__icontains=search))
+        return qs.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorPerformanceCreateView(LoginRequiredMixin, CreateView):
+    model = DistributorPerformance
+    form_class = DistributorPerformanceForm
+    template_name = 'manufacturing/distributorperformance_form.html'
+    success_url = reverse_lazy('manufacturing:distributorperformance_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorPerformanceUpdateView(LoginRequiredMixin, UpdateView):
+    model = DistributorPerformance
+    form_class = DistributorPerformanceForm
+    template_name = 'manufacturing/distributorperformance_form.html'
+    success_url = reverse_lazy('manufacturing:distributorperformance_list')
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class DistributorPerformanceDeleteView(LoginRequiredMixin, DeleteView):
+    model = DistributorPerformance
+    template_name = 'manufacturing/distributorperformance_confirm_delete.html'
+    success_url = reverse_lazy('manufacturing:distributorperformance_list')

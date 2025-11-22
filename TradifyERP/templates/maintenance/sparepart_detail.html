@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}{{ spare_part.part_name }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4"><div class="card"><div class="card-body"><table class="table"><tr><td><strong>Code:</strong></td><td>{{ spare_part.part_code }}</td></tr><tr><td><strong>Stock:</strong></td><td>{{ spare_part.current_stock }}</td></tr></table></div></div></div>
+{% endblock %}

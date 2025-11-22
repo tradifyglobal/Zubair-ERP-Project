@@ -1,0 +1,106 @@
+{% extends "maintenance/base.html" %}
+{% load static %}
+
+{% block page_title %}{% if form.instance.pk %}Edit{% else %}Add New{% endif %} {{ model_name }}{% endblock %}
+{% block page_heading %}{% if form.instance.pk %}Edit{% else %}Add New{% endif %} {{ model_name }}{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url list_view_name %}">{{ model_name }}s</a></li>
+  <li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}New{% endif %}</li>
+{% endblock %}
+
+{% block page_content %}
+<div class="row">
+  <div class="col-lg-8 offset-lg-2">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0">
+          {% if form.instance.pk %}
+            Edit {{ model_name }}
+          {% else %}
+            Add New {{ model_name }}
+          {% endif %}
+        </h6>
+      </div>
+      <form method="post" class="card-body">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">
+            <h6>Please correct the errors below:</h6>
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="form-container">
+          {% for field in form %}
+            <div class="mb-3">
+              {{ field.label_tag }}
+              {% if field.help_text %}
+                <small class="form-text text-muted d-block">{{ field.help_text|safe }}</small>
+              {% endif %}
+              
+              {% if field.field.widget.input_type == "hidden" %}
+                {{ field }}
+              {% elif field.field.widget.input_type == "checkbox" %}
+                <div class="form-check">
+                  {{ field }}
+                  <label class="form-check-label" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                  </label>
+                </div>
+              {% elif field.field.widget.input_type == "select" %}
+                {{ field }}
+              {% elif field.field.widget.input_type == "textarea" %}
+                {{ field }}
+              {% elif field.field.widget.input_type == "datetime-local" %}
+                {{ field }}
+              {% else %}
+                {{ field }}
+              {% endif %}
+
+              {% if field.errors %}
+                <div class="invalid-feedback d-block">
+                  {{ field.errors }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Form Actions -->
+        <div class="card-footer bg-light">
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="mdi mdi-content-save"></i> Save
+            </button>
+            <a href="{% url list_view_name %}" class="btn btn-secondary">
+              <i class="mdi mdi-close"></i> Cancel
+            </a>
+            {% if form.instance.pk %}
+              <a href="{% url delete_view_name form.instance.pk %}" class="btn btn-danger btn-delete ms-auto">
+                <i class="mdi mdi-trash-can"></i> Delete
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-control, .form-select {
+    min-height: 2.5rem;
+  }
+  .form-container .mb-3 label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+</style>
+{% endblock %}

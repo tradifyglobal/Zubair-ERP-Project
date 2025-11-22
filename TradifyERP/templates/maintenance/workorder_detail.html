@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}{{ work_order.work_order_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4"><div class="card"><div class="card-body"><table class="table"><tr><td><strong>WO #:</strong></td><td>{{ work_order.work_order_number }}</td></tr><tr><td><strong>Asset:</strong></td><td>{{ work_order.asset }}</td></tr><tr><td><strong>Status:</strong></td><td>{{ work_order.status }}</td></tr></table></div></div></div>
+{% endblock %}

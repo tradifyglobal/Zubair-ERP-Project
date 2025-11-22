@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}Vendor Bills - Accounts Payable{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Vendor Bills</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'ap:bill_create' %}" class="btn btn-primary">Create Bill</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-3">
+                                <input type="text" name="search" class="form-control" placeholder="Search bill #, vendor..." 
+                                    value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="status" class="form-select">
+                                    <option value="">All Status</option>
+                                    <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                                    <option value="POSTED" {% if request.GET.status == 'POSTED' %}selected{% endif %}>Posted</option>
+                                    <option value="PAID" {% if request.GET.status == 'PAID' %}selected{% endif %}>Paid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="payment_status" class="form-select">
+                                    <option value="">All Payment Status</option>
+                                    <option value="UNPAID" {% if request.GET.payment_status == 'UNPAID' %}selected{% endif %}>Unpaid</option>
+                                    <option value="PARTIAL" {% if request.GET.payment_status == 'PARTIAL' %}selected{% endif %}>Partial</option>
+                                    <option value="PAID" {% if request.GET.payment_status == 'PAID' %}selected{% endif %}>Paid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Search</button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'ap:bill_list' %}" class="btn btn-light w-100">Clear Filters</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bills Table -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        {% if bills %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Bill Number</th>
+                                        <th>Vendor</th>
+                                        <th>Bill Date</th>
+                                        <th>Due Date</th>
+                                        <th>Amount</th>
+                                        <th>Paid</th>
+                                        <th>Status</th>
+                                        <th>Payment Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bill in bills %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'ap:bill_detail' bill.id %}">
+                                                {{ bill.bill_number }}
+                                            </a>
+                                        </td>
+                                        <td>{{ bill.vendor.name }}</td>
+                                        <td>{{ bill.bill_date|date:"M d, Y" }}</td>
+                                        <td>{{ bill.due_date|date:"M d, Y" }}</td>
+                                        <td>${{ bill.total_amount }}</td>
+                                        <td>${{ bill.amount_paid }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if bill.status == 'PAID' %}success{% elif bill.status == 'DRAFT' %}secondary{% else %}primary{% endif %}">
+                                                {{ bill.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if bill.payment_status == 'PAID' %}success{% elif bill.payment_status == 'UNPAID' %}danger{% else %}warning{% endif %}">
+                                                {{ bill.get_payment_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="{% url 'ap:bill_detail' bill.id %}">View</a></li>
+                                                    <li><a class="dropdown-item" href="{% url 'ap:bill_update' bill.id %}">Edit</a></li>
+                                                    {% if not bill.is_approved %}
+                                                    <li><a class="dropdown-item" href="{% url 'ap:bill_approve' bill.id %}">Approve</a></li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                        {% else %}
+                        <div class="alert alert-info text-center">
+                            No bills found. <a href="{% url 'ap:bill_create' %}">Create one now</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

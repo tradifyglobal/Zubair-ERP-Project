@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}{% if object %}Edit{% else %}Create{% endif %} Bill - Accounts Payable{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{% if object %}Edit{% else %}Create New{% endif %} Vendor Bill</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'ap:bill_list' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Bill Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Vendor and Bill Number -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.vendor.id_for_label }}" class="form-label">Vendor <span class="text-danger">*</span></label>
+                                    <select name="vendor" id="{{ form.vendor.id_for_label }}" class="form-select {% if form.vendor.errors %}is-invalid{% endif %}" required>
+                                        <option value="">Select a vendor...</option>
+                                        {% for vendor in form.vendor.field.queryset %}
+                                        <option value="{{ vendor.id }}" {% if form.vendor.value == vendor.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ vendor.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.vendor.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.vendor.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.bill_number.id_for_label }}" class="form-label">Bill Number <span class="text-danger">*</span></label>
+                                    <input type="text" name="bill_number" id="{{ form.bill_number.id_for_label }}" 
+                                        class="form-control {% if form.bill_number.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.bill_number.value|default:'' }}" required>
+                                    {% if form.bill_number.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.bill_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.bill_date.id_for_label }}" class="form-label">Bill Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="bill_date" id="{{ form.bill_date.id_for_label }}" 
+                                        class="form-control {% if form.bill_date.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.bill_date.value|date:'Y-m-d'|default:'' }}" required>
+                                    {% if form.bill_date.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.bill_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="due_date" id="{{ form.due_date.id_for_label }}" 
+                                        class="form-control {% if form.due_date.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.due_date.value|date:'Y-m-d'|default:'' }}" required>
+                                    {% if form.due_date.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.due_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                <textarea name="description" id="{{ form.description.id_for_label }}" 
+                                    class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                    rows="3" placeholder="Bill description...">{{ form.description.value|default:'' }}</textarea>
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Amount -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.total_amount.id_for_label }}" class="form-label">Total Amount <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" name="total_amount" id="{{ form.total_amount.id_for_label }}" 
+                                            class="form-control {% if form.total_amount.errors %}is-invalid{% endif %}" 
+                                            step="0.01" value="{{ form.total_amount.value|default:'' }}" required>
+                                    </div>
+                                    {% if form.total_amount.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.total_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.po_reference.id_for_label }}" class="form-label">PO Reference</label>
+                                    <input type="text" name="po_reference" id="{{ form.po_reference.id_for_label }}" 
+                                        class="form-control" value="{{ form.po_reference.value|default:'' }}">
+                                </div>
+                            </div>
+
+                            <!-- Terms -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="{{ form.payment_terms.id_for_label }}" class="form-label">Payment Terms</label>
+                                    <input type="text" name="payment_terms" id="{{ form.payment_terms.id_for_label }}" 
+                                        class="form-control" placeholder="e.g., Net 30" value="{{ form.payment_terms.value|default:'' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.status.id_for_label }}" class="form-label">Status <span class="text-danger">*</span></label>
+                                    <select name="status" id="{{ form.status.id_for_label }}" class="form-select {% if form.status.errors %}is-invalid{% endif %}" required>
+                                        {% for value, label in form.status.field.choices %}
+                                        <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}Update Bill{% else %}Create Bill{% endif %}
+                                </button>
+                                <a href="{% url 'ap:bill_list' %}" class="btn btn-light">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Sidebar -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Form Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="mb-3">Required Fields</h6>
+                        <p class="small text-muted">
+                            Fields marked with <span class="text-danger">*</span> are required to create the bill.
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">Bill Dates</h6>
+                        <p class="small text-muted">
+                            The Bill Date is when you received the invoice from the vendor. The Due Date is when payment is required.
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">Status</h6>
+                        <p class="small text-muted">
+                            <strong>Draft:</strong> Bill is still being prepared<br>
+                            <strong>Posted:</strong> Bill has been recorded in the system
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

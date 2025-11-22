@@ -1,0 +1,190 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>AR Dashboard | Accounts Receivable</title>
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .metric-card.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .metric-card .value {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    .metric-card .label {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title mb-0">AR Dashboard</h4>
+                    <p class="text-muted">Accounts Receivable Overview</p>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card">
+                        <div class="label">Total Outstanding</div>
+                        <div class="value">₹{{ total_outstanding|floatformat:0 }}</div>
+                        <small>{{ total_invoices }} Invoices</small>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card warning">
+                        <div class="label">Overdue Amount</div>
+                        <div class="value">₹{{ overdue_amount|floatformat:0 }}</div>
+                        <small>{{ overdue_count }} Overdue</small>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card">
+                        <div class="label">DSO</div>
+                        <div class="value">{{ dso }} days</div>
+                        <small>Days Sales Outstanding</small>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card">
+                        <div class="label">Recent Payments</div>
+                        <div class="value">{{ recent_payments|length }}</div>
+                        <small>Last 10 Payments</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Quick Actions</h5>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'ar:invoice_list' %}" class="btn btn-primary btn-sm">View Invoices</a>
+                                <a href="{% url 'ar:payment_list' %}" class="btn btn-info btn-sm">View Payments</a>
+                                <a href="{% url 'ar:aging_report' %}" class="btn btn-warning btn-sm">AR Aging Report</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Invoices & Payments -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Invoices</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice</th>
+                                            <th>Customer</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for invoice in recent_invoices %}
+                                        <tr>
+                                            <td>{{ invoice.invoice_number }}</td>
+                                            <td>{{ invoice.customer.customer_name }}</td>
+                                            <td>₹{{ invoice.total_amount|floatformat:2 }}</td>
+                                            <td>
+                                                {% if invoice.status == 'ISSUED' %}
+                                                    <span class="badge bg-warning">Issued</span>
+                                                {% elif invoice.status == 'SENT' %}
+                                                    <span class="badge bg-info">Sent</span>
+                                                {% elif invoice.status == 'PARTIALLY_PAID' %}
+                                                    <span class="badge bg-primary">Partial</span>
+                                                {% elif invoice.status == 'PAID' %}
+                                                    <span class="badge bg-success">Paid</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">No recent invoices</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Payments</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Payment #</th>
+                                            <th>Customer</th>
+                                            <th>Amount</th>
+                                            <th>Method</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in recent_payments %}
+                                        <tr>
+                                            <td>{{ payment.payment_number }}</td>
+                                            <td>{{ payment.customer.customer_name }}</td>
+                                            <td>₹{{ payment.payment_amount|floatformat:2 }}</td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ payment.get_payment_method_display }}</span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">No recent payments</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+{% endblock %}

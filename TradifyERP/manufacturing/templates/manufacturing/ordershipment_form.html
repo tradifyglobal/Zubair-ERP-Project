@@ -1,0 +1,199 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Shipment | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="mb-0">{% if form.instance.pk %}Edit Shipment{% else %}Add New Shipment{% endif %}</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Section -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Shipment Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" class="form-horizontal">
+                                {% csrf_token %}
+
+                                <!-- Order Selection -->
+                                <div class="mb-3">
+                                    <label for="{{ form.order.id_for_label }}" class="form-label">
+                                        Order <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.order }}
+                                    {% if form.order.errors %}
+                                        <div class="text-danger small mt-1">{{ form.order.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Shipment Dates Section -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.shipment_date.id_for_label }}" class="form-label">
+                                                Shipment Date <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.shipment_date }}
+                                            {% if form.shipment_date.errors %}
+                                                <div class="text-danger small mt-1">{{ form.shipment_date.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.expected_delivery.id_for_label }}" class="form-label">
+                                                Expected Delivery <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.expected_delivery }}
+                                            {% if form.expected_delivery.errors %}
+                                                <div class="text-danger small mt-1">{{ form.expected_delivery.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.actual_delivery.id_for_label }}" class="form-label">
+                                                Actual Delivery
+                                            </label>
+                                            {{ form.actual_delivery }}
+                                            {% if form.actual_delivery.errors %}
+                                                <div class="text-danger small mt-1">{{ form.actual_delivery.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Courier & Tracking Section -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.courier.id_for_label }}" class="form-label">
+                                                <i class="mdi mdi-truck"></i> Courier/Carrier
+                                            </label>
+                                            {{ form.courier }}
+                                            {% if form.courier.errors %}
+                                                <div class="text-danger small mt-1">{{ form.courier.errors }}</div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">
+                                                Select from available courier services
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.tracking_number.id_for_label }}" class="form-label">
+                                                <i class="mdi mdi-barcode"></i> Tracking Number
+                                            </label>
+                                            {{ form.tracking_number }}
+                                            {% if form.tracking_number.errors %}
+                                                <div class="text-danger small mt-1">{{ form.tracking_number.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status & Cost Section -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                                Status <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.status }}
+                                            {% if form.status.errors %}
+                                                <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.shipping_cost.id_for_label }}" class="form-label">
+                                                Shipping Cost ($)
+                                            </label>
+                                            {{ form.shipping_cost }}
+                                            {% if form.shipping_cost.errors %}
+                                                <div class="text-danger small mt-1">{{ form.shipping_cost.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Notes Section -->
+                                <div class="mb-3">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                        <i class="mdi mdi-note"></i> Notes
+                                    </label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger small mt-1">{{ form.notes.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Form Actions -->
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="mdi mdi-content-save"></i> Save Shipment
+                                    </button>
+                                    <a href="{% url 'manufacturing:ordershipment_list' %}" class="btn btn-light">
+                                        <i class="mdi mdi-close"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Panel -->
+                <div class="col-lg-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="mdi mdi-information"></i> Shipment Information
+                            </h5>
+                            <div class="small text-muted">
+                                <p><strong>Available Couriers:</strong></p>
+                                <ul class="list-unstyled">
+                                    <li>✓ Dtdc</li>
+                                    <li>✓ Delhivery</li>
+                                    <li>✓ Blue Dart</li>
+                                    <li>✓ Ecom Express</li>
+                                    <li>✓ FedEx</li>
+                                    <li>✓ Gati</li>
+                                    <li>✓ Dhl & more...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    .text-danger {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}

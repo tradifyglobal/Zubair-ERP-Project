@@ -1,0 +1,50 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Confirm Delete Distributor | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="mb-0 font-size-18">Confirm Delete</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation -->
+            <div class="row">
+                <div class="col-lg-6 mx-auto">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <i class="mdi mdi-alert-circle-outline text-danger" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title text-center text-danger">Are you sure?</h5>
+                            <p class="card-text text-center">
+                                You are about to delete the distributor <strong>{{ object.name }}</strong>.
+                                This action cannot be undone.
+                            </p>
+                            <form method="post" class="text-center">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="mdi mdi-delete"></i> Yes, Delete
+                                </button>
+                                <a href="{% url 'manufacturing:distributor_list' %}" class="btn btn-light">
+                                    <i class="mdi mdi-close"></i> Cancel
+                                </a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -125,6 +125,39 @@
                                         </a>
                                     </li>
 
+                                    <!-- Cash Management -->
+                                    <li class="menu-title">Cash Management</li>
+                                    <li>
+                                        <a href="{% url 'cash_management:dashboard' %}">
+                                            <span>Cash Dashboard</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:payment_list' %}">
+                                            <span>Payment Schedule</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:position_list' %}">
+                                            <span>Cash Positions</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:forecast_list' %}">
+                                            <span>Liquidity Forecast</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:treasury_list' %}">
+                                            <span>Treasury Accounts</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:fx_list' %}">
+                                            <span>FX Exposure</span>
+                                        </a>
+                                    </li>
+
                                     <!-- Reconciliation -->
                                     <li class="menu-title">Reconciliation</li>
                                     <li>
@@ -434,6 +467,39 @@
                                             <span>Equipment</span>
                                         </a>
                                     </li>
+
+                                    <!-- Distributor Management -->
+                                    <li class="menu-title">Distribution & After-Sales</li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:distributor_list' %}">
+                                            <span>Distributors</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:distributororder_list' %}">
+                                            <span>Distributor Orders</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:ordershipment_list' %}">
+                                            <span>Shipments</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:aftersalesservice_list' %}">
+                                            <span>Service Tickets</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:warrantyregistration_list' %}">
+                                            <span>Warranties</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'manufacturing:distributorperformance_list' %}">
+                                            <span>Distributor Performance</span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
 
@@ -554,6 +620,220 @@
                                     <li>
                                         <a href="{% url 'inventory:low_stock_report' %}">
                                             <span>Low Stock Report</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title" data-key="t-crm-app">CRM & Sales</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="target"></i>
+                                    <span data-key="t-crm">CRM</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Dashboard -->
+                                    <li class="menu-title">Dashboard</li>
+                                    <li>
+                                        <a href="{% url 'crm:dashboard' %}">
+                                            <span>CRM Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Lead Management -->
+                                    <li class="menu-title">Lead Management</li>
+                                    <li>
+                                        <a href="{% url 'crm:lead_list' %}">
+                                            <span>All Leads</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Opportunities -->
+                                    <li class="menu-title">Opportunities</li>
+                                    <li>
+                                        <a href="{% url 'crm:opportunity_list' %}">
+                                            <span>All Opportunities</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Quotes -->
+                                    <li class="menu-title">Quotes</li>
+                                    <li>
+                                        <a href="{% url 'crm:quote_list' %}">
+                                            <span>All Quotes</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Activities -->
+                                    <li class="menu-title">Activities</li>
+                                    <li>
+                                        <a href="{% url 'crm:activity_list' %}">
+                                            <span>All Activities</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Campaigns -->
+                                    <li class="menu-title">Campaigns</li>
+                                    <li>
+                                        <a href="{% url 'crm:campaign_list' %}">
+                                            <span>All Campaigns</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title" data-key="t-maintenance-app">Site Maintenance</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="wrench"></i>
+                                    <span data-key="t-maintenance">Site Maintenance</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Dashboard -->
+                                    <li class="menu-title">Dashboard</li>
+                                    <li>
+                                        <a href="{% url 'maintenance:dashboard' %}">
+                                            <span>Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Maintenance Assets -->
+                                    <li class="menu-title">Assets</li>
+                                    <li>
+                                        <a href="{% url 'maintenance:asset-list' %}">
+                                            <span>All Assets</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'maintenance:asset-create' %}">
+                                            <span>Add Asset</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Maintenance Tasks -->
+                                    <li class="menu-title">Tasks</li>
+                                    <li>
+                                        <a href="{% url 'maintenance:task-list' %}">
+                                            <span>All Tasks</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'maintenance:task-create' %}">
+                                            <span>Create Task</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Work Orders -->
+                                    <li class="menu-title">Work Orders</li>
+                                    <li>
+                                        <a href="{% url 'maintenance:workorder-list' %}">
+                                            <span>All Work Orders</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'maintenance:workorder-create' %}">
+                                            <span>New Work Order</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Spare Parts -->
+                                    <li class="menu-title">Inventory</li>
+                                    <li>
+                                        <a href="{% url 'maintenance:sparepart-list' %}">
+                                            <span>Spare Parts</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'maintenance:sparepart-create' %}">
+                                            <span>Add Spare Part</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Vendors & Contracts -->
+                                    <li class="menu-title">Vendors</li>
+                                    <li>
+                                        <a href="{% url 'maintenance:vendor-list' %}">
+                                            <span>All Vendors</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'maintenance:vendor-create' %}">
+                                            <span>Add Vendor</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'maintenance:contract-list' %}">
+                                            <span>Contracts</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Compliance -->
+                                    <li class="menu-title">Compliance</li>
+                                    <li>
+                                        <a href="{% url 'maintenance:standard-list' %}">
+                                            <span>Standards</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'maintenance:audit-list' %}">
+                                            <span>Audits</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Cost Tracking -->
+                                    <li class="menu-title">Financial</li>
+                                    <li>
+                                        <a href="{% url 'maintenance:cost-list' %}">
+                                            <span>Maintenance Costs</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'maintenance:downtime-list' %}">
+                                            <span>Downtime Records</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="menu-title" data-key="t-projects-app">Projects</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="briefcase"></i>
+                                    <span data-key="t-projects">Project Management</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Dashboard -->
+                                    <li class="menu-title">Dashboard</li>
+                                    <li>
+                                        <a href="{% url 'projects:dashboard' %}">
+                                            <span>Projects Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Projects -->
+                                    <li class="menu-title">Projects</li>
+                                    <li>
+                                        <a href="{% url 'projects:project_list' %}">
+                                            <span>All Projects</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Tasks -->
+                                    <li class="menu-title">Tasks</li>
+                                    <li>
+                                        <a href="{% url 'projects:task_list' %}">
+                                            <span>All Tasks</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Time Tracking -->
+                                    <li class="menu-title">Time Tracking</li>
+                                    <li>
+                                        <a href="{% url 'projects:timeentry_list' %}">
+                                            <span>Time Entries</span>
                                         </a>
                                     </li>
                                 </ul>

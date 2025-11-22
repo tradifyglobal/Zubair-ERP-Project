@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Delete Confirmation{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Delete Confirmation</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">Are you sure you want to delete the following item?</p>
+                    <div class="alert alert-warning mb-4">
+                        <strong>{{ object }}</strong>
+                    </div>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                </div>
+                <div class="card-footer bg-light">
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Yes, Delete
+                        </button>
+                    </form>
+                    <a href="javascript:history.back()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

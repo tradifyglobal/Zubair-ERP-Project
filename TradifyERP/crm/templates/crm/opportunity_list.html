@@ -1,0 +1,60 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Opportunities | CRM</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Opportunities</h4>
+                        <a href="{% url 'crm:opportunity_create' %}" class="btn btn-primary btn-sm">Add Opportunity</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Opportunity</th>
+                                        <th>Amount</th>
+                                        <th>Probability</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for opp in opportunities %}
+                                        <tr>
+                                            <td>{{ opp.opportunity_name }}</td>
+                                            <td>${{ opp.deal_amount|floatformat:2 }}</td>
+                                            <td>{{ opp.probability }}%</td>
+                                            <td><span class="badge bg-info">{{ opp.status }}</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info">View</button>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-3">No opportunities found</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

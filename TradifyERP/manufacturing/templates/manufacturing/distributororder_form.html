@@ -1,0 +1,39 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Distributor Order | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Order Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                {% for field in form %}
+                                    {% if field.widget.input_type != 'hidden' %}
+                                        <div class="mb-3">
+                                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                            {{ field }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                <a href="{% url 'manufacturing:distributororder_list' %}" class="btn btn-light">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

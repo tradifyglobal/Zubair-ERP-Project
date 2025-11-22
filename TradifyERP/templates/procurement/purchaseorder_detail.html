@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}PO {{ purchase_order.po_number }} - Procurement{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title with Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Purchase Order: {{ purchase_order.po_number }}</h4>
+                    <div class="page-title-right">
+                        {% if purchase_order.status == 'DRAFT' %}
+                        <a href="{% url 'procurement:po_update' purchase_order.id %}" class="btn btn-warning me-2">Edit</a>
+                        <a href="{% url 'procurement:po_approve' purchase_order.id %}" class="btn btn-success">Send PO</a>
+                        {% else %}
+                        <a href="{% url 'procurement:po_list' %}" class="btn btn-secondary">Back to List</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PO Summary Card -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">PO Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Vendor</label>
+                                <p class="mb-2">
+                                    <strong>{{ purchase_order.vendor.name }}</strong><br>
+                                    {% if purchase_order.vendor.address %}
+                                    {{ purchase_order.vendor.address }}<br>
+                                    {% endif %}
+                                    {% if purchase_order.vendor.city %}
+                                    {{ purchase_order.vendor.city }}, {{ purchase_order.vendor.state }} {{ purchase_order.vendor.zip_code }}<br>
+                                    {% endif %}
+                                    {% if purchase_order.vendor.phone %}
+                                    {{ purchase_order.vendor.phone }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">PO Details</label>
+                                <p class="mb-2">
+                                    <strong>PO Date:</strong> {{ purchase_order.po_date|date:"M d, Y" }}<br>
+                                    <strong>Expected Delivery:</strong> {{ purchase_order.expected_delivery_date|date:"M d, Y" }}<br>
+                                    <strong>Status:</strong>
+                                    <span class="badge bg-{% if purchase_order.status == 'RECEIVED' %}success{% elif purchase_order.status == 'DRAFT' %}secondary{% else %}primary{% endif %}">
+                                        {{ purchase_order.get_status_display }}
+                                    </span><br>
+                                    <strong>Approved:</strong> {% if purchase_order.is_approved %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Items -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Line Items</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if po_line_items %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Description</th>
+                                        <th class="text-right">Qty Ordered</th>
+                                        <th class="text-right">Qty Received</th>
+                                        <th class="text-right">Unit Price</th>
+                                        <th class="text-right">Line Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in po_line_items %}
+                                    <tr>
+                                        <td>{{ item.item_number }}</td>
+                                        <td>{{ item.description }}</td>
+                                        <td class="text-right">{{ item.quantity }}</td>
+                                        <td class="text-right">{{ item.qty_received }}</td>
+                                        <td class="text-right">${{ item.unit_price }}</td>
+                                        <td class="text-right"><strong>${{ item.line_total }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No line items for this PO.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amount Summary Sidebar -->
+            <div class="col-lg-4">
+                <!-- Amount Summary Card -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Amount Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Amount:</span>
+                                <strong>${{ purchase_order.total_amount }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Amount Received:</span>
+                                <strong class="text-success">${{ purchase_order.amount_received }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Amount Invoiced:</span>
+                                <strong>${{ purchase_order.amount_invoiced }}</strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span><strong>Outstanding:</strong></span>
+                                <strong class="text-warning">${{ purchase_order.amount_outstanding }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipts Card -->
+                {% if receipts %}
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Goods Receipts</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            {% for receipt in receipts %}
+                            <li class="mb-2">
+                                <a href="{% url 'procurement:receipt_detail' receipt.id %}">
+                                    {{ receipt.receipt_number }}
+                                </a>
+                                <br>
+                                <small class="text-muted">{{ receipt.receipt_date|date:"M d, Y" }}</small>
+                                <br>
+                                <span class="badge bg-secondary">{{ receipt.get_status_display }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

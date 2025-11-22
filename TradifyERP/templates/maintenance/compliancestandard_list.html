@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Compliance Standards{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-3"><div class="col"><h1 class="h3">Compliance Standards</h1></div><div class="col text-end"><a href="{% url 'maintenance:standard-create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> New</a></div></div>
+    <div class="card"><div class="card-body">
+        {% if standards %}<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Code</th><th>Name</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead><tbody>{% for s in standards %}<tr><td><strong>{{ s.standard_code }}</strong></td><td>{{ s.standard_name }}</td><td>{{ s.category }}</td><td><span class="badge bg-secondary">{{ s.status }}</span></td><td><a href="{% url 'maintenance:standard-update' s.pk %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a> <a href="{% url 'maintenance:standard-delete' s.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Sure?')"><i class="fas fa-trash"></i></a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="alert alert-info">No standards found.</div>{% endif %}
+    </div></div>
+</div>
+{% endblock %}

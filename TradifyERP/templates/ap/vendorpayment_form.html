@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}{% if object %}Edit{% else %}Record{% endif %} Payment - Accounts Payable{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{% if object %}Edit{% else %}Record New{% endif %} Vendor Payment</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'ap:payment_list' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Payment Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Vendor and Payment Number -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.vendor.id_for_label }}" class="form-label">Vendor <span class="text-danger">*</span></label>
+                                    <select name="vendor" id="{{ form.vendor.id_for_label }}" class="form-select {% if form.vendor.errors %}is-invalid{% endif %}" required>
+                                        <option value="">Select a vendor...</option>
+                                        {% for vendor in form.vendor.field.queryset %}
+                                        <option value="{{ vendor.id }}" {% if form.vendor.value == vendor.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ vendor.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.vendor.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.vendor.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.payment_number.id_for_label }}" class="form-label">Payment Number <span class="text-danger">*</span></label>
+                                    <input type="text" name="payment_number" id="{{ form.payment_number.id_for_label }}" 
+                                        class="form-control {% if form.payment_number.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.payment_number.value|default:'' }}" required>
+                                    {% if form.payment_number.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.payment_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Payment Date and Method -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.payment_date.id_for_label }}" class="form-label">Payment Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="payment_date" id="{{ form.payment_date.id_for_label }}" 
+                                        class="form-control {% if form.payment_date.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.payment_date.value|date:'Y-m-d'|default:'' }}" required>
+                                    {% if form.payment_date.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.payment_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.payment_method.id_for_label }}" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                    <select name="payment_method" id="{{ form.payment_method.id_for_label }}" class="form-select {% if form.payment_method.errors %}is-invalid{% endif %}" required>
+                                        {% for value, label in form.payment_method.field.choices %}
+                                        <option value="{{ value }}" {% if form.payment_method.value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.payment_method.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.payment_method.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Amount and Reference -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.payment_amount.id_for_label }}" class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" name="payment_amount" id="{{ form.payment_amount.id_for_label }}" 
+                                            class="form-control {% if form.payment_amount.errors %}is-invalid{% endif %}" 
+                                            step="0.01" value="{{ form.payment_amount.value|default:'' }}" required>
+                                    </div>
+                                    {% if form.payment_amount.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.payment_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.reference_number.id_for_label }}" class="form-label">Reference Number</label>
+                                    <input type="text" name="reference_number" id="{{ form.reference_number.id_for_label }}" 
+                                        class="form-control" placeholder="e.g., ACH trace number" value="{{ form.reference_number.value|default:'' }}">
+                                </div>
+                            </div>
+
+                            <!-- Check Number (conditional) -->
+                            <div class="row mb-3" id="check-number-field" style="display: none;">
+                                <div class="col-md-6">
+                                    <label for="{{ form.check_number.id_for_label }}" class="form-label">Check Number</label>
+                                    <input type="text" name="check_number" id="{{ form.check_number.id_for_label }}" 
+                                        class="form-control" value="{{ form.check_number.value|default:'' }}">
+                                </div>
+                            </div>
+
+                            <!-- Bills to Pay -->
+                            <div class="mb-4">
+                                <label class="form-label">Bills to Pay <span class="text-danger">*</span></label>
+                                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                    {% if form.bills.field.queryset %}
+                                    <div class="list-unstyled">
+                                        {% for bill in form.bills.field.queryset %}
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" name="bills" value="{{ bill.id }}" id="bill_{{ bill.id }}" 
+                                                class="form-check-input" {% if bill in form.bills.value %}checked{% endif %}>
+                                            <label class="form-check-label" for="bill_{{ bill.id }}">
+                                                <strong>{{ bill.bill_number }}</strong> - {{ bill.vendor.name }}<br>
+                                                <small class="text-muted">
+                                                    Amount: ${{ bill.total_amount }} | Unpaid: ${{ bill.outstanding_amount }}
+                                                </small>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted mb-0">No unpaid bills available for this vendor.</p>
+                                    {% endif %}
+                                </div>
+                                {% if form.bills.errors %}
+                                <div class="invalid-feedback d-block">{{ form.bills.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="mb-4">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                <textarea name="notes" id="{{ form.notes.id_for_label }}" 
+                                    class="form-control" rows="3" placeholder="Payment notes...">{{ form.notes.value|default:'' }}</textarea>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}Update Payment{% else %}Record Payment{% endif %}
+                                </button>
+                                <a href="{% url 'ap:payment_list' %}" class="btn btn-light">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Sidebar -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Form Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="mb-3">Payment Methods</h6>
+                        <p class="small text-muted">
+                            <strong>Cash:</strong> Physical currency payment<br>
+                            <strong>Check:</strong> Check number required<br>
+                            <strong>ACH:</strong> Bank transfer<br>
+                            <strong>Wire:</strong> Wire transfer<br>
+                            <strong>Card:</strong> Credit/Debit card
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">Bills Selection</h6>
+                        <p class="small text-muted">
+                            Select the bills you're paying with this payment. The total of selected bills should equal the payment amount.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show/hide check number field based on payment method
+    document.getElementById('{{ form.payment_method.id_for_label }}').addEventListener('change', function() {
+        const checkNumberField = document.getElementById('check-number-field');
+        if (this.value === 'CHECK') {
+            checkNumberField.style.display = 'block';
+        } else {
+            checkNumberField.style.display = 'none';
+        }
+    });
+
+    // Trigger on page load
+    document.getElementById('{{ form.payment_method.id_for_label }}').dispatchEvent(new Event('change'));
+</script>
+{% endblock %}

@@ -38,6 +38,20 @@ urlpatterns = [
     path('sales/', include('sales.urls')),
     # Inventory module
     path('inventory/', include('inventory.urls')),
+    # Accounts Payable module
+    path('ap/', include('ap.urls')),
+    # Procurement module
+    path('procurement/', include('procurement.urls')),
+    # Cash Management module
+    path('cash/', include('cash_management.urls')),
+    # Project Management module
+    path('projects/', include('projects.urls')),
+    # CRM module
+    path('crm/', include('crm.urls')),
+    # Accounts Receivable module
+    path('ar/', include('ar.urls')),
+    # Site Maintenance module
+    path('maintenance/', include('maintenance.urls')),
     # Include Tradify Global Starterkit routes (pages, apps)
     path('', include('minia.urls')),
 ]

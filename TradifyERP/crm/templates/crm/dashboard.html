@@ -1,0 +1,540 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>CRM Dashboard | TradifyERP</title>
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 400px;
+    }
+    .metric-card {
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        border: none;
+        border-bottom: 3px solid transparent;
+    }
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom: 3px solid #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title mb-0">CRM Dashboard</h4>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="core-tab" data-bs-toggle="tab" href="#core" role="tab" aria-selected="true">
+                                <i class="mdi mdi-account-multiple"></i> Core CRM
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="retail-tab" data-bs-toggle="tab" href="#retail" role="tab" aria-selected="false">
+                                <i class="mdi mdi-shopping"></i> Retail & E-commerce
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="manufacturing-tab" data-bs-toggle="tab" href="#manufacturing" role="tab" aria-selected="false">
+                                <i class="mdi mdi-factory"></i> Manufacturing
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- CORE CRM TAB -->
+                <div class="tab-pane fade show active" id="core" role="tabpanel" aria-labelledby="core-tab">
+
+            <!-- Key Metrics Row -->
+            <div class="row mb-4">
+                <!-- Total Leads -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Leads</h6>
+                                    <h3 class="mb-0">{{ total_leads }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-primary">
+                                        <i class="mdi mdi-account-multiple"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Qualified Leads -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Qualified Leads</h6>
+                                    <h3 class="mb-0">{{ qualified_leads }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-success">
+                                        <i class="mdi mdi-check-circle"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Open Opportunities -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Open Opportunities</h6>
+                                    <h3 class="mb-0">{{ open_opportunities }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-info">
+                                        <i class="mdi mdi-target"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Opportunity Value -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Opp. Value</h6>
+                                    <h3 class="mb-0">${{ total_opportunity_value|floatformat:0 }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-warning">
+                                        <i class="mdi mdi-cash-multiple"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Pipeline & Today's Activities -->
+            <div class="row mb-4">
+                <!-- Sales Pipeline -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Sales Pipeline Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="pipelineChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Activities -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Today's Activities</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if today_activities %}
+                                <div class="activity-list">
+                                    {% for activity in today_activities %}
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="flex-shrink-0">
+                                                <span class="avatar-title rounded-circle bg-light">
+                                                    <i class="mdi mdi-phone"></i>
+                                                </span>
+                                            </div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <h6 class="mb-1">{{ activity.activity_type }}</h6>
+                                                <p class="text-muted mb-0 small">{{ activity.description }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No activities scheduled for today</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Forecast & Win Rate -->
+            <div class="row">
+                <!-- Sales Forecast -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Forecasted Revenue</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <h6 class="text-muted mb-1">Weighted Forecast</h6>
+                                    <h3 class="mb-0">${{ weighted_forecast|floatformat:0 }}</h3>
+                                </div>
+                                <div class="col-6">
+                                    <h6 class="text-muted mb-1">Best Case</h6>
+                                    <h3 class="mb-0">${{ best_case_forecast|floatformat:0 }}</h3>
+                                </div>
+                            </div>
+                            <p class="text-muted text-center"><small>Updated: Today</small></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Win Rate -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Win Rate & Performance</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h6 class="text-muted mb-1">Win Rate</h6>
+                                    <h3 class="mb-0">{{ win_rate }}%</h3>
+                                </div>
+                                <div class="col-6">
+                                    <h6 class="text-muted mb-1">Active Campaigns</h6>
+                                    <h3 class="mb-0">{{ active_campaigns }}</h3>
+                                </div>
+                            </div>
+                            <div class="progress mt-3">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ win_rate }}%" aria-valuenow="{{ win_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="{% url 'crm:lead_list' %}" class="btn btn-sm btn-primary">
+                                    <i class="mdi mdi-account-plus"></i> View Leads
+                                </a>
+                                <a href="{% url 'crm:opportunity_list' %}" class="btn btn-sm btn-info">
+                                    <i class="mdi mdi-target"></i> View Opportunities
+                                </a>
+                                <a href="{% url 'crm:quote_list' %}" class="btn btn-sm btn-warning">
+                                    <i class="mdi mdi-file-document"></i> View Quotes
+                                </a>
+                                <a href="{% url 'crm:activity_list' %}" class="btn btn-sm btn-success">
+                                    <i class="mdi mdi-calendar"></i> View Activities
+                                </a>
+                                <a href="{% url 'crm:campaign_list' %}" class="btn btn-sm btn-secondary">
+                                    <i class="mdi mdi-bullhorn"></i> View Campaigns
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                </div><!-- End Core CRM Tab -->
+
+                <!-- RETAIL & E-COMMERCE TAB -->
+                <div class="tab-pane fade" id="retail" role="tabpanel" aria-labelledby="retail-tab">
+                    <!-- Retail Metrics Row -->
+                    <div class="row mb-4">
+                        <!-- Active Loyalty Programs -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Active Programs</h6>
+                                            <h3 class="mb-0">{{ active_loyalty_programs }}</h3>
+                                        </div>
+                                        <div class="avatar-sm">
+                                            <span class="avatar-title rounded-circle bg-primary">
+                                                <i class="mdi mdi-gift"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Loyalty Members -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Loyalty Members</h6>
+                                            <h3 class="mb-0">{{ total_loyalty_members }}</h3>
+                                        </div>
+                                        <div class="avatar-sm">
+                                            <span class="avatar-title rounded-circle bg-success">
+                                                <i class="mdi mdi-account-group"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- POS Revenue Today -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">POS Revenue (Today)</h6>
+                                            <h3 class="mb-0">${{ pos_revenue_today|floatformat:0 }}</h3>
+                                        </div>
+                                        <div class="avatar-sm">
+                                            <span class="avatar-title rounded-circle bg-info">
+                                                <i class="mdi mdi-cash-multiple"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Promotions -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Active Promotions</h6>
+                                            <h3 class="mb-0">{{ active_promotions }}</h3>
+                                        </div>
+                                        <div class="avatar-sm">
+                                            <span class="avatar-title rounded-circle bg-warning">
+                                                <i class="mdi mdi-tag-multiple"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Retail Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Retail Quick Actions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <a href="/admin/crm/loyaltyprogram/" class="btn btn-sm btn-primary">
+                                            <i class="mdi mdi-gift"></i> Loyalty Programs
+                                        </a>
+                                        <a href="/admin/crm/loyaltymember/" class="btn btn-sm btn-success">
+                                            <i class="mdi mdi-account-group"></i> Loyalty Members
+                                        </a>
+                                        <a href="/admin/crm/postransaction/" class="btn btn-sm btn-info">
+                                            <i class="mdi mdi-cash-register"></i> POS Transactions
+                                        </a>
+                                        <a href="/admin/crm/promotion/" class="btn btn-sm btn-warning">
+                                            <i class="mdi mdi-tag-multiple"></i> Promotions
+                                        </a>
+                                        <a href="/admin/crm/customersegment/" class="btn btn-sm btn-secondary">
+                                            <i class="mdi mdi-account-multiple"></i> Segments
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- End Retail Tab -->
+
+                <!-- MANUFACTURING TAB -->
+                <div class="tab-pane fade" id="manufacturing" role="tabpanel" aria-labelledby="manufacturing-tab">
+                    <!-- Manufacturing Metrics Row -->
+                    <div class="row mb-4">
+                        <!-- Total Distributors -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Active Distributors</h6>
+                                            <h3 class="mb-0">{{ total_distributors }}</h3>
+                                        </div>
+                                        <div class="avatar-sm">
+                                            <span class="avatar-title rounded-circle bg-primary">
+                                                <i class="mdi mdi-factory"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pending Orders -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Pending Orders</h6>
+                                            <h3 class="mb-0">{{ pending_orders }}</h3>
+                                        </div>
+                                        <div class="avatar-sm">
+                                            <span class="avatar-title rounded-circle bg-warning">
+                                                <i class="mdi mdi-package-variant"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Open Service Tickets -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Open Tickets</h6>
+                                            <h3 class="mb-0">{{ open_service_tickets }}</h3>
+                                        </div>
+                                        <div class="avatar-sm">
+                                            <span class="avatar-title rounded-circle bg-danger">
+                                                <i class="mdi mdi-ticket-multiple"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Warranties -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Active Warranties</h6>
+                                            <h3 class="mb-0">{{ active_warranties }}</h3>
+                                        </div>
+                                        <div class="avatar-sm">
+                                            <span class="avatar-title rounded-circle bg-success">
+                                                <i class="mdi mdi-shield-check"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manufacturing Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Manufacturing Quick Actions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <a href="/admin/crm/distributor/" class="btn btn-sm btn-primary">
+                                            <i class="mdi mdi-factory"></i> Distributors
+                                        </a>
+                                        <a href="/admin/crm/distributororder/" class="btn btn-sm btn-info">
+                                            <i class="mdi mdi-package-variant"></i> Orders
+                                        </a>
+                                        <a href="/admin/crm/ordershipment/" class="btn btn-sm btn-secondary">
+                                            <i class="mdi mdi-truck"></i> Shipments
+                                        </a>
+                                        <a href="/admin/crm/aftersalesservice/" class="btn btn-sm btn-warning">
+                                            <i class="mdi mdi-wrench"></i> Service
+                                        </a>
+                                        <a href="/admin/crm/warrantyregistration/" class="btn btn-sm btn-success">
+                                            <i class="mdi mdi-shield-check"></i> Warranty
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- End Manufacturing Tab -->
+            </div><!-- End Tab Content -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'libs/chartjs/dist/chart.min.js' %}"></script>
+<script>
+    // Pipeline Chart
+    var pipelineCtx = document.getElementById('pipelineChart');
+    if (pipelineCtx) {
+        var pipelineChart = new Chart(pipelineCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Prospect', 'Qualified', 'Proposal', 'Negotiation', 'Won'],
+                datasets: [{
+                    data: [12, 19, 8, 5, 2],
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#10b981',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#8b5cf6'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

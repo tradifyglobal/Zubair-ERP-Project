@@ -1,0 +1,72 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Activity | CRM</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content" style="padding-bottom: 120px;">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title mb-0">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Activity</h4>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <div class="card">
+                        <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
+                            <form method="post" id="activityForm">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                                </div>
+                                {% endif %}
+
+                                {% for field in form %}
+                                <div class="mb-3">
+                                    {% if field.field.widget.input_type == 'hidden' %}
+                                        {{ field }}
+                                    {% else %}
+                                        {{ field.label_tag }}
+                                        {% if field.field.widget.input_type == 'textarea' %}
+                                            {{ field }}
+                                        {% elif field.field.widget.input_type == 'checkbox' %}
+                                            <div class="form-check">{{ field }}</div>
+                                        {% else %}
+                                            {{ field }}
+                                        {% endif %}
+                                        {% if field.errors %}
+                                        <div class="invalid-feedback" style="display:block; color:red;">
+                                            {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Footer Button Bar -->
+<div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #dee2e6; padding: 15px 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); z-index: 100;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <button type="submit" form="activityForm" class="btn btn-primary">{% if form.instance.pk %}Update{% else %}Create{% endif %} Activity</button>
+                <a href="{% url 'crm:activity_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

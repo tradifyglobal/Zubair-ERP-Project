@@ -1,0 +1,256 @@
+{% extends "maintenance/base.html" %}
+{% load static %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_heading %}Maintenance Dashboard{% endblock %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item active">Dashboard</li>
+{% endblock %}
+
+{% block action_buttons %}
+  <a href="{% url 'maintenance:asset-create' %}" class="btn btn-primary">
+    <i class="mdi mdi-plus"></i> Add Asset
+  </a>
+  <a href="{% url 'maintenance:workorder-create' %}" class="btn btn-success">
+    <i class="mdi mdi-plus"></i> Create Work Order
+  </a>
+{% endblock %}
+
+{% block page_content %}
+<div class="row">
+  <!-- Key Metrics -->
+  <div class="col-md-3 mb-4">
+    <div class="card border-left-primary">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <h6 class="card-title text-muted">Total Assets</h6>
+            <h3 class="mb-0">{{ total_assets }}</h3>
+          </div>
+          <i class="mdi mdi-factory" style="font-size: 2.5rem; color: #0d6efd; opacity: 0.3;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-4">
+    <div class="card border-left-success">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <h6 class="card-title text-muted">Active Work Orders</h6>
+            <h3 class="mb-0">{{ active_work_orders }}</h3>
+          </div>
+          <i class="mdi mdi-clipboard-list" style="font-size: 2.5rem; color: #198754; opacity: 0.3;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-4">
+    <div class="card border-left-info">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <h6 class="card-title text-muted">Vendors</h6>
+            <h3 class="mb-0">{{ total_vendors }}</h3>
+          </div>
+          <i class="mdi mdi-briefcase" style="font-size: 2.5rem; color: #0dcaf0; opacity: 0.3;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-4">
+    <div class="card border-left-warning">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <h6 class="card-title text-muted">Spare Parts</h6>
+            <h3 class="mb-0">{{ total_spare_parts }}</h3>
+          </div>
+          <i class="mdi mdi-package" style="font-size: 2.5rem; color: #ffc107; opacity: 0.3;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Low Stock Alert -->
+{% if low_stock_parts %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card border-left-danger">
+      <div class="card-header bg-danger text-white">
+        <h6 class="mb-0"><i class="mdi mdi-alert"></i> Low Stock Spare Parts</h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Part Code</th>
+                <th>Part Name</th>
+                <th>Current Stock</th>
+                <th>Reorder Level</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for part in low_stock_parts %}
+              <tr>
+                <td>{{ part.part_code }}</td>
+                <td>{{ part.part_name }}</td>
+                <td><span class="badge bg-danger">{{ part.current_stock }}</span></td>
+                <td>{{ part.reorder_level }}</td>
+                <td>
+                  <a href="{% url 'maintenance:sparepart-update' part.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="mdi mdi-pencil"></i> Edit
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row">
+  <!-- Recent Work Orders -->
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0 d-flex justify-content-between align-items-center">
+          <span><i class="mdi mdi-clipboard-list"></i> Recent Work Orders</span>
+          <a href="{% url 'maintenance:workorder-list' %}" class="btn btn-sm btn-link">View All</a>
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Work Order</th>
+                <th>Asset</th>
+                <th>Status</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in recent_work_orders %}
+              <tr>
+                <td>
+                  <a href="{% url 'maintenance:workorder-detail' order.id %}">
+                    {{ order.work_order_number }}
+                  </a>
+                </td>
+                <td>{{ order.asset.asset_name }}</td>
+                <td>
+                  <span class="badge bg-info">{{ order.status }}</span>
+                </td>
+                <td>
+                  {% if order.priority == 'High' %}
+                    <span class="badge bg-danger">{{ order.priority }}</span>
+                  {% elif order.priority == 'Medium' %}
+                    <span class="badge bg-warning">{{ order.priority }}</span>
+                  {% else %}
+                    <span class="badge bg-success">{{ order.priority }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted py-3">No recent work orders</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Audits -->
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0 d-flex justify-content-between align-items-center">
+          <span><i class="mdi mdi-clipboard-check"></i> Compliance Status</span>
+          <a href="{% url 'maintenance:audit-list' %}" class="btn btn-sm btn-link">View All</a>
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-6">
+            <h5 class="badge bg-warning">{{ pending_audits }} Pending</h5>
+            <p class="text-muted small">Audits</p>
+          </div>
+          <div class="col-6">
+            <h5 class="badge bg-success">{{ total_vendors }}</h5>
+            <p class="text-muted small">Contracts Active</p>
+          </div>
+        </div>
+        <a href="{% url 'maintenance:audit-create' %}" class="btn btn-sm btn-primary w-100 mt-3">
+          <i class="mdi mdi-plus"></i> New Audit
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="mdi mdi-link"></i> Quick Links</h6>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-2 mb-3">
+            <a href="{% url 'maintenance:asset-list' %}" class="btn btn-outline-primary btn-block w-100">
+              <i class="mdi mdi-factory d-block" style="font-size: 1.5rem;"></i>
+              <small>Assets</small>
+            </a>
+          </div>
+          <div class="col-md-2 mb-3">
+            <a href="{% url 'maintenance:task-list' %}" class="btn btn-outline-primary btn-block w-100">
+              <i class="mdi mdi-tasks d-block" style="font-size: 1.5rem;"></i>
+              <small>Tasks</small>
+            </a>
+          </div>
+          <div class="col-md-2 mb-3">
+            <a href="{% url 'maintenance:workorder-list' %}" class="btn btn-outline-primary btn-block w-100">
+              <i class="mdi mdi-clipboard-list d-block" style="font-size: 1.5rem;"></i>
+              <small>Work Orders</small>
+            </a>
+          </div>
+          <div class="col-md-2 mb-3">
+            <a href="{% url 'maintenance:sparepart-list' %}" class="btn btn-outline-primary btn-block w-100">
+              <i class="mdi mdi-package d-block" style="font-size: 1.5rem;"></i>
+              <small>Spare Parts</small>
+            </a>
+          </div>
+          <div class="col-md-2 mb-3">
+            <a href="{% url 'maintenance:vendor-list' %}" class="btn btn-outline-primary btn-block w-100">
+              <i class="mdi mdi-briefcase d-block" style="font-size: 1.5rem;"></i>
+              <small>Vendors</small>
+            </a>
+          </div>
+          <div class="col-md-2 mb-3">
+            <a href="{% url 'maintenance:cost-list' %}" class="btn btn-outline-primary btn-block w-100">
+              <i class="mdi mdi-currency-usd d-block" style="font-size: 1.5rem;"></i>
+              <small>Costs</small>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

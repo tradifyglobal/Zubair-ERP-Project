@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}RFQ {{ rfq.rfq_number }} - Procurement{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Request for Quotation: {{ rfq.rfq_number }}</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'procurement:rfq_list' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RFQ Summary -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">RFQ Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">RFQ Information</label>
+                                <p class="mb-2">
+                                    <strong>RFQ Date:</strong> {{ rfq.rfq_date|date:"M d, Y" }}<br>
+                                    <strong>Deadline:</strong> {{ rfq.deadline|date:"M d, Y" }}<br>
+                                    <strong>Description:</strong> {{ rfq.description }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Status</label>
+                                <p class="mb-2">
+                                    <strong>Award Status:</strong>
+                                    <span class="badge bg-{% if rfq.award_status == 'AWARDED' %}success{% elif rfq.award_status == 'OPEN' %}primary{% else %}secondary{% endif %}">
+                                        {{ rfq.get_award_status_display }}
+                                    </span><br>
+                                    {% if rfq.awarded_vendor %}
+                                    <strong>Awarded To:</strong> {{ rfq.awarded_vendor.name }}<br>
+                                    {% endif %}
+                                    <strong>Created By:</strong> {{ rfq.created_by.first_name }} {{ rfq.created_by.last_name }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invited Vendors -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Invited Vendors ({{ rfq.vendors.count }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if rfq.vendors.all %}
+                        <div class="list-group">
+                            {% for vendor in rfq.vendors.all %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ vendor.name }}</strong><br>
+                                        <small class="text-muted">{{ vendor.email }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No vendors invited for this RFQ.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quotations Sidebar -->
+            <div class="col-lg-4">
+                <!-- Quotations Summary -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Quotations Received ({{ quotations.count }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if quotations %}
+                        <div class="list-group">
+                            {% for quote in quotations %}
+                            <div class="list-group-item mb-2 {% if quote.vendor == rfq.awarded_vendor %}bg-success-light{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ quote.vendor.name }}</strong><br>
+                                        <small class="text-muted">
+                                            Total: <strong>${{ quote.total_amount }}</strong>
+                                        </small><br>
+                                        <small class="text-muted">
+                                            Score: <span class="badge bg-secondary">{{ quote.score }}/100</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                {% if quote.vendor == rfq.awarded_vendor %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success">Awarded</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No quotations received yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                {% if rfq.award_status == 'OPEN' and quotations %}
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Award Decision</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">Select the vendor with the best score to award this RFQ.</p>
+                        <form method="post" action="{% url 'procurement:rfq_award' rfq.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <select name="awarded_vendor" class="form-select" required>
+                                    <option value="">Select vendor...</option>
+                                    {% for quote in quotations %}
+                                    <option value="{{ quote.vendor.id }}">
+                                        {{ quote.vendor.name }} (Score: {{ quote.score }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Award RFQ</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

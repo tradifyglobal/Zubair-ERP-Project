@@ -1,0 +1,107 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Liquidity Forecasts | Cash Management</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Liquidity Forecasts</h4>
+                        <a href="#" class="btn btn-primary btn-sm">Create Forecast</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Forecast Period</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Scenario</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for forecast in forecasts %}
+                                        <tr>
+                                            <td>{{ forecast.forecast_period }}</td>
+                                            <td>{{ forecast.forecast_start_date|date:"M d, Y" }}</td>
+                                            <td>{{ forecast.forecast_end_date|date:"M d, Y" }}</td>
+                                            <td>
+                                                {% if forecast.scenario_type == 'BASE' %}
+                                                    <span class="badge bg-primary">Base</span>
+                                                {% elif forecast.scenario_type == 'OPTIMISTIC' %}
+                                                    <span class="badge bg-success">Optimistic</span>
+                                                {% elif forecast.scenario_type == 'PESSIMISTIC' %}
+                                                    <span class="badge bg-danger">Pessimistic</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if forecast.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-info">View</a>
+                                                <a href="#" class="btn btn-sm btn-warning">Edit</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">No liquidity forecasts found</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {% if is_paginated %}
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

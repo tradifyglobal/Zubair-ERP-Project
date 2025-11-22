@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}Receipt {{ goods_receipt.receipt_number }} - Procurement{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title with Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Goods Receipt: {{ goods_receipt.receipt_number }}</h4>
+                    <div class="page-title-right">
+                        {% if goods_receipt.status == 'RECEIVED' %}
+                        <a href="{% url 'procurement:receipt_update' goods_receipt.id %}" class="btn btn-warning me-2">Inspect</a>
+                        {% endif %}
+                        <a href="{% url 'procurement:receipt_list' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Summary Card -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Receipt Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Related PO</label>
+                                <p class="mb-2">
+                                    <strong>
+                                        <a href="{% url 'procurement:po_detail' goods_receipt.po.id %}">
+                                            {{ goods_receipt.po.po_number }}
+                                        </a>
+                                    </strong><br>
+                                    <small class="text-muted">{{ goods_receipt.po.vendor.name }}</small>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Receipt Details</label>
+                                <p class="mb-2">
+                                    <strong>Receipt Date:</strong> {{ goods_receipt.receipt_date|date:"M d, Y" }}<br>
+                                    <strong>Status:</strong>
+                                    <span class="badge bg-{% if goods_receipt.status == 'ACCEPTED' %}success{% elif goods_receipt.status == 'RECEIVED' %}primary{% else %}warning{% endif %}">
+                                        {{ goods_receipt.get_status_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Shipment Info</label>
+                                <p class="mb-2">
+                                    <strong>Carrier:</strong> {{ goods_receipt.carrier|default:"-" }}<br>
+                                    <strong>Tracking #:</strong> {{ goods_receipt.tracking_number|default:"-" }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted text-uppercase font-weight-bold font-size-10">Received By</label>
+                                <p class="mb-2">
+                                    <strong>User:</strong> {{ goods_receipt.received_by.first_name }} {{ goods_receipt.received_by.last_name }}<br>
+                                    <strong>Date:</strong> {{ goods_receipt.created_date|date:"M d, Y g:i A" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Received Items -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Received Items</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if receipt_items %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Description</th>
+                                        <th class="text-right">Qty Ordered</th>
+                                        <th class="text-right">Qty Received</th>
+                                        <th class="text-right">Qty Accepted</th>
+                                        <th class="text-right">Qty Rejected</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in receipt_items %}
+                                    <tr>
+                                        <td>{{ item.po_line_item.item_number }}</td>
+                                        <td>{{ item.po_line_item.description }}</td>
+                                        <td class="text-right">{{ item.po_line_item.quantity }}</td>
+                                        <td class="text-right">{{ item.quantity_received }}</td>
+                                        <td class="text-right">
+                                            <span class="text-success">
+                                                <strong>{{ item.quantity_accepted }}</strong>
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <span class="text-danger">
+                                                {{ item.quantity_rejected }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No items for this receipt.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Control Sidebar -->
+            <div class="col-lg-4">
+                <!-- QC Summary Card -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Quality Control</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Received:</span>
+                                <strong>{{ goods_receipt.total_quantity_received }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Accepted:</span>
+                                <strong class="text-success">{{ goods_receipt.total_quantity_accepted }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Rejected:</span>
+                                <strong class="text-danger">{{ goods_receipt.total_quantity_rejected }}</strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span><strong>Acceptance Rate:</strong></span>
+                                <strong>
+                                    {% if goods_receipt.total_quantity_received > 0 %}
+                                        {{ acceptance_rate }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+
+                        {% if goods_receipt.rejection_reason %}
+                        <div class="alert alert-warning mt-3">
+                            <strong>Rejection Reason:</strong>
+                            <p class="mb-0">{{ goods_receipt.rejection_reason }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 3-Way Matching Card -->
+                {% if matching_issue %}
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">3-Way Matching</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <strong>Discrepancy Detected</strong>
+                            <p class="mb-0">{{ matching_issue.discrepancy_description }}</p>
+                        </div>
+                        <a href="{% url 'procurement:matching_detail' matching_issue.id %}" class="btn btn-sm btn-primary w-100">
+                            Review Discrepancy
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -85,6 +85,13 @@ INSTALLED_APPS = [
     'manufacturing',
     'sales',
     'inventory',
+    'ap.apps.ApConfig',  # Accounts Payable Module
+    'procurement.apps.ProcurementConfig',  # Procurement Module
+    'cash_management.apps.CashManagementConfig',  # Cash Management Module
+    'projects.apps.ProjectsConfig',  # Project Management Module
+    'crm.apps.CrmConfig',  # CRM Module
+    'ar.apps.ArConfig',  # Accounts Receivable Module
+    'maintenance.apps.MaintenanceConfig',  # Site Maintenance Module
 ]
 
 MIDDLEWARE = [

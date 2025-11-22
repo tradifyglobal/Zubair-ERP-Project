@@ -1,0 +1,318 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Projects Dashboard | TradifyERP</title>
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 400px;
+    }
+    .metric-card {
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title mb-0">Projects Dashboard</h4>
+                </div>
+            </div>
+
+            <!-- Key Metrics Row -->
+            <div class="row mb-4">
+                <!-- Active Projects -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Active Projects</h6>
+                                    <h3 class="mb-0">{{ active_projects_count }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-primary">
+                                        <i class="mdi mdi-briefcase"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Budget -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Project Budget</h6>
+                                    <h3 class="mb-0">${{ total_budget|floatformat:0 }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-warning">
+                                        <i class="mdi mdi-cash-multiple"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overdue Tasks -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Overdue Tasks</h6>
+                                    <h3 class="mb-0">{{ overdue_tasks_count }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-danger">
+                                        <i class="mdi mdi-alert-circle"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Utilization -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Budget Utilization</h6>
+                                    <h3 class="mb-0">{{ budget_utilization }}%</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-success">
+                                        <i class="mdi mdi-percent"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Overview & Team Hours -->
+            <div class="row mb-4">
+                <!-- Active Projects List -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Active Projects</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if active_projects %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Project</th>
+                                                <th>Progress</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for project in active_projects %}
+                                                <tr>
+                                                    <td>
+                                                        <a href="#" class="text-decoration-none">{{ project.name }}</a>
+                                                    </td>
+                                                    <td>
+                                                        <div class="progress" style="height: 20px;">
+                                                            <div class="progress-bar" role="progressbar" style="width: {{ project.completion_percentage }}%" aria-valuenow="{{ project.completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                                {{ project.completion_percentage }}%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-info">{{ project.status }}</span>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No active projects</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Time Entries -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Time Entries</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_time_entries %}
+                                <div class="activity-list">
+                                    {% for entry in recent_time_entries %}
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="flex-shrink-0">
+                                                <span class="avatar-title rounded-circle bg-light">
+                                                    <i class="mdi mdi-clock"></i>
+                                                </span>
+                                            </div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <h6 class="mb-1">{{ entry.task_name }}</h6>
+                                                <p class="text-muted mb-0 small">{{ entry.hours_worked }} hours - {{ entry.entry_date }}</p>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <h6 class="mb-0">${{ entry.cost|floatformat:2 }}</h6>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No recent time entries</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget vs Spent & Task Status -->
+            <div class="row mb-4">
+                <!-- Budget Analysis -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Budget vs Spent (by Category)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="budgetChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Status Distribution -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Task Status Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="taskStatusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="{% url 'projects:project_list' %}" class="btn btn-sm btn-primary">
+                                    <i class="mdi mdi-briefcase"></i> View Projects
+                                </a>
+                                <a href="{% url 'projects:task_list' %}" class="btn btn-sm btn-info">
+                                    <i class="mdi mdi-checkbox-marked-circle"></i> View Tasks
+                                </a>
+                                <a href="{% url 'projects:timeentry_list' %}" class="btn btn-sm btn-warning">
+                                    <i class="mdi mdi-clock"></i> Time Entries
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'libs/chartjs/dist/chart.min.js' %}"></script>
+<script>
+    // Budget Chart
+    var budgetCtx = document.getElementById('budgetChart');
+    if (budgetCtx) {
+        var budgetChart = new Chart(budgetCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Labor', 'Material', 'Equipment', 'Overhead', 'Contingency'],
+                datasets: [
+                    {
+                        label: 'Budgeted',
+                        data: [50000, 30000, 20000, 10000, 5000],
+                        backgroundColor: '#3b82f6'
+                    },
+                    {
+                        label: 'Spent',
+                        data: [35000, 25000, 15000, 8000, 2000],
+                        backgroundColor: '#ef4444'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Task Status Chart
+    var taskStatusCtx = document.getElementById('taskStatusChart');
+    if (taskStatusCtx) {
+        var taskStatusChart = new Chart(taskStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Todo', 'In Progress', 'Completed', 'Blocked'],
+                datasets: [{
+                    data: [15, 25, 50, 10],
+                    backgroundColor: [
+                        '#e5e7eb',
+                        '#fbbf24',
+                        '#10b981',
+                        '#ef4444'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

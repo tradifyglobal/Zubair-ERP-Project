@@ -260,3 +260,544 @@ class EquipmentForm(forms.ModelForm):
             'fixed_asset_account': forms.Select(attrs={'class': 'form-select'}),
             'depreciation_account': forms.Select(attrs={'class': 'form-select'}),
         }
+
+
+# ============================================================================
+# DISTRIBUTOR & AFTER-SALES SERVICE FORMS
+# ============================================================================
+
+
+class DistributorForm(forms.ModelForm):
+    """Form for creating/editing distributors."""
+    
+    class Meta:
+        model = __import__('manufacturing.models', fromlist=['Distributor']).Distributor
+        fields = ['distributor_code', 'distributor_name', 'status', 'email', 'phone',
+                  'website', 'address', 'city', 'state', 'postal_code', 'country',
+                  'account_manager', 'region', 'territory', 'contract_start_date',
+                  'contract_end_date', 'credit_limit', 'annual_sales_target',
+                  'authorized_products']
+        widgets = {
+            'distributor_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Distributor code',
+                'required': 'required'
+            }),
+            'distributor_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Company name',
+                'required': 'required'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Email',
+                'required': 'required'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Phone',
+                'type': 'tel',
+                'required': 'required'
+            }),
+            'website': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Website'
+            }),
+            'address': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Street address',
+                'required': 'required'
+            }),
+            'city': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'City',
+                'required': 'required'
+            }),
+            'state': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'State/Province',
+                'required': 'required'
+            }),
+            'postal_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Postal code',
+                'required': 'required'
+            }),
+            'country': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Country',
+                'required': 'required'
+            }),
+            'account_manager': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'region': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Region'
+            }),
+            'territory': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Territory'
+            }),
+            'contract_start_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'contract_end_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'credit_limit': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01'
+            }),
+            'annual_sales_target': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01'
+            }),
+            'authorized_products': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Product codes (comma-separated)'
+            }),
+        }
+
+
+class DistributorContactForm(forms.ModelForm):
+    """Form for managing distributor contacts."""
+    
+    class Meta:
+        model = __import__('manufacturing.models', fromlist=['DistributorContact']).DistributorContact
+        fields = ['distributor', 'first_name', 'last_name', 'job_title', 'department',
+                  'email', 'phone', 'mobile', 'is_primary_contact',
+                  'preferred_contact_method', 'next_follow_up']
+        widgets = {
+            'distributor': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'First name',
+                'required': 'required'
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Last name',
+                'required': 'required'
+            }),
+            'job_title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Job title',
+                'required': 'required'
+            }),
+            'department': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Department'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Email',
+                'required': 'required'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Phone',
+                'type': 'tel',
+                'required': 'required'
+            }),
+            'mobile': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Mobile',
+                'type': 'tel'
+            }),
+            'is_primary_contact': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'preferred_contact_method': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'next_follow_up': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+        }
+
+
+class DistributorOrderForm(forms.ModelForm):
+    """Form for creating distributor orders."""
+    
+    class Meta:
+        model = __import__('manufacturing.models', fromlist=['DistributorOrder']).DistributorOrder
+        fields = ['distributor', 'order_date', 'required_delivery_date', 'status',
+                  'description', 'subtotal', 'discount_amount', 'tax_amount',
+                  'total_amount', 'payment_terms']
+        widgets = {
+            'distributor': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'order_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'required_delivery_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Order details'
+            }),
+            'subtotal': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'required': 'required'
+            }),
+            'discount_amount': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01'
+            }),
+            'tax_amount': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01'
+            }),
+            'total_amount': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'required': 'required'
+            }),
+            'payment_terms': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Net 30, COD, etc.'
+            }),
+        }
+
+
+class CourierForm(forms.ModelForm):
+    """Form for courier/carrier management."""
+    
+    class Meta:
+        model = __import__('manufacturing.models', fromlist=['Courier']).Courier
+        fields = ['name', 'code', 'description', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Courier Name (e.g., Delhivery)'
+            }),
+            'code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Short code (e.g., DEL)'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Description and details'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+        }
+
+
+class OrderShipmentForm(forms.ModelForm):
+    """Form for tracking order shipments."""
+    
+    class Meta:
+        model = __import__('manufacturing.models', fromlist=['OrderShipment']).OrderShipment
+        fields = ['order', 'shipment_date', 'expected_delivery', 'actual_delivery',
+                  'courier', 'tracking_number', 'shipping_cost', 'status', 'notes']
+        widgets = {
+            'order': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'shipment_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'expected_delivery': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'actual_delivery': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'courier': forms.Select(attrs={
+                'class': 'form-select',
+                'placeholder': 'Select Courier/Carrier'
+            }),
+            'tracking_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Tracking number'
+            }),
+            'shipping_cost': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Notes'
+            }),
+        }
+
+
+class AfterSalesServiceForm(forms.ModelForm):
+    """Form for after-sales service tickets."""
+    
+    class Meta:
+        model = __import__('manufacturing.models', fromlist=['AfterSalesService']).AfterSalesService
+        fields = ['distributor', 'service_type', 'status', 'priority', 'product_code',
+                  'serial_number', 'purchase_date', 'issue_description', 'issue_date',
+                  'is_under_warranty', 'warranty_expiry_date', 'assigned_to']
+        widgets = {
+            'distributor': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'service_type': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'priority': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'product_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Product code'
+            }),
+            'serial_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Serial number'
+            }),
+            'purchase_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'issue_description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Describe the issue',
+                'required': 'required'
+            }),
+            'issue_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'is_under_warranty': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'warranty_expiry_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'assigned_to': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+        }
+
+
+class WarrantyRegistrationForm(forms.ModelForm):
+    """Form for warranty registration."""
+    
+    class Meta:
+        model = __import__('manufacturing.models', fromlist=['WarrantyRegistration']).WarrantyRegistration
+        fields = ['warranty_type', 'product_code', 'serial_number', 'distributor',
+                  'end_customer_name', 'end_customer_email', 'end_customer_phone',
+                  'purchase_date', 'coverage_start_date', 'coverage_end_date',
+                  'coverage_description', 'terms_and_conditions']
+        widgets = {
+            'warranty_type': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'product_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Product code',
+                'required': 'required'
+            }),
+            'serial_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Serial number',
+                'required': 'required'
+            }),
+            'distributor': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'end_customer_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Customer name'
+            }),
+            'end_customer_email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Customer email'
+            }),
+            'end_customer_phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Customer phone',
+                'type': 'tel'
+            }),
+            'purchase_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'coverage_start_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'coverage_end_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'coverage_description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'What does warranty cover?',
+                'required': 'required'
+            }),
+            'terms_and_conditions': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Terms and conditions'
+            }),
+        }
+
+
+class DistributorPerformanceForm(forms.ModelForm):
+    """Form for tracking distributor performance."""
+    
+    class Meta:
+        model = __import__('manufacturing.models', fromlist=['DistributorPerformance']).DistributorPerformance
+        fields = ['distributor', 'performance_date', 'orders_count', 'total_sales',
+                  'on_time_delivery_percentage', 'order_accuracy_percentage',
+                  'return_rate_percentage', 'complaint_count',
+                  'payment_on_time_percentage', 'overall_rating']
+        widgets = {
+            'distributor': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'performance_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'orders_count': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0',
+                'min': '0'
+            }),
+            'total_sales': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'min': '0'
+            }),
+            'on_time_delivery_percentage': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0',
+                'min': '0',
+                'max': '100'
+            }),
+            'order_accuracy_percentage': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0',
+                'min': '0',
+                'max': '100'
+            }),
+            'return_rate_percentage': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0',
+                'min': '0',
+                'max': '100'
+            }),
+            'complaint_count': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0',
+                'min': '0'
+            }),
+            'payment_on_time_percentage': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0',
+                'min': '0',
+                'max': '100'
+            }),
+            'overall_rating': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+        }
+
+    def save(self, commit=True):
+        """Auto-populate performance_month and performance_year from performance_date.
+        Uses update_or_create to handle unique constraint on (distributor, month, year)."""
+        instance = super().save(commit=False)
+        
+        # Extract month and year from performance_date
+        if instance.performance_date:
+            instance.performance_month = instance.performance_date.month
+            instance.performance_year = instance.performance_date.year
+        
+        if commit:
+            # Use update_or_create to handle the unique constraint
+            # If a record exists for this distributor/month/year, update it
+            # Otherwise, create a new one
+            from manufacturing.models import DistributorPerformance
+            
+            obj, created = DistributorPerformance.objects.update_or_create(
+                distributor=instance.distributor,
+                performance_month=instance.performance_month,
+                performance_year=instance.performance_year,
+                defaults={
+                    'performance_date': instance.performance_date,
+                    'orders_count': instance.orders_count,
+                    'total_sales': instance.total_sales,
+                    'average_order_value': instance.average_order_value,
+                    'on_time_delivery_percentage': instance.on_time_delivery_percentage,
+                    'order_accuracy_percentage': instance.order_accuracy_percentage,
+                    'return_rate_percentage': instance.return_rate_percentage,
+                    'complaint_count': instance.complaint_count,
+                    'payment_on_time_percentage': instance.payment_on_time_percentage,
+                    'overall_rating': instance.overall_rating,
+                }
+            )
+            return obj
+        return instance
+
+

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}{% if object %}Edit{% else %}Record{% endif %} Receipt - Procurement{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{% if object %}Edit{% else %}Record New{% endif %} Goods Receipt</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'procurement:receipt_list' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Receipt Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            <!-- PO and Receipt Number -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.po.id_for_label }}" class="form-label">Purchase Order <span class="text-danger">*</span></label>
+                                    <select name="po" id="{{ form.po.id_for_label }}" class="form-select {% if form.po.errors %}is-invalid{% endif %}" required>
+                                        <option value="">Select a PO...</option>
+                                        {% for po in form.po.field.queryset %}
+                                        <option value="{{ po.id }}" {% if form.po.value == po.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ po.po_number }} - {{ po.vendor.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.po.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.po.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.receipt_number.id_for_label }}" class="form-label">Receipt Number <span class="text-danger">*</span></label>
+                                    <input type="text" name="receipt_number" id="{{ form.receipt_number.id_for_label }}" 
+                                        class="form-control {% if form.receipt_number.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.receipt_number.value|default:'' }}" required>
+                                    {% if form.receipt_number.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.receipt_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Receipt Date -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.receipt_date.id_for_label }}" class="form-label">Receipt Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="receipt_date" id="{{ form.receipt_date.id_for_label }}" 
+                                        class="form-control {% if form.receipt_date.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.receipt_date.value|date:'Y-m-d'|default:'' }}" required>
+                                    {% if form.receipt_date.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.receipt_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.status.id_for_label }}" class="form-label">Status <span class="text-danger">*</span></label>
+                                    <select name="status" id="{{ form.status.id_for_label }}" class="form-select {% if form.status.errors %}is-invalid{% endif %}" required>
+                                        {% for value, label in form.status.field.choices %}
+                                        <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Carrier and Tracking -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.carrier.id_for_label }}" class="form-label">Carrier</label>
+                                    <input type="text" name="carrier" id="{{ form.carrier.id_for_label }}" 
+                                        class="form-control" placeholder="e.g., FedEx, UPS, DHL" value="{{ form.carrier.value|default:'' }}">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.tracking_number.id_for_label }}" class="form-label">Tracking Number</label>
+                                    <input type="text" name="tracking_number" id="{{ form.tracking_number.id_for_label }}" 
+                                        class="form-control" value="{{ form.tracking_number.value|default:'' }}">
+                                </div>
+                            </div>
+
+                            <!-- Quality Control -->
+                            <div class="mb-3">
+                                <label for="{{ form.rejection_reason.id_for_label }}" class="form-label">Rejection Reason (if applicable)</label>
+                                <textarea name="rejection_reason" id="{{ form.rejection_reason.id_for_label }}" 
+                                    class="form-control" rows="3" placeholder="Describe any rejections or issues...">{{ form.rejection_reason.value|default:'' }}</textarea>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="mb-4">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                <textarea name="notes" id="{{ form.notes.id_for_label }}" 
+                                    class="form-control" rows="3" placeholder="Receipt notes or comments...">{{ form.notes.value|default:'' }}</textarea>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}Update Receipt{% else %}Record Receipt{% endif %}
+                                </button>
+                                <a href="{% url 'procurement:receipt_list' %}" class="btn btn-light">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Sidebar -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Form Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="mb-3">Receipt Status</h6>
+                        <p class="small text-muted">
+                            <strong>Received:</strong> Items received<br>
+                            <strong>Inspected:</strong> Quality check done<br>
+                            <strong>Accepted:</strong> Items accepted and ready for use
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">Quality Control</h6>
+                        <p class="small text-muted">
+                            If any items are rejected or have quality issues, provide details in the Rejection Reason field for tracking and vendor communication.
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">3-Way Matching</h6>
+                        <p class="small text-muted">
+                            This receipt will be automatically matched with the PO and eventual invoice for 3-way matching verification.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

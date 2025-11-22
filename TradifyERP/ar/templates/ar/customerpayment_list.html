@@ -1,0 +1,127 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Customer Payments | AR</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Customer Payments</h4>
+                        <a href="#" class="btn btn-primary btn-sm">Record Payment</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="get" class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="methodFilter" class="form-label">Payment Method</label>
+                                    <select id="methodFilter" name="method" class="form-select">
+                                        <option value="">All Methods</option>
+                                        <option value="CASH">Cash</option>
+                                        <option value="CHECK">Check</option>
+                                        <option value="ACH">ACH Transfer</option>
+                                        <option value="WIRE">Wire Transfer</option>
+                                        <option value="CREDIT_CARD">Credit Card</option>
+                                        <option value="ONLINE">Online Payment</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                                    <a href="?" class="btn btn-secondary btn-sm ms-2">Reset</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Payment #</th>
+                                            <th>Customer</th>
+                                            <th>Payment Date</th>
+                                            <th>Amount</th>
+                                            <th>Method</th>
+                                            <th>Reference</th>
+                                            <th>Invoices Paid</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in payments %}
+                                        <tr>
+                                            <td>{{ payment.payment_number }}</td>
+                                            <td>{{ payment.customer.customer_name }}</td>
+                                            <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                            <td>₹{{ payment.payment_amount|floatformat:2 }}</td>
+                                            <td><span class="badge bg-info">{{ payment.get_payment_method_display }}</span></td>
+                                            <td>{{ payment.reference_number }}</td>
+                                            <td>{{ payment.reconciliations.count }}</td>
+                                            <td>
+                                                <a href="{% url 'ar:payment_detail' payment.pk %}" class="btn btn-sm btn-info">View</a>
+                                                <a href="#" class="btn btn-sm btn-warning">Edit</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="8" class="text-center text-muted">No payments found</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

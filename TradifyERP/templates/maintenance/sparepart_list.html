@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Spare Parts{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-3">
+        <div class="col"><h1 class="h3">Spare Parts</h1></div>
+        <div class="col text-end"><a href="{% url 'maintenance:sparepart-create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> New</a></div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            {% if spare_parts %}<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Code</th><th>Name</th><th>Stock</th><th>Reorder</th><th>Actions</th></tr></thead><tbody>{% for sp in spare_parts %}<tr><td><strong>{{ sp.part_code }}</strong></td><td>{{ sp.part_name }}</td><td>{{ sp.current_stock }}</td><td>{{ sp.reorder_level }}</td><td><a href="{% url 'maintenance:sparepart-update' sp.pk %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a> <a href="{% url 'maintenance:sparepart-delete' sp.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Sure?')"><i class="fas fa-trash"></i></a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="alert alert-info">No spare parts found.</div>{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

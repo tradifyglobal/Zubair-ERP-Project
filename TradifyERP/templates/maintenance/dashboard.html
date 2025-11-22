@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Maintenance Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-lg py-4">
+    <h1 class="h3 mb-4">Maintenance Module Dashboard</h1>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Assets</h6>
+                    <h2 class="mb-0">{{ total_assets }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Active Work Orders</h6>
+                    <h2 class="mb-0 text-warning">{{ active_work_orders }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Vendors</h6>
+                    <h2 class="mb-0">{{ total_vendors }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Spare Parts</h6>
+                    <h2 class="mb-0">{{ total_spare_parts }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Access</h5>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group flex-wrap" role="group">
+                        <a href="{% url 'maintenance:asset-list' %}" class="btn btn-outline-primary">Assets</a>
+                        <a href="{% url 'maintenance:task-list' %}" class="btn btn-outline-primary">Tasks</a>
+                        <a href="{% url 'maintenance:workorder-list' %}" class="btn btn-outline-primary">Work Orders</a>
+                        <a href="{% url 'maintenance:sparepart-list' %}" class="btn btn-outline-primary">Spare Parts</a>
+                        <a href="{% url 'maintenance:vendor-list' %}" class="btn btn-outline-primary">Vendors</a>
+                        <a href="{% url 'maintenance:contract-list' %}" class="btn btn-outline-primary">Contracts</a>
+                        <a href="{% url 'maintenance:standard-list' %}" class="btn btn-outline-primary">Standards</a>
+                        <a href="{% url 'maintenance:audit-list' %}" class="btn btn-outline-primary">Audits</a>
+                        <a href="{% url 'maintenance:cost-list' %}" class="btn btn-outline-primary">Costs</a>
+                        <a href="{% url 'maintenance:downtime-list' %}" class="btn btn-outline-primary">Downtime</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    {% if low_stock_parts %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Low Stock Spare Parts</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for part in low_stock_parts %}
+                        <li class="mb-2">
+                            <strong>{{ part.part_name }}</strong> - {{ part.current_stock }} in stock (reorder: {{ part.reorder_level }})
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Work Orders -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Work Orders</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr><th>WO #</th><th>Asset</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for wo in recent_work_orders %}
+                                <tr>
+                                    <td><strong>{{ wo.work_order_number }}</strong></td>
+                                    <td>{{ wo.asset.asset_name }}</td>
+                                    <td><span class="badge {% if wo.status == 'Open' %}bg-warning{% else %}bg-info{% endif %}">{{ wo.status }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pending Audits -->
+    {% if pending_audits %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Pending Audits: {{ pending_audits }}</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'maintenance:audit-list' %}" class="btn btn-sm btn-info">View All Audits</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

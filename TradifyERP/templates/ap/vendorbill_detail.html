@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}{{ bill.bill_number }} - Bill Details{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Bill: {{ bill.bill_number }}</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'ap:bill_update' bill.id %}" class="btn btn-primary">Edit</a>
+                        <a href="{% url 'ap:bill_list' %}" class="btn btn-light">Back to Bills</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bill Summary -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6 class="text-uppercase text-muted mb-2">Bill Information</h6>
+                                <p><strong>Bill Number:</strong> {{ bill.bill_number }}</p>
+                                <p><strong>Vendor:</strong> <a href="#">{{ bill.vendor.name }}</a></p>
+                                <p><strong>Bill Date:</strong> {{ bill.bill_date|date:"M d, Y" }}</p>
+                                <p><strong>Due Date:</strong> {{ bill.due_date|date:"M d, Y" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-uppercase text-muted mb-2">Status</h6>
+                                <p>
+                                    <strong>Bill Status:</strong> 
+                                    <span class="badge bg-primary">{{ bill.get_status_display }}</span>
+                                </p>
+                                <p>
+                                    <strong>Payment Status:</strong> 
+                                    <span class="badge bg-warning">{{ bill.get_payment_status_display }}</span>
+                                </p>
+                                <p>
+                                    <strong>Approved:</strong> 
+                                    {% if bill.is_approved %}
+                                    <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-uppercase text-muted mb-3">Amounts</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Total Amount</label>
+                            <h4 class="text-primary">${{ bill.total_amount }}</h4>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amount Paid</label>
+                            <h4 class="text-success">${{ bill.amount_paid }}</h4>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Outstanding</label>
+                            <h4 class="text-danger">${{ bill.total_amount|add:bill.amount_paid }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Line Items -->
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Bill Line Items</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if line_items %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Line Total</th>
+                                        <th>Expense Account</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in line_items %}
+                                    <tr>
+                                        <td>{{ item.description }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>${{ item.unit_price }}</td>
+                                        <td>${{ item.line_total }}</td>
+                                        <td>{{ item.expense_account.name }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No line items</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments -->
+        {% if payments %}
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Payments Applied</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Payment #</th>
+                                        <th>Payment Date</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payments %}
+                                    <tr>
+                                        <td><a href="{% url 'ap:payment_detail' payment.id %}">{{ payment.payment_number }}</a></td>
+                                        <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                        <td>${{ payment.payment_amount }}</td>
+                                        <td>{{ payment.get_payment_method_display }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

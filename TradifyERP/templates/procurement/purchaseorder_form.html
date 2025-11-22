@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}{% if object %}Edit{% else %}Create{% endif %} PO - Procurement{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{% if object %}Edit{% else %}Create New{% endif %} Purchase Order</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'procurement:po_list' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Purchase Order Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Vendor and PO Number -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.vendor.id_for_label }}" class="form-label">Vendor <span class="text-danger">*</span></label>
+                                    <select name="vendor" id="{{ form.vendor.id_for_label }}" class="form-select {% if form.vendor.errors %}is-invalid{% endif %}" required>
+                                        <option value="">Select a vendor...</option>
+                                        {% for vendor in form.vendor.field.queryset %}
+                                        <option value="{{ vendor.id }}" {% if form.vendor.value == vendor.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ vendor.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.vendor.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.vendor.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.po_number.id_for_label }}" class="form-label">PO Number <span class="text-danger">*</span></label>
+                                    <input type="text" name="po_number" id="{{ form.po_number.id_for_label }}" 
+                                        class="form-control {% if form.po_number.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.po_number.value|default:'' }}" required>
+                                    {% if form.po_number.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.po_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.expected_delivery_date.id_for_label }}" class="form-label">Expected Delivery Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="expected_delivery_date" id="{{ form.expected_delivery_date.id_for_label }}" 
+                                        class="form-control {% if form.expected_delivery_date.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.expected_delivery_date.value|date:'Y-m-d'|default:'' }}" required>
+                                    {% if form.expected_delivery_date.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.expected_delivery_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.total_amount.id_for_label }}" class="form-label">Total Amount <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" name="total_amount" id="{{ form.total_amount.id_for_label }}" 
+                                            class="form-control {% if form.total_amount.errors %}is-invalid{% endif %}" 
+                                            step="0.01" value="{{ form.total_amount.value|default:'' }}" required>
+                                    </div>
+                                    {% if form.total_amount.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.total_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                <textarea name="description" id="{{ form.description.id_for_label }}" 
+                                    class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                    rows="3" placeholder="PO description or special instructions...">{{ form.description.value|default:'' }}</textarea>
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Ship To and Bill To -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.ship_to_address.id_for_label }}" class="form-label">Ship To Address</label>
+                                    <textarea name="ship_to_address" id="{{ form.ship_to_address.id_for_label }}" 
+                                        class="form-control" rows="2" placeholder="Delivery address...">{{ form.ship_to_address.value|default:'' }}</textarea>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.bill_to_address.id_for_label }}" class="form-label">Bill To Address</label>
+                                    <textarea name="bill_to_address" id="{{ form.bill_to_address.id_for_label }}" 
+                                        class="form-control" rows="2" placeholder="Billing address...">{{ form.bill_to_address.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+
+                            <!-- Additional Terms -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="{{ form.payment_terms.id_for_label }}" class="form-label">Payment Terms</label>
+                                    <input type="text" name="payment_terms" id="{{ form.payment_terms.id_for_label }}" 
+                                        class="form-control" placeholder="e.g., Net 30" value="{{ form.payment_terms.value|default:'' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.status.id_for_label }}" class="form-label">Status <span class="text-danger">*</span></label>
+                                    <select name="status" id="{{ form.status.id_for_label }}" class="form-select {% if form.status.errors %}is-invalid{% endif %}" required>
+                                        {% for value, label in form.status.field.choices %}
+                                        <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}Update PO{% else %}Create PO{% endif %}
+                                </button>
+                                <a href="{% url 'procurement:po_list' %}" class="btn btn-light">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Sidebar -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Form Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="mb-3">PO Status Flow</h6>
+                        <p class="small text-muted">
+                            <strong>Draft:</strong> PO is being prepared<br>
+                            <strong>Sent:</strong> PO sent to vendor<br>
+                            <strong>Received:</strong> Items have been received
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">Dates</h6>
+                        <p class="small text-muted">
+                            Expected Delivery Date must be in the future from today.
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">Amount</h6>
+                        <p class="small text-muted">
+                            Total Amount should match the sum of all line items.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -61,4 +61,40 @@ urlpatterns = [
     path('equipment/', views.EquipmentListView.as_view(), name='equipment_list'),
     path('equipment/new/', views.EquipmentCreateView.as_view(), name='equipment_create'),
     path('equipment/<int:pk>/delete/', views.EquipmentDeleteView.as_view(), name='equipment_delete'),
+    
+    # Distributor URLs
+    path('distributors/', views.DistributorListView.as_view(), name='distributor_list'),
+    path('distributors/new/', views.DistributorCreateView.as_view(), name='distributor_create'),
+    path('distributors/<int:pk>/edit/', views.DistributorUpdateView.as_view(), name='distributor_update'),
+    path('distributors/<int:pk>/delete/', views.DistributorDeleteView.as_view(), name='distributor_delete'),
+    
+    # Distributor Order URLs
+    path('orders/', views.DistributorOrderListView.as_view(), name='distributororder_list'),
+    path('orders/new/', views.DistributorOrderCreateView.as_view(), name='distributororder_create'),
+    path('orders/<int:pk>/edit/', views.DistributorOrderUpdateView.as_view(), name='distributororder_update'),
+    path('orders/<int:pk>/delete/', views.DistributorOrderDeleteView.as_view(), name='distributororder_delete'),
+    
+    # Order Shipment URLs
+    path('shipments/', views.OrderShipmentListView.as_view(), name='ordershipment_list'),
+    path('shipments/new/', views.OrderShipmentCreateView.as_view(), name='ordershipment_create'),
+    path('shipments/<int:pk>/edit/', views.OrderShipmentUpdateView.as_view(), name='ordershipment_update'),
+    path('shipments/<int:pk>/delete/', views.OrderShipmentDeleteView.as_view(), name='ordershipment_delete'),
+    
+    # After-Sales Service URLs
+    path('services/', views.AfterSalesServiceListView.as_view(), name='aftersalesservice_list'),
+    path('services/new/', views.AfterSalesServiceCreateView.as_view(), name='aftersalesservice_create'),
+    path('services/<int:pk>/edit/', views.AfterSalesServiceUpdateView.as_view(), name='aftersalesservice_update'),
+    path('services/<int:pk>/delete/', views.AfterSalesServiceDeleteView.as_view(), name='aftersalesservice_delete'),
+    
+    # Warranty Registration URLs
+    path('warranties/', views.WarrantyRegistrationListView.as_view(), name='warrantyregistration_list'),
+    path('warranties/new/', views.WarrantyRegistrationCreateView.as_view(), name='warrantyregistration_create'),
+    path('warranties/<int:pk>/edit/', views.WarrantyRegistrationUpdateView.as_view(), name='warrantyregistration_update'),
+    path('warranties/<int:pk>/delete/', views.WarrantyRegistrationDeleteView.as_view(), name='warrantyregistration_delete'),
+    
+    # Distributor Performance URLs
+    path('performance/', views.DistributorPerformanceListView.as_view(), name='distributorperformance_list'),
+    path('performance/new/', views.DistributorPerformanceCreateView.as_view(), name='distributorperformance_create'),
+    path('performance/<int:pk>/edit/', views.DistributorPerformanceUpdateView.as_view(), name='distributorperformance_update'),
+    path('performance/<int:pk>/delete/', views.DistributorPerformanceDeleteView.as_view(), name='distributorperformance_delete'),
 ]

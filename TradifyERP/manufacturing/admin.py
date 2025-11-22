@@ -8,7 +8,9 @@ from .models import (
     ProductCategory, Product, RawMaterial,
     BillOfMaterials, BOMLine,
     WorkCenter, Routing, RoutingLine,
-    ProductionOrder, QualityInspection, Equipment
+    ProductionOrder, QualityInspection, Equipment,
+    Distributor, DistributorContact, DistributorOrder, OrderShipment, Courier,
+    AfterSalesService, ServiceActivity, WarrantyRegistration, DistributorPerformance
 )
 
 
@@ -245,3 +247,255 @@ class EquipmentAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+# ============================================================================
+# DISTRIBUTOR & AFTER-SALES SERVICE ADMIN
+# ============================================================================
+
+
+@admin.register(Distributor)
+class DistributorAdmin(admin.ModelAdmin):
+    list_display = ['distributor_code', 'distributor_name', 'status', 'region', 'email', 'phone']
+    list_filter = ['status', 'region', 'date_onboarded']
+    search_fields = ['distributor_code', 'distributor_name', 'email']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Identification', {
+            'fields': ('distributor_code', 'distributor_name', 'status', 'entity')
+        }),
+        ('Contact Information', {
+            'fields': ('email', 'phone', 'website')
+        }),
+        ('Address', {
+            'fields': ('address', 'city', 'state', 'postal_code', 'country')
+        }),
+        ('Territory & Management', {
+            'fields': ('region', 'territory', 'account_manager')
+        }),
+        ('Relationship', {
+            'fields': ('date_onboarded', 'contract_start_date', 'contract_end_date')
+        }),
+        ('Financial', {
+            'fields': ('credit_limit', 'annual_sales_target', 'ytd_sales')
+        }),
+        ('Products', {
+            'fields': ('authorized_products',),
+            'classes': ('collapse',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(DistributorContact)
+class DistributorContactAdmin(admin.ModelAdmin):
+    list_display = ['first_name', 'last_name', 'distributor', 'job_title', 'email']
+    list_filter = ['is_primary_contact', 'preferred_contact_method', 'created_at']
+    search_fields = ['first_name', 'last_name', 'email', 'distributor__distributor_name']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Distributor', {
+            'fields': ('distributor',)
+        }),
+        ('Contact Information', {
+            'fields': ('first_name', 'last_name', 'job_title', 'department')
+        }),
+        ('Communication', {
+            'fields': ('email', 'phone', 'mobile', 'preferred_contact_method')
+        }),
+        ('Relationship', {
+            'fields': ('is_primary_contact', 'last_contact_date', 'next_follow_up')
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(DistributorOrder)
+class DistributorOrderAdmin(admin.ModelAdmin):
+    list_display = ['order_number', 'distributor', 'order_date', 'status', 'total_amount']
+    list_filter = ['status', 'order_date', 'distributor']
+    search_fields = ['order_number', 'distributor__distributor_name', 'sales_order_reference']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Order Information', {
+            'fields': ('order_number', 'entity', 'distributor', 'status')
+        }),
+        ('Dates', {
+            'fields': ('order_date', 'required_delivery_date', 'actual_delivery_date')
+        }),
+        ('Details', {
+            'fields': ('description',)
+        }),
+        ('Financial', {
+            'fields': ('subtotal', 'discount_amount', 'tax_amount', 'total_amount', 'payment_terms')
+        }),
+        ('Tracking', {
+            'fields': ('is_posted', 'sales_order_reference')
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(Courier)
+class CourierAdmin(admin.ModelAdmin):
+    list_display = ['name', 'code', 'is_active']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'code']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Courier Information', {
+            'fields': ('entity', 'name', 'code')
+        }),
+        ('Details', {
+            'fields': ('description',)
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(OrderShipment)
+class OrderShipmentAdmin(admin.ModelAdmin):
+    list_display = ['shipment_number', 'order', 'shipment_date', 'status', 'courier']
+    list_filter = ['status', 'shipment_date', 'courier']
+    search_fields = ['shipment_number', 'tracking_number', 'order__order_number']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Shipment Information', {
+            'fields': ('shipment_number', 'order', 'status')
+        }),
+        ('Dates', {
+            'fields': ('shipment_date', 'expected_delivery', 'actual_delivery')
+        }),
+        ('Carrier & Tracking', {
+            'fields': ('courier', 'tracking_number', 'shipping_cost')
+        }),
+        ('Notes', {
+            'fields': ('notes',),
+            'classes': ('collapse',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(AfterSalesService)
+class AfterSalesServiceAdmin(admin.ModelAdmin):
+    list_display = ['service_ticket_number', 'distributor', 'service_type', 'status', 'priority']
+    list_filter = ['status', 'service_type', 'priority', 'issue_date']
+    search_fields = ['service_ticket_number', 'serial_number', 'distributor__distributor_name']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Service Information', {
+            'fields': ('service_ticket_number', 'entity', 'distributor', 'service_type', 'status', 'priority')
+        }),
+        ('Product Details', {
+            'fields': ('product_code', 'serial_number', 'purchase_date')
+        }),
+        ('Issue', {
+            'fields': ('issue_description', 'issue_date')
+        }),
+        ('Resolution', {
+            'fields': ('resolution_description', 'resolution_date')
+        }),
+        ('Warranty', {
+            'fields': ('is_under_warranty', 'warranty_expiry_date', 'warranty_covered')
+        }),
+        ('Cost & Assignment', {
+            'fields': ('service_cost', 'assigned_to')
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(ServiceActivity)
+class ServiceActivityAdmin(admin.ModelAdmin):
+    list_display = ['activity_type', 'service', 'performed_by', 'created_at']
+    list_filter = ['activity_type', 'created_at']
+    search_fields = ['service__service_ticket_number', 'description']
+    readonly_fields = ['created_at']
+
+
+@admin.register(WarrantyRegistration)
+class WarrantyRegistrationAdmin(admin.ModelAdmin):
+    list_display = ['warranty_number', 'product_code', 'distributor', 'warranty_type', 'is_active', 'is_claimed']
+    list_filter = ['warranty_type', 'is_active', 'is_claimed', 'coverage_start_date']
+    search_fields = ['warranty_number', 'serial_number', 'product_code']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Warranty Information', {
+            'fields': ('warranty_number', 'warranty_type', 'is_active', 'is_claimed')
+        }),
+        ('Product Details', {
+            'fields': ('product_code', 'serial_number')
+        }),
+        ('Customer/Distributor', {
+            'fields': ('distributor', 'end_customer_name', 'end_customer_email', 'end_customer_phone')
+        }),
+        ('Coverage', {
+            'fields': ('purchase_date', 'coverage_start_date', 'coverage_end_date', 'coverage_description')
+        }),
+        ('Terms', {
+            'fields': ('terms_and_conditions',),
+            'classes': ('collapse',)
+        }),
+        ('Claims', {
+            'fields': ('claims_count', 'total_claims_value')
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(DistributorPerformance)
+class DistributorPerformanceAdmin(admin.ModelAdmin):
+    list_display = ['distributor', 'performance_month', 'performance_year', 'total_sales', 'overall_rating']
+    list_filter = ['performance_year', 'performance_month', 'overall_rating']
+    search_fields = ['distributor__distributor_name']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Period', {
+            'fields': ('distributor', 'performance_date', 'performance_month', 'performance_year')
+        }),
+        ('Sales Metrics', {
+            'fields': ('orders_count', 'total_sales', 'average_order_value')
+        }),
+        ('Fulfillment', {
+            'fields': ('on_time_delivery_percentage', 'order_accuracy_percentage')
+        }),
+        ('Quality', {
+            'fields': ('return_rate_percentage', 'complaint_count')
+        }),
+        ('Payment', {
+            'fields': ('payment_on_time_percentage',)
+        }),
+        ('Rating', {
+            'fields': ('overall_rating',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}{% if object %}Edit{% else %}Create{% endif %} RFQ - Procurement{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">{% if object %}Edit{% else %}Create New{% endif %} Request for Quotation</h4>
+                    <div class="page-title-right">
+                        <a href="{% url 'procurement:rfq_list' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">RFQ Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            <!-- RFQ Number -->
+                            <div class="mb-3">
+                                <label for="{{ form.rfq_number.id_for_label }}" class="form-label">RFQ Number <span class="text-danger">*</span></label>
+                                <input type="text" name="rfq_number" id="{{ form.rfq_number.id_for_label }}" 
+                                    class="form-control {% if form.rfq_number.errors %}is-invalid{% endif %}" 
+                                    value="{{ form.rfq_number.value|default:'' }}" required>
+                                {% if form.rfq_number.errors %}
+                                <div class="invalid-feedback d-block">{{ form.rfq_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description <span class="text-danger">*</span></label>
+                                <textarea name="description" id="{{ form.description.id_for_label }}" 
+                                    class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                    rows="4" placeholder="Describe the items or services being requested...">{{ form.description.value|default:'' }}</textarea>
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.rfq_date.id_for_label }}" class="form-label">RFQ Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="rfq_date" id="{{ form.rfq_date.id_for_label }}" 
+                                        class="form-control {% if form.rfq_date.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.rfq_date.value|date:'Y-m-d'|default:'' }}" required>
+                                    {% if form.rfq_date.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.rfq_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.deadline.id_for_label }}" class="form-label">Quotation Deadline <span class="text-danger">*</span></label>
+                                    <input type="date" name="deadline" id="{{ form.deadline.id_for_label }}" 
+                                        class="form-control {% if form.deadline.errors %}is-invalid{% endif %}" 
+                                        value="{{ form.deadline.value|date:'Y-m-d'|default:'' }}" required>
+                                    {% if form.deadline.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.deadline.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Vendor Selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Vendors <span class="text-danger">*</span></label>
+                                <p class="small text-muted mb-2">Select vendors to send this RFQ to (minimum 2 recommended)</p>
+                                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                    {% if form.vendors.field.queryset %}
+                                    <div class="list-unstyled">
+                                        {% for vendor in form.vendors.field.queryset %}
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" name="vendors" value="{{ vendor.id }}" id="vendor_{{ vendor.id }}" 
+                                                class="form-check-input" {% if vendor in form.vendors.value %}checked{% endif %}>
+                                            <label class="form-check-label" for="vendor_{{ vendor.id }}">
+                                                <strong>{{ vendor.name }}</strong><br>
+                                                <small class="text-muted">{{ vendor.email }}</small>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted mb-0">No vendors available.</p>
+                                    {% endif %}
+                                </div>
+                                {% if form.vendors.errors %}
+                                <div class="invalid-feedback d-block">{{ form.vendors.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Specifications -->
+                            <div class="mb-4">
+                                <label for="{{ form.specifications.id_for_label }}" class="form-label">Technical Specifications</label>
+                                <textarea name="specifications" id="{{ form.specifications.id_for_label }}" 
+                                    class="form-control" rows="3" placeholder="Any technical requirements or specifications...">{{ form.specifications.value|default:'' }}</textarea>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="mb-4">
+                                <label for="{{ form.award_status.id_for_label }}" class="form-label">Status <span class="text-danger">*</span></label>
+                                <select name="award_status" id="{{ form.award_status.id_for_label }}" class="form-select {% if form.award_status.errors %}is-invalid{% endif %}" required>
+                                    {% for value, label in form.award_status.field.choices %}
+                                    <option value="{{ value }}" {% if form.award_status.value == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.award_status.errors %}
+                                <div class="invalid-feedback d-block">{{ form.award_status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if object %}Update RFQ{% else %}Create RFQ{% endif %}
+                                </button>
+                                <a href="{% url 'procurement:rfq_list' %}" class="btn btn-light">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Sidebar -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Form Help</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="mb-3">RFQ Process</h6>
+                        <p class="small text-muted">
+                            1. Create RFQ with description<br>
+                            2. Send to multiple vendors<br>
+                            3. Collect quotations<br>
+                            4. Evaluate and award
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">Vendor Selection</h6>
+                        <p class="small text-muted">
+                            Select at least 2-3 vendors for competitive bidding. The system will notify them of the RFQ.
+                        </p>
+
+                        <hr>
+
+                        <h6 class="mb-3">Status</h6>
+                        <p class="small text-muted">
+                            <strong>Open:</strong> Awaiting quotations<br>
+                            <strong>Awarded:</strong> Vendor selected<br>
+                            <strong>Closed:</strong> RFQ closed
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

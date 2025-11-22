@@ -1,0 +1,309 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Cash Management Dashboard | TradifyERP</title>
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 400px;
+    }
+    .metric-card {
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title mb-0">Cash Management Dashboard</h4>
+                </div>
+            </div>
+
+            <!-- Key Metrics Row -->
+            <div class="row mb-4">
+                <!-- Total Cash Position -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Cash Position</h6>
+                                    <h3 class="mb-0">${{ total_cash|floatformat:2 }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-primary">
+                                        <i class="mdi mdi-cash"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Payments -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Upcoming Payments (7 Days)</h6>
+                                    <h3 class="mb-0">{{ upcoming_payments_count }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-warning">
+                                        <i class="mdi mdi-calendar-clock"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liquidity Status -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Liquidity Status</h6>
+                                    <h3 class="mb-0">{{ liquidity_status }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-success">
+                                        <i class="mdi mdi-water"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Treasury Accounts -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Active Treasury Accounts</h6>
+                                    <h3 class="mb-0">{{ treasury_accounts_count }}</h3>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title rounded-circle bg-info">
+                                        <i class="mdi mdi-bank"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cash Flow Forecast & Bank Accounts -->
+            <div class="row mb-4">
+                <!-- 30-Day Cash Forecast -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">30-Day Cash Forecast</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="forecastChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Bank Accounts -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Bank Accounts Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if bank_accounts %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Account</th>
+                                                <th class="text-end">Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for account in bank_accounts %}
+                                                <tr>
+                                                    <td>{{ account.account_name }}</td>
+                                                    <td class="text-end">${{ account.closing_balance|floatformat:2 }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No bank accounts configured</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Payments & Treasury Details -->
+            <div class="row mb-4">
+                <!-- Upcoming Payments -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Upcoming Payments</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if upcoming_payments %}
+                                <div class="activity-list">
+                                    {% for payment in upcoming_payments %}
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="flex-shrink-0">
+                                                <span class="badge bg-light text-dark">{{ payment.status }}</span>
+                                            </div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <h6 class="mb-1">{{ payment.payment_description }}</h6>
+                                                <p class="text-muted mb-0 small">Due: {{ payment.scheduled_date }}</p>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <h6 class="mb-0">${{ payment.amount|floatformat:2 }}</h6>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No upcoming payments</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FX Exposure -->
+                <div class="col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">FX Exposure & Treasury</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if fx_exposures %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Currency</th>
+                                                <th>Amount</th>
+                                                <th>Hedged</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for exposure in fx_exposures %}
+                                                <tr>
+                                                    <td>{{ exposure.currency }}</td>
+                                                    <td>{{ exposure.exposure_amount }}</td>
+                                                    <td>
+                                                        {% if exposure.is_hedged %}
+                                                            <span class="badge bg-success">Yes</span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger">No</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No FX exposures</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="{% url 'cash_management:payment_list' %}" class="btn btn-sm btn-primary">
+                                    <i class="mdi mdi-cash-multiple"></i> Payment Schedule
+                                </a>
+                                <a href="{% url 'cash_management:position_list' %}" class="btn btn-sm btn-info">
+                                    <i class="mdi mdi-chart-line"></i> Cash Positions
+                                </a>
+                                <a href="{% url 'cash_management:forecast_list' %}" class="btn btn-sm btn-warning">
+                                    <i class="mdi mdi-crystal-ball"></i> Liquidity Forecast
+                                </a>
+                                <a href="{% url 'cash_management:treasury_list' %}" class="btn btn-sm btn-success">
+                                    <i class="mdi mdi-bank"></i> Treasury Accounts
+                                </a>
+                                <a href="{% url 'cash_management:fx_list' %}" class="btn btn-sm btn-secondary">
+                                    <i class="mdi mdi-currency-usd"></i> FX Exposure
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'libs/chartjs/dist/chart.min.js' %}"></script>
+<script>
+    // Forecast Chart
+    var forecastCtx = document.getElementById('forecastChart');
+    if (forecastCtx) {
+        var forecastChart = new Chart(forecastCtx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 5', 'Day 10', 'Day 15', 'Day 20', 'Day 25', 'Day 30'],
+                datasets: [{
+                    label: 'Forecasted Cash Position',
+                    data: [150000, 145000, 140000, 155000, 160000, 165000, 170000],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
