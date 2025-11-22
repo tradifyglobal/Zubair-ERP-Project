@@ -1,5 +1,6 @@
 {% extends "maintenance/base.html" %}
 {% load static %}
+{% load permission_tags %}
 
 {% block page_title %}{{ model_name }} List{% endblock %}
 {% block page_heading %}{{ model_name }}s{% endblock %}
@@ -9,9 +10,21 @@
 {% endblock %}
 
 {% block action_buttons %}
-  <a href="{% url view_name_create %}" class="btn btn-primary">
+  {% if user|has_action_permission:'maintenance:add' %}
+                            {% if user|has_action_permission:'maintenance:add' %}
+                            <a href="{% url view_name_create %}" class="btn btn-primary">
     <i class="mdi mdi-plus"></i> Add New
   </a>
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
 {% endblock %}
 
 {% block page_content %}
@@ -74,12 +87,36 @@
                   </td>
                   <td>{{ obj.created_at|date:"M d, Y" }}</td>
                   <td>
-                    <a href="{% url view_name_detail obj.id %}" class="btn btn-sm btn-info" title="View">
+                    {% if user|has_action_permission:'maintenance:view' %}
+                                                    {% if user|has_action_permission:'maintenance:view' %}
+                                                    {% if user|has_action_permission:'maintenance:view' %}
+                                                    <a href="{% url view_name_detail obj.id %}" class="btn btn-sm btn-info" title="View">
                       <i class="mdi mdi-eye"></i>
                     </a>
-                    <a href="{% url view_name_update obj.id %}" class="btn btn-sm btn-warning" title="Edit">
+                                                    {% endif %}
+                                                    {% endif %}
+                                                    {% endif %}
+                    {% if user|has_action_permission:'maintenance:edit' %}
+                                                    {% if user|has_action_permission:'maintenance:edit' %}
+                                                    {% if user|has_action_permission:'maintenance:edit' %}
+                                                    <a href="{% url view_name_update obj.id %}" class="btn btn-sm btn-warning" title="Edit">
                       <i class="mdi mdi-pencil"></i>
                     </a>
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="No edit permission">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="No edit permission">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="No edit permission">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </button>
+                                                    {% endif %}
                     <a href="{% url view_name_delete obj.id %}" class="btn btn-sm btn-danger btn-delete" title="Delete">
                       <i class="mdi mdi-trash-can"></i>
                     </a>

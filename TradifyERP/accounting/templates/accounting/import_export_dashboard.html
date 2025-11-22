@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+{% load permission_tags %}
+
+{% block title %}Import/Export - {{ module_name|title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">
+                    <i class="mdi mdi-swap-horizontal"></i> Import/Export Data
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Import/Export</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Import Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="mdi mdi-file-import"></i> Import Data
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if can_import %}
+                    <p class="text-muted">Import data from CSV or Excel files into the system.</p>
+                    
+                    <div class="list-group">
+                        {% for model in available_models %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ model.name }}</h6>
+                                    <small class="text-muted">{{ model.description }}</small>
+                                </div>
+                                <div>
+                                    <a href="{{ model.template_url }}" class="btn btn-sm btn-outline-secondary me-1" title="Download Template">
+                                        <i class="mdi mdi-download"></i> Template
+                                    </a>
+                                    <a href="{{ model.import_url }}" class="btn btn-sm btn-primary">
+                                        <i class="mdi mdi-upload"></i> Import
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="alert alert-info mb-0">
+                            No import options configured for this module.
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="mdi mdi-alert"></i> You don't have permission to import data.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="mdi mdi-file-export"></i> Export Data
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if can_export %}
+                    <p class="text-muted">Export data to CSV, Excel, or JSON format.</p>
+                    
+                    <div class="list-group">
+                        {% for model in available_models %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ model.name }}</h6>
+                                    <small class="text-muted">{{ model.record_count|default:"0" }} records</small>
+                                </div>
+                                <div class="btn-group">
+                                    <a href="{{ model.export_url }}?format=csv" class="btn btn-sm btn-success" title="Export as CSV">
+                                        <i class="mdi mdi-file-delimited"></i> CSV
+                                    </a>
+                                    <a href="{{ model.export_url }}?format=excel" class="btn btn-sm btn-success" title="Export as Excel">
+                                        <i class="mdi mdi-file-excel"></i> Excel
+                                    </a>
+                                    <a href="{{ model.export_url }}?format=json" class="btn btn-sm btn-success" title="Export as JSON">
+                                        <i class="mdi mdi-code-braces"></i> JSON
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="alert alert-info mb-0">
+                            No export options configured for this module.
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="mdi mdi-alert"></i> You don't have permission to export data.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Cards -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card card-body">
+                <h6><i class="mdi mdi-information text-info"></i> CSV Format</h6>
+                <p class="text-muted small mb-0">Comma-separated values, compatible with Excel and other spreadsheet applications.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-body">
+                <h6><i class="mdi mdi-information text-success"></i> Excel Format</h6>
+                <p class="text-muted small mb-0">Native Excel format (.xlsx) with formatting and multiple sheets support.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-body">
+                <h6><i class="mdi mdi-information text-primary"></i> JSON Format</h6>
+                <p class="text-muted small mb-0">Structured data format, ideal for API integration and data migration.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

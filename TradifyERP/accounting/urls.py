@@ -1,4 +1,5 @@
 from django.urls import path
+from accounting.models import Account, Customer, Vendor
 from .views import (
     DashboardView, GLDashboardView,
     AccountListView, AccountDetailView,
@@ -29,17 +30,35 @@ from .views_analytics import (
     FinancialRatiosView, AccountsReceivableAgingView, AccountsPayableAgingView,
     VarianceAnalysisView, CostCenterAnalysisView
 )
+from .dashboard_views import main_dashboard
 from .stakeholder_views import (
     StakeholderListView, StakeholderDetailView, StakeholderCreateView, StakeholderUpdateView, StakeholderDeleteView,
     CapitalContributionListView, CapitalContributionDetailView, CapitalContributionCreateView, CapitalContributionUpdateView,
     ShareholdingListView, ShareholdingDetailView, ShareholdingCreateView, ShareholdingUpdateView
+)
+from .user_views import (
+    UserListView, UserCreateView, UserEditView, UserDetailView,
+    UserApplyTemplateView, UserToggleStatusView
+)
+from .import_export_views import (
+    BaseImportView, BaseExportView, ImportTemplateDownloadView,
+    ImportExportDashboardView
+)
+from .import_export_implementations import (
+    AccountImporter, AccountExporter,
+    CustomerImporter, CustomerExporter,
+    VendorImporter, VendorExporter,
+    LedgerEntryExporter
 )
 
 app_name = 'accounting'
 
 urlpatterns = [
     # Main dashboards
+    path('', DashboardView.as_view(), name='main_dashboard'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    
+    # GL Dashboard - Accounting specific
     path('gl-dashboard/', GLDashboardView.as_view(), name='gl_dashboard'),
     
     # Accounts
@@ -157,4 +176,69 @@ urlpatterns = [
     path('ap-aging/', AccountsPayableAgingView.as_view(), name='ap_aging'),
     path('variance-analysis/', VarianceAnalysisView.as_view(), name='variance_analysis'),
     path('cost-center-analysis/', CostCenterAnalysisView.as_view(), name='cost_center_analysis'),
+    
+    # User Management with Module Permissions
+    path('users/', UserListView.as_view(), name='user_list'),
+    path('users/create/', UserCreateView.as_view(), name='user_create'),
+    path('users/<int:pk>/', UserDetailView.as_view(), name='user_detail'),
+    path('users/<int:pk>/edit/', UserEditView.as_view(), name='user_edit'),
+    path('users/<int:pk>/apply-template/', UserApplyTemplateView.as_view(), name='user_apply_template'),
+    path('users/<int:pk>/toggle-status/', UserToggleStatusView.as_view(), name='user_toggle_status'),
+    
+    # Import/Export Dashboard
+    path('import-export/', ImportExportDashboardView.as_view(), name='import_export_dashboard'),
+    
+    # Account Import/Export
+    path('accounts/import/', BaseImportView.as_view(
+        importer_class=AccountImporter,
+        module_name='accounting',
+        success_url='/accounting/accounts/'
+    ), name='account_import'),
+    path('accounts/export/', BaseExportView.as_view(
+        exporter_class=AccountExporter,
+        module_name='accounting'
+    ), name='account_export'),
+    path('accounts/import-template/', ImportTemplateDownloadView.as_view(
+        model_class=Account,
+        template_fields=['account_number', 'account_name', 'account_type', 'description', 'parent_account', 'is_active'],
+        module_name='accounting'
+    ), name='account_import_template'),
+    
+    # Customer Import/Export
+    path('customers/import/', BaseImportView.as_view(
+        importer_class=CustomerImporter,
+        module_name='accounting',
+        success_url='/accounting/customers/'
+    ), name='customer_import'),
+    path('customers/export/', BaseExportView.as_view(
+        exporter_class=CustomerExporter,
+        module_name='accounting'
+    ), name='customer_export'),
+    path('customers/import-template/', ImportTemplateDownloadView.as_view(
+        model_class=Customer,
+        template_fields=['name', 'email', 'phone', 'address', 'city', 'state', 'country', 'postal_code', 'tax_id', 'credit_limit', 'is_active'],
+        module_name='accounting'
+    ), name='customer_import_template'),
+    
+    # Vendor Import/Export
+    path('vendors/import/', BaseImportView.as_view(
+        importer_class=VendorImporter,
+        module_name='accounting',
+        success_url='/accounting/vendors/'
+    ), name='vendor_import'),
+    path('vendors/export/', BaseExportView.as_view(
+        exporter_class=VendorExporter,
+        module_name='accounting'
+    ), name='vendor_export'),
+    path('vendors/import-template/', ImportTemplateDownloadView.as_view(
+        model_class=Vendor,
+        template_fields=['name', 'email', 'phone', 'address', 'city', 'state', 'country', 'postal_code', 'tax_id', 'payment_terms', 'is_active'],
+        module_name='accounting'
+    ), name='vendor_import_template'),
+    
+    # Ledger Entry Export (export only)
+    path('ledger-entries/export/', BaseExportView.as_view(
+        exporter_class=LedgerEntryExporter,
+        module_name='accounting'
+    ), name='ledger_entry_export'),
 ]

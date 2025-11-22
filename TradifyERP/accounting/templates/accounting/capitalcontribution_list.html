@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 {% block head_title%}
     <title>Capital Contributions | TradifyERP</title>
 {% endblock %}
@@ -113,9 +114,21 @@
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Contributions List</h5>
+                            {% if user|has_action_permission:'accounting:add' %}
+                            {% if user|has_action_permission:'accounting:add' %}
                             <a href="{% url 'accounting:capital_contribution_create' %}" class="btn btn-primary btn-sm">
                                 <i class="mdi mdi-plus"></i> Add Contribution
                             </a>
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
                         </div>
                         <div class="card-body">
                             {% if object_list %}
@@ -167,14 +180,38 @@
                                             <td>{{ contribution.reference_number }}</td>
                                             <td>
                                                 <div class="btn-group" role="group">
+                                                    {% if user|has_action_permission:'accounting:view' %}
+                                                    {% if user|has_action_permission:'accounting:view' %}
+                                                    {% if user|has_action_permission:'accounting:view' %}
                                                     <a href="{% url 'accounting:capital_contribution_detail' contribution.id %}" 
                                                        class="btn btn-sm btn-info" title="View">
                                                         <i class="mdi mdi-eye"></i>
                                                     </a>
+                                                    {% endif %}
+                                                    {% endif %}
+                                                    {% endif %}
+                                                    {% if user|has_action_permission:'accounting:edit' %}
+                                                    {% if user|has_action_permission:'accounting:edit' %}
+                                                    {% if user|has_action_permission:'accounting:edit' %}
                                                     <a href="{% url 'accounting:capital_contribution_update' contribution.id %}" 
                                                        class="btn btn-sm btn-warning" title="Edit">
                                                         <i class="mdi mdi-pencil"></i>
                                                     </a>
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="No edit permission">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="No edit permission">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="No edit permission">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </button>
+                                                    {% endif %}
                                                 </div>
                                             </td>
                                         </tr>

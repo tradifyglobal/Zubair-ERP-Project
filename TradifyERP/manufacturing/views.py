@@ -5,6 +5,7 @@ Complete CRUD operations with RBAC and multi-entity support.
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from accounting.permission_utils import module_permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -84,6 +85,7 @@ class ProductCategoryListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class ProductCategoryDeleteView(LoginRequiredMixin, DeleteView):
     model = ProductCategory
     template_name = 'manufacturing/productcategory_confirm_delete.html'
@@ -203,6 +205,7 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class ProductDeleteView(LoginRequiredMixin, DeleteView):
     model = Product
     template_name = 'manufacturing/product_confirm_delete.html'
@@ -270,6 +273,7 @@ class RawMaterialCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class RawMaterialDeleteView(LoginRequiredMixin, DeleteView):
     model = RawMaterial
     template_name = 'manufacturing/rawmaterial_confirm_delete.html'
@@ -349,6 +353,7 @@ class BOMUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class BOMDeleteView(LoginRequiredMixin, DeleteView):
     model = BillOfMaterials
     template_name = 'manufacturing/bom_confirm_delete.html'
@@ -425,6 +430,7 @@ class RoutingUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class RoutingDeleteView(LoginRequiredMixin, DeleteView):
     model = Routing
     template_name = 'manufacturing/routing_confirm_delete.html'
@@ -487,6 +493,7 @@ class WorkCenterCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class WorkCenterDeleteView(LoginRequiredMixin, DeleteView):
     model = WorkCenter
     template_name = 'manufacturing/workcenter_confirm_delete.html'
@@ -586,6 +593,7 @@ class ProductionOrderUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class ProductionOrderDeleteView(LoginRequiredMixin, DeleteView):
     model = ProductionOrder
     template_name = 'manufacturing/productionorder_confirm_delete.html'
@@ -662,6 +670,7 @@ class QualityInspectionUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class QualityInspectionDeleteView(LoginRequiredMixin, DeleteView):
     model = QualityInspection
     template_name = 'manufacturing/qualityinspection_confirm_delete.html'
@@ -729,6 +738,7 @@ class EquipmentCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class EquipmentDeleteView(LoginRequiredMixin, DeleteView):
     model = Equipment
     template_name = 'manufacturing/equipment_confirm_delete.html'
@@ -849,6 +859,7 @@ class DistributorUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class DistributorDeleteView(LoginRequiredMixin, DeleteView):
     model = Distributor
     template_name = 'manufacturing/distributor_confirm_delete.html'
@@ -894,6 +905,7 @@ class DistributorOrderUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class DistributorOrderDeleteView(LoginRequiredMixin, DeleteView):
     model = DistributorOrder
     template_name = 'manufacturing/distributororder_confirm_delete.html'
@@ -941,6 +953,7 @@ class OrderShipmentUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class OrderShipmentDeleteView(LoginRequiredMixin, DeleteView):
     model = OrderShipment
     template_name = 'manufacturing/ordershipment_confirm_delete.html'
@@ -991,6 +1004,7 @@ class AfterSalesServiceUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class AfterSalesServiceDeleteView(LoginRequiredMixin, DeleteView):
     model = AfterSalesService
     template_name = 'manufacturing/aftersalesservice_confirm_delete.html'
@@ -1043,6 +1057,7 @@ class WarrantyRegistrationUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class WarrantyRegistrationDeleteView(LoginRequiredMixin, DeleteView):
     model = WarrantyRegistration
     template_name = 'manufacturing/warrantyregistration_confirm_delete.html'
@@ -1095,7 +1110,9 @@ class DistributorPerformanceUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class DistributorPerformanceDeleteView(LoginRequiredMixin, DeleteView):
     model = DistributorPerformance
     template_name = 'manufacturing/distributorperformance_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:distributorperformance_list')
+

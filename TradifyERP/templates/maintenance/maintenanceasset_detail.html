@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load permission_tags %}
 {% block title %}{{ asset.asset_name }}{% endblock %}
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="row mb-3"><div class="col"><h1 class="h3">{{ asset.asset_name }}</h1></div><div class="col text-end"><a href="{% url 'maintenance:asset-update' asset.pk %}" class="btn btn-warning"><i class="fas fa-edit"></i></a> <a href="{% url 'maintenance:asset-delete' asset.pk %}" class="btn btn-danger" onclick="return confirm('Sure?')"><i class="fas fa-trash"></i></a> <a href="{% url 'maintenance:asset-list' %}" class="btn btn-secondary">Back</a></div></div>
+    <div class="row mb-3"><div class="col"><h1 class="h3">{{ asset.asset_name }}</h1></div><div class="col text-end"><a href="{% url 'maintenance:asset-update' asset.pk %}" class="btn btn-warning"><i class="fas fa-edit"></i></a> {% if user|has_action_permission:'maintenance:delete' %}<a href="{% url 'maintenance:asset-delete' asset.pk %}" class="btn btn-danger" onclick="return confirm('Sure?')"><i class="fas fa-trash"></i></a>{% endif %} <a href="{% url 'maintenance:asset-list' %}" class="btn btn-secondary">Back</a></div></div>
     <div class="card"><div class="card-body">
         <table class="table table-sm"><tr><td><strong>Code:</strong></td><td>{{ asset.asset_code }}</td></tr><tr><td><strong>Category:</strong></td><td>{{ asset.category }}</td></tr><tr><td><strong>Location:</strong></td><td>{{ asset.location }}</td></tr><tr><td><strong>Status:</strong></td><td><span class="badge {% if asset.status == 'Active' %}bg-success{% else %}bg-warning{% endif %}">{{ asset.status }}</span></td></tr><tr><td><strong>Manufacturer:</strong></td><td>{{ asset.manufacturer }}</td></tr><tr><td><strong>Model:</strong></td><td>{{ asset.model_number }}</td></tr><tr><td><strong>Serial #:</strong></td><td>{{ asset.serial_number }}</td></tr><tr><td><strong>Installed:</strong></td><td>{{ asset.installation_date|date:"M d, Y" }}</td></tr><tr><td><strong>Warranty Until:</strong></td><td>{{ asset.warranty_expiry_date|date:"M d, Y" }}</td></tr></table>
     </div></div>

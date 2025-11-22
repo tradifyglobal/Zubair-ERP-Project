@@ -1,4 +1,5 @@
 {% load static %}
+{% load permission_tags %}
 {% block sidebar%}
             <div class="topnav">
                 <div class="container-fluid">
@@ -13,6 +14,16 @@
                                     </a>
                                 </li>
 
+                                <!-- User Management (Superuser Only) -->
+                                {% if user.is_superuser %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'accounting:user_list' %}" id="topnav-users" role="button">
+                                        <i data-feather="users"></i><span data-key="t-users">ERP User Management</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if user|has_module_permission:'accounting' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-accounting" role="button">
                                         <i data-feather="book"></i><span data-key="t-accounting">Accounting</span> <div class="arrow-down"></div>
@@ -78,7 +89,9 @@
                                         <a href="{% url 'accounting:audit_log_list' %}" class="dropdown-item">Audit Logs</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'shareholder' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-shareholder" role="button">
                                         <i data-feather="users"></i><span data-key="t-shareholder">Shareholder Management</span> <div class="arrow-down"></div>
@@ -97,7 +110,9 @@
                                         <a href="{% url 'shareholder:shareholding-create' %}" class="dropdown-item">Add Shares</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'hr' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-hr" role="button">
                                         <i data-feather="users"></i><span data-key="t-hr">HR Management</span> <div class="arrow-down"></div>
@@ -118,7 +133,9 @@
                                         <a href="{% url 'hr:performance-list' %}" class="dropdown-item">Performance Reviews</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'manufacturing' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-manufacturing" role="button">
                                         <i data-feather="settings"></i><span data-key="t-manufacturing">Manufacturing</span> <div class="arrow-down"></div>
@@ -160,7 +177,9 @@
                                         <a href="{% url 'manufacturing:distributorperformance_list' %}" class="dropdown-item">Distributor Performance</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'sales' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-sales" role="button">
                                         <i data-feather="shopping-cart"></i><span data-key="t-sales">Sales</span> <div class="arrow-down"></div>
@@ -182,7 +201,9 @@
                                         <a href="{% url 'sales:invoice_create' %}" class="dropdown-item">Create Invoice</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'inventory' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-inventory" role="button">
                                         <i data-feather="box"></i><span data-key="t-inventory">Inventory</span> <div class="arrow-down"></div>
@@ -207,7 +228,9 @@
                                         <a href="{% url 'inventory:low_stock_report' %}" class="dropdown-item">Low Stock Report</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'ap' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-ap" role="button">
                                         <i data-feather="credit-card"></i><span data-key="t-ap">Accounts Payable</span> <div class="arrow-down"></div>
@@ -226,7 +249,9 @@
                                         <a href="{% url 'ap:payment_create' %}" class="dropdown-item">Record Payment</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'procurement' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-procurement" role="button">
                                         <i data-feather="truck"></i><span data-key="t-procurement">Procurement</span> <div class="arrow-down"></div>
@@ -252,7 +277,9 @@
                                         <a href="{% url 'procurement:matching_list' %}" class="dropdown-item">3-Way Matching</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'crm' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-crm" role="button">
                                         <i data-feather="target"></i><span data-key="t-crm">CRM</span> <div class="arrow-down"></div>
@@ -277,7 +304,9 @@
                                         <a href="{% url 'crm:campaign_list' %}" class="dropdown-item">All Campaigns</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'projects' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-projects" role="button">
                                         <i data-feather="briefcase"></i><span data-key="t-projects">Projects</span> <div class="arrow-down"></div>
@@ -296,7 +325,9 @@
                                         <a href="{% url 'projects:timeentry_list' %}" class="dropdown-item">Time Entries</a>
                                     </div>
                                 </li>
+                                {% endif %}
 
+                                {% if user|has_module_permission:'maintenance' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-maintenance" role="button">
                                         <i data-feather="wrench"></i><span data-key="t-maintenance">Maintenance</span> <div class="arrow-down"></div>
@@ -335,12 +366,7 @@
                                         <a href="{% url 'maintenance:downtime-list' %}" class="dropdown-item">Downtime Records</a>
                                     </div>
                                 </li>
-
-
-
-
-
-
+                                {% endif %}
 
                             </ul>
                         </div>

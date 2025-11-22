@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 {% block head_title%}
     <title>Stakeholders | TradifyERP</title>
 {% endblock %}
@@ -113,9 +114,15 @@
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Stakeholder List</h5>
+                            {% if user|has_action_permission:'accounting:add' %}
                             <a href="{% url 'accounting:stakeholder_create' %}" class="btn btn-primary btn-sm">
                                 <i class="mdi mdi-plus"></i> Add Stakeholder
                             </a>
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add stakeholders">
+                                <i class="mdi mdi-plus"></i> Add Stakeholder
+                            </button>
+                            {% endif %}
                         </div>
                         <div class="card-body">
                             {% if object_list %}
@@ -165,19 +172,33 @@
                                             <td>{{ stakeholder.created_at|date:"M d, Y" }}</td>
                                             <td>
                                                 <div class="btn-group" role="group">
+                                                    {% if user|has_action_permission:'accounting:view' %}
                                                     <a href="{% url 'accounting:stakeholder_detail' stakeholder.id %}" 
                                                        class="btn btn-sm btn-info" title="View">
                                                         <i class="mdi mdi-eye"></i>
                                                     </a>
+                                                    {% endif %}
+                                                    {% if user|has_action_permission:'accounting:edit' %}
                                                     <a href="{% url 'accounting:stakeholder_update' stakeholder.id %}" 
                                                        class="btn btn-sm btn-warning" title="Edit">
                                                         <i class="mdi mdi-pencil"></i>
                                                     </a>
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="No edit permission">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                    {% if user|has_action_permission:'accounting:delete' %}
                                                     <a href="{% url 'accounting:stakeholder_delete' stakeholder.id %}" 
                                                        class="btn btn-sm btn-danger" title="Delete"
                                                        onclick="return confirm('Are you sure?')">
                                                         <i class="mdi mdi-delete"></i>
                                                     </a>
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="No delete permission">
+                                                        <i class="mdi mdi-delete"></i>
+                                                    </button>
+                                                    {% endif %}
                                                 </div>
                                             </td>
                                         </tr>

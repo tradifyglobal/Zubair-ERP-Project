@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 # Customize admin site title
 admin.site.site_header = "Tradify Global Administration"
@@ -26,8 +27,11 @@ admin.site.index_title = "Welcome to Tradify Global Administration"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Root dashboard redirect to accounting dashboard
+    path('', RedirectView.as_view(url='/accounting/dashboard/', permanent=False), name='home'),
+    path('dashboard/', RedirectView.as_view(url='/accounting/dashboard/', permanent=False), name='dashboard'),
     # Accounting module - includes /dashboard/ route
-    path('', include('accounting.urls')),
+    path('accounting/', include('accounting.urls')),
     # Shareholder management module
     path('shareholder/', include('shareholder.urls')),
     # HR Management module
@@ -52,8 +56,6 @@ urlpatterns = [
     path('ar/', include('ar.urls')),
     # Site Maintenance module
     path('maintenance/', include('maintenance.urls')),
-    # Include Tradify Global Starterkit routes (pages, apps)
-    path('', include('minia.urls')),
 ]
 
 # Serve static files in development
