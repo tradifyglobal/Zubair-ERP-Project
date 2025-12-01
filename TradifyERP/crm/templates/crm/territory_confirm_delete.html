@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Territory - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title mb-0">Delete Territory</h4>
+            </div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'crm:territories' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Warning!</strong> This action cannot be undone.
+                    </div>
+
+                    <p class="mb-3">
+                        Are you sure you want to delete the following territory?
+                    </p>
+
+                    <div class="card mb-3 bg-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Territory Code</label>
+                                    <p class="mb-2"><strong>{{ object.territory_code }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Territory Name</label>
+                                    <p class="mb-2"><strong>{{ object.territory_name }}</strong></p>
+                                </div>
+                            </div>
+                            {% if object.manager %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Manager</label>
+                                    <p class="mb-0"><strong>{{ object.manager.get_full_name }}</strong></p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form method="post" class="form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="confirm_delete" name="confirm" value="yes" required>
+                                <label class="custom-control-label" for="confirm_delete">
+                                    I understand this action cannot be undone. Delete this territory.
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-danger btn-block">
+                                <i class="fas fa-trash"></i> Delete Territory
+                            </button>
+                        </div>
+                    </form>
+
+                    <a href="{% url 'crm:territories' %}" class="btn btn-secondary btn-block">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

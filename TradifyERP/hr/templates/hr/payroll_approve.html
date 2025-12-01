@@ -1,0 +1,124 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Approve Payroll - HR{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3">Approve Payroll</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Review Payroll Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Please review the payroll details below before approving.
+                    </div>
+
+                    <!-- Payroll Info -->
+                    <div class="mb-4">
+                        <h6 class="text-uppercase text-muted mb-3">Payroll Information</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted">Payroll Number</label>
+                                <p><strong>{{ payroll.payroll_number }}</strong></p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted">Payroll Date</label>
+                                <p><strong>{{ payroll.payroll_date|date:"d M Y" }}</strong></p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted">Period Start</label>
+                                <p><strong>{{ payroll.period_start|date:"d M Y" }}</strong></p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted">Period End</label>
+                                <p><strong>{{ payroll.period_end|date:"d M Y" }}</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Financial Summary -->
+                    <div class="mb-4">
+                        <h6 class="text-uppercase text-muted mb-3">Financial Summary</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-success">
+                                    <div class="card-body">
+                                        <label class="text-muted">Total Gross</label>
+                                        <p class="h5 text-success"><strong>{{ payroll.total_gross|floatformat:2 }}</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-danger">
+                                    <div class="card-body">
+                                        <label class="text-muted">Total Deductions</label>
+                                        <p class="h5 text-danger"><strong>{{ payroll.total_deductions|floatformat:2 }}</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <label class="text-muted">Total Taxes</label>
+                                        <p class="h5 text-warning"><strong>{{ payroll.total_taxes|floatformat:2 }}</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <label class="text-muted">Net Total</label>
+                                        <p class="h5 text-primary"><strong>{{ payroll.total_net|floatformat:2 }}</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Employee Count -->
+                    <div class="mb-4">
+                        <h6 class="text-uppercase text-muted mb-3">Payroll Records</h6>
+                        <p><strong>{{ payroll_records.count }}</strong> employee(s) included in this payroll</p>
+                    </div>
+
+                    <hr>
+
+                    <!-- Confirmation Message -->
+                    <div class="alert alert-warning">
+                        <strong>Warning:</strong> Once approved, this payroll will be locked for editing. Please ensure all details are correct.
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-sm-flex justify-content-end">
+                        <a href="{% url 'hr:payroll-detail' payroll.id %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Approve Payroll
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

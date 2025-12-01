@@ -1,0 +1,286 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block head_title %}
+<title>FX Exposure Detail | Cash Management</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="page-title mb-0">FX Exposure Detail</h4>
+                            <p class="text-muted mt-2">
+                                {{ fxexposure.home_currency.code }} / {{ fxexposure.foreign_currency.code }} - {{ fxexposure.exposure_date|date:"M d, Y" }}
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{% url 'cash_management:fx_list' %}" class="btn btn-secondary btn-sm">
+                                <i class="ri-arrow-left-line"></i> Back
+                            </a>
+                            {% if perms.cash_management.change_fxexposure %}
+                            <a href="{% url 'cash_management:fx_edit' fxexposure.pk %}" class="btn btn-primary btn-sm">
+                                <i class="ri-edit-line"></i> Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <!-- Exposure Overview -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Exposure Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Entity</label>
+                                        <p class="h6">{{ fxexposure.entity.entity_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Exposure Type</label>
+                                        <p class="h6">
+                                            {% if fxexposure.exposure_type == 'RECEIVABLE' %}
+                                            <span class="badge bg-success">AR Receivable</span>
+                                            {% elif fxexposure.exposure_type == 'PAYABLE' %}
+                                            <span class="badge bg-warning">AP Payable</span>
+                                            {% elif fxexposure.exposure_type == 'INVESTMENT' %}
+                                            <span class="badge bg-info">Investment</span>
+                                            {% elif fxexposure.exposure_type == 'CASH' %}
+                                            <span class="badge bg-primary">Cash Balance</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Exposure Date</label>
+                                        <p class="h6">{{ fxexposure.exposure_date|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Maturity Date</label>
+                                        <p class="h6">
+                                            {% if fxexposure.maturity_date %}
+                                            {{ fxexposure.maturity_date|date:"M d, Y" }}
+                                            {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FX Amounts -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">FX Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Home Currency</label>
+                                        <p class="h6">{{ fxexposure.home_currency.code }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Foreign Currency</label>
+                                        <p class="h6">{{ fxexposure.foreign_currency.code }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Foreign Amount</label>
+                                        <p class="h5 text-info">
+                                            {{ fxexposure.foreign_currency.symbol }}
+                                            {{ fxexposure.foreign_amount|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Home Currency Amount</label>
+                                        <p class="h5 text-success">
+                                            {{ fxexposure.home_currency.symbol }}
+                                            {{ fxexposure.home_currency_amount|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Exchange Rate</label>
+                                        <p class="h6">
+                                            1 {{ fxexposure.foreign_currency.code }} = {{ fxexposure.exchange_rate|floatformat:6 }} {{ fxexposure.home_currency.code }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hedging Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Hedging Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Hedged</label>
+                                        <p>
+                                            {% if fxexposure.is_hedged %}
+                                            <span class="badge bg-success">
+                                                <i class="ri-shield-check-line"></i> Hedged
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="ri-shield-line"></i> Not Hedged
+                                            </span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Hedge Amount</label>
+                                        <p class="h6">
+                                            {{ fxexposure.foreign_currency.symbol }}
+                                            {{ fxexposure.hedge_amount|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if fxexposure.is_hedged and fxexposure.hedge_rate %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Hedge Rate</label>
+                                        <p class="h6">
+                                            1 {{ fxexposure.foreign_currency.code }} = {{ fxexposure.hedge_rate|floatformat:6 }} {{ fxexposure.home_currency.code }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Hedge Gain/Loss</label>
+                                        {% with gain=fxexposure.hedge_rate|add:fxexposure.exchange_rate|stringformat:"-f" %}
+                                        <p class="h5 {% if gain >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ gain|floatformat:6 }}
+                                        </p>
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Reference Information -->
+                    {% if fxexposure.reference_number %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Reference Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Reference Number</label>
+                                <p class="h6">{{ fxexposure.reference_number }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Exposure Summary -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Exposure Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Total Exposure (Home Currency)</label>
+                                <p class="h5">
+                                    {{ fxexposure.home_currency.symbol }}
+                                    {{ fxexposure.home_currency_amount|floatformat:2 }}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Unhedged Exposure</label>
+                                {% with unhedged=fxexposure.foreign_amount|add:fxexposure.hedge_amount|stringformat:"-f" %}
+                                <p class="h6">
+                                    {{ fxexposure.foreign_currency.symbol }}
+                                    {{ unhedged|floatformat:2 }}
+                                </p>
+                                {% endwith %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Hedging Coverage</label>
+                                {% if fxexposure.foreign_amount > 0 %}
+                                {% with coverage=fxexposure.hedge_amount|add:fxexposure.foreign_amount|mul:100|stringformat:".0f" %}
+                                <p class="h6">{{ coverage }}%</p>
+                                {% endwith %}
+                                {% else %}
+                                <p class="text-muted">N/A</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Timeline</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Created</label>
+                                <p class="h6">{{ fxexposure.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Last Updated</label>
+                                <p class="h6">{{ fxexposure.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

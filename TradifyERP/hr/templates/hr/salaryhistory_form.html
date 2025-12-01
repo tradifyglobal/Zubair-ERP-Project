@@ -1,0 +1,259 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Record Salary Update - HR Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3">{% if is_edit %}Edit{% else %}Record{% endif %} Salary Update</h1>
+                <a href="{% url 'hr:salaryhistory-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if is_approved %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong><i class="fas fa-lock"></i> Record Locked</strong>
+        <p class="mb-0">This salary history record has been approved and cannot be edited. Only administrators can make changes.</p>
+    </div>
+    {% endif %}
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Form Errors:</strong>
+            <ul class="mb-0">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6">
+                <!-- Status Section -->
+                {% if is_edit %}
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">Workflow Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Current Status *</label>
+                            {{ form.status }}
+                            <small class="d-block text-muted mt-1">Workflow: Requested → In Review → Approved</small>
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>Current Status:</strong> 
+                            <span class="badge {% if current_status == 'Approved' %}bg-success{% elif current_status == 'In Review' %}bg-warning{% else %}bg-info{% endif %}">
+                                {{ current_status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Employee & Salary Info -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Employee & Salary Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.employee.id_for_label }}" class="form-label">Employee *</label>
+                            {{ form.employee }}
+                            {% if form.employee.errors %}
+                            <div class="invalid-feedback d-block">{{ form.employee.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.salary_before.id_for_label }}" class="form-label">Current Salary *</label>
+                            {{ form.salary_before }}
+                            <small class="d-block text-muted mt-1">Previous salary amount</small>
+                            {% if form.salary_before.errors %}
+                            <div class="invalid-feedback d-block">{{ form.salary_before.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.salary_after.id_for_label }}" class="form-label">New Salary *</label>
+                            {{ form.salary_after }}
+                            <small class="d-block text-muted mt-1">Updated salary amount</small>
+                            {% if form.salary_after.errors %}
+                            <div class="invalid-feedback d-block">{{ form.salary_after.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <strong>Salary Difference:</strong>
+                            <div id="salary-difference" style="font-weight: bold; font-size: 1.1em;">---</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-md-6">
+                <!-- Change Details -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Change Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.effective_date.id_for_label }}" class="form-label">Effective Date *</label>
+                            {{ form.effective_date }}
+                            <small class="d-block text-muted mt-1">When the salary change takes effect</small>
+                            {% if form.effective_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.effective_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.change_reason.id_for_label }}" class="form-label">Reason for Change *</label>
+                            {{ form.change_reason }}
+                            {% if form.change_reason.errors %}
+                            <div class="invalid-feedback d-block">{{ form.change_reason.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.performance_rating.id_for_label }}" class="form-label">Performance Rating</label>
+                            {{ form.performance_rating }}
+                            <small class="d-block text-muted mt-1">Optional performance rating for this period</small>
+                            {% if form.performance_rating.errors %}
+                            <div class="invalid-feedback d-block">{{ form.performance_rating.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approval Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Approval & Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.approved_by.id_for_label }}" class="form-label">Select Approver</label>
+                            {{ form.approved_by }}
+                            <small class="d-block text-muted mt-1">Who should approve this salary change</small>
+                            {% if form.approved_by.errors %}
+                            <div class="invalid-feedback d-block">{{ form.approved_by.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.approval_notes.id_for_label }}" class="form-label">Approval Notes</label>
+                            {{ form.approval_notes }}
+                            <small class="d-block text-muted mt-1">Additional details about this salary change</small>
+                            {% if form.approval_notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.approval_notes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="d-flex gap-2">
+                    {% if not is_approved or user.is_superuser %}
+                    <button type="submit" class="btn btn-primary" {% if is_approved and not user.is_superuser %}disabled{% endif %}>
+                        <i class="fas fa-save"></i> {% if is_edit %}Update{% else %}Record{% endif %} Salary
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'hr:salaryhistory-list' %}" class="btn btn-light">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control, .form-select {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #dee2e6;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .form-control:focus, .form-select:focus {
+        color: #495057;
+        background-color: #fff;
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .form-control:disabled {
+        background-color: #e9ecef;
+        opacity: 1;
+    }
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+    .gap-2 {
+        gap: 0.5rem;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const salaryBeforeInput = document.querySelector('input[name="salary_before"]');
+    const salaryAfterInput = document.querySelector('input[name="salary_after"]');
+    const differenceDiv = document.getElementById('salary-difference');
+
+    function updateDifference() {
+        const before = parseFloat(salaryBeforeInput.value) || 0;
+        const after = parseFloat(salaryAfterInput.value) || 0;
+        const diff = after - before;
+        
+        if (diff > 0) {
+            differenceDiv.innerHTML = `<span style="color: green;">+${diff.toFixed(2)}</span>`;
+        } else if (diff < 0) {
+            differenceDiv.innerHTML = `<span style="color: red;">${diff.toFixed(2)}</span>`;
+        } else {
+            differenceDiv.innerHTML = '0.00';
+        }
+    }
+
+    if (salaryBeforeInput && salaryAfterInput) {
+        salaryBeforeInput.addEventListener('input', updateDifference);
+        salaryAfterInput.addEventListener('input', updateDifference);
+        updateDifference();
+    }
+});
+</script>
+{% endblock %}

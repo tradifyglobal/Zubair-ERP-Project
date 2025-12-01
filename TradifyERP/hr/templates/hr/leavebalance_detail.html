@@ -1,0 +1,195 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Leave Balance Details - HR Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">Leave Balance Details</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        {{ leave_balance.employee.get_full_name }} - {{ leave_balance.leave_type.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Employee and Leave Type -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Employee</h6>
+                            <p class="mb-0">
+                                <a href="{% url 'hr:employee-detail' leave_balance.employee.id %}">
+                                    {{ leave_balance.employee.get_full_name }}
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Leave Type</h6>
+                            <p class="mb-0">
+                                <a href="{% url 'hr:leave-detail' leave_balance.leave_type.id %}">
+                                    {{ leave_balance.leave_type.name }}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Balance Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-muted">Year</h6>
+                            <p class="mb-0 h5">{{ leave_balance.year }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-muted">Leave Code</h6>
+                            <p class="mb-0"><code>{{ leave_balance.leave_type.code }}</code></p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Balance Breakdown -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Opening Balance</h6>
+                                    <h3 class="card-text mb-0">{{ leave_balance.opening_balance|floatformat:1 }}</h3>
+                                    <small class="text-muted">From previous year</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Allocated</h6>
+                                    <h3 class="card-text mb-0">{{ leave_balance.allocated|floatformat:1 }}</h3>
+                                    <small class="text-muted">This year</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Taken</h6>
+                                    <h3 class="card-text mb-0">{{ leave_balance.taken|floatformat:1 }}</h3>
+                                    <small class="text-muted">Already used</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Available Balance (Highlighted) -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-success">
+                                <h5 class="alert-heading">
+                                    <i class="fas fa-check-circle"></i> Available Balance
+                                </h5>
+                                <h2 class="mb-0">{{ leave_balance.available|floatformat:1 }} days</h2>
+                                <small>Calculation: {{ leave_balance.opening_balance|floatformat:1 }} + {{ leave_balance.allocated|floatformat:1 }} - {{ leave_balance.taken|floatformat:1 }} = {{ leave_balance.available|floatformat:1 }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timestamps -->
+                    <div class="row mt-4 text-muted small">
+                        <div class="col-md-6">
+                            <p><strong>Created:</strong> {{ leave_balance.created_at|date:"d M Y H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Updated:</strong> {{ leave_balance.updated_at|date:"d M Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Actions Card -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Actions</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'hr:leavebalance-update' leave_balance.id %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-edit text-warning"></i> Edit Leave Balance
+                    </a>
+                    <a href="{% url 'hr:leavebalance-list' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-list text-info"></i> View All Balances
+                    </a>
+                    <a href="{% url 'hr:leave-request-list' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar text-primary"></i> Leave Requests
+                    </a>
+                </div>
+            </div>
+
+            <!-- Employee Info Card -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-user"></i> Employee Info</h5>
+                </div>
+                <div class="card-body small">
+                    <p class="mb-2">
+                        <strong>Name:</strong> {{ leave_balance.employee.get_full_name }}<br>
+                        <strong>Email:</strong> {{ leave_balance.employee.email }}<br>
+                        <strong>Department:</strong> {{ leave_balance.employee.department.name }}<br>
+                        <strong>Position:</strong> {{ leave_balance.employee.position.title }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Leave Type Info Card -->
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Leave Type Info</h5>
+                </div>
+                <div class="card-body small">
+                    <p class="mb-2">
+                        <strong>Name:</strong> {{ leave_balance.leave_type.name }}<br>
+                        <strong>Code:</strong> <code>{{ leave_balance.leave_type.code }}</code><br>
+                        <strong>Annual Allocation:</strong> {{ leave_balance.leave_type.annual_allocation }} days<br>
+                        <strong>Accrual Method:</strong> {{ leave_balance.leave_type.get_accrual_method_display }}<br>
+                        <strong>Status:</strong> 
+                        {% if leave_balance.leave_type.status == 'APPROVED' %}
+                            <span class="badge bg-success">Approved</span>
+                        {% else %}
+                            <span class="badge bg-warning">{{ leave_balance.leave_type.get_status_display }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Balance Calculation Info -->
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-calculator"></i> How It Works</h5>
+                </div>
+                <div class="card-body small">
+                    <h6>Balance Formula:</h6>
+                    <code class="d-block mb-2 p-2 bg-light">
+                        Available = Opening + Allocated - Taken
+                    </code>
+                    <ul class="mb-0">
+                        <li><strong>Opening:</strong> Carryover from last year</li>
+                        <li><strong>Allocated:</strong> Given this year</li>
+                        <li><strong>Taken:</strong> Already used</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

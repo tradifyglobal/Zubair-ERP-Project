@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Territory - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title mb-0">{% if form.instance.pk %}Edit Territory{% else %}New Territory{% endif %}</h4>
+            </div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'crm:territories' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Territory Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="form">
+                        {% csrf_token %}
+                        
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.territory_code.id_for_label }}">{{ form.territory_code.label }}
+                                        {% if form.territory_code.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.territory_code }}
+                                    {% if form.territory_code.errors %}
+                                    <small class="form-text text-danger">{{ form.territory_code.errors }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.territory_name.id_for_label }}">{{ form.territory_name.label }}
+                                        {% if form.territory_name.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.territory_name }}
+                                    {% if form.territory_name.errors %}
+                                    <small class="form-text text-danger">{{ form.territory_name.errors }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.manager.id_for_label }}">{{ form.manager.label }}
+                                        {% if form.manager.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.manager }}
+                                    {% if form.manager.errors %}
+                                    <small class="form-text text-danger">{{ form.manager.errors }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.annual_target.id_for_label }}">{{ form.annual_target.label }}
+                                        {% if form.annual_target.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ form.annual_target }}
+                                    {% if form.annual_target.errors %}
+                                    <small class="form-text text-danger">{{ form.annual_target.errors }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <small class="form-text text-danger">{{ form.description.errors }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                {{ form.is_active }}
+                                <label class="custom-control-label" for="{{ form.is_active.id_for_label }}">
+                                    {{ form.is_active.label }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ form.non_field_errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-footer mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %}
+                            </button>
+                            <a href="{% url 'crm:territories' %}" class="btn btn-light">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Territory Code</small>
+                        <p class="mb-0">Enter a unique code for this territory (e.g., TER001)</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Territory Name</small>
+                        <p class="mb-0">Give this territory a descriptive name (e.g., North Region)</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Manager</small>
+                        <p class="mb-0">Assign a user to manage this territory</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Annual Target</small>
+                        <p class="mb-0">Set the annual sales target for this territory</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-footer {
+        display: sticky;
+        position: sticky;
+        bottom: 0;
+        background-color: #f8f9fa;
+        padding: 15px 0;
+        border-top: 1px solid #dee2e6;
+        margin-left: -15px;
+        margin-right: -15px;
+        margin-bottom: -15px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+</style>
+{% endblock %}

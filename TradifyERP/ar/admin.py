@@ -40,7 +40,7 @@ class CustomerInvoiceAdmin(admin.ModelAdmin):
             'fields': ('status', 'is_approved', 'approved_by', 'approved_date')
         }),
         ('GL Integration', {
-            'fields': ('gl_entry',)
+            'fields': ('gl_entry_id',)
         }),
         ('Audit Information', {
             'fields': ('created_by', 'created_date', 'updated_date'),
@@ -83,13 +83,13 @@ class CustomerPaymentAdmin(admin.ModelAdmin):
             'fields': ('payment_number', 'entity', 'customer', 'payment_date', 'payment_amount')
         }),
         ('Payment Details', {
-            'fields': ('payment_method', 'reference_number', 'bank_account')
+            'fields': ('payment_method', 'reference_number', 'bank_account_id')
         }),
         ('Approval', {
             'fields': ('approved_by', 'approved_date')
         }),
         ('GL Integration', {
-            'fields': ('gl_entry',)
+            'fields': ('gl_entry_id',)
         }),
         ('Audit Information', {
             'fields': ('created_by', 'created_date', 'updated_date'),

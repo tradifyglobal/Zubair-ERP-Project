@@ -168,8 +168,9 @@ class MaintenanceCostForm(forms.ModelForm):
     
     class Meta:
         model = MaintenanceCost
-        fields = ['cost_type', 'description', 'amount', 'cost_date', 'assigned_to', 'notes']
+        fields = ['work_order', 'cost_type', 'description', 'amount', 'cost_date', 'assigned_to', 'notes']
         widgets = {
+            'work_order': forms.Select(attrs={'class': 'form-select', 'required': 'required'}),
             'cost_type': forms.Select(attrs={'class': 'form-select', 'required': 'required'}),
             'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cost Description', 'required': 'required'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01', 'required': 'required'}),

@@ -1,0 +1,306 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Investment History - {{ stakeholder.first_name }} {{ stakeholder.last_name }}{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="mb-sm-0">Investment History</h4>
+                        <p class="text-muted mb-0 mt-2">{{ stakeholder.first_name }} {{ stakeholder.last_name }}</p>
+                    </div>
+                    <div class="page-title-right">
+                        <a href="{% url 'shareholder:stakeholder-detail' stakeholder.pk %}" class="btn btn-secondary waves-effect waves-light">
+                            Back to Shareholder
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted d-block">Total Invested</span>
+                                <h4 class="my-2">{{ total_invested|floatformat:2 }}</h4>
+                            </div>
+                            <div class="avatar-md bg-light rounded">
+                                <i data-feather="dollar-sign" class="avatar-title font-size-24 text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted d-block">Total Contributions</span>
+                                <h4 class="my-2">{{ total_contributions }}</h4>
+                            </div>
+                            <div class="avatar-md bg-light rounded">
+                                <i data-feather="trending-up" class="avatar-title font-size-24 text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted d-block">Completed</span>
+                                <h4 class="my-2">{{ completed_contributions }}</h4>
+                            </div>
+                            <div class="avatar-md bg-light rounded">
+                                <i data-feather="check-circle" class="avatar-title font-size-24 text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted d-block">Pending</span>
+                                <h4 class="my-2">{{ pending_contributions }}</h4>
+                            </div>
+                            <div class="avatar-md bg-light rounded">
+                                <i data-feather="clock" class="avatar-title font-size-24 text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contributions by Entity -->
+        {% for entity_name, entity_data in contributions_by_entity.items %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ entity_data.entity.name }} - Total: <span class="text-success">{{ entity_data.total|floatformat:2 }}</span></h5>
+            </div>
+            <div class="card-body">
+                <!-- Timeline View -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        {% if entity_data.contributions %}
+                            <div class="timeline">
+                                {% for contribution in entity_data.contributions %}
+                                    <div class="timeline-item">
+                                        <div class="timeline-item-content">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div>
+                                                    <h6 class="timeline-title">
+                                                        {% if contribution.status == 'COMPLETED' %}
+                                                            <span class="badge bg-success">{{ contribution.get_status_display }}</span>
+                                                        {% elif contribution.status == 'PENDING' %}
+                                                            <span class="badge bg-warning">{{ contribution.get_status_display }}</span>
+                                                        {% elif contribution.status == 'CANCELLED' %}
+                                                            <span class="badge bg-danger">{{ contribution.get_status_display }}</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">{{ contribution.get_status_display }}</span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <p class="text-muted mb-0 small">
+                                                        <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        {{ contribution.contribution_date|date:"F d, Y" }}
+                                                    </p>
+                                                </div>
+                                                <div class="text-end">
+                                                    <h5 class="text-success mb-0">
+                                                        {{ contribution.amount_company_currency|floatformat:2 }}
+                                                    </h5>
+                                                    <small class="text-muted">Company Currency</small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Amount Details Table -->
+                                            <table class="table table-sm table-borderless mb-3">
+                                                <tr>
+                                                    <td class="text-muted" style="width: 35%;">
+                                                        <strong>Original Amount:</strong>
+                                                    </td>
+                                                    <td>
+                                                        {{ contribution.amount|floatformat:2 }} {{ contribution.currency.code }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted" style="width: 35%;">
+                                                        <strong>Source Currency:</strong>
+                                                    </td>
+                                                    <td>
+                                                        {{ contribution.currency.code }} ({{ contribution.currency.name }})
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">
+                                                        <strong>Destination Currency:</strong>
+                                                    </td>
+                                                    <td>
+                                                        {{ contribution.currency_destination.code }} ({{ contribution.currency_destination.name }})
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">
+                                                        <strong>Conversion Rate:</strong>
+                                                    </td>
+                                                    <td>
+                                                        1 {{ contribution.currency.code }} = <span class="text-primary">{{ contribution.exchange_rate|floatformat:6 }}</span> {{ contribution.currency_destination.code }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">
+                                                        <strong>USD Equivalent:</strong>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-info">{{ contribution.amount_usd|floatformat:2 }}</span> USD
+                                                    </td>
+                                                </tr>
+                                                <tr class="table-active">
+                                                    <td class="text-muted">
+                                                        <strong>Company Currency Amount:</strong>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-success fw-bold">{{ contribution.amount_company_currency|floatformat:2 }}</span> {{ contribution.currency_destination.code }}
+                                                    </td>
+                                                </tr>
+                                            </table>
+
+                                            <!-- Payment Details -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted d-block">Payment Mode</small>
+                                                    <span>{{ contribution.get_payment_mode_display }}</span>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted d-block">Reference Number</small>
+                                                    <span>{{ contribution.reference_number|default:"N/A" }}</span>
+                                                </div>
+                                            </div>
+
+                                            {% if contribution.paying_bank_name %}
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <small class="text-muted d-block">Bank Name</small>
+                                                        <span>{{ contribution.paying_bank_name }}</span>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="text-muted d-block">Account Number</small>
+                                                        <span>{{ contribution.paying_account_number|default:"N/A" }}</span>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if contribution.notes %}
+                                                <div class="mt-3 p-2 bg-light rounded">
+                                                    <small class="text-muted d-block">Notes</small>
+                                                    <p class="mb-0 small">{{ contribution.notes }}</p>
+                                                </div>
+                                            {% endif %}
+
+                                            <div class="mt-3">
+                                                <a href="{% url 'shareholder:capital-contribution-detail' contribution.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    View Details
+                                                </a>
+                                                <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-sm btn-outline-secondary">
+                                                    Edit
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <p class="text-muted mb-0">No investment records for this entity</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- No Contributions Message -->
+        {% if not contributions %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i data-feather="inbox" class="font-size-64 text-muted mb-3"></i>
+                    <h5>No Investment History</h5>
+                    <p class="text-muted mb-3">There are no capital contributions recorded for this shareholder yet.</p>
+                    <a href="{% url 'shareholder:capital-contribution-create-for-stakeholder' stakeholder.pk %}" class="btn btn-primary">
+                        <i class="feather-plus me-2"></i>Record First Investment
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -37px;
+        top: 5px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #007bff;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 3px #dee2e6;
+    }
+
+    .timeline-item-content {
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+
+    .timeline-item-content:hover {
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .timeline-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}

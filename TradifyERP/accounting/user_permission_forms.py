@@ -6,6 +6,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from accounting.module_permissions import ModulePermission
+from accounting.models import Entity, UserEntity
 
 
 class UserModulePermissionForm(forms.ModelForm):
@@ -357,6 +358,7 @@ class QuickAccessTemplateForm(forms.Form):
             ModulePermission.grant_full_access(user, 'procurement', granted_by)
             ModulePermission.grant_full_access(user, 'ap', granted_by)
             
+            
             # View access to manufacturing and accounting
             ModulePermission.grant_read_only_access(user, 'manufacturing', granted_by)
             ModulePermission.grant_read_only_access(user, 'accounting', granted_by)
@@ -365,3 +367,75 @@ class QuickAccessTemplateForm(forms.Form):
             # Read-only access to all modules
             for module_code in modules.keys():
                 ModulePermission.grant_read_only_access(user, module_code, granted_by)
+
+
+class UserEntityAssignmentForm(forms.Form):
+    """Form for assigning entities to users."""
+    
+    entities = forms.ModelMultipleChoiceField(
+        queryset=Entity.objects.filter(is_active=True),
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input entity-checkbox',
+        }),
+        label="Assigned Entities",
+        help_text="Select which entities this user can access"
+    )
+    
+    default_entity = forms.ModelChoiceField(
+        queryset=Entity.objects.filter(is_active=True),
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+        }),
+        label="Default Entity",
+        help_text="The entity the user will see on login",
+        required=False
+    )
+    
+    can_switch_entities = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Allow Entity Switching",
+        help_text="User can switch between assigned entities",
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        self.user = user
+        
+        # Set initial values if user is provided
+        if user:
+            assigned_entities = user.entity_assignments.values_list('entity_id', flat=True)
+            self.fields['entities'].initial = assigned_entities
+            
+            default_entity = user.entity_assignments.filter(is_default=True).first()
+            if default_entity:
+                self.fields['default_entity'].initial = default_entity.entity_id
+            
+            can_switch = user.entity_assignments.filter(can_switch=True).exists()
+            self.fields['can_switch_entities'].initial = can_switch
+    
+    def save(self, user=None, granted_by=None):
+        """Save entity assignments for user."""
+        target_user = user or self.user
+        if not target_user:
+            return
+        
+        selected_entities = self.cleaned_data.get('entities', [])
+        default_entity = self.cleaned_data.get('default_entity')
+        can_switch = self.cleaned_data.get('can_switch_entities', True)
+        
+        # Remove all existing assignments
+        UserEntity.objects.filter(user=target_user).delete()
+        
+        # Create new assignments
+        for entity in selected_entities:
+            is_default = (entity == default_entity) if default_entity else False
+            UserEntity.objects.create(
+                user=target_user,
+                entity=entity,
+                is_default=is_default,
+                can_switch=can_switch,
+                assigned_by=granted_by
+            )

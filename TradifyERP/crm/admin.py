@@ -1,5 +1,11 @@
 from django.contrib import admin
-from .models import Lead, SalesStage, Opportunity, Quote, Activity, Campaign, CRMSettings
+from .models import (
+    Lead, SalesStage, Opportunity, Quote, Activity, Campaign, CRMSettings,
+    Territory, CustomerGroup, Contact, Prospect, SalesPerson, LeadSource,
+    Contract, Appointment, Communication,
+    EmailCampaign, SMSCenter, SMSLog, EmailGroup,
+    MaintenanceSchedule, MaintenanceVisit, WarrantyClaim, SMSSettings
+)
 from .retail_models import (
     LoyaltyProgram, LoyaltyMember, PointTransaction, 
     POSTransaction, Promotion, PromotionUsage, CustomerSegment
@@ -113,6 +119,161 @@ class CustomerSegmentAdmin(admin.ModelAdmin):
     list_display = ['segment_name', 'criteria_type', 'is_active']
     list_filter = ['criteria_type', 'is_active']
     search_fields = ['segment_name', 'description']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+# ===== MASTERS MODELS =====
+
+@admin.register(Territory)
+class TerritoryAdmin(admin.ModelAdmin):
+    list_display = ['territory_name', 'region', 'manager', 'annual_target', 'is_active']
+    list_filter = ['is_active', 'region']
+    search_fields = ['territory_name', 'region']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(CustomerGroup)
+class CustomerGroupAdmin(admin.ModelAdmin):
+    list_display = ['group_name', 'group_code', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['group_name', 'group_code']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ['contact_name', 'company', 'email', 'phone', 'designation', 'department']
+    list_filter = ['company', 'department']
+    search_fields = ['contact_name', 'email', 'phone', 'company']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(Prospect)
+class ProspectAdmin(admin.ModelAdmin):
+    list_display = ['prospect_name', 'company', 'email', 'phone', 'status', 'probability', 'estimated_value', 'assigned_to']
+    list_filter = ['status', 'probability', 'created_date']
+    search_fields = ['prospect_name', 'company', 'email']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'created_date'
+
+
+@admin.register(SalesPerson)
+class SalesPersonAdmin(admin.ModelAdmin):
+    list_display = ['user', 'employee_id', 'territory', 'manager', 'monthly_target', 'annual_target', 'is_active']
+    list_filter = ['is_active', 'territory', 'manager']
+    search_fields = ['user__first_name', 'user__last_name', 'employee_id']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(LeadSource)
+class LeadSourceAdmin(admin.ModelAdmin):
+    list_display = ['source_name', 'source_code', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['source_name', 'source_code']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+# ===== SALES PIPELINE MODELS =====
+
+@admin.register(Contract)
+class ContractAdmin(admin.ModelAdmin):
+    list_display = ['contract_number', 'contract_name', 'customer', 'contract_value', 'currency', 'status', 'start_date', 'end_date']
+    list_filter = ['status', 'currency', 'start_date']
+    search_fields = ['contract_number', 'contract_name', 'customer__customer_name']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'start_date'
+
+
+@admin.register(Appointment)
+class AppointmentAdmin(admin.ModelAdmin):
+    list_display = ['title', 'appointment_date', 'assigned_to', 'status', 'duration_minutes', 'location']
+    list_filter = ['status', 'appointment_date']
+    search_fields = ['title', 'description', 'location']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'appointment_date'
+
+
+@admin.register(Communication)
+class CommunicationAdmin(admin.ModelAdmin):
+    list_display = ['subject', 'communication_type', 'communication_date', 'sender', 'recipient_name', 'recipient_email']
+    list_filter = ['communication_type', 'communication_date']
+    search_fields = ['subject', 'message', 'recipient_email']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'communication_date'
+
+
+# ===== CAMPAIGN MODELS =====
+
+@admin.register(EmailCampaign)
+class EmailCampaignAdmin(admin.ModelAdmin):
+    list_display = ['campaign_name', 'subject', 'status', 'sent_date', 'opened_count', 'clicked_count']
+    list_filter = ['status', 'sent_date']
+    search_fields = ['campaign_name', 'subject']
+    readonly_fields = ['created_at', 'updated_at', 'opened_count', 'clicked_count']
+    date_hierarchy = 'sent_date'
+
+
+@admin.register(SMSCenter)
+class SMSCenterAdmin(admin.ModelAdmin):
+    list_display = ['campaign_name', 'status', 'sent_date', 'success_count', 'failed_count']
+    list_filter = ['status', 'sent_date']
+    search_fields = ['campaign_name', 'message']
+    readonly_fields = ['created_at', 'updated_at', 'success_count', 'failed_count']
+    date_hierarchy = 'sent_date'
+
+
+@admin.register(SMSLog)
+class SMSLogAdmin(admin.ModelAdmin):
+    list_display = ['recipient_phone', 'recipient_name', 'status', 'sent_at', 'delivered_at']
+    list_filter = ['status', 'sent_at', 'delivered_at']
+    search_fields = ['recipient_phone', 'recipient_name']
+    readonly_fields = ['created_at']
+    date_hierarchy = 'created_at'
+
+
+@admin.register(EmailGroup)
+class EmailGroupAdmin(admin.ModelAdmin):
+    list_display = ['group_name', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['group_name', 'description']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+# ===== MAINTENANCE MODELS =====
+
+@admin.register(MaintenanceSchedule)
+class MaintenanceScheduleAdmin(admin.ModelAdmin):
+    list_display = ['schedule_name', 'customer', 'frequency', 'next_maintenance_date', 'assigned_to', 'is_active']
+    list_filter = ['frequency', 'is_active', 'next_maintenance_date']
+    search_fields = ['schedule_name', 'customer__customer_name']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'next_maintenance_date'
+
+
+@admin.register(MaintenanceVisit)
+class MaintenanceVisitAdmin(admin.ModelAdmin):
+    list_display = ['visit_number', 'maintenance_schedule', 'visit_date', 'status', 'technician', 'total_cost']
+    list_filter = ['status', 'visit_date']
+    search_fields = ['visit_number', 'work_description']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'visit_date'
+
+
+@admin.register(WarrantyClaim)
+class WarrantyClaimAdmin(admin.ModelAdmin):
+    list_display = ['claim_number', 'customer', 'product_description', 'claimed_amount', 'approved_amount', 'status', 'claim_date']
+    list_filter = ['status', 'claim_date']
+    search_fields = ['claim_number', 'product_description', 'customer__customer_name']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'claim_date'
+
+
+# ===== SETTINGS MODELS =====
+
+@admin.register(SMSSettings)
+class SMSSettingsAdmin(admin.ModelAdmin):
+    list_display = ['entity', 'sms_provider', 'sender_id', 'is_enabled']
+    list_filter = ['is_enabled', 'sms_provider']
     readonly_fields = ['created_at', 'updated_at']
 
 

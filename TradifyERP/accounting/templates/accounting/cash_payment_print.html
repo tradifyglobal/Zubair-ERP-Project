@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <title>Cash Payment Print - #{{ payment.id }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #000;
+            background: white;
+        }
+        .container {
+            max-width: 8.5in;
+            height: 11in;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-sizing: border-box;
+        }
+        .header-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #4a73df;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+        }
+        .receipt-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #2e5090;
+            flex: 1;
+        }
+        .receipt-number {
+            text-align: right;
+            font-size: 11px;
+            color: #4a73df;
+            font-weight: bold;
+        }
+        .receipt-body {
+            margin-bottom: 15px;
+        }
+        .row {
+            display: flex;
+            margin-bottom: 1px;
+            border: 1px solid #2e5090;
+            min-height: 28px;
+        }
+        .cell {
+            padding: 6px 8px;
+            border-right: 1px solid #2e5090;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+        }
+        .cell:last-child {
+            border-right: none;
+        }
+        .cell-label {
+            width: 35%;
+            font-weight: bold;
+            background-color: #e8eef7;
+            color: #2e5090;
+        }
+        .cell-value {
+            width: 65%;
+            padding-left: 8px;
+        }
+        .status-info {
+            font-size: 10px;
+            margin-top: 12px;
+            padding: 8px 10px;
+            background-color: #e8eef7;
+            border-left: 4px solid #4a73df;
+            color: #2e5090;
+        }
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+        .signature-line {
+            text-align: center;
+            font-size: 10px;
+            width: 40%;
+        }
+        .signature-line .line {
+            border-bottom: 1px solid #000;
+            height: 20px;
+            margin-bottom: 2px;
+        }
+        .website {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 15px;
+            color: #4a73df;
+            font-weight: bold;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                height: auto;
+            }
+            .container {
+                margin: 0;
+                padding: 15px;
+                height: auto;
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header-section">
+            <div class="receipt-title">CASH PAYMENT</div>
+            <div class="receipt-number">Payment #{{ payment.id }}</div>
+        </div>
+
+        <!-- Receipt Body -->
+        <div class="receipt-body">
+            <!-- Payee Account Code and Name -->
+            <div class="row">
+                <div class="cell cell-label">PAID TO</div>
+                <div class="cell cell-value"><strong>{{ payment.account.account_number }}</strong> - {{ payment.account.name }}</div>
+            </div>
+
+            <!-- Paid From Account -->
+            <div class="row">
+                <div class="cell cell-label">PAID FROM</div>
+                <div class="cell cell-value"><strong>{% if payment.credit_account %}{{ payment.credit_account.account_number }}{% endif %}</strong> - {% if payment.credit_account %}{{ payment.credit_account.name }}{% endif %}</div>
+            </div>
+
+            <!-- Description and Date -->
+            <div class="row">
+                <div class="cell cell-label">DESCRIPTION</div>
+                <div class="cell cell-value">{{ payment.description }}</div>
+                <div class="cell cell-label" style="width: 15%; border-left: 1px solid #2e5090;">DATE</div>
+                <div class="cell cell-value" style="width: 20%;">{{ payment.date|date:"m/d/Y" }}</div>
+            </div>
+
+            <!-- Currency and Amount -->
+            <div class="row">
+                <div class="cell cell-label">CURRENCY</div>
+                <div class="cell cell-value">{% if payment.currency %}{{ payment.currency.code }}{% else %}USD{% endif %}</div>
+                <div class="cell cell-label" style="width: 15%; border-left: 1px solid #2e5090;">AMOUNT</div>
+                <div class="cell cell-value" style="width: 20%;">{{ payment.debit_amount|floatformat:2 }}</div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="row">
+                <div class="cell cell-label">PAYMENT METHOD</div>
+                <div class="cell cell-value">Cash</div>
+                <div class="cell cell-label" style="width: 15%; border-left: 1px solid #2e5090;">CHECK #</div>
+                <div class="cell cell-value" style="width: 20%;"></div>
+            </div>
+
+            <!-- Total Amount -->
+            <div class="row">
+                <div class="cell cell-label">TOTAL AMOUNT</div>
+                <div class="cell cell-value">{{ payment.debit_amount|floatformat:2 }}</div>
+                <div class="cell cell-label" style="width: 15%; border-left: 1px solid #2e5090;">BALANCE</div>
+                <div class="cell cell-value" style="width: 20%;">0.00</div>
+            </div>
+
+            <!-- Reference Number -->
+            <div class="row">
+                <div class="cell cell-label">REFERENCE</div>
+                <div class="cell cell-value">{{ payment.reference_number }}</div>
+            </div>
+        </div>
+
+        <!-- Status Info -->
+        <div class="status-info">
+            <strong>Status:</strong> {{ payment.get_workflow_status_display }} | 
+            <strong>Workflow:</strong> {{ payment.get_workflow_status_display }}
+        </div>
+
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="signature-line">
+                <div class="line"></div>
+                <span>Authorized Signature</span>
+            </div>
+            <div class="signature-line">
+                <div class="line"></div>
+                <span>Date</span>
+            </div>
+        </div>
+
+        <!-- Website -->
+        <div class="website">www.tradifyglobal.com</div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>
+                <span class="detail-label">Date:</span>
+                <span class="detail-value">{{ payment.date|date:"d M Y" }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Reference Number:</span>
+                <span class="detail-value">{{ payment.reference_number }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">{{ payment.get_status_display }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Workflow Status:</span>
+                <span class="detail-value">{{ payment.get_workflow_status_display }}</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Account Information</div>
+            <table class="table">
+                <tr>
+                    <th>Account Type</th>
+                    <th>Account Code</th>
+                    <th>Account Name</th>
+                </tr>
+                <tr>
+                    <td>Debit Account</td>
+                    <td>{{ payment.account.account_number }}</td>
+                    <td>{{ payment.account.name }}</td>
+                </tr>
+                <tr>
+                    <td>Credit Account</td>
+                    <td>{% if payment.credit_account %}{{ payment.credit_account.account_number }}{% else %}N/A{% endif %}</td>
+                    <td>{% if payment.credit_account %}{{ payment.credit_account.name }}{% else %}N/A{% endif %}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Amounts</div>
+            <table class="table">
+                <tr>
+                    <th>Debit Amount</th>
+                    <th>Credit Amount</th>
+                </tr>
+                <tr>
+                    <td>{{ payment.debit_amount }}</td>
+                    <td>{{ payment.credit_amount }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Description</div>
+            <p>{{ payment.description }}</p>
+        </div>
+
+        {% if payment.notes %}
+            <div class="section">
+                <div class="section-title">Notes</div>
+                <p>{{ payment.notes }}</p>
+            </div>
+        {% endif %}
+
+        <div class="footer">
+            <p>This is a system-generated document. Printed on {{ now|date:"d M Y H:i" }}</p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>

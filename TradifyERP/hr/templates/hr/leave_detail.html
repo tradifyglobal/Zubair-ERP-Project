@@ -1,0 +1,238 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Leave Type - {{ leave.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">Leave Type Details</h1>
+            <p class="text-muted">{{ leave.name }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:leave-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6">
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Leave Type Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Leave Type Name</h6>
+                            <p class="mb-0"><strong>{{ leave.name }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Code</h6>
+                            <p class="mb-0"><strong>{{ leave.code }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Annual Allocation</h6>
+                            <p class="mb-0">{{ leave.annual_allocation }} days/year</p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Accrual Method</h6>
+                            <p class="mb-0">{{ leave.get_accrual_method_display }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carry Over Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Carry Over Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Allow Carry Over</h6>
+                            <p class="mb-0">
+                                {% if leave.can_carry_over %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Maximum Carryover Days</h6>
+                            <p class="mb-0">{{ leave.max_carryover|default:"No limit" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Approval & Notice</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Requires Approval</h6>
+                            <p class="mb-0">
+                                {% if leave.requires_approval %}
+                                    <span class="badge bg-warning">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-info">No</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Notice Days Required</h6>
+                            <p class="mb-0">{{ leave.notice_days_required }} day(s)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Status & Workflow</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Current Status</h6>
+                        <p>
+                            <span class="badge bg-{% if leave.status == 'DRAFT' %}secondary{% elif leave.status == 'SUBMITTED' %}warning{% elif leave.status == 'APPROVED' %}success{% else %}danger{% endif %} fs-6">
+                                {{ leave.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Workflow Actions -->
+                    <div class="mt-3">
+                        {% if leave.status == 'DRAFT' %}
+                        <a href="{% url 'hr:leave-submit' leave.pk %}" class="btn btn-warning w-100 mb-2">
+                            <i class="fas fa-paper-plane"></i> Submit for Approval
+                        </a>
+                        {% elif leave.status == 'SUBMITTED' %}
+                        <a href="{% url 'hr:leave-approve' leave.pk %}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-check"></i> Approve
+                        </a>
+                        <a href="{% url 'hr:leave-reject' leave.pk %}" class="btn btn-danger w-100">
+                            <i class="fas fa-times"></i> Reject
+                        </a>
+                        {% elif leave.status == 'APPROVED' %}
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle"></i> This leave type is approved and active.
+                        </div>
+                        {% elif leave.status == 'REJECTED' %}
+                        <div class="alert alert-danger mb-0">
+                            <i class="fas fa-times-circle"></i> This leave type has been rejected.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Workflow Info -->
+                    {% if leave.submitted_by %}
+                    <hr>
+                    <div class="small">
+                        <h6 class="text-muted mb-2">Submitted By</h6>
+                        <p class="mb-1">{{ leave.submitted_by.get_full_name }}</p>
+                        <p class="text-muted mb-0">{{ leave.submitted_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if leave.approved_by %}
+                    <hr>
+                    <div class="small">
+                        <h6 class="text-muted mb-2">Approved By</h6>
+                        <p class="mb-1">{{ leave.approved_by.get_full_name }}</p>
+                        <p class="text-muted mb-0">{{ leave.approval_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if leave.rejection_reason %}
+                    <hr>
+                    <div class="small">
+                        <h6 class="text-muted mb-2">Rejection Reason</h6>
+                        <p class="mb-0">{{ leave.rejection_reason }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if leave.status != 'APPROVED' %}
+                    <a href="{% url 'hr:leave-update' leave.pk %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-edit"></i> Edit Leave Type
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'hr:leave-list' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-list"></i> View All Leave Types
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">System Information</h5>
+                </div>
+                <div class="card-body small">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Entity</h6>
+                            <p class="mb-0">{{ leave.entity.name }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Created</h6>
+                            <p class="mb-0">{{ leave.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Last Updated</h6>
+                            <p class="mb-0">{{ leave.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

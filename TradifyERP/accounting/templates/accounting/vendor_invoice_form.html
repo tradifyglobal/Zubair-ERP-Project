@@ -142,4 +142,26 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.querySelector('input[name="amount"]');
+    const taxInput = document.querySelector('input[name="tax_amount"]');
+    const totalInput = document.querySelector('input[name="total_amount"]');
+
+    function calculateTotal() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const tax = parseFloat(taxInput.value) || 0;
+        const total = (amount + tax).toFixed(2);
+        totalInput.value = total;
+    }
+
+    if (amountInput && taxInput && totalInput) {
+        amountInput.addEventListener('input', calculateTotal);
+        taxInput.addEventListener('input', calculateTotal);
+        // Initial calculation on page load
+        calculateTotal();
+    }
+});
+</script>
 {% endblock %}

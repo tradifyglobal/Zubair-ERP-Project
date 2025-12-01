@@ -81,11 +81,11 @@
                             <tbody>
                                 <tr>
                                     <td><strong>Original Amount:</strong></td>
-                                    <td class="text-end">{{ contribution.original_amount }}</td>
+                                    <td class="text-end">{{ contribution.amount }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Origin Currency:</strong></td>
-                                    <td class="text-end">{{ contribution.origin_currency.code }}</td>
+                                    <td class="text-end">{{ contribution.currency.code }}</td>
                                 </tr>
                                 <tr class="table-info">
                                     <td><strong>Exchange Rate:</strong></td>
@@ -93,15 +93,15 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Converted Amount:</strong></td>
-                                    <td class="text-end">{{ contribution.converted_amount }}</td>
+                                    <td class="text-end">{{ contribution.amount_company_currency }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Destination Currency:</strong></td>
-                                    <td class="text-end">{{ contribution.destination_currency.code }}</td>
+                                    <td class="text-end">{{ contribution.currency_destination.code }}</td>
                                 </tr>
                                 <tr class="table-success">
                                     <td><strong>USD Amount:</strong></td>
-                                    <td class="text-end">{{ contribution.usd_amount }}</td>
+                                    <td class="text-end">{{ contribution.amount_usd }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -146,6 +146,23 @@
                 </div>
             </div>
         </div>
+
+        <!-- Document File -->
+        {% if contribution.document_file %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Document</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>File:</strong> <a href="{{ contribution.document_file.url }}" target="_blank" download>{{ contribution.document_file.name }}</a></p>
+                        <p><small class="text-muted">Size: {{ contribution.document_file.size|filesizeformat }}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Accounting Entry -->
         {% if contribution.ledger_entry %}

@@ -1,0 +1,119 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ department.name }} - Department Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">{{ department.name }}</h1>
+            <p class="text-muted">{{ department.code }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:department-update' department.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'hr:department-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Department Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Code</h6>
+                            <p><strong>{{ department.code }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Name</h6>
+                            <p><strong>{{ department.name }}</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h6 class="text-muted">Description</h6>
+                            <p>{{ department.description|default:"--" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Manager</h6>
+                            <p>{{ department.manager.first_name }} {{ department.manager.last_name|default:"--" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Parent Department</h6>
+                            <p>{{ department.parent_department.name|default:"--" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Annual Budget</h6>
+                            <p><strong>{{ department.annual_budget|default:"--" }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Cost Center</h6>
+                            <p>{{ department.cost_center|default:"--" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Status</h6>
+                            <p>
+                                {% if department.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Entity</h6>
+                            <p>{{ department.entity.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'hr:department-update' department.id %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-edit"></i> Edit Department
+                    </a>
+                    <a href="{% url 'hr:department-list' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-list"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Employees:</strong> <span class="badge bg-info">{{ department.employees.count }}</span></p>
+                    <p class="mb-0"><strong>Total Positions:</strong> <span class="badge bg-warning">{{ department.positions.count }}</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

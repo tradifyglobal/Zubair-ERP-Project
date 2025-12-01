@@ -1,0 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Theme Test</title>
+</head>
+<body data-sidebar="{% if user_theme_pref.sidebar_color %}{{ user_theme_pref.sidebar_color }}{% else %}light{% endif %}" 
+      data-layout="{% if user_theme_pref.layout_mode %}{{ user_theme_pref.layout_mode }}{% else %}vertical{% endif %}" 
+      data-layout-size="{% if user_theme_pref.layout_size %}{{ user_theme_pref.layout_size }}{% else %}fluid{% endif %}">
+    <h1>Theme Test Page</h1>
+    <p>User: {{ user.username }}</p>
+    <p>Sidebar Color: {{ user_theme_pref.sidebar_color }}</p>
+    <p>Layout Mode: {{ user_theme_pref.layout_mode }}</p>
+    <p>Layout Size: {{ user_theme_pref.layout_size }}</p>
+    <p>Current Theme: {{ current_theme.display_name }}</p>
+</body>
+</html>

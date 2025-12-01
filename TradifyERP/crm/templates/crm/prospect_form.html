@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Prospect - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8"><h4 class="page-title mb-0">{% if form.instance.pk %}Edit Prospect{% else %}New Prospect{% endif %}</h4></div>
+            <div class="col-md-4 text-right"><a href="{% url 'crm:prospects' %}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a></div>
+        </div>
+    </div>
+    <div class="row"><div class="col-lg-8"><div class="card"><div class="card-header"><h5 class="card-title mb-0">Prospect Details</h5></div><div class="card-body">
+        <form method="post">{% csrf_token %}
+            <div class="form-row">
+                <div class="col-md-6"><div class="form-group"><label>{{ form.prospect_name.label }}<span class="text-danger">*</span></label>{{ form.prospect_name }}</div></div>
+                <div class="col-md-6"><div class="form-group"><label>{{ form.status.label }}</label>{{ form.status }}</div></div>
+            </div>
+            <div class="form-row">
+                <div class="col-md-6"><div class="form-group"><label>{{ form.probability.label }}</label>{{ form.probability }}</div></div>
+                <div class="col-md-6"><div class="form-group"><label>{{ form.estimated_value.label }}</label>{{ form.estimated_value }}</div></div>
+            </div>
+            <div class="form-group"><label>{{ form.expected_closing_date.label }}</label>{{ form.expected_closing_date }}</div>
+            <div class="form-group"><label>{{ form.notes.label }}</label>{{ form.notes }}</div>
+            <div class="form-footer mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %}</button>
+                <a href="{% url 'crm:prospects' %}" class="btn btn-light"><i class="fas fa-times"></i> Cancel</a>
+            </div>
+        </form>
+    </div></div></div></div>
+</div>
+<style>.form-footer { position: sticky; bottom: 0; background-color: #f8f9fa; padding: 15px 0; border-top: 1px solid #dee2e6; margin-left: -15px; margin-right: -15px; margin-bottom: -15px; padding-left: 15px; padding-right: 15px; }</style>
+{% endblock %}

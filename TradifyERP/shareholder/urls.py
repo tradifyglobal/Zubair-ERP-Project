@@ -4,9 +4,13 @@ from . import views
 app_name = 'shareholder'
 
 urlpatterns = [
+    # Dashboard
+    path('', views.ShareholderDashboardView.as_view(), name='dashboard'),
+    
     # Shareholder URLs
     path('shareholders/', views.ShareholderListView.as_view(), name='stakeholder-list'),
     path('shareholders/<int:pk>/', views.ShareholderDetailView.as_view(), name='stakeholder-detail'),
+    path('shareholders/<int:pk>/investment-history/', views.InvestmentHistoryView.as_view(), name='investment-history'),
     path('shareholders/create/', views.ShareholderCreateView.as_view(), name='stakeholder-create'),
     path('shareholders/<int:pk>/edit/', views.ShareholderUpdateView.as_view(), name='stakeholder-edit'),
     path('shareholders/<int:pk>/delete/', views.ShareholderDeleteView.as_view(), name='stakeholder-delete'),

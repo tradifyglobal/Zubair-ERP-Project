@@ -1,0 +1,92 @@
+{% extends 'partials/base.html' %}
+{% block head_title %}<title>{% if form.instance.pk %}Edit{% else %}Create{% endif %} Cash Position | Cash Management</title>{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="mb-0">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Cash Position</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body p-4">
+                            <form method="post">{% csrf_token %}
+                                {% for field in form %}
+                                <div class="mb-3">
+                                    <label class="form-label">{{ field.label }}{% if field.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                                    {{ field }}
+                                    {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors.0 }}</div>{% endif %}
+                                    {% if field.help_text %}
+                                    <small class="form-text text-muted d-block mt-1">{{ field.help_text|safe }}</small>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                    <a href="{% url 'cash_management:position_list' %}" class="btn btn-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bankAccountSelect = document.getElementById('id_bank_account');
+    const currencySelect = document.getElementById('id_currency');
+    
+    // Currency mapping cache
+    let currencyCache = {};
+    
+    // Function to populate currency from bank account
+    function updateCurrency() {
+        if (!bankAccountSelect || !currencySelect) return;
+        
+        const bankAccountId = bankAccountSelect.value;
+        if (!bankAccountId) {
+            currencySelect.value = '';
+            return;
+        }
+        
+        // If we have cached data, use it
+        if (currencyCache[bankAccountId]) {
+            currencySelect.value = currencyCache[bankAccountId];
+            return;
+        }
+        
+        // Fetch currency for selected bank account via AJAX
+        fetch(`/cash/api/bank-account/${bankAccountId}/currency/`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.currency_id) {
+                currencyCache[bankAccountId] = data.currency_id;
+                currencySelect.value = data.currency_id;
+            }
+        })
+        .catch(error => console.log('Currency auto-population: Using manual selection'));
+    }
+    
+    // Update currency when bank account changes
+    if (bankAccountSelect) {
+        bankAccountSelect.addEventListener('change', updateCurrency);
+        // Auto-populate on form load if bank account is already selected
+        if (bankAccountSelect.value) {
+            updateCurrency();
+        }
+    }
+});
+</script>
+{% endblock %}

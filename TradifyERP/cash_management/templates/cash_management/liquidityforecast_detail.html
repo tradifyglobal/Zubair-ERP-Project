@@ -1,0 +1,288 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block head_title %}
+<title>Liquidity Forecast Detail | Cash Management</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="page-title mb-0">Liquidity Forecast Detail</h4>
+                            <p class="text-muted mt-2">Forecast Period: {{ liquidityforecast.forecast_start_date|date:"M d, Y" }} - {{ liquidityforecast.forecast_end_date|date:"M d, Y" }}</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'cash_management:forecast_list' %}" class="btn btn-secondary btn-sm">
+                                <i class="ri-arrow-left-line"></i> Back
+                            </a>
+                            {% if perms.cash_management.change_liquidityforecast %}
+                            <a href="{% url 'cash_management:forecast_edit' liquidityforecast.pk %}" class="btn btn-primary btn-sm">
+                                <i class="ri-edit-line"></i> Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <!-- Forecast Overview -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Forecast Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Entity</label>
+                                        <p class="h6">{{ liquidityforecast.entity.entity_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Forecast Horizon</label>
+                                        <p class="h6">{{ liquidityforecast.forecast_horizon_days }} days</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Start Date</label>
+                                        <p class="h6">{{ liquidityforecast.forecast_start_date|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">End Date</label>
+                                        <p class="h6">{{ liquidityforecast.forecast_end_date|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cash Flow Summary -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Cash Flow Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Opening Balance</label>
+                                        <p class="h5 text-info">
+                                            {{ liquidityforecast.opening_balance|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Forecasted Inflows</label>
+                                        <p class="h5 text-success">
+                                            +{{ liquidityforecast.forecasted_inflows|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Forecasted Outflows</label>
+                                        <p class="h5 text-danger">
+                                            -{{ liquidityforecast.forecasted_outflows|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Forecasted Closing Balance</label>
+                                        <p class="h5 text-primary">
+                                            {{ liquidityforecast.forecasted_closing_balance|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Minimum Cash Level</label>
+                                        <p class="h6">{{ liquidityforecast.minimum_cash_level|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Surplus/Deficit</label>
+                                        <p class="h5 {% if liquidityforecast.surplus_deficit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ liquidityforecast.surplus_deficit|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Assessment -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Risk Assessment (Auto-Calculated)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Risk Level</label>
+                                <p>
+                                    {% if liquidityforecast.risk_level == 'LOW' %}
+                                    <span class="badge bg-success">
+                                        <i class="ri-check-line"></i> Low Risk
+                                    </span>
+                                    {% elif liquidityforecast.risk_level == 'MEDIUM' %}
+                                    <span class="badge bg-warning">
+                                        <i class="ri-alert-line"></i> Medium Risk
+                                    </span>
+                                    {% elif liquidityforecast.risk_level == 'HIGH' %}
+                                    <span class="badge bg-danger">
+                                        <i class="ri-error-warning-line"></i> High Risk
+                                    </span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Risk Calculation Details -->
+                            <div class="alert alert-info">
+                                <h6 class="mb-2"><i class="ri-information-line"></i> Risk Calculation (Industry Best Practices)</h6>
+                                <small class="d-block mb-2">
+                                    Risk level is automatically calculated based on surplus/deficit percentage relative to minimum cash level:
+                                </small>
+                                <div class="risk-thresholds mb-2">
+                                    <div class="threshold-row mb-1">
+                                        <span class="badge bg-success">LOW RISK</span> 
+                                        <small>Surplus ≥ +30% of minimum cash level (strong position)</small>
+                                    </div>
+                                    <div class="threshold-row mb-1">
+                                        <span class="badge bg-warning">MEDIUM RISK</span> 
+                                        <small>Between -30% and +30% of minimum cash level (needs monitoring)</small>
+                                    </div>
+                                    <div class="threshold-row">
+                                        <span class="badge bg-danger">HIGH RISK</span> 
+                                        <small>Deficit &lt; -30% of minimum cash level (concerning shortage)</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Current Calculation -->
+                            <div class="calculation-details mt-3">
+                                <h6 class="mb-2">Current Calculation:</h6>
+                                <table class="table table-sm table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-muted">Surplus/Deficit Amount:</td>
+                                            <td class="text-end h6 {% if liquidityforecast.surplus_deficit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                {{ liquidityforecast.surplus_deficit|floatformat:2 }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Minimum Cash Level:</td>
+                                            <td class="text-end h6">{{ liquidityforecast.minimum_cash_level|floatformat:2 }}</td>
+                                        </tr>
+                                        <tr class="border-top">
+                                            <td class="text-muted"><strong>Surplus Percentage:</strong></td>
+                                            <td class="text-end h6">
+                                                {% widthratio liquidityforecast.surplus_deficit liquidityforecast.minimum_cash_level 100 as surplus_pct %}
+                                                <strong>{{ surplus_pct|floatformat:2 }}%</strong>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actual vs Forecast -->
+                    {% if liquidityforecast.actual_closing_balance %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Actual vs Forecast</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Forecasted Closing Balance</label>
+                                        <p class="h6">{{ liquidityforecast.forecasted_closing_balance|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Actual Closing Balance</label>
+                                        <p class="h6">{{ liquidityforecast.actual_closing_balance|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Variance</label>
+                                        <p class="h5 {% if liquidityforecast.variance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ liquidityforecast.variance|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Notes -->
+                    {% if liquidityforecast.notes %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ liquidityforecast.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Timeline -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Timeline</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Created</label>
+                                <p class="h6">{{ liquidityforecast.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Last Updated</label>
+                                <p class="h6">{{ liquidityforecast.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

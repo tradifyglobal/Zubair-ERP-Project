@@ -1,0 +1,233 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block head_title %}
+<title>Treasury Account Detail | Cash Management</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="page-title mb-0">Treasury Account Detail</h4>
+                            <p class="text-muted mt-2">{{ treasuryaccount.account_name }}</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'cash_management:treasury_list' %}" class="btn btn-secondary btn-sm">
+                                <i class="ri-arrow-left-line"></i> Back
+                            </a>
+                            {% if perms.cash_management.change_treasuryaccount %}
+                            <a href="{% url 'cash_management:treasury_edit' treasuryaccount.pk %}" class="btn btn-primary btn-sm">
+                                <i class="ri-edit-line"></i> Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <!-- Account Details -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Account Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Account Code</label>
+                                        <p class="h6">{{ treasuryaccount.account_code }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Account Name</label>
+                                        <p class="h6">{{ treasuryaccount.account_name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Account Type</label>
+                                        <p class="h6">{{ treasuryaccount.get_account_type_display }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Entity</label>
+                                        <p class="h6">{{ treasuryaccount.entity.entity_name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Currency</label>
+                                        <p class="h6">{{ treasuryaccount.currency.code }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Status</label>
+                                        <p class="h6">
+                                            {% if treasuryaccount.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Balance Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Balance Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Opening Balance</label>
+                                        <p class="h5 text-info">
+                                            {{ treasuryaccount.currency.symbol }}
+                                            {{ treasuryaccount.opening_balance|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Current Balance</label>
+                                        <p class="h5 text-success">
+                                            {{ treasuryaccount.currency.symbol }}
+                                            {{ treasuryaccount.current_balance|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Net Change</label>
+                                        {% with change=treasuryaccount.current_balance|add:treasuryaccount.opening_balance|stringformat:"-f" %}
+                                        <p class="h5 {% if change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ treasuryaccount.currency.symbol }}
+                                            {{ change|floatformat:2 }}
+                                        </p>
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms (for loans/credit lines) -->
+                    {% if treasuryaccount.account_type in 'LOAN,CREDIT_LINE' %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Loan/Credit Terms</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if treasuryaccount.interest_rate %}
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Interest Rate</label>
+                                        <p class="h6">{{ treasuryaccount.interest_rate }}% per annum</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Maturity Date</label>
+                                        <p class="h6">
+                                            {% if treasuryaccount.maturity_date %}
+                                            {{ treasuryaccount.maturity_date|date:"M d, Y" }}
+                                            {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if treasuryaccount.credit_limit %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Credit Limit</label>
+                                        <p class="h6">
+                                            {{ treasuryaccount.currency.symbol }}
+                                            {{ treasuryaccount.credit_limit|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- GL Account -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">GL Account Integration</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">GL Account Code</label>
+                                <p class="h6">{{ treasuryaccount.gl_account.account_code }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">GL Account Name</label>
+                                <p class="h6">{{ treasuryaccount.gl_account.account_name }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Account Type</label>
+                                <p class="h6">{{ treasuryaccount.gl_account.get_account_type_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Timeline</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Created</label>
+                                <p class="h6">{{ treasuryaccount.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Last Updated</label>
+                                <p class="h6">{{ treasuryaccount.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

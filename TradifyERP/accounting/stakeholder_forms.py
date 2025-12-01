@@ -10,7 +10,7 @@ class StakeholderForm(forms.ModelForm):
     class Meta:
         model = Stakeholder
         fields = [
-            'stakeholder_type', 'status', 
+            'entity', 'stakeholder_type', 'status', 
             'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender',
             'company_name', 'registration_number', 'company_type',
             'email', 'phone_number', 'secondary_phone', 'fax',
@@ -26,14 +26,23 @@ class StakeholderForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Set default joined_date if not editing an existing instance
+        if not self.instance.pk and 'joined_date' in self.fields:
+            from django.utils import timezone
+            self.fields['joined_date'].initial = timezone.now().date()
+            # Make the field not required since we have a default
+            self.fields['joined_date'].required = False
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
             Fieldset(
                 'Basic Information',
                 Row(
-                    Column('stakeholder_type', css_class='col-md-4'),
-                    Column('status', css_class='col-md-4'),
+                    Column('entity', css_class='col-md-6'),
+                    Column('stakeholder_type', css_class='col-md-3'),
+                    Column('status', css_class='col-md-3'),
+                ),
+                Row(
                     Column('joined_date', css_class='col-md-4'),
                 )
             ),
@@ -114,26 +123,49 @@ class CapitalContributionForm(forms.ModelForm):
     class Meta:
         model = CapitalContribution
         fields = [
-            'contribution_date', 'status', 'amount', 'currency', 'currency_destination', 'exchange_rate',
+            'entity', 'stakeholder', 'contribution_date', 'status', 'amount', 'currency', 'currency_destination', 'exchange_rate',
             'payment_mode', 'reference_number', 'payment_bank_account', 'payment_method_details',
             'paying_bank_name', 'paying_account_number', 'paying_account_holder',
             'document_file', 'notes'
         ]
         widgets = {
-            'contribution_date': forms.DateInput(attrs={'type': 'date'}),
-            'payment_method_details': forms.Textarea(attrs={'rows': 2}),
-            'notes': forms.Textarea(attrs={'rows': 2}),
+            'stakeholder': forms.Select(attrs={'class': 'form-select'}),
+            'contribution_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'currency': forms.Select(attrs={'class': 'form-select'}),
+            'currency_destination': forms.Select(attrs={'class': 'form-select'}),
+            'exchange_rate': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.000001'}),
+            'payment_mode': forms.Select(attrs={'class': 'form-select'}),
+            'reference_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'payment_bank_account': forms.Select(attrs={'class': 'form-select'}),
+            'payment_method_details': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+            'paying_bank_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'paying_account_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'paying_account_holder': forms.TextInput(attrs={'class': 'form-control'}),
+            'document_file': forms.FileInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Set default contribution_date if not editing an existing instance
+        if not self.instance.pk and 'contribution_date' in self.fields:
+            from django.utils import timezone
+            self.fields['contribution_date'].initial = timezone.now().date()
+            # Make the field not required since we have a default
+            self.fields['contribution_date'].required = False
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
             Fieldset(
-                'Contribution Details',
+                'Shareholder & Contribution Details',
                 Row(
+                    Column('entity', css_class='col-md-4'),
+                    Column('stakeholder', css_class='col-md-4'),
                     Column('contribution_date', css_class='col-md-4'),
+                ),
+                Row(
                     Column('status', css_class='col-md-4'),
                 )
             ),
@@ -189,7 +221,7 @@ class ShareholdingForm(forms.ModelForm):
     class Meta:
         model = Shareholding
         fields = [
-            'share_type', 'share_class', 'number_of_shares', 'par_value',
+            'entity', 'stakeholder', 'share_type', 'share_class', 'number_of_shares', 'par_value',
             'acquisition_date', 'acquisition_price', 'acquisition_currency',
             'vesting_schedule', 'vesting_start_date', 'vesting_end_date',
             'voting_rights_percentage', 'dividend_rights_percentage', 'is_active',
@@ -197,26 +229,50 @@ class ShareholdingForm(forms.ModelForm):
             'certificate_number', 'certificate_file', 'notes'
         ]
         widgets = {
-            'acquisition_date': forms.DateInput(attrs={'type': 'date'}),
-            'vesting_start_date': forms.DateInput(attrs={'type': 'date'}),
-            'vesting_end_date': forms.DateInput(attrs={'type': 'date'}),
-            'notes': forms.Textarea(attrs={'rows': 2}),
+            'stakeholder': forms.Select(attrs={'class': 'form-select'}),
+            'share_type': forms.Select(attrs={'class': 'form-select'}),
+            'share_class': forms.TextInput(attrs={'class': 'form-control'}),
+            'number_of_shares': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'par_value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.0001'}),
+            'acquisition_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'acquisition_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'acquisition_currency': forms.Select(attrs={'class': 'form-select'}),
+            'vesting_schedule': forms.TextInput(attrs={'class': 'form-control'}),
+            'vesting_start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'vesting_end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'voting_rights_percentage': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'dividend_rights_percentage': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_transferable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_redeemable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'redemption_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'certificate_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'certificate_file': forms.FileInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Set default acquisition_date if not editing an existing instance
+        if not self.instance.pk and 'acquisition_date' in self.fields:
+            from django.utils import timezone
+            self.fields['acquisition_date'].initial = timezone.now().date()
+            # Make the field not required since we have a default
+            self.fields['acquisition_date'].required = False
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
             Fieldset(
-                'Share Details',
+                'Shareholder & Share Details',
                 Row(
+                    Column('entity', css_class='col-md-4'),
+                    Column('stakeholder', css_class='col-md-4'),
                     Column('share_type', css_class='col-md-4'),
-                    Column('share_class', css_class='col-md-4'),
-                    Column('number_of_shares', css_class='col-md-4'),
                 ),
                 Row(
-                    Column('par_value', css_class='col-md-12'),
+                    Column('share_class', css_class='col-md-4'),
+                    Column('number_of_shares', css_class='col-md-4'),
+                    Column('par_value', css_class='col-md-4'),
                 )
             ),
             Fieldset(
@@ -228,7 +284,7 @@ class ShareholdingForm(forms.ModelForm):
                 )
             ),
             Fieldset(
-                'Vesting Schedule',
+                'Vesting Details',
                 Row(
                     Column('vesting_schedule', css_class='col-md-12'),
                 ),
@@ -238,22 +294,22 @@ class ShareholdingForm(forms.ModelForm):
                 )
             ),
             Fieldset(
-                'Rights & Terms',
+                'Rights & Restrictions',
                 Row(
                     Column('voting_rights_percentage', css_class='col-md-6'),
                     Column('dividend_rights_percentage', css_class='col-md-6'),
                 ),
                 Row(
-                    Column('is_active', css_class='col-md-4'),
-                    Column('is_transferable', css_class='col-md-4'),
-                    Column('is_redeemable', css_class='col-md-4'),
+                    Column('is_active', css_class='col-md-3'),
+                    Column('is_transferable', css_class='col-md-3'),
+                    Column('is_redeemable', css_class='col-md-3'),
                 ),
                 Row(
-                    Column('redemption_price', css_class='col-md-12'),
+                    Column('redemption_price', css_class='col-md-6'),
                 )
             ),
             Fieldset(
-                'Certification & Documentation',
+                'Certificate & Documentation',
                 Row(
                     Column('certificate_number', css_class='col-md-6'),
                     Column('certificate_file', css_class='col-md-6'),

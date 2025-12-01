@@ -40,6 +40,7 @@
                                     <tr>
                                         <th>Lead Name</th>
                                         <th>Company</th>
+                                        <th>Source</th>
                                         <th>Status</th>
                                         <th>Lead Score</th>
                                         <th>Actions</th>
@@ -48,8 +49,9 @@
                                 <tbody>
                                     {% for lead in leads %}
                                         <tr>
-                                            <td>{{ lead.first_name }} {{ lead.last_name }}</td>
+                                            <td>{{ lead.lead_name }}</td>
                                             <td>{{ lead.company_name }}</td>
+                                            <td>{% if lead.source %}<span class="badge badge-secondary">{{ lead.source.source_name }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
                                             <td><span class="badge bg-info">{{ lead.status }}</span></td>
                                             <td>
                                                 <div class="progress" style="height: 20px;">
@@ -57,12 +59,12 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-info">View</button>
+                                                <a href="{% url 'crm:lead_detail' lead.pk %}" class="btn btn-sm btn-info">View</a>
                                             </td>
                                         </tr>
                                     {% empty %}
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted py-3">No leads found</td>
+                                            <td colspan="6" class="text-center text-muted py-3">No leads found</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>

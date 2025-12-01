@@ -184,6 +184,8 @@ class Employee(models.Model):
     ssn = models.CharField(
         max_length=20,
         unique=True,
+        blank=True,
+        null=True,
         help_text="Social Security Number or equivalent"
     )
     tax_id = models.CharField(
@@ -405,6 +407,21 @@ class Payroll(models.Model):
     
     def __str__(self):
         return f"{self.payroll_number} - {self.payroll_date.strftime('%B %Y')}"
+    
+    def save(self, *args, **kwargs):
+        """Auto-generate payroll number if not provided."""
+        if not self.payroll_number or self.payroll_number.strip() == '':
+            from datetime import datetime
+            year = self.payroll_date.year
+            month = self.payroll_date.month
+            # Get next sequence number for this year-month
+            count = Payroll.objects.filter(
+                payroll_date__year=year,
+                payroll_date__month=month
+            ).count()
+            self.payroll_number = f"PAY-{year}-{month:02d}-{count + 1:03d}"
+        
+        super().save(*args, **kwargs)
     
     def calculate_totals(self):
         """Recalculate payroll totals from pay records."""
@@ -674,6 +691,13 @@ class Leave(models.Model):
     """
     Leave type master (Vacation, Sick, etc.).
     """
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('SUBMITTED', 'Submitted for Approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
     entity = models.ForeignKey(
         'accounting.Entity',
         on_delete=models.CASCADE,
@@ -681,7 +705,7 @@ class Leave(models.Model):
     )
     
     name = models.CharField(max_length=100)
-    code = models.CharField(max_length=20, unique=True)
+    code = models.CharField(max_length=20)
     
     # Accrual
     annual_allocation = models.DecimalField(
@@ -692,9 +716,9 @@ class Leave(models.Model):
     accrual_method = models.CharField(
         max_length=20,
         choices=[
-            ('ANNUAL', 'Annual (all at once)'),
-            ('MONTHLY', 'Monthly accrual'),
-            ('QUARTERLY', 'Quarterly accrual'),
+            ('ANNUAL', 'Annual - All days at beginning of year'),
+            ('MONTHLY', 'Monthly - Accrued each month'),
+            ('QUARTERLY', 'Quarterly - Accrued each quarter'),
         ],
         default='ANNUAL'
     )
@@ -713,11 +737,36 @@ class Leave(models.Model):
     requires_approval = models.BooleanField(default=True)
     notice_days_required = models.IntegerField(default=1)
     
+    # Workflow
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='DRAFT'
+    )
+    submitted_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='submitted_leave_types'
+    )
+    submitted_date = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_leave_types'
+    )
+    approval_date = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         ordering = ['name']
+        unique_together = [['entity', 'code']]
     
     def __str__(self):
         return self.name
@@ -826,6 +875,15 @@ class LeaveRequest(models.Model):
         max_length=20,
         choices=STATUS_CHOICES,
         default='DRAFT'
+    )
+    
+    # Who submitted the request
+    requested_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='requested_leave_requests'
     )
     
     # Approval
@@ -972,6 +1030,7 @@ class Disciplinary(models.Model):
 class SalaryHistory(models.Model):
     """
     Track salary changes and history for audit trail.
+    Implements workflow: Requested -> In Review -> Approved
     """
     CHANGE_REASONS = [
         ('HIRE', 'New Hire'),
@@ -983,6 +1042,20 @@ class SalaryHistory(models.Model):
         ('RESTRUCTURE', 'Restructure'),
         ('TERMINATION', 'Termination'),
         ('OTHER', 'Other'),
+    ]
+    
+    APPROVAL_STATUS = [
+        ('REQUESTED', 'Requested'),
+        ('IN_REVIEW', 'In Review'),
+        ('APPROVED', 'Approved'),
+    ]
+    
+    PERFORMANCE_RATINGS = [
+        (1, '1 - Poor'),
+        (2, '2 - Below Average'),
+        (3, '3 - Average'),
+        (4, '4 - Good'),
+        (5, '5 - Excellent'),
     ]
     
     employee = models.ForeignKey(
@@ -1000,15 +1073,30 @@ class SalaryHistory(models.Model):
     change_reason = models.CharField(max_length=50, choices=CHANGE_REASONS)
     
     # Details
-    performance_rating = models.IntegerField(null=True, blank=True)
+    performance_rating = models.IntegerField(
+        null=True,
+        blank=True,
+        choices=PERFORMANCE_RATINGS,
+        help_text='Employee performance rating for this period'
+    )
     approval_notes = models.TextField(blank=True)
+    
+    # Workflow Status
+    status = models.CharField(
+        max_length=20,
+        choices=APPROVAL_STATUS,
+        default='REQUESTED',
+        help_text='Approval workflow status'
+    )
     
     # Approvals
     approved_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='salary_approvals'
+        blank=True,
+        related_name='salary_approvals',
+        help_text='User who approved this salary change'
     )
     approved_date = models.DateTimeField(null=True, blank=True)
     

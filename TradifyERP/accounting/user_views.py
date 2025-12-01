@@ -14,7 +14,8 @@ from accounting.user_permission_forms import (
     UserCreateFormWithPermissions,
     UserEditFormWithPermissions,
     BulkModulePermissionForm,
-    QuickAccessTemplateForm
+    QuickAccessTemplateForm,
+    UserEntityAssignmentForm
 )
 from accounting.module_permissions import ModulePermission, UserModuleAccessLog
 
@@ -145,9 +146,14 @@ class UserEditView(AdminRequiredMixin, UpdateView):
                 self.request.POST,
                 user=self.object
             )
+            context['entity_form'] = UserEntityAssignmentForm(
+                self.request.POST,
+                user=self.object
+            )
             context['template_form'] = QuickAccessTemplateForm(self.request.POST)
         else:
             context['permission_form'] = BulkModulePermissionForm(user=self.object)
+            context['entity_form'] = UserEntityAssignmentForm(user=self.object)
             context['template_form'] = QuickAccessTemplateForm()
         
         # Add module list for display
@@ -188,6 +194,20 @@ class UserEditView(AdminRequiredMixin, UpdateView):
             messages.warning(
                 self.request,
                 f'User "{user.username}" updated but there were issues saving permissions.'
+            )
+        
+        # Get entity assignment form
+        entity_form = UserEntityAssignmentForm(self.request.POST, user=user)
+        if entity_form.is_valid():
+            entity_form.save(user=user, granted_by=self.request.user)
+            messages.success(
+                self.request,
+                f'Entity assignments updated for "{user.username}".'
+            )
+        else:
+            messages.warning(
+                self.request,
+                f'Entity assignments had validation errors: {entity_form.errors}'
             )
         
         return redirect(self.success_url)

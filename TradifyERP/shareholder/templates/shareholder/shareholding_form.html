@@ -21,6 +21,35 @@
             </div>
         </div>
 
+        <!-- Error Messages -->
+        {% if form.non_field_errors %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error:</strong>
+                        {{ form.non_field_errors }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if form.errors %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Form Errors:</strong>
+                        <ul class="mb-0 mt-2">
+                        {% for field, errors in form.errors.items %}
+                            <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                        {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
         <!-- Form Card -->
         <div class="row">
             <div class="col-lg-8">
@@ -29,30 +58,24 @@
                         <h4 class="card-title">Share Details</h4>
                     </div>
                     <div class="card-body">
-                        <form method="post" enctype="multipart/form-data">
+                        <form method="post" enctype="multipart/form-data" id="shareholding-form">
                             {% csrf_token %}
-                            
-                            {% if form.non_field_errors %}
-                                <div class="alert alert-danger">
-                                    {{ form.non_field_errors }}
-                                </div>
-                            {% endif %}
-
                             {% crispy form %}
-
-                            <div class="row mt-3">
-                                <div class="col-sm-6">
-                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
-                                        <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Add{% endif %}
-                                    </button>
-                                </div>
-                                <div class="col-sm-6 text-end">
-                                    <a href="{% url 'shareholder:shareholding-list' %}" class="btn btn-secondary waves-effect waves-light">
-                                        Cancel
-                                    </a>
-                                </div>
-                            </div>
                         </form>
+                        
+                        <!-- Submit buttons OUTSIDE the crispy form to ensure they work -->
+                        <div class="row mt-4">
+                            <div class="col-sm-6">
+                                <button form="shareholding-form" type="submit" class="btn btn-primary waves-effect waves-light w-100">
+                                    <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Add Shareholding{% endif %}
+                                </button>
+                            </div>
+                            <div class="col-sm-6">
+                                <a href="{% url 'shareholder:shareholding-list' %}" class="btn btn-secondary waves-effect waves-light w-100">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -24,6 +24,16 @@
                     <h5 class="mb-0">Review Details</h5>
                 </div>
                 <div class="card-body">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <h6 class="alert-heading">Form Errors</h6>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+                    
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         
@@ -46,33 +56,64 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.period_start.id_for_label }}" class="form-label">Period Start *</label>
-                                {{ form.period_start }}
-                                {% if form.period_start.errors %}
-                                <div class="invalid-feedback d-block">{{ form.period_start.errors.0 }}</div>
+                                <label for="{{ form.review_period_start.id_for_label }}" class="form-label">Period Start *</label>
+                                {{ form.review_period_start }}
+                                {% if form.review_period_start.errors %}
+                                <div class="invalid-feedback d-block">{{ form.review_period_start.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.period_end.id_for_label }}" class="form-label">Period End *</label>
-                                {{ form.period_end }}
-                                {% if form.period_end.errors %}
-                                <div class="invalid-feedback d-block">{{ form.period_end.errors.0 }}</div>
+                                <label for="{{ form.review_period_end.id_for_label }}" class="form-label">Period End *</label>
+                                {{ form.review_period_end }}
+                                {% if form.review_period_end.errors %}
+                                <div class="invalid-feedback d-block">{{ form.review_period_end.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label for="{{ form.rating.id_for_label }}" class="form-label">Rating (1-5) *</label>
-                                {{ form.rating }}
-                                <small class="text-muted">1 = Needs Improvement, 5 = Excellent</small>
-                                {% if form.rating.errors %}
-                                <div class="invalid-feedback d-block">{{ form.rating.errors.0 }}</div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.overall_rating.id_for_label }}" class="form-label">Overall Rating *</label>
+                                {{ form.overall_rating }}
+                                {% if form.overall_rating.errors %}
+                                <div class="invalid-feedback d-block">{{ form.overall_rating.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quality_rating.id_for_label }}" class="form-label">Quality Rating *</label>
+                                {{ form.quality_rating }}
+                                {% if form.quality_rating.errors %}
+                                <div class="invalid-feedback d-block">{{ form.quality_rating.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.productivity_rating.id_for_label }}" class="form-label">Productivity Rating *</label>
+                                {{ form.productivity_rating }}
+                                {% if form.productivity_rating.errors %}
+                                <div class="invalid-feedback d-block">{{ form.productivity_rating.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.teamwork_rating.id_for_label }}" class="form-label">Teamwork Rating *</label>
+                                {{ form.teamwork_rating }}
+                                {% if form.teamwork_rating.errors %}
+                                <div class="invalid-feedback d-block">{{ form.teamwork_rating.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.leadership_rating.id_for_label }}" class="form-label">Leadership Rating</label>
+                                {{ form.leadership_rating }}
+                                {% if form.leadership_rating.errors %}
+                                <div class="invalid-feedback d-block">{{ form.leadership_rating.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
                             <div class="col-md-12 mb-3">
                                 <label for="{{ form.comments.id_for_label }}" class="form-label">Comments *</label>
                                 {{ form.comments }}

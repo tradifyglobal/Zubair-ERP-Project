@@ -47,6 +47,8 @@
                             <form method="post" class="needs-validation">
                                 {% csrf_token %}
 
+
+
                                 <!-- Vendor -->
                                 <div class="row mb-3">
                                     <label for="{{ form.vendor.id_for_label }}" class="col-md-3 col-form-label">
@@ -64,14 +66,14 @@
 
                                 <!-- Invoice -->
                                 <div class="row mb-3">
-                                    <label for="{{ form.invoice.id_for_label }}" class="col-md-3 col-form-label">
+                                    <label for="{{ form.vendor_invoice.id_for_label }}" class="col-md-3 col-form-label">
                                         Invoice <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        {{ form.invoice }}
-                                        {% if form.invoice.errors %}
+                                        {{ form.vendor_invoice }}
+                                        {% if form.vendor_invoice.errors %}
                                         <div class="invalid-feedback d-block">
-                                            {{ form.invoice.errors.0 }}
+                                            {{ form.vendor_invoice.errors.0 }}
                                         </div>
                                         {% endif %}
                                     </div>
@@ -126,33 +128,18 @@
 
                                 <hr class="my-4">
 
-                                <!-- Description -->
-                                <div class="row mb-3">
-                                    <label for="{{ form.description.id_for_label }}" class="col-md-3 col-form-label">
-                                        Description
+                                <!-- Form Errors -->
+                                    <label for="{{ form.vendor_invoice.id_for_label }}" class="col-md-3 col-form-label">
+                                        Invoice <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        {{ form.description }}
-                                        {% if form.description.errors %}
+                                        {{ form.vendor_invoice }}
+                                        {% if form.vendor_invoice.errors %}
                                         <div class="invalid-feedback d-block">
-                                            {{ form.description.errors.0 }}
+                                            {{ form.vendor_invoice.errors.0 }}
                                         </div>
                                         {% endif %}
                                     </div>
-                                </div>
-
-                                <!-- Form Errors -->
-                                {% if form.non_field_errors %}
-                                <div class="alert alert-danger" role="alert">
-                                    <h4 class="alert-heading">Error!</h4>
-                                    {% for error in form.non_field_errors %}
-                                    <p>{{ error }}</p>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-
-                                <!-- Buttons -->
-                                <div class="row">
                                     <div class="col-md-9 offset-md-3">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="ri-save-line me-2"></i>Save Payment

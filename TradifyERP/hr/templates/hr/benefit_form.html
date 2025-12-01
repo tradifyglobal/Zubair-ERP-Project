@@ -1,0 +1,174 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Create{% endif %} Benefit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">{% if is_edit %}Edit Benefit{% else %}Create New Benefit{% endif %}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:benefit-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% if is_edit %}Edit{% else %}New{% endif %} Benefit Details</h5>
+                </div>
+                <div class="card-body">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Errors:</strong>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <!-- Row 1: Entity and Name -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.entity.id_for_label }}" class="form-label">Entity <span class="text-danger">*</span></label>
+                                {{ form.entity }}
+                                {% if form.entity.errors %}<div class="invalid-feedback d-block">{{ form.entity.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Benefit Name <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Benefit Type and Description -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.benefit_type.id_for_label }}" class="form-label">Benefit Type <span class="text-danger">*</span></label>
+                                {{ form.benefit_type }}
+                                {% if form.benefit_type.errors %}<div class="invalid-feedback d-block">{{ form.benefit_type.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.is_active.id_for_label }}" class="form-label">
+                                    {{ form.is_active }} Active
+                                </label>
+                                {% if form.is_active.errors %}<div class="invalid-feedback d-block">{{ form.is_active.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Description (Full Width) -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}<div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 4: Employee Cost and Employer Cost -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.employee_cost.id_for_label }}" class="form-label">Employee Cost <span class="text-danger">*</span></label>
+                                {{ form.employee_cost }}
+                                <small class="text-muted d-block">Cost to employee per period</small>
+                                {% if form.employee_cost.errors %}<div class="invalid-feedback d-block">{{ form.employee_cost.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.employer_cost.id_for_label }}" class="form-label">Employer Cost <span class="text-danger">*</span></label>
+                                {{ form.employer_cost }}
+                                <small class="text-muted d-block">Cost to employer per period</small>
+                                {% if form.employer_cost.errors %}<div class="invalid-feedback d-block">{{ form.employer_cost.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 5: GL Accounts -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.employee_expense_account.id_for_label }}" class="form-label">Employee Expense Account</label>
+                                {{ form.employee_expense_account }}
+                                {% if form.employee_expense_account.errors %}<div class="invalid-feedback d-block">{{ form.employee_expense_account.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.employer_expense_account.id_for_label }}" class="form-label">Employer Expense Account</label>
+                                {{ form.employer_expense_account }}
+                                {% if form.employer_expense_account.errors %}<div class="invalid-feedback d-block">{{ form.employer_expense_account.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> {% if is_edit %}Update Benefit{% else %}Create Benefit{% endif %}
+                                </button>
+                                <a href="{% url 'hr:benefit-list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Information</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Benefit Types:</strong></p>
+                    <ul class="mb-0" style="font-size: 0.85em;">
+                        <li>Health Insurance</li>
+                        <li>Dental Plan</li>
+                        <li>Vision Plan</li>
+                        <li>401(k) Retirement</li>
+                        <li>Stock Options</li>
+                        <li>Life Insurance</li>
+                        <li>Disability Insurance</li>
+                        <li>FSA / HSA</li>
+                        <li>Tuition Reimbursement</li>
+                        <li>Other</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Tips</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Setting Up Benefits:</strong></p>
+                    <ul class="mb-0">
+                        <li>Ensure GL accounts are configured</li>
+                        <li>Set accurate costs for reporting</li>
+                        <li>Mark as active to make available</li>
+                        <li>Use consistent naming</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

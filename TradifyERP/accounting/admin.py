@@ -7,8 +7,10 @@ from .models import (
     Customer, Vendor, VendorInvoice, VendorPayment,
     FixedAsset, DeferredExpense, DeferredRevenue,
     PeriodLock, AuditLog,
-    Stakeholder, CapitalContribution, Shareholding
+    Stakeholder, CapitalContribution, Shareholding, UserEntity,
+    CashReceiptLine, CashPaymentLine, BankReceiptLine, BankPaymentLine
 )
+from .models_theme import Theme, UserThemePreference
 
 
 @admin.register(Entity)
@@ -17,6 +19,21 @@ class EntityAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'created_at')
     search_fields = ('code', 'name')
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(UserEntity)
+class UserEntityAdmin(admin.ModelAdmin):
+    list_display = ('user', 'entity', 'is_default', 'can_switch', 'assigned_at')
+    list_filter = ('is_default', 'can_switch', 'entity', 'assigned_at')
+    search_fields = ('user__username', 'user__email', 'entity__name', 'entity__code')
+    readonly_fields = ('assigned_at',)
+    raw_id_fields = ('user', 'entity', 'assigned_by')
+    
+    def save_model(self, request, obj, form, change):
+        """Set assigned_by when creating new UserEntity."""
+        if not change:  # Creating new object
+            obj.assigned_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Currency)
@@ -315,3 +332,157 @@ class ShareholdingAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+# ============ CASH MANAGEMENT ADMIN ============
+
+@admin.register(CashReceiptLine)
+class CashReceiptLineAdmin(admin.ModelAdmin):
+    list_display = ('date', 'entity', 'description', 'debit_amount', 'credit_amount', 'status')
+    list_filter = ('entity', 'status', 'date')
+    search_fields = ('description', 'reference_number')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('account',)
+    
+    fieldsets = (
+        ('General', {
+            'fields': ('entity', 'date', 'description', 'reference_number')
+        }),
+        ('Transaction', {
+            'fields': ('account', 'debit_amount', 'credit_amount', 'status')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(CashPaymentLine)
+class CashPaymentLineAdmin(admin.ModelAdmin):
+    list_display = ('date', 'entity', 'description', 'debit_amount', 'credit_amount', 'status')
+    list_filter = ('entity', 'status', 'date')
+    search_fields = ('description', 'reference_number')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('account',)
+    
+    fieldsets = (
+        ('General', {
+            'fields': ('entity', 'date', 'description', 'reference_number')
+        }),
+        ('Transaction', {
+            'fields': ('account', 'debit_amount', 'credit_amount', 'status')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(BankReceiptLine)
+class BankReceiptLineAdmin(admin.ModelAdmin):
+    list_display = ('date', 'entity', 'debit_amount', 'workflow_status', 'status')
+    list_filter = ('entity', 'status', 'workflow_status', 'date')
+    search_fields = ('description', 'reference_number')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('account', 'credit_account')
+    
+    fieldsets = (
+        ('General', {
+            'fields': ('entity', 'date', 'description', 'reference_number')
+        }),
+        ('Transaction', {
+            'fields': ('account', 'credit_account', 'debit_amount', 'credit_amount', 'status', 'workflow_status')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(BankPaymentLine)
+class BankPaymentLineAdmin(admin.ModelAdmin):
+    list_display = ('date', 'entity', 'debit_amount', 'workflow_status', 'status')
+    list_filter = ('entity', 'status', 'workflow_status', 'date')
+    search_fields = ('description', 'reference_number')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('account', 'credit_account')
+    
+    fieldsets = (
+        ('General', {
+            'fields': ('entity', 'date', 'description', 'reference_number')
+        }),
+        ('Transaction', {
+            'fields': ('account', 'credit_account', 'debit_amount', 'credit_amount', 'status', 'workflow_status')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+# Theme Management Admin
+@admin.register(Theme)
+class ThemeAdmin(admin.ModelAdmin):
+    list_display = ('display_name', 'name', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'display_name', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('Theme Information', {
+            'fields': ('name', 'display_name', 'description', 'is_active')
+        }),
+        ('Media', {
+            'fields': ('thumbnail_url',),
+            'classes': ('collapse',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(UserThemePreference)
+class UserThemePreferenceAdmin(admin.ModelAdmin):
+    list_display = ('user', 'theme', 'sidebar_color', 'layout_mode')
+    list_filter = ('theme', 'layout_mode', 'created_at')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('user', 'created_at', 'updated_at')
+    
+    fieldsets = (
+        ('User & Theme', {
+            'fields': ('user', 'theme')
+        }),
+        ('Layout Preferences', {
+            'fields': ('sidebar_color', 'layout_mode', 'layout_size')
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        """Prevent manual creation - preferences are auto-created by signal."""
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion - preferences are tied to user."""
+        return False

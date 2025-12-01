@@ -8,7 +8,7 @@
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1 class="h3">Add New Employee</h1>
+            <h1 class="h3">{% if is_edit %}Edit Employee{% else %}Add New Employee{% endif %}</h1>
         </div>
         <div class="col-md-4 text-end">
             <a href="{% url 'hr:employee-list' %}" class="btn btn-secondary">
@@ -18,139 +18,197 @@
     </div>
 
     <div class="row">
-        <div class="col-md-8">
+        <!-- Left Column: Form -->
+        <div class="col-lg-8">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Employee Information</h5>
+                    <h5 class="mb-0">{% if is_edit %}Edit Employee{% else %}Add New Employee{% endif %}</h5>
                 </div>
                 <div class="card-body">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Form Errors:</strong>
+                        <ul class="mb-0">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+                    
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         
+                        <!-- Row 1: Entity and Employee ID -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.entity.id_for_label }}" class="form-label">Entity *</label>
                                 {{ form.entity }}
-                                {% if form.entity.errors %}
-                                <div class="invalid-feedback d-block">{{ form.entity.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.entity.errors %}<div class="invalid-feedback d-block">{{ form.entity.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.employee_id.id_for_label }}" class="form-label">Employee ID *</label>
                                 {{ form.employee_id }}
-                                {% if form.employee_id.errors %}
-                                <div class="invalid-feedback d-block">{{ form.employee_id.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.employee_id.errors %}<div class="invalid-feedback d-block">{{ form.employee_id.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
+                        <!-- Row 2: First and Last Name -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name *</label>
                                 {{ form.first_name }}
-                                {% if form.first_name.errors %}
-                                <div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name *</label>
                                 {{ form.last_name }}
-                                {% if form.last_name.errors %}
-                                <div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
+                        <!-- Row 3: Email and Phone -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.email.id_for_label }}" class="form-label">Email *</label>
                                 {{ form.email }}
-                                {% if form.email.errors %}
-                                <div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
                                 {{ form.phone }}
-                                {% if form.phone.errors %}
-                                <div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.phone.errors %}<div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
+                        <!-- Row 4: SSN and Tax ID -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.ssn.id_for_label }}" class="form-label">SSN *</label>
+                                <label for="{{ form.ssn.id_for_label }}" class="form-label">SSN</label>
                                 {{ form.ssn }}
-                                {% if form.ssn.errors %}
-                                <div class="invalid-feedback d-block">{{ form.ssn.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.ssn.errors %}<div class="invalid-feedback d-block">{{ form.ssn.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.tax_id.id_for_label }}" class="form-label">Tax ID</label>
                                 {{ form.tax_id }}
-                                {% if form.tax_id.errors %}
-                                <div class="invalid-feedback d-block">{{ form.tax_id.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.tax_id.errors %}<div class="invalid-feedback d-block">{{ form.tax_id.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
+                        <!-- Row 5: Department and Position -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.department.id_for_label }}" class="form-label">Department *</label>
                                 {{ form.department }}
-                                {% if form.department.errors %}
-                                <div class="invalid-feedback d-block">{{ form.department.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.department.errors %}<div class="invalid-feedback d-block">{{ form.department.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.position.id_for_label }}" class="form-label">Position *</label>
-                                {{ form.position }}
-                                {% if form.position.errors %}
-                                <div class="invalid-feedback d-block">{{ form.position.errors.0 }}</div>
-                                {% endif %}
+                                <div class="input-group">
+                                    {{ form.position }}
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createPositionModal">
+                                        <i class="feather-plus"></i> New
+                                    </button>
+                                </div>
+                                {% if form.position.errors %}<div class="invalid-feedback d-block">{{ form.position.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
+                        <!-- Row 6: Hire Date and Base Salary -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.hire_date.id_for_label }}" class="form-label">Hire Date *</label>
                                 {{ form.hire_date }}
-                                {% if form.hire_date.errors %}
-                                <div class="invalid-feedback d-block">{{ form.hire_date.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.hire_date.errors %}<div class="invalid-feedback d-block">{{ form.hire_date.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.base_salary.id_for_label }}" class="form-label">Base Salary *</label>
                                 {{ form.base_salary }}
-                                {% if form.base_salary.errors %}
-                                <div class="invalid-feedback d-block">{{ form.base_salary.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.base_salary.errors %}<div class="invalid-feedback d-block">{{ form.base_salary.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
+                        <!-- Row 7: Status and Pay Frequency -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
                                 {{ form.status }}
-                                {% if form.status.errors %}
-                                <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.status.errors %}<div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.pay_frequency.id_for_label }}" class="form-label">Pay Frequency</label>
                                 {{ form.pay_frequency }}
-                                {% if form.pay_frequency.errors %}
-                                <div class="invalid-feedback d-block">{{ form.pay_frequency.errors.0 }}</div>
-                                {% endif %}
+                                {% if form.pay_frequency.errors %}<div class="invalid-feedback d-block">{{ form.pay_frequency.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
 
+                        <!-- Row 8: Salary Currency and Manager -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.salary_currency.id_for_label }}" class="form-label">Salary Currency</label>
+                                {{ form.salary_currency }}
+                                {% if form.salary_currency.errors %}<div class="invalid-feedback d-block">{{ form.salary_currency.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.manager.id_for_label }}" class="form-label">Manager</label>
+                                {{ form.manager }}
+                                {% if form.manager.errors %}<div class="invalid-feedback d-block">{{ form.manager.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 9: Address (Full Width) -->
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}<div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 10: City and State -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.state.id_for_label }}" class="form-label">State</label>
+                                {{ form.state }}
+                                {% if form.state.errors %}<div class="invalid-feedback d-block">{{ form.state.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 11: Postal Code and Country -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.postal_code.id_for_label }}" class="form-label">Postal Code</label>
+                                {{ form.postal_code }}
+                                {% if form.postal_code.errors %}<div class="invalid-feedback d-block">{{ form.postal_code.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">Country</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}<div class="invalid-feedback d-block">{{ form.country.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 12: User Account (Full Width) -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.user.id_for_label }}" class="form-label">User Account</label>
+                                {{ form.user }}
+                                {% if form.user.errors %}<div class="invalid-feedback d-block">{{ form.user.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
                         <hr>
                         <div class="row">
                             <div class="col-md-12">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save Employee
+                                    <i class="fas fa-save"></i> {% if is_edit %}Update{% else %}Save{% endif %} Employee
                                 </button>
                                 <a href="{% url 'hr:employee-list' %}" class="btn btn-light">
                                     <i class="fas fa-times"></i> Cancel
@@ -162,19 +220,48 @@
             </div>
         </div>
 
-        <!-- Info Panel -->
-        <div class="col-md-4">
+        <!-- Right Column: Info Panel -->
+        <div class="col-lg-4">
             <div class="card">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Instructions</h5>
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Instructions</h5>
                 </div>
-                <div class="card-body">
-                    <ul class="small">
-                        <li>All fields marked with * are required</li>
+                <div class="card-body small">
+                    <h6 class="mb-2"><strong>Required Fields</strong></h6>
+                    <ul class="mb-3">
+                        <li>Entity</li>
+                        <li>Employee ID</li>
+                        <li>First Name</li>
+                        <li>Last Name</li>
+                        <li>Email</li>
+                        <li>Department</li>
+                        <li>Position</li>
+                        <li>Hire Date</li>
+                        <li>Base Salary</li>
+                    </ul>
+
+                    <hr>
+                    <h6 class="mb-2"><strong>Tips</strong></h6>
+                    <ul class="mb-0">
                         <li>Employee ID must be unique</li>
                         <li>Email must be in valid format</li>
                         <li>Hire date cannot be in future</li>
-                        <li>Department and Position must be created first in admin</li>
+                        <li>Use "New" button to create missing positions</li>
+                        <li>All changes are saved automatically</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Best Practices</h5>
+                </div>
+                <div class="card-body small">
+                    <ul class="mb-0">
+                        <li>Complete all personal details</li>
+                        <li>Verify email address accuracy</li>
+                        <li>Assign correct department/position</li>
+                        <li>Link to user account for system access</li>
                     </ul>
                 </div>
             </div>
@@ -207,4 +294,122 @@
         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
 </style>
+
+<!-- Create Position Modal -->
+<div class="modal fade" id="createPositionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Position</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createPositionForm">
+                    <div class="mb-3">
+                        <label for="positionTitle" class="form-label">Position Title *</label>
+                        <input type="text" class="form-control" id="positionTitle" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="positionCode" class="form-label">Position Code *</label>
+                        <input type="text" class="form-control" id="positionCode" name="code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="positionDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="positionDescription" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="positionDepartment" class="form-label">Department</label>
+                        <select class="form-select" id="positionDepartment" name="department">
+                            <option value="">-- Select Department --</option>
+                            {{ form.department.field.choices|safe }}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="positionEmploymentType" class="form-label">Employment Type</label>
+                        <select class="form-select" id="positionEmploymentType" name="employment_type">
+                            <option value="PERMANENT">Permanent</option>
+                            <option value="CONTRACT">Contract</option>
+                            <option value="TEMPORARY">Temporary</option>
+                            <option value="PART_TIME">Part-time</option>
+                        </select>
+                    </div>
+                    <div id="positionFormErrors" class="alert alert-danger d-none" role="alert"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="savePositionBtn">Create Position</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const savePositionBtn = document.getElementById('savePositionBtn');
+    const createPositionForm = document.getElementById('createPositionForm');
+    const positionSelect = document.querySelector('select[name="position"]');
+    const positionModal = new bootstrap.Modal(document.getElementById('createPositionModal'));
+    
+    if (savePositionBtn) {
+        savePositionBtn.addEventListener('click', function() {
+            const formData = new FormData(createPositionForm);
+            
+            fetch('{% url "hr:position-create" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add new option to select
+                    const option = document.createElement('option');
+                    option.value = data.id;
+                    option.text = `${data.title} (${data.code})`;
+                    option.selected = true;
+                    positionSelect.appendChild(option);
+                    
+                    // Reset form and close modal
+                    createPositionForm.reset();
+                    document.getElementById('positionFormErrors').classList.add('d-none');
+                    positionModal.hide();
+                    
+                    // Show success message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        <strong>Success!</strong> Position "${data.title}" created successfully.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+                    setTimeout(() => alertDiv.remove(), 3000);
+                } else {
+                    // Show errors
+                    const errorDiv = document.getElementById('positionFormErrors');
+                    let errorHtml = '<strong>Errors:</strong><ul>';
+                    if (data.errors) {
+                        for (const [field, messages] of Object.entries(data.errors)) {
+                            messages.forEach(msg => {
+                                errorHtml += `<li>${field}: ${msg}</li>`;
+                            });
+                        }
+                    }
+                    errorHtml += '</ul>';
+                    errorDiv.innerHTML = errorHtml;
+                    errorDiv.classList.remove('d-none');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const errorDiv = document.getElementById('positionFormErrors');
+                errorDiv.innerHTML = '<strong>Error:</strong> Failed to create position. Please try again.';
+                errorDiv.classList.remove('d-none');
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

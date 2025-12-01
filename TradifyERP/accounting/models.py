@@ -21,6 +21,24 @@ class Entity(models.Model):
         return f"{self.code} - {self.name}"
 
 
+class UserEntity(models.Model):
+    """Link users to entities they have access to."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='entity_assignments')
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='user_assignments')
+    is_default = models.BooleanField(default=False, help_text="User's default entity on login")
+    can_switch = models.BooleanField(default=True, help_text="User can switch to other assigned entities")
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='entity_assignments_given')
+
+    class Meta:
+        unique_together = ('user', 'entity')
+        verbose_name_plural = "User Entities"
+        ordering = ['-is_default', 'entity__name']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.entity.name}"
+
+
 class Currency(models.Model):
     """Currency definitions."""
     code = models.CharField(max_length=3, unique=True)  # e.g., USD, EUR, GBP
@@ -56,6 +74,7 @@ class Account(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True)
     opening_balance = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    parent_account = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='sub_accounts')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -65,6 +84,50 @@ class Account(models.Model):
 
     def __str__(self):
         return f"{self.account_number} - {self.name}"
+    
+    def is_capital_account(self):
+        """Check if this is a capital/equity account."""
+        return 'capital' in self.name.lower() and self.account_type == 'EQUITY'
+    
+    def get_shareholder_subaccount(self, stakeholder):
+        """Get or create a shareholder sub-account under this capital account."""
+        if not self.is_capital_account():
+            return None
+        
+        # Find highest sub-account number
+        sub_accounts = self.sub_accounts.filter(account_number__startswith=self.account_number + '-').order_by('-account_number')
+        
+        if sub_accounts.exists():
+            last_number = sub_accounts.first().account_number
+            # Extract the sub-number (e.g., "3100-02" -> 02)
+            sub_num = int(last_number.split('-')[-1])
+            next_sub_num = sub_num + 1
+        else:
+            next_sub_num = 1
+        
+        # Generate sub-account code
+        new_account_number = f"{self.account_number}-{next_sub_num:02d}"
+        
+        # Get stakeholder name
+        if stakeholder.stakeholder_type == 'INDIVIDUAL':
+            shareholder_name = stakeholder.full_name
+        else:
+            shareholder_name = stakeholder.company_name or str(stakeholder)
+        
+        # Create or get the sub-account
+        sub_account, created = Account.objects.get_or_create(
+            entity=self.entity,
+            account_number=new_account_number,
+            defaults={
+                'name': f"{shareholder_name} - Capital",
+                'account_type': self.account_type,
+                'currency': self.currency,
+                'parent_account': self,
+                'is_active': True,
+                'description': f"Capital account for {shareholder_name}"
+            }
+        )
+        return sub_account
 
 
 class LedgerEntry(models.Model):
@@ -72,6 +135,14 @@ class LedgerEntry(models.Model):
     ENTRY_TYPES = [
         ('DEBIT', 'Debit'),
         ('CREDIT', 'Credit'),
+    ]
+    
+    WORKFLOW_STATUS = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
     ]
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='ledger_entries')
@@ -82,6 +153,7 @@ class LedgerEntry(models.Model):
     description = models.TextField(blank=True, null=True)
     reference_number = models.CharField(max_length=100, blank=True, null=True)
     is_posted = models.BooleanField(default=False)
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS, default='DRAFT')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -799,13 +871,16 @@ class CapitalContribution(models.Model):
         
         self.amount_company_currency = self.amount * self.exchange_rate
         
-        # Calculate USD equivalent (assuming company currency exchange rate is set)
+        # Calculate USD equivalent
+        # currency_destination.exchange_rate is the rate from that currency to USD
+        # So multiply to convert to USD
         try:
             usd_currency = Currency.objects.get(code='USD')
             if self.currency_destination == usd_currency:
                 self.amount_usd = self.amount_company_currency
             else:
-                self.amount_usd = self.amount_company_currency / self.currency_destination.exchange_rate
+                # Multiply by the exchange rate to get USD amount
+                self.amount_usd = self.amount_company_currency * self.currency_destination.exchange_rate
         except:
             self.amount_usd = self.amount_company_currency
         
@@ -974,6 +1049,188 @@ class Shareholding(models.Model):
             return Decimal('0.00')
         
         return (Decimal(self.number_of_shares) / Decimal(total_shares) * 100).quantize(Decimal('0.01'))
+
+
+# ============ CASH MANAGEMENT MODULE ============
+
+class CashReceiptLine(models.Model):
+    """Line items for cash receipts."""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+        ('POSTED', 'Posted'),
+    ]
+    
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='cash_receipt_lines')
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_receipt_debit', help_text="Debit account (e.g., 3100-01 Capital)")
+    credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_receipt_credit', help_text="Credit account (e.g., 100001 Cash)", null=True, blank=True)
+    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    date = models.DateField(default=timezone.now)
+    description = models.CharField(max_length=500)
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['entity', '-date']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Cash Receipt - {self.date} - {self.description[:50]}"
+
+
+class CashPaymentLine(models.Model):
+    """Line items for cash payments."""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+        ('POSTED', 'Posted'),
+    ]
+    
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='cash_payment_lines')
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_payment_debit', help_text="Debit account (e.g., shareholder capital)")
+    credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_payment_credit', help_text="Credit account (e.g., 100001 Cash)", null=True, blank=True)
+    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    date = models.DateField(default=timezone.now)
+    description = models.CharField(max_length=500)
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['entity', '-date']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Cash Payment - {self.date} - {self.description[:50]}"
+
+
+class BankReceiptLine(models.Model):
+    """Line items for bank receipts."""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+        ('POSTED', 'Posted'),
+    ]
+    
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='bank_receipt_lines')
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_receipt_debit', help_text="Debit account (e.g., 3100-01 Capital)", null=True, blank=True)
+    credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_receipt_credit', help_text="Credit account (e.g., 1000 Bank)", null=True, blank=True)
+    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    date = models.DateField(default=timezone.now)
+    description = models.CharField(max_length=500)
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['entity', '-date']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Bank Receipt - {self.date} - {self.debit_amount}"
+
+
+class BankPaymentLine(models.Model):
+    """Line items for bank payments."""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+        ('POSTED', 'Posted'),
+    ]
+    
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='bank_payment_lines')
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_payment_debit', help_text="Debit account (e.g., 1000 Bank)", null=True, blank=True)
+    credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_payment_credit', help_text="Credit account (e.g., 3100-01 Capital)", null=True, blank=True)
+    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    date = models.DateField(default=timezone.now)
+    description = models.CharField(max_length=500)
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['entity', '-date']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Bank Payment - {self.date} - {self.debit_amount}"
 
 
 # Import RBAC models to register them with Django ORM

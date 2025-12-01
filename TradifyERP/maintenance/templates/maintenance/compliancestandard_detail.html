@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ standard.standard_name }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">{{ standard.standard_name }}</h5></div>
+                <div class="card-body">
+                    <p><strong>Code:</strong> {{ standard.standard_code }}</p>
+                    <p><strong>Requirement:</strong></p>
+                    <p>{{ standard.requirement|default:"N/A" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'maintenance:standard-update' standard.pk %}" class="btn btn-warning w-100 mb-2"><i data-feather="edit"></i> Edit</a>
+                    <a href="{% url 'maintenance:standard-list' %}" class="btn btn-secondary w-100"><i data-feather="arrow-left"></i> Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

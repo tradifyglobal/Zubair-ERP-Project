@@ -7,7 +7,7 @@
                         <div class="d-flex align-items-center">
                             <!-- LOGO -->
                             <div class="navbar-brand-box" style="margin: 0; padding-left: 1.5rem;">
-                                <a href="{% url 'accounting:dashboard' %}" class="logo logo-dark">
+                                <a href="{% url 'dashboard' %}" class="logo logo-dark">
                                     <span class="logo-sm">
                                         <img src="{% static 'images/logo.png' %}" alt="" height="24">
                                     </span>
@@ -16,7 +16,7 @@
                                     </span>
                                 </a>
 
-                                <a href="{% url 'accounting:dashboard' %}" class="logo logo-light">
+                                <a href="{% url 'dashboard' %}" class="logo logo-light">
                                     <span class="logo-sm">
                                         <img src="{% static 'images/logo.png' %}" alt="" height="24">
                                     </span>
@@ -251,6 +251,31 @@
                         </div>
 
                         <div class="dropdown d-inline-block">
+                            <button type="button" class="btn header-item bg-light-subtle me-2" id="entity-selector-dropdown"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Switch Entity">
+                                <i class="mdi mdi-office-building font-size-18" style="color: #667eea;"></i>
+                                <span class="d-none d-sm-inline-block ms-1 fw-medium text-dark" style="font-size: 0.85rem;">
+                                    {{ selected_entity_code|default:"Entity" }}
+                                </span>
+                                <i class="mdi mdi-chevron-down d-none d-sm-inline-block"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" style="min-width: 250px;">
+                                <h6 class="dropdown-header px-3">Select Entity</h6>
+                                <div class="dropdown-divider m-0"></div>
+                                <form method="post" action="{% url 'accounting:switch-entity' %}" id="entity-switch-form">
+                                    {% csrf_token %}
+                                    {% for entity in all_entities %}
+                                    <button type="submit" name="entity_id" value="{{ entity.id }}" class="dropdown-item {% if entity.id == selected_entity_id %}active bg-light{% endif %}" style="text-align: left; padding: 0.75rem 1rem; width: 100%; border: none; cursor: pointer; background: none;">
+                                        <i class="mdi mdi-{% if entity.id == selected_entity_id %}check-circle{% else %}circle-outline{% endif %} me-2"></i>
+                                        <strong>{{ entity.code }}</strong><br>
+                                        <small class="text-muted">{{ entity.name }}</small>
+                                    </button>
+                                    {% endfor %}
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="dropdown d-inline-block">
                             <button type="button" class="btn header-item bg-light-subtle border-start border-end" id="page-header-user-dropdown"
                             data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img class="rounded-circle header-profile-user" src="{% static 'images/users/avatar-1.jpg' %}"
@@ -260,11 +285,11 @@
                             </button>
                             <div class="dropdown-menu dropdown-menu-end">
                                 <!-- item-->
-                                <a class="dropdown-item" href="{% url 'apps:contacts.profile' %}"><i class="mdi mdi-face-man font-size-16 align-middle me-1"></i> Profile</a>
-                                <a class="dropdown-item" href="{% url 'lockscreen' %}"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i> Lock screen</a>
+                                {# <a class="dropdown-item" href="{% url 'apps:contacts.profile' %}"><i class="mdi mdi-face-man font-size-16 align-middle me-1"></i> Profile</a> #}
+                                {# <a class="dropdown-item" href="{% url 'lockscreen' %}"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i> Lock screen</a> #}
                                 {% if user.is_authenticated %}
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{% url 'account_change_password' %}"><i class="mdi mdi-lock text-muted font-size-16 align-middle me-1"></i> Change
+                                {# <a class="dropdown-item" href="{% url 'account_change_password' %}"><i class="mdi mdi-lock text-muted font-size-16 align-middle me-1"></i> Change #}
                                     Password</a>
 
                                 <a class="dropdown-item" href="{% url 'logout' %}"><i class="mdi mdi-logout font-size-16 align-middle me-1"></i> Logout</a>

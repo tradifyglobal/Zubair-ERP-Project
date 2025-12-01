@@ -1,0 +1,202 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.id %}Edit{% else %}Add{% endif %} Department - HR Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3">{% if form.instance.id %}Edit{% else %}Add New{% endif %} Department</h1>
+                <a href="{% url 'hr:department-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Form Errors:</strong>
+            <ul class="mb-0">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6">
+                <!-- Department Info Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Department Info</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.entity.id_for_label }}" class="form-label">Entity *</label>
+                            {{ form.entity }}
+                            {% if form.entity.errors %}
+                            <div class="invalid-feedback d-block">{{ form.entity.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">Code *</label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                            <div class="invalid-feedback d-block">{{ form.code.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            <label for="{{ form.is_active.id_for_label }}" class="form-check-label">Is Active</label>
+                            {% if form.is_active.errors %}
+                            <div class="invalid-feedback d-block">{{ form.is_active.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GL Integration Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">GL Integration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.cost_center_account.id_for_label }}" class="form-label">Cost Center Account</label>
+                            <small class="d-block text-muted mb-2">Cost center linked to accounting for expense allocation</small>
+                            {{ form.cost_center_account }}
+                            {% if form.cost_center_account.errors %}
+                            <div class="invalid-feedback d-block">{{ form.cost_center_account.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-md-6">
+                <!-- Management Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.manager.id_for_label }}" class="form-label">Manager</label>
+                            <small class="d-block text-muted mb-2">Department manager</small>
+                            {{ form.manager }}
+                            {% if form.manager.errors %}
+                            <div class="invalid-feedback d-block">{{ form.manager.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.annual_budget.id_for_label }}" class="form-label">Annual Budget</label>
+                            {{ form.annual_budget }}
+                            {% if form.annual_budget.errors %}
+                            <div class="invalid-feedback d-block">{{ form.annual_budget.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Panel -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Instructions</h5>
+                    </div>
+                    <div class="card-body small">
+                        <ul class="mb-0">
+                            <li>All fields marked with * are required</li>
+                            <li>Code must be unique within the entity</li>
+                            <li>Name should clearly describe the department</li>
+                            <li>Manager should be an existing active employee</li>
+                            <li>Cost Center Account links to GL for expense tracking</li>
+                            <li>Annual Budget is for budgeting and reporting</li>
+                            <li>Mark as Active to enable the department</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if form.instance.id %}Update{% else %}Save{% endif %} Department
+                    </button>
+                    <a href="{% url 'hr:department-list' %}" class="btn btn-light">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control, .form-select {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #dee2e6;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .form-control:focus, .form-select:focus {
+        color: #495057;
+        background-color: #fff;
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+    .gap-2 {
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}

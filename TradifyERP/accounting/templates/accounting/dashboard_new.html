@@ -33,10 +33,23 @@
 <div class="main-content" style="margin-top: 60px !important;">
     <div class="page-content" style="padding-top: 0.5rem !important;">
         <div class="container-fluid">
-            <!-- Page Title -->
+            <!-- Page Title with Entity Selector -->
             <div class="row mb-3">
                 <div class="col-12">
-                    <h4 class="page-title mb-0">Dashboard</h4>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Dashboard</h4>
+                        <div style="max-width: 250px;">
+                            <label for="entity-selector" class="form-label mb-1">Select Entity:</label>
+                            <form method="get" class="d-flex gap-2" id="entity-form">
+                                <select id="entity-selector" name="entity_id" class="form-select form-select-sm" onchange="document.getElementById('entity-form').submit();">
+                                    <option value="">-- All Available --</option>
+                                    {% for e in all_entities %}
+                                    <option value="{{ e.id }}" {% if e.id == entity.id %}selected{% endif %}>{{ e.code }} - {{ e.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ territory.territory_name }} - Territory - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title mb-0">{{ territory.territory_name }}</h4>
+                <p class="text-muted mb-0">Territory Code: <strong>{{ territory.territory_code }}</strong></p>
+            </div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'crm:territory_update' territory.pk %}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{% url 'crm:territory_delete' territory.pk %}" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i> Delete
+                </a>
+                <a href="{% url 'crm:territories' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Territory Code</label>
+                                <p class="mb-0">{{ territory.territory_code }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Territory Name</label>
+                                <p class="mb-0">{{ territory.territory_name }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Manager</label>
+                                <p class="mb-0">
+                                    {% if territory.manager %}
+                                    {{ territory.manager.get_full_name }}
+                                    {% else %}
+                                    <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Status</label>
+                                <p class="mb-0">
+                                    {% if territory.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Inactive</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if territory.annual_target %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Annual Target</label>
+                        <p class="mb-0">{{ territory.annual_target }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if territory.description %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Description</label>
+                        <p class="mb-0">{{ territory.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Audit Trail -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Audit Trail</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-0">
+                                <label class="form-label text-muted">Created</label>
+                                <p class="mb-0">{{ territory.created_at|date:"M d, Y - H:i" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-0">
+                                <label class="form-label text-muted">Last Updated</label>
+                                <p class="mb-0">{{ territory.updated_at|date:"M d, Y - H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'crm:territory_update' territory.pk %}" class="btn btn-warning btn-block mb-2">
+                        <i class="fas fa-edit"></i> Edit Territory
+                    </a>
+                    <a href="{% url 'crm:territories' %}" class="btn btn-secondary btn-block">
+                        <i class="fas fa-list"></i> View All Territories
+                    </a>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Additional Info</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">ID</small>
+                        <p class="mb-0 text-monospace">{{ territory.pk }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Entity</small>
+                        <p class="mb-0">{{ territory.entity.name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-monospace {
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

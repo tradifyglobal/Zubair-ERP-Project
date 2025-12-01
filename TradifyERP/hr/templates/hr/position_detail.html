@@ -1,0 +1,137 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ position.title }} - Position Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">{{ position.title }}</h1>
+            <p class="text-muted">{{ position.code }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:position-update' position.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'hr:position-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Position Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Code</h6>
+                            <p><strong>{{ position.code }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Title</h6>
+                            <p><strong>{{ position.title }}</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h6 class="text-muted">Description</h6>
+                            <p>{{ position.description|default:"--" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Department</h6>
+                            <p>{{ position.department.name|default:"--" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Employment Type</h6>
+                            <p>{{ position.get_employment_type_display }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Salary Grade</h6>
+                            <p>{{ position.salary_grade|default:"--" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Reports To</h6>
+                            <p>{{ position.reports_to.title|default:"--" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Minimum Salary</h6>
+                            <p><strong>{{ position.min_salary|default:"--" }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Maximum Salary</h6>
+                            <p><strong>{{ position.max_salary|default:"--" }}</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h6 class="text-muted">Salary Expense Account</h6>
+                            <p>{{ position.salary_expense_account.name|default:"--" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Status</h6>
+                            <p>
+                                {% if position.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Entity</h6>
+                            <p>{{ position.entity.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'hr:position-update' position.id %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-edit"></i> Edit Position
+                    </a>
+                    <a href="{% url 'hr:position-list' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-list"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Information</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Created:</strong> {{ position.created_at|default:"--" }}</p>
+                    <p class="mb-0"><strong>Updated:</strong> {{ position.updated_at|default:"--" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -47,6 +47,27 @@
         max-height: 500px;
         overflow-y: auto;
     }
+    /* Entity assignment card fix */
+    .entity-assignment-card {
+        height: auto;
+        overflow: visible;
+    }
+    .entity-assignment-card .card-body {
+        padding: 1.5rem;
+    }
+    .entity-checkbox {
+        margin-right: 8px;
+    }
+    .entity-checkbox-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+    .entity-checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 </style>
 {% endblock %}
 
@@ -166,38 +187,50 @@
 
                     <!-- Quick Permission Templates -->
                     <div class="col-lg-6">
-                        <div class="card">
+                        <div class="card entity-assignment-card">
                             <div class="card-header bg-success text-white">
-                                <h5 class="mb-0"><i class="mdi mdi-flash me-2"></i>Quick Access Templates</h5>
+                                <h5 class="mb-0"><i class="mdi mdi-shield-account me-2"></i>Entity Assignment</h5>
                             </div>
                             <div class="card-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Apply Permission Template</label>
-                                    {{ template_form.template }}
-                                    <div class="small text-muted mt-1">
-                                        Select a template to quickly assign common permission sets, or choose "Custom" to manually select permissions below.
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Assigned Entities</label>
+                                    <div class="entity-checkbox-list">
+                                        {% for entity in entity_form.entities %}
+                                            <div class="entity-checkbox-item form-check">
+                                                {{ entity.tag }}
+                                                <label class="form-check-label ms-2" for="{{ entity.id_for_label }}">
+                                                    {{ entity.choice_label }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
                                     </div>
+                                    {% if entity_form.entities.errors %}
+                                    <div class="text-danger small mt-2">{{ entity_form.entities.errors }}</div>
+                                    {% endif %}
+                                    <div class="small text-muted mt-2">Select which entities this user can access</div>
                                 </div>
 
-                                <div class="alert alert-info">
-                                    <strong><i class="mdi mdi-information me-1"></i> Template Options:</strong>
-                                    <ul class="mb-0 mt-2 small">
-                                        <li><strong>Full Administrator:</strong> Access to all modules with all permissions</li>
-                                        <li><strong>Accountant:</strong> Full access to accounting modules, view only for others</li>
-                                        <li><strong>HR Manager:</strong> Full HR access, view only for other modules</li>
-                                        <li><strong>Sales Manager:</strong> Full sales & CRM, view inventory & accounting</li>
-                                        <li><strong>Read Only:</strong> View-only access to all modules</li>
-                                        <li><strong>Custom:</strong> Manually select permissions below</li>
-                                    </ul>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold" for="{{ entity_form.default_entity.id_for_label }}">
+                                        {{ entity_form.default_entity.label }}
+                                    </label>
+                                    {{ entity_form.default_entity }}
+                                    {% if entity_form.default_entity.errors %}
+                                    <div class="text-danger small mt-2">{{ entity_form.default_entity.errors }}</div>
+                                    {% endif %}
                                 </div>
 
-                                <div class="d-grid gap-2">
-                                    <button type="button" class="btn btn-outline-primary select-all-btn" onclick="selectAllModules()">
-                                        <i class="mdi mdi-check-all me-1"></i> Select All Modules
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary select-all-btn" onclick="clearAllModules()">
-                                        <i class="mdi mdi-close-box-multiple me-1"></i> Clear All
-                                    </button>
+                                <div class="form-check mb-3">
+                                    {{ entity_form.can_switch_entities }}
+                                    <label class="form-check-label" for="{{ entity_form.can_switch_entities.id_for_label }}">
+                                        {{ entity_form.can_switch_entities.label }}
+                                    </label>
+                                    <div class="small text-muted mt-1">{{ entity_form.can_switch_entities.help_text }}</div>
+                                </div>
+
+                                <div class="alert alert-info alert-sm" role="alert">
+                                    <strong><i class="mdi mdi-information me-1"></i>Entity Restrictions:</strong>
+                                    <p class="mb-0 small mt-2">Users can only access entities assigned above. If entity switching is disabled, they can only see their default entity.</p>
                                 </div>
                             </div>
                         </div>
@@ -218,22 +251,26 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th style="width: 25%;">Module</th>
-                                                <th class="text-center" style="width: 12.5%;">
+                                                <th class="text-center" style="width: 10.7%;">
+                                                    <input type="checkbox" id="select-all-permissions" class="form-check-input" title="Select all permissions">
+                                                    <div class="small">All</div>
+                                                </th>
+                                                <th class="text-center" style="width: 10.7%;">
                                                     <i class="mdi mdi-eye"></i> View
                                                 </th>
-                                                <th class="text-center" style="width: 12.5%;">
+                                                <th class="text-center" style="width: 10.7%;">
                                                     <i class="mdi mdi-plus"></i> Add
                                                 </th>
-                                                <th class="text-center" style="width: 12.5%;">
+                                                <th class="text-center" style="width: 10.7%;">
                                                     <i class="mdi mdi-pencil"></i> Edit
                                                 </th>
-                                                <th class="text-center" style="width: 12.5%;">
+                                                <th class="text-center" style="width: 10.7%;">
                                                     <i class="mdi mdi-delete"></i> Delete
                                                 </th>
-                                                <th class="text-center" style="width: 12.5%;">
+                                                <th class="text-center" style="width: 10.7%;">
                                                     <i class="mdi mdi-check-decagram"></i> Approve
                                                 </th>
-                                                <th class="text-center" style="width: 12.5%;">
+                                                <th class="text-center" style="width: 10.7%;">
                                                     <i class="mdi mdi-file-export"></i> Export
                                                 </th>
                                             </tr>
@@ -244,6 +281,9 @@
                                                 <td>
                                                     <strong>{{ module_name }}</strong>
                                                     <div class="small text-muted">{{ module_code }}</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <input type="checkbox" class="form-check-input module-select-all" data-module="{{ module_code }}" title="Select all for this module">
                                                 </td>
                                                 <td class="text-center">
                                                     {% for field in permission_form %}
@@ -329,20 +369,61 @@
 
 {% block extra_js %}
 <script>
-    // Apply permission template
-    document.getElementById('permission-template').addEventListener('change', function() {
-        const template = this.value;
-        
-        if (template === 'custom' || template === '') {
-            return; // Don't change anything for custom
-        }
-        
-        // Apply template logic here or submit to server
-        if (confirm('This will override current permissions. Continue?')) {
-            // You can add AJAX call here to apply template
-            applyTemplate(template);
-        }
+    // Master checkbox for all permissions
+    document.getElementById('select-all-permissions').addEventListener('change', function() {
+        const isChecked = this.checked;
+        document.querySelectorAll('input[type="checkbox"].permission-checkbox').forEach(cb => {
+            cb.checked = isChecked;
+        });
     });
+
+    // Module-level select all
+    document.querySelectorAll('.module-select-all').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const module = this.dataset.module;
+            const isChecked = this.checked;
+            document.querySelectorAll(`input[name="${module}_can_view"], input[name="${module}_can_add"], input[name="${module}_can_edit"], input[name="${module}_can_delete"], input[name="${module}_can_approve"], input[name="${module}_can_export"]`).forEach(cb => {
+                cb.checked = isChecked;
+            });
+        });
+    });
+
+    // Update master checkbox state when individual checkboxes change
+    document.querySelectorAll('input[type="checkbox"].permission-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const allCheckboxes = document.querySelectorAll('input[type="checkbox"].permission-checkbox');
+            const checkedCheckboxes = document.querySelectorAll('input[type="checkbox"].permission-checkbox:checked');
+            const masterCheckbox = document.getElementById('select-all-permissions');
+            
+            if (checkedCheckboxes.length === allCheckboxes.length) {
+                masterCheckbox.checked = true;
+                masterCheckbox.indeterminate = false;
+            } else if (checkedCheckboxes.length === 0) {
+                masterCheckbox.checked = false;
+                masterCheckbox.indeterminate = false;
+            } else {
+                masterCheckbox.indeterminate = true;
+            }
+        });
+    });
+    
+    // Apply permission template
+    const templateSelect = document.getElementById('permission-template');
+    if (templateSelect) {
+        templateSelect.addEventListener('change', function() {
+            const template = this.value;
+            
+            if (template === 'custom' || template === '') {
+                return; // Don't change anything for custom
+            }
+            
+            // Apply template logic here or submit to server
+            if (confirm('This will override current permissions. Continue?')) {
+                // You can add AJAX call here to apply template
+                applyTemplate(template);
+            }
+        });
+    }
     
     function selectAllModules() {
         document.querySelectorAll('input[type="checkbox"][data-permission="view"]').forEach(cb => {

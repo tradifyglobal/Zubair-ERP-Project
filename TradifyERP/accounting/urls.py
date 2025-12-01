@@ -1,24 +1,41 @@
-from django.urls import path
+from django.urls import path, include
 from accounting.models import Account, Customer, Vendor
 from .views import (
     DashboardView, GLDashboardView,
     AccountListView, AccountDetailView,
-    LedgerEntryListView, LedgerEntryCreateView, DoubleEntryJournalView,
+    LedgerEntryListView, LedgerEntryDetailView, LedgerEntryPrintView, LedgerEntryCreateView, DoubleEntryJournalView, LedgerEntryEditWorkflowView,
     TrialBalanceListView, ProfitLossListView, BalanceSheetListView,
-    CustomerListView, VendorListView,
-    VendorInvoiceListView, VendorInvoiceDetailView, VendorInvoiceUpdateView, VendorInvoiceStatusUpdateView, RecordVendorPaymentView, VendorPaymentListView,
-    FixedAssetListView,
+    CustomerListView, CustomerDetailView, CustomerUpdateView, VendorListView, VendorDetailView, VendorUpdateView,
+    VendorInvoiceListView, VendorInvoiceDetailView, VendorInvoiceUpdateView, VendorInvoiceStatusUpdateView, RecordVendorPaymentView, VendorPaymentListView, VendorPaymentDetailView, VendorPaymentUpdateView, VendorPaymentCreateView,
+    FixedAssetListView, FixedAssetCreateView, FixedAssetUpdateView, FixedAssetDeleteView,
     AuditLogListView,
-    BankProfileListView, BankStatementListView,
+    BankProfileListView, BankProfileCreateView, BankProfileUpdateView, BankProfileDeleteView, BankStatementListView,
     CashFlowForecastListView, CashTransactionListView,
     ReconciliationEntryListView, ReconciliationRecordListView, ReconciliationMatchListView,
     TaxRateListView, TaxTransactionListView, TaxSummaryListView,
+)
+from accounting.views_debug import theme_debug
+from .views import (
     DeferredExpenseListView, DeferredRevenueListView,
-    EntityListView, CurrencyListView, PeriodLockListView,
+    EntityListView, EntityCreateView, EntityUpdateView, EntityDeleteView, CurrencyListView, PeriodLockListView,
     QuickAddLedgerEntryView, QuickAddCustomerView, QuickAddVendorView, QuickAddAccountView, QuickAddVendorInvoiceView,
     QuickAddVendorPaymentView, QuickAddFixedAssetView, QuickAddCashTransactionView, QuickAddBankProfileView,
     QuickAddTaxRateView, QuickAddDeferredExpenseView, QuickAddDeferredRevenueView, QuickAddReconciliationRecordView,
+    GetAccountShareholderAPIView,
 )
+from .cash_views import (
+    CashReceiptCreateView, CashReceiptListView, CashReceiptDetailView, CashReceiptPrintView,
+    CashPaymentCreateView, CashPaymentListView, CashPaymentDetailView, CashPaymentPrintView,
+    BankReceiptCreateView, BankReceiptListView, BankReceiptDetailView, BankReceiptPrintView,
+    BankPaymentCreateView, BankPaymentListView, BankPaymentDetailView, BankPaymentPrintView
+)
+from .cash_workflow_views import (
+    CashReceiptApprovalView, CashReceiptAuthorizationView, CashReceiptRejectView,
+    CashPaymentApprovalView, CashPaymentAuthorizationView, CashPaymentRejectView,
+    BankReceiptApprovalView, BankReceiptAuthorizationView, BankReceiptRejectView,
+    BankPaymentApprovalView, BankPaymentAuthorizationView, BankPaymentRejectView
+)
+from .views_entity_selection import EntitySelectionView, EntitySwitchView
 from .views_extended import (
     QuickAddCurrencyView, QuickAddEntityView, QuickAddBankStatementView, QuickAddCashFlowForecastView,
     QuickAddTaxTransactionView, QuickAddTaxSummaryView, QuickAddPeriodLockView,
@@ -54,6 +71,13 @@ from .import_export_implementations import (
 app_name = 'accounting'
 
 urlpatterns = [
+    # Debug - Theme Test
+    path('theme-debug/', theme_debug, name='theme_debug'),
+    
+    # Entity Selection
+    path('select-entity/', EntitySelectionView.as_view(), name='select-entity'),
+    path('switch-entity/', EntitySwitchView.as_view(), name='switch-entity'),
+    
     # Main dashboards
     path('', DashboardView.as_view(), name='main_dashboard'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
@@ -67,7 +91,10 @@ urlpatterns = [
     
     # Ledger Entries
     path('ledger-entries/', LedgerEntryListView.as_view(), name='ledger_entry_list'),
-    path('ledger-entries/create/', LedgerEntryCreateView.as_view(), name='ledger_entry_create'),
+    path('ledger-entries/<int:pk>/', LedgerEntryDetailView.as_view(), name='ledger_entry_detail'),
+    path('ledger-entries/<int:pk>/print/', LedgerEntryPrintView.as_view(), name='ledger_entry_print'),
+    path('ledger-entries/<int:pk>/edit-workflow/', LedgerEntryEditWorkflowView.as_view(), name='ledger_entry_edit_workflow'),
+    path('ledger-entries/create/', DoubleEntryJournalView.as_view(), name='ledger_entry_create'),
     path('journal-entries/create/', DoubleEntryJournalView.as_view(), name='journal_entry_create'),
     path('quick-add-entry/', QuickAddLedgerEntryView.as_view(), name='quick_add_entry'),
     
@@ -99,6 +126,9 @@ urlpatterns = [
     path('quick-add-reconciliation-entry/', QuickAddReconciliationEntryView.as_view(), name='quick_add_reconciliation_entry'),
     path('quick-add-reconciliation-match/', QuickAddReconciliationMatchView.as_view(), name='quick_add_reconciliation_match'),
     
+    # API Endpoints
+    path('api/account-shareholder/', GetAccountShareholderAPIView.as_view(), name='api_account_shareholder'),
+    
     # Financial Reports
     path('trial-balances/', TrialBalanceListView.as_view(), name='trial_balance_list'),
     path('profit-loss/', ProfitLossListView.as_view(), name='profit_loss_list'),
@@ -108,7 +138,11 @@ urlpatterns = [
     
     # Customers & Vendors
     path('customers/', CustomerListView.as_view(), name='customer_list'),
+    path('customers/<int:pk>/', CustomerDetailView.as_view(), name='customer_detail'),
+    path('customers/<int:pk>/edit/', CustomerUpdateView.as_view(), name='customer_edit'),
     path('vendors/', VendorListView.as_view(), name='vendor_list'),
+    path('vendors/<int:pk>/', VendorDetailView.as_view(), name='vendor_detail'),
+    path('vendors/<int:pk>/edit/', VendorUpdateView.as_view(), name='vendor_edit'),
     
     # Invoices & Payments
     path('vendor-invoices/', VendorInvoiceListView.as_view(), name='vendor_invoice_list'),
@@ -117,12 +151,21 @@ urlpatterns = [
     path('vendor-invoices/<int:pk>/update-status/', VendorInvoiceStatusUpdateView.as_view(), name='vendor_invoice_update_status'),
     path('vendor-invoices/<int:pk>/record-payment/', RecordVendorPaymentView.as_view(), name='record_vendor_payment'),
     path('vendor-payments/', VendorPaymentListView.as_view(), name='vendor_payments_list'),
+    path('vendor-payments/create/', VendorPaymentCreateView.as_view(), name='vendor_payment_create'),
+    path('vendor-payments/<int:pk>/edit/', VendorPaymentUpdateView.as_view(), name='vendor_payment_edit'),
+    path('vendor-payments/<int:pk>/', VendorPaymentDetailView.as_view(), name='vendor_payment_detail'),
     
     # Fixed Assets
     path('fixed-assets/', FixedAssetListView.as_view(), name='fixed_asset_list'),
+    path('fixed-assets/create/', FixedAssetCreateView.as_view(), name='fixed_asset_create'),
+    path('fixed-assets/<int:pk>/edit/', FixedAssetUpdateView.as_view(), name='fixed_asset_edit'),
+    path('fixed-assets/<int:pk>/delete/', FixedAssetDeleteView.as_view(), name='fixed_asset_delete'),
     
     # Banking
     path('bank-profiles/', BankProfileListView.as_view(), name='bank_profiles_list'),
+    path('bank-profiles/create/', BankProfileCreateView.as_view(), name='bank_profile_create'),
+    path('bank-profiles/<int:pk>/edit/', BankProfileUpdateView.as_view(), name='bank_profile_edit'),
+    path('bank-profiles/<int:pk>/delete/', BankProfileDeleteView.as_view(), name='bank_profile_delete'),
     path('bank-statements/', BankStatementListView.as_view(), name='bank_statements_list'),
     path('cash-transactions/', CashTransactionListView.as_view(), name='cash_transactions_list'),
     path('cash-flow-forecast/', CashFlowForecastListView.as_view(), name='cash_flow_forecast_list'),
@@ -143,6 +186,9 @@ urlpatterns = [
     
     # Administration
     path('entities/', EntityListView.as_view(), name='entities_list'),
+    path('entities/create/', EntityCreateView.as_view(), name='entity_create'),
+    path('entities/<int:pk>/edit/', EntityUpdateView.as_view(), name='entity_edit'),
+    path('entities/<int:pk>/delete/', EntityDeleteView.as_view(), name='entity_delete'),
     path('currencies/', CurrencyListView.as_view(), name='currencies_list'),
     path('period-locks/', PeriodLockListView.as_view(), name='period_locks_list'),
     
@@ -241,4 +287,51 @@ urlpatterns = [
         exporter_class=LedgerEntryExporter,
         module_name='accounting'
     ), name='ledger_entry_export'),
+    
+    # Cash Receipts
+    path('cash-receipts/', CashReceiptListView.as_view(), name='cash_receipt_list'),
+    path('cash-receipts/create/', CashReceiptCreateView.as_view(), name='cash_receipt_create'),
+    path('cash-receipts/<int:pk>/', CashReceiptDetailView.as_view(), name='cash_receipt_detail'),
+    path('cash-receipts/<int:pk>/print/', CashReceiptPrintView.as_view(), name='cash_receipt_print'),
+    path('cash-receipts/<int:pk>/approve/', CashReceiptApprovalView.as_view(), name='cash_receipt_approve'),
+    path('cash-receipts/<int:pk>/authorize/', CashReceiptAuthorizationView.as_view(), name='cash_receipt_authorize'),
+    path('cash-receipts/<int:pk>/reject/', CashReceiptRejectView.as_view(), name='cash_receipt_reject'),
+    
+    # Cash Payments
+    path('cash-payments/', CashPaymentListView.as_view(), name='cash_payment_list'),
+    path('cash-payments/create/', CashPaymentCreateView.as_view(), name='cash_payment_create'),
+    path('cash-payments/<int:pk>/', CashPaymentDetailView.as_view(), name='cash_payment_detail'),
+    path('cash-payments/<int:pk>/print/', CashPaymentPrintView.as_view(), name='cash_payment_print'),
+    path('cash-payments/<int:pk>/approve/', CashPaymentApprovalView.as_view(), name='cash_payment_approve'),
+    path('cash-payments/<int:pk>/authorize/', CashPaymentAuthorizationView.as_view(), name='cash_payment_authorize'),
+    path('cash-payments/<int:pk>/reject/', CashPaymentRejectView.as_view(), name='cash_payment_reject'),
+    
+    # Bank Receipts
+    path('bank-receipts/', BankReceiptListView.as_view(), name='bank_receipt_list'),
+    path('bank-receipts/create/', BankReceiptCreateView.as_view(), name='bank_receipt_create'),
+    path('bank-receipts/<int:pk>/', BankReceiptDetailView.as_view(), name='bank_receipt_detail'),
+    path('bank-receipts/<int:pk>/print/', BankReceiptPrintView.as_view(), name='bank_receipt_print'),
+    path('bank-receipts/<int:pk>/approve/', BankReceiptApprovalView.as_view(), name='bank_receipt_approve'),
+    path('bank-receipts/<int:pk>/authorize/', BankReceiptAuthorizationView.as_view(), name='bank_receipt_authorize'),
+    path('bank-receipts/<int:pk>/reject/', BankReceiptRejectView.as_view(), name='bank_receipt_reject'),
+    
+    # Bank Payments
+    path('bank-payments/', BankPaymentListView.as_view(), name='bank_payment_list'),
+    path('bank-payments/create/', BankPaymentCreateView.as_view(), name='bank_payment_create'),
+    path('bank-payments/<int:pk>/', BankPaymentDetailView.as_view(), name='bank_payment_detail'),
+    path('bank-payments/<int:pk>/print/', BankPaymentPrintView.as_view(), name='bank_payment_print'),
+    path('bank-payments/<int:pk>/approve/', BankPaymentApprovalView.as_view(), name='bank_payment_approve'),
+    path('bank-payments/<int:pk>/authorize/', BankPaymentAuthorizationView.as_view(), name='bank_payment_authorize'),
+    path('bank-payments/<int:pk>/reject/', BankPaymentRejectView.as_view(), name='bank_payment_reject'),
+]
+
+# Import dashboard views
+from .views_dashboard import AccountingDashboardView, CashPositionView
+
+# Add capital & cash position URLs
+urlpatterns += [
+    # Capital & Cash Position Dashboards
+    path('accounting-dashboard/', AccountingDashboardView.as_view(), name='accounting_dashboard'),
+    path('cash-position/', CashPositionView.as_view(), name='cash_position'),
+    path('theme/', include('accounting.urls_theme')),
 ]

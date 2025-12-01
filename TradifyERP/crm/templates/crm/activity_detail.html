@@ -1,0 +1,169 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Activity: {{ activity.subject }} | CRM</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content" style="padding-bottom: 120px;">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Activity Details</h4>
+                        <div>
+                            <a href="{% url 'crm:activity_update' activity.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            <a href="{% url 'crm:activity_delete' activity.pk %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
+                            <a href="{% url 'crm:activity_list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Information -->
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <!-- Basic Information Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Activity Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Subject</label>
+                                    <strong>{{ activity.subject }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Activity Type</label>
+                                    <span class="badge bg-info">{{ activity.get_activity_type_display }}</span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Assigned To</label>
+                                    <strong>{{ activity.assigned_to.get_full_name|default:activity.assigned_to.username }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Activity Date</label>
+                                    <strong>{{ activity.activity_date|date:"M d, Y H:i" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Priority & Status Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Status & Priority</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Priority</label>
+                                    <span class="badge bg-{% if activity.priority == 'HIGH' %}danger{% elif activity.priority == 'MEDIUM' %}warning{% else %}success{% endif %}">
+                                        {{ activity.get_priority_display }}
+                                    </span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Status</label>
+                                    <span class="badge bg-{% if activity.is_completed %}success{% else %}warning{% endif %}">
+                                        {% if activity.is_completed %}Completed{% else %}Pending{% endif %}
+                                    </span>
+                                </div>
+                                {% if activity.is_completed and activity.completion_date %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Completion Date</label>
+                                    <strong>{{ activity.completion_date|date:"M d, Y H:i" }}</strong>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Related Records Card -->
+                    {% if activity.lead or activity.opportunity or activity.customer %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Related Records</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% if activity.lead %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Lead</label>
+                                    <strong>
+                                        <a href="{% url 'crm:lead_detail' activity.lead.pk %}">{{ activity.lead.lead_name }}</a>
+                                    </strong>
+                                </div>
+                                {% endif %}
+                                {% if activity.opportunity %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Opportunity</label>
+                                    <strong>
+                                        <a href="{% url 'crm:opportunity_detail' activity.opportunity.pk %}">{{ activity.opportunity.opportunity_name }}</a>
+                                    </strong>
+                                </div>
+                                {% endif %}
+                                {% if activity.customer %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Customer</label>
+                                    <strong>{{ activity.customer.customer_name }}</strong>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Description Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Description</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ activity.description|linebreaks }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Metadata Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Metadata</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Created By</label>
+                                    <strong>{{ activity.created_by|default:"System" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Created At</label>
+                                    <strong>{{ activity.created_at|date:"M d, Y H:i" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Last Updated</label>
+                                    <strong>{{ activity.updated_at|date:"M d, Y H:i" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Footer Button Bar -->
+<div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #dee2e6; padding: 15px 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); z-index: 100;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <a href="{% url 'crm:activity_update' activity.pk %}" class="btn btn-primary">Edit Activity</a>
+                <a href="{% url 'crm:activity_list' %}" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

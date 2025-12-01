@@ -14,19 +14,7 @@
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="page-title mb-0">Activities</h4>
-                        {% if user|has_action_permission:'crm:add' %}
-                            {% if user|has_action_permission:'crm:add' %}
-                            <a href="{% url 'crm:activity_create' %}" class="btn btn-primary btn-sm">Add Activity</a>
-                            {% else %}
-                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add records">
-                                <i class="mdi mdi-plus"></i> Add (No Permission)
-                            </button>
-                            {% endif %}
-                            {% else %}
-                            <button class="btn btn-secondary btn-sm" disabled title="You do not have permission to add records">
-                                <i class="mdi mdi-plus"></i> Add (No Permission)
-                            </button>
-                            {% endif %}
+                        <a href="{% url 'crm:activity_create' %}" class="btn btn-primary btn-sm">Add Activity</a>
                     </div>
                 </div>
             </div>
@@ -35,7 +23,50 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <p class="text-muted">Activity list will display here</p>
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                        <th>Assigned To</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in activities %}
+                                        <tr>
+                                            <td><strong>{{ activity.subject }}</strong></td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    {{ activity.get_activity_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ activity.activity_date|date:"M d, Y H:i" }}</td>
+                                            <td>{{ activity.assigned_to.get_full_name|default:activity.assigned_to.username }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if activity.priority == 'HIGH' %}danger{% elif activity.priority == 'MEDIUM' %}warning{% else %}success{% endif %}">
+                                                    {{ activity.get_priority_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if activity.is_completed %}success{% else %}warning{% endif %}">
+                                                    {% if activity.is_completed %}Completed{% else %}Pending{% endif %}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'crm:activity_detail' activity.pk %}" class="btn btn-sm btn-info">View</a>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-3">No activities found</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

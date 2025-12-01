@@ -70,10 +70,10 @@
                             <td>{{ program.points_per_currency|floatformat:2 }}</td>
                             <td>{{ program.start_date|date:"M d, Y" }}</td>
                             <td class="no-print">
-                                <a href="#" class="btn btn-sm btn-info" title="View">
+                                <a href="{% url 'crm:loyaltyprogram_detail' program.id %}" class="btn btn-sm btn-info" title="View">
                                     <i class="mdi mdi-eye"></i>
                                 </a>
-                                <a href="#" class="btn btn-sm btn-warning" title="Edit">
+                                <a href="{% url 'crm:loyaltyprogram_edit' program.id %}" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="mdi mdi-pencil"></i>
                                 </a>
                             </td>

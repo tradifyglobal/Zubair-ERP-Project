@@ -249,4 +249,42 @@
         font-size: 0.875rem;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+        const taxAmountInput = document.getElementById('{{ form.tax_amount.id_for_label }}');
+        const totalAmountInput = document.getElementById('{{ form.total_amount.id_for_label }}');
+        
+        // Get the actual input element IDs
+        const amountField = document.querySelector('input[name="amount"]');
+        const taxAmountField = document.querySelector('input[name="tax_amount"]');
+        const totalAmountField = document.querySelector('input[name="total_amount"]');
+        
+        function calculateTotal() {
+            if (amountField && taxAmountField && totalAmountField) {
+                const amount = parseFloat(amountField.value) || 0;
+                const taxAmount = parseFloat(taxAmountField.value) || 0;
+                const total = amount + taxAmount;
+                
+                // Format to 2 decimal places
+                totalAmountField.value = total.toFixed(2);
+            }
+        }
+        
+        // Add event listeners for real-time calculation
+        if (amountField) {
+            amountField.addEventListener('input', calculateTotal);
+            amountField.addEventListener('change', calculateTotal);
+        }
+        
+        if (taxAmountField) {
+            taxAmountField.addEventListener('input', calculateTotal);
+            taxAmountField.addEventListener('change', calculateTotal);
+        }
+        
+        // Calculate on page load in case there are pre-filled values
+        calculateTotal();
+    });
+</script>
 {% endblock %}

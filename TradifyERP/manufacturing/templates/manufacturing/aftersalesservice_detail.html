@@ -1,0 +1,193 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Service Ticket Detail | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-10">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">{{ object.service_ticket_number }}</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:dashboard' %}">Manufacturing</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:aftersalesservice_list' %}">Service Tickets</a></li>
+                                <li class="breadcrumb-item active">{{ object.service_ticket_number }}</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <!-- Service Information -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Service Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Ticket Number</h6>
+                                            <p><strong>{{ object.service_ticket_number }}</strong></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Distributor</h6>
+                                            <p>{{ object.distributor.distributor_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <h6 class="text-muted mb-1">Service Type</h6>
+                                            <p>{{ object.get_service_type_display }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-muted mb-1">Status</h6>
+                                            <p><span class="badge bg-warning">{{ object.get_status_display }}</span></p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-muted mb-1">Priority</h6>
+                                            <p>{{ object.get_priority_display }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Details -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Product Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Product Code</h6>
+                                            <p>{{ object.product_code|default:"—" }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Serial Number</h6>
+                                            <p>{{ object.serial_number|default:"—" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Purchase Date</h6>
+                                            <p>{{ object.purchase_date|date:"d M Y"|default:"—" }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Warranty Status</h6>
+                                            <p>
+                                                {% if object.is_under_warranty %}
+                                                    <span class="badge bg-success">Under Warranty</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Out of Warranty</span>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {% if object.warranty_expiry_date %}
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Warranty Expiry Date</h6>
+                                            <p>{{ object.warranty_expiry_date|date:"d M Y" }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Issue Description -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Issue Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-1">Issue Date</h6>
+                                        <p>{{ object.issue_date|date:"d M Y" }}</p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <h6 class="text-muted mb-1">Description</h6>
+                                        <p>{{ object.issue_description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Resolution -->
+                            {% if object.resolution_description %}
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Resolution</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-1">Resolution Date</h6>
+                                        <p>{{ object.resolution_date|date:"d M Y"|default:"—" }}</p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <h6 class="text-muted mb-1">Resolution Description</h6>
+                                        <p>{{ object.resolution_description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Cost & Assignment -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Service Cost & Assignment</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Service Cost</h6>
+                                            <p>{{ object.service_cost }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Assigned To</h6>
+                                            <p>{{ object.assigned_to.get_full_name|default:"—" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <!-- Created/Updated Info -->
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-1">Created</h6>
+                                        <p>{{ object.created_at|date:"d M Y H:i" }}</p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <h6 class="text-muted mb-1">Updated</h6>
+                                        <p>{{ object.updated_at|date:"d M Y H:i" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-lg-10">
+                    <div class="card-footer d-flex gap-2 justify-content-end">
+                        <a href="{% url 'manufacturing:aftersalesservice_update' object.pk %}" class="btn btn-warning">Edit</a>
+                        <a href="{% url 'manufacturing:aftersalesservice_delete' object.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                        <a href="{% url 'manufacturing:aftersalesservice_list' %}" class="btn btn-light">Back</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

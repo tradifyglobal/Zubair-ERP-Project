@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}View Bank Payment - Accounting{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="#">Cash Management</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:bank_payment_list' %}">Bank Payments</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">View Payment #{{ payment.id }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-header-shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Bank Payment #{{ payment.id }}</h5>
+                    <span class="badge 
+                        {% if payment.workflow_status == 'DRAFT' %}bg-secondary
+                        {% elif payment.workflow_status == 'APPROVED' %}bg-info
+                        {% elif payment.workflow_status == 'AUTHORIZED' %}bg-success
+                        {% elif payment.workflow_status == 'REJECTED' %}bg-danger
+                        {% else %}bg-warning{% endif %}">
+                        {{ payment.get_workflow_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Details Card -->
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Payment Information</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Payment ID:</strong> {{ payment.id }}</p>
+                            <p><strong>Date:</strong> {{ payment.date|date:"d M Y" }}</p>
+                            <p><strong>Reference:</strong> {{ payment.reference_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> <span class="badge bg-primary">{{ payment.get_status_display }}</span></p>
+                            <p><strong>Workflow Status:</strong> <span class="badge bg-info">{{ payment.get_workflow_status_display }}</span></p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="card-title mb-3">Accounts</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Account (Debit):</strong></p>
+                            <p>{{ payment.account.account_number }} - {{ payment.account.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Credit Account:</strong></p>
+                            <p>{% if payment.credit_account %}{{ payment.credit_account.account_number }} - {{ payment.credit_account.name }}{% else %}N/A{% endif %}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="card-title mb-3">Amounts</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Debit Amount:</strong> {{ payment.debit_amount }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Credit Amount:</strong> {{ payment.credit_amount }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="card-title mb-3">Description</h6>
+                    <p>{{ payment.description }}</p>
+
+                    {% if payment.notes %}
+                        <hr>
+                        <h6 class="card-title mb-3">Notes</h6>
+                        <p>{{ payment.notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <a href="{% url 'accounting:bank_payment_print' payment.pk %}" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-print"></i> Print
+                    </a>
+                    <a href="{% url 'accounting:bank_payment_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

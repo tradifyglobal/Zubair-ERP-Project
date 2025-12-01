@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Communication Details - CRM{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box"><div class="row align-items-center"><div class="col-md-8"><h4 class="page-title">{{ object.subject }}</h4></div><div class="col-md-4 text-right"><a href="{% url 'crm:communications' %}" class="btn btn-sm btn-secondary"><i class="fas fa-arrow-left"></i></a> <a href="{% url 'crm:communication_update' object.id %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a> <a href="{% url 'crm:communication_delete' object.id %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></a></div></div></div>
+    <div class="row"><div class="col-lg-8"><div class="card"><div class="card-body">
+        <h5 class="card-title mb-3">Communication Information</h5>
+        <div class="row mb-3"><div class="col-md-6"><strong>Type:</strong><br><span class="badge badge-info">{{ object.communication_type }}</span></div><div class="col-md-6"><strong>Contact:</strong><br>{{ object.contact|default:'N/A' }}</div></div>
+        <div class="row mb-3"><div class="col-md-6"><strong>Subject:</strong><br>{{ object.subject }}</div><div class="col-md-6"><strong>Date:</strong><br>{{ object.communication_date|date:'M d, Y'|default:'N/A' }}</div></div>
+        <div class="row mb-3"><div class="col-md-12"><strong>Follow-up Date:</strong><br>{{ object.follow_up_date|date:'M d, Y'|default:'N/A' }}</div></div>
+        {% if object.notes %}<div class="row"><div class="col-md-12"><strong>Notes:</strong><br><p class="text-muted">{{ object.notes }}</p></div></div>{% endif %}
+    </div></div></div></div>
+</div>
+{% endblock %}

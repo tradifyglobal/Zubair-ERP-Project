@@ -84,23 +84,19 @@
                                         {% for distributor in object_list %}
                                         <tr>
                                             <td>
-                                                <strong>{{ distributor.code }}</strong>
+                                                <strong>{{ distributor.distributor_code }}</strong>
                                             </td>
                                             <td>
-                                                {{ distributor.name }}
+                                                {{ distributor.distributor_name }}
                                             </td>
                                             <td>
-                                                {{ distributor.contact_person|default:"—" }}
+                                                {% if distributor.account_manager %}{{ distributor.account_manager.get_full_name|default:distributor.account_manager.username }}{% else %}—{% endif %}
                                             </td>
                                             <td>
                                                 {{ distributor.phone|default:"—" }}
                                             </td>
                                             <td>
-                                                {% if distributor.is_active %}
-                                                    <span class="badge bg-success-subtle text-success">Active</span>
-                                                {% else %}
-                                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
-                                                {% endif %}
+                                                <span class="badge {% if distributor.status == 'ACTIVE' %}bg-success{% elif distributor.status == 'INACTIVE' %}bg-danger{% elif distributor.status == 'SUSPENDED' %}bg-warning{% else %}bg-info{% endif %}">{{ distributor.get_status_display }}</span>
                                             </td>
                                             <td>
                                                 {{ distributor.created_at|date:"d M Y" }}

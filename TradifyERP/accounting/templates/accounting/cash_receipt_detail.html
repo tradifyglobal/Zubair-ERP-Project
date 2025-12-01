@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}View Cash Receipt - Accounting{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="#">Cash Management</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:cash_receipt_list' %}">Cash Receipts</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">View Receipt #{{ receipt.id }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-header-shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Cash Receipt #{{ receipt.id }}</h5>
+                    <span class="badge 
+                        {% if receipt.workflow_status == 'DRAFT' %}bg-secondary
+                        {% elif receipt.workflow_status == 'APPROVED' %}bg-info
+                        {% elif receipt.workflow_status == 'AUTHORIZED' %}bg-success
+                        {% elif receipt.workflow_status == 'REJECTED' %}bg-danger
+                        {% else %}bg-warning{% endif %}">
+                        {{ receipt.get_workflow_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Details Card -->
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Receipt Information</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Receipt ID:</strong> {{ receipt.id }}</p>
+                            <p><strong>Date:</strong> {{ receipt.date|date:"d M Y" }}</p>
+                            <p><strong>Reference:</strong> {{ receipt.reference_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> <span class="badge bg-primary">{{ receipt.get_status_display }}</span></p>
+                            <p><strong>Workflow Status:</strong> <span class="badge bg-info">{{ receipt.get_workflow_status_display }}</span></p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="card-title mb-3">Accounts</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Account (Debit):</strong></p>
+                            <p>{{ receipt.account.account_number }} - {{ receipt.account.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Credit Account:</strong></p>
+                            <p>{% if receipt.credit_account %}{{ receipt.credit_account.account_number }} - {{ receipt.credit_account.name }}{% else %}N/A{% endif %}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="card-title mb-3">Amounts</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Debit Amount:</strong> {{ receipt.debit_amount }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Credit Amount:</strong> {{ receipt.credit_amount }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="card-title mb-3">Description</h6>
+                    <p>{{ receipt.description }}</p>
+
+                    {% if receipt.notes %}
+                        <hr>
+                        <h6 class="card-title mb-3">Notes</h6>
+                        <p>{{ receipt.notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <a href="{% url 'accounting:cash_receipt_print' receipt.pk %}" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-print"></i> Print
+                    </a>
+                    <a href="{% url 'accounting:cash_receipt_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

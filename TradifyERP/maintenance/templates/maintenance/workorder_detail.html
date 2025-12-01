@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ work_order.work_order_number }} - Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Work Order {{ work_order.work_order_number }}</h4>
+                <div class="page-title-right">
+                    <a href="{% url 'maintenance:workorder-update' work_order.pk %}" class="btn btn-warning me-2">
+                        <i data-feather="edit"></i> Edit
+                    </a>
+                    <a href="{% url 'maintenance:workorder-list' %}" class="btn btn-secondary">
+                        <i data-feather="arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Work Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">WO Number</label>
+                            <p class="mb-2"><strong>{{ work_order.work_order_number }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Status</label>
+                            <p class="mb-2">
+                                <span class="badge {% if work_order.status == 'Open' %}bg-secondary{% elif work_order.status == 'In Progress' %}bg-info{% elif work_order.status == 'Completed' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ work_order.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Asset</label>
+                            <p class="mb-2">
+                                <a href="{% url 'maintenance:asset-detail' work_order.asset.pk %}">
+                                    {{ work_order.asset.asset_name }}
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Priority</label>
+                            <p class="mb-2">
+                                {% if work_order.priority == 'High' %}
+                                <span class="badge bg-danger">{{ work_order.priority }}</span>
+                                {% elif work_order.priority == 'Medium' %}
+                                <span class="badge bg-warning">{{ work_order.priority }}</span>
+                                {% else %}
+                                <span class="badge bg-info">{{ work_order.priority }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Assigned To</label>
+                            <p class="mb-2">{{ work_order.assigned_to.get_full_name|default:"Unassigned" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Estimated Cost</label>
+                            <p class="mb-2">${{ work_order.estimated_cost|default:"0.00" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Start Date</label>
+                            <p class="mb-2">{{ work_order.start_date|date:"Y-m-d"|default:"N/A" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Due Date</label>
+                            <p class="mb-2">{{ work_order.due_date|date:"Y-m-d"|default:"N/A" }}</p>
+                        </div>
+                    </div>
+
+                    {% if work_order.description %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Description</label>
+                        <p class="mb-0">{{ work_order.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Spare Parts -->
+            {% if spare_parts %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Spare Parts Used</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Part Name</th>
+                                <th>Quantity</th>
+                                <th>Unit Cost</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for part in spare_parts %}
+                            <tr>
+                                <td>{{ part.part_name }}</td>
+                                <td>{{ part.quantity_used }}</td>
+                                <td>${{ part.unit_cost }}</td>
+                                <td>${{ part.quantity_used|mul:part.unit_cost }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Costs -->
+            {% if costs %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Maintenance Costs</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Cost Type</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cost in costs %}
+                            <tr>
+                                <td>{{ cost.cost_type }}</td>
+                                <td>${{ cost.amount }}</td>
+                                <td>{{ cost.description|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'maintenance:cost-create' %}" class="btn btn-sm btn-outline-primary">
+                            <i data-feather="plus"></i> Add Cost
+                        </a>
+                        <a href="{% url 'maintenance:downtime-create' %}" class="btn btn-sm btn-outline-warning">
+                            <i data-feather="alert-circle"></i> Log Downtime
+                        </a>
+                        <hr>
+                        <a href="{% url 'maintenance:workorder-delete' work_order.pk %}" onclick="return confirm('Are you sure?')" class="btn btn-sm btn-outline-danger">
+                            <i data-feather="trash-2"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-muted">
+                        <small>
+                            Created: {{ work_order.created_at|date:"Y-m-d H:i" }}<br>
+                            Last Updated: {{ work_order.updated_at|date:"Y-m-d H:i" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>
+    feather.replace();
+</script>
+{% endblock %}

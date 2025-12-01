@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Email Campaign Details - CRM{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box"><div class="row align-items-center"><div class="col-md-8"><h4 class="page-title">{{ object.campaign_name }}</h4></div><div class="col-md-4 text-right"><a href="{% url 'crm:email-campaigns' %}" class="btn btn-sm btn-secondary"><i class="fas fa-arrow-left"></i></a> <a href="{% url 'crm:emailcampaign_update' object.id %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a> <a href="{% url 'crm:emailcampaign_delete' object.id %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></a></div></div></div>
+    <div class="row"><div class="col-lg-8"><div class="card"><div class="card-body">
+        <h5 class="card-title mb-3">Campaign Information</h5>
+        <div class="row mb-3"><div class="col-md-6"><strong>Campaign Name:</strong><br>{{ object.campaign_name }}</div><div class="col-md-6"><strong>Status:</strong><br><span class="badge badge-{% if object.status == 'Active' %}success{% else %}secondary{% endif %}">{{ object.status }}</span></div></div>
+        <div class="row mb-3"><div class="col-md-12"><strong>Subject:</strong><br>{{ object.subject }}</div></div>
+        <div class="row"><div class="col-md-6"><strong>Opens:</strong><br>{{ object.opens|default:'0' }}</div><div class="col-md-6"><strong>Clicks:</strong><br>{{ object.clicks|default:'0' }}</div></div>
+    </div></div></div></div>
+</div>
+{% endblock %}

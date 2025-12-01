@@ -1,0 +1,175 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Quote: {{ quote.quote_number }} | CRM</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content" style="padding-bottom: 120px;">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Quote Details</h4>
+                        <div>
+                            <a href="{% url 'crm:quote_update' quote.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            <a href="{% url 'crm:quote_delete' quote.pk %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
+                            <a href="{% url 'crm:quote_list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote Information -->
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <!-- Basic Information Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Quote Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Quote Number</label>
+                                    <strong>{{ quote.quote_number }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Status</label>
+                                    <span class="badge bg-{% if quote.status == 'ACCEPTED' %}success{% elif quote.status == 'REJECTED' %}danger{% elif quote.status == 'EXPIRED' %}warning{% elif quote.status == 'SENT' %}info{% else %}secondary{% endif %}">
+                                        {{ quote.get_status_display }}
+                                    </span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Customer</label>
+                                    <strong>{{ quote.customer.customer_name }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Opportunity</label>
+                                    <strong>{{ quote.opportunity.opportunity_name }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quote Details Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Quote Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Quote Date</label>
+                                    <strong>{{ quote.quote_date|date:"M d, Y" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Valid Until</label>
+                                    <strong>{{ quote.valid_until|date:"M d, Y" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Subtotal</label>
+                                    <strong>${{ quote.subtotal|floatformat:2 }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Tax Amount</label>
+                                    <strong>${{ quote.tax_amount|floatformat:2 }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Card -->
+                    <div class="card mb-3 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Total Amount</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center">
+                                <h2 class="text-primary">${{ quote.total_amount|floatformat:2 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Terms & Conditions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Payment Terms</label>
+                                    <strong>{{ quote.payment_terms }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Delivery Terms</label>
+                                    <strong>{{ quote.delivery_terms }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes Card -->
+                    {% if quote.notes %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ quote.notes|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Tracking Card -->
+                    {% if quote.sent_date or quote.accepted_date %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Tracking Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% if quote.sent_date %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Sent Date</label>
+                                    <strong>{{ quote.sent_date|date:"M d, Y" }}</strong>
+                                </div>
+                                {% endif %}
+                                {% if quote.accepted_date %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Accepted Date</label>
+                                    <strong>{{ quote.accepted_date|date:"M d, Y" }}</strong>
+                                </div>
+                                {% endif %}
+                                {% if quote.accepted_by %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Accepted By</label>
+                                    <strong>{{ quote.accepted_by }}</strong>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Footer Button Bar -->
+<div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #dee2e6; padding: 15px 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); z-index: 100;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <a href="{% url 'crm:quote_update' quote.pk %}" class="btn btn-primary">Edit Quote</a>
+                <a href="{% url 'crm:quote_list' %}" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
