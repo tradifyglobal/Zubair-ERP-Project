@@ -77,6 +77,10 @@
                             <div class="card-body">
                                 <h5 class="card-title">Total Invested</h5>
                                 <h3 class="text-primary">${{ stakeholder.total_invested|floatformat:2 }}</h3>
+                                <small class="text-muted">
+                                    Completed Contributions: ${{ completed_contributions_total|floatformat:2 }}<br>
+                                    Paid Commitments: ${{ paid_commitments_total|floatformat:2 }}
+                                </small>
                             </div>
                         </div>
                     </div>

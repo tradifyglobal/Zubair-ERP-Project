@@ -103,8 +103,40 @@ class ShareholderDetailView(SessionEntityMixin, LoginRequiredMixin, PermissionRe
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         stakeholder = self.get_object()
+        entity_id = self.request.session.get('selected_entity_id')
+        
+        # Get contributions and shareholdings
         context['contributions'] = CapitalContribution.objects.filter(stakeholder=stakeholder).order_by('-contribution_date')
         context['shareholdings'] = Shareholding.objects.filter(stakeholder=stakeholder).order_by('-acquisition_date')
+        
+        # Calculate total invested from completed contributions only
+        completed_contributions = CapitalContribution.objects.filter(
+            stakeholder=stakeholder,
+            status='COMPLETED'
+        )
+        total_from_contributions = sum(
+            float(cc.amount_company_currency or 0) for cc in completed_contributions
+        )
+        
+        # Import ShareholderPaymentCommitment here to avoid circular imports
+        from accounting.models import ShareholderPaymentCommitment
+        
+        # Calculate total from paid commitments
+        paid_commitments = ShareholderPaymentCommitment.objects.filter(
+            stakeholder=stakeholder,
+            status='PAID',
+            entity_id=entity_id
+        )
+        total_from_commitments = sum(
+            float(pc.committed_amount or 0) for pc in paid_commitments
+        )
+        
+        # Store breakdown in context
+        context['completed_contributions_total'] = total_from_contributions
+        context['paid_commitments_total'] = total_from_commitments
+        context['completed_contributions_count'] = completed_contributions.count()
+        context['paid_commitments_count'] = paid_commitments.count()
+        
         return context
 
 

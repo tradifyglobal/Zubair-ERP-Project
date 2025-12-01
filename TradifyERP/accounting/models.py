@@ -725,14 +725,25 @@ class Stakeholder(models.Model):
     
     @property
     def total_invested(self):
-        """Calculate total capital invested by this stakeholder."""
-        # Include both completed and pending contributions for total invested
-        total = 0
-        for cc in self.capital_contributions.all():
-            # Use amount_company_currency if amount_usd is not set or is 0
-            amount = cc.amount_usd if cc.amount_usd else (cc.amount_company_currency or cc.amount)
-            total += float(amount or 0)
-        return total
+        """Calculate total capital invested by this stakeholder.
+        
+        Includes:
+        - Completed capital contributions (amount_company_currency)
+        - Paid shareholder payment commitments (committed_amount)
+        """
+        total = Decimal('0.00')
+        
+        # Add completed capital contributions
+        completed_contributions = self.capital_contributions.filter(status='COMPLETED')
+        for cc in completed_contributions:
+            total += Decimal(str(cc.amount_company_currency or 0))
+        
+        # Add paid payment commitments
+        paid_commitments = self.payment_commitments.filter(status='PAID')
+        for pc in paid_commitments:
+            total += Decimal(str(pc.committed_amount or 0))
+        
+        return float(total)
     
     @property
     def total_shares(self):
