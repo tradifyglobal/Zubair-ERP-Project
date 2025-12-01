@@ -361,3 +361,116 @@ class ShareholdingUpdateView(SessionEntityMixin, LoginRequiredMixin, PermissionR
     def get_queryset(self):
         # Filter by session entity using mixin
         return super().get_queryset()
+
+
+# ==================== Shareholder Investment Tracking ====================
+
+from accounting.models import ShareholderInvestmentLimit, ShareholderPaymentCommitment
+from shareholder.forms import ShareholderInvestmentLimitForm, ShareholderPaymentCommitmentForm
+
+
+class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    """Report showing investment status for all shareholders."""
+    template_name = 'shareholder/investment_report.html'
+    permission_required = 'accounting.view_stakeholder'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id).first()
+        
+        if not entity:
+            context['investment_data'] = []
+            return context
+        
+        # Get all investment limits for this entity
+        limits = ShareholderInvestmentLimit.objects.filter(entity=entity, is_active=True)
+        
+        investment_data = []
+        for limit in limits:
+            # Get pending commitments
+            pending_commitments = ShareholderPaymentCommitment.objects.filter(
+                stakeholder=limit.stakeholder,
+                entity=entity,
+                status__in=['PENDING', 'OVERDUE']
+            ).first()
+            
+            investment_data.append({
+                'stakeholder': limit.stakeholder,
+                'target_amount': limit.target_investment_amount,
+                'invested_amount': limit.total_invested,
+                'balance_to_invest': limit.balance_to_invest,
+                'invested_percentage': limit.invested_percentage,
+                'currency': limit.currency,
+                'next_payment_date': pending_commitments.promised_payment_date if pending_commitments else None,
+                'next_payment_amount': pending_commitments.committed_amount if pending_commitments else None,
+                'is_overdue': pending_commitments.is_overdue if pending_commitments else False,
+            })
+        
+        context['investment_data'] = investment_data
+        context['entity'] = entity
+        return context
+
+
+class ShareholderInvestmentLimitCreateView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Create shareholder investment limit."""
+    model = ShareholderInvestmentLimit
+    form_class = ShareholderInvestmentLimitForm
+    template_name = 'shareholder/investment_limit_form.html'
+    permission_required = 'accounting.add_shareholderinvestmentlimit'
+    success_url = reverse_lazy('shareholder:investment_report')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        entity_id = self.request.session.get('selected_entity_id')
+        # Filter stakeholders for this entity in the form
+        if 'data' not in kwargs:
+            entity = Entity.objects.filter(id=entity_id).first()
+            if entity:
+                initial = kwargs.get('initial', {})
+                initial['entity'] = entity
+                kwargs['initial'] = initial
+        return kwargs
+
+    def form_valid(self, form):
+        entity_id = self.request.session.get('selected_entity_id')
+        form.instance.entity_id = entity_id
+        form.instance.update_totals()
+        return super().form_valid(form)
+
+
+class ShareholderInvestmentLimitUpdateView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Update shareholder investment limit."""
+    model = ShareholderInvestmentLimit
+    form_class = ShareholderInvestmentLimitForm
+    template_name = 'shareholder/investment_limit_form.html'
+    permission_required = 'accounting.change_shareholderinvestmentlimit'
+    success_url = reverse_lazy('shareholder:investment_report')
+
+    def form_valid(self, form):
+        form.instance.update_totals()
+        return super().form_valid(form)
+
+
+class ShareholderPaymentCommitmentCreateView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Create shareholder payment commitment."""
+    model = ShareholderPaymentCommitment
+    form_class = ShareholderPaymentCommitmentForm
+    template_name = 'shareholder/payment_commitment_form.html'
+    permission_required = 'accounting.add_shareholderpaymentcommitment'
+    success_url = reverse_lazy('shareholder:investment_report')
+
+    def form_valid(self, form):
+        entity_id = self.request.session.get('selected_entity_id')
+        form.instance.entity_id = entity_id
+        return super().form_valid(form)
+
+
+class ShareholderPaymentCommitmentUpdateView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Update shareholder payment commitment."""
+    model = ShareholderPaymentCommitment
+    form_class = ShareholderPaymentCommitmentForm
+    template_name = 'shareholder/payment_commitment_form.html'
+    permission_required = 'accounting.change_shareholderpaymentcommitment'
+    success_url = reverse_lazy('shareholder:investment_report')
+

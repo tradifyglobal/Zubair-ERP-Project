@@ -29,31 +29,37 @@ class CashPositionForm(forms.ModelForm):
         widgets = {
             'entity': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Select the entity for this cash position'
             }),
             'bank_account': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Select the bank account to record position for'
             }),
             'position_date': forms.DateInput(attrs={
                 'type': 'date',
                 'class': 'form-control',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Date of the cash position snapshot'
             }),
             'opening_balance': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Opening balance at the start of the period'
             }),
             'closing_balance': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Closing balance at the end of the period'
             }),
             'is_reconciled': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
+                'class': 'form-check-input',
+                'title': 'Check if this position has been reconciled with bank statement'
             }),
         }
     
@@ -78,24 +84,28 @@ class PaymentScheduleForm(forms.ModelForm):
         widgets = {
             'entity': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Entity making the payment'
             }),
             'reference_document': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Bill/PO number',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Reference number (e.g., Bill #, PO #)'
             }),
             'reference_type': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required',
-                'choices': [('BILL', 'Bill'), ('PO', 'PO'), ('LOAN', 'Loan'), ('OTHER', 'Other')]
+                'choices': [('BILL', 'Bill'), ('PO', 'PO'), ('LOAN', 'Loan'), ('OTHER', 'Other')],
+                'title': 'Type of payment (Bill, PO, Loan, etc.)'
             }),
             'payment_amount': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
                 'min': '0.01',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Amount to be paid'
             }),
             'currency': forms.Select(attrs={
                 'class': 'form-select',
@@ -237,58 +247,73 @@ class TreasuryAccountForm(forms.ModelForm):
     
     class Meta:
         model = TreasuryAccount
-        fields = ['entity', 'account_code', 'account_name', 'account_type', 'currency', 'opening_balance',
-                  'current_balance', 'interest_rate', 'maturity_date', 'credit_limit', 'is_active']
+        fields = ['entity', 'account_code', 'account_name', 'account_type', 'currency', 'gl_account',
+                  'opening_balance', 'current_balance', 'interest_rate', 'maturity_date', 'credit_limit', 'is_active']
         widgets = {
             'entity': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Entity owning this treasury account'
             }),
             'account_code': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Account code',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Unique code for this treasury account'
             }),
             'account_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Account name',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Descriptive name for the account'
             }),
             'account_type': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Type: Investment, Loan, Credit Line, or Operating'
             }),
             'currency': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Currency for this treasury account'
+            }),
+            'gl_account': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required',
+                'title': 'Link to general ledger account for accounting integration'
             }),
             'opening_balance': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Initial balance when account was opened'
             }),
             'current_balance': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Current account balance as of today'
             }),
             'interest_rate': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.000',
                 'step': '0.001',
-                'min': '0'
+                'min': '0',
+                'title': 'Annual interest rate percentage (for loans/investments)'
             }),
             'maturity_date': forms.DateInput(attrs={
                 'type': 'date',
-                'class': 'form-control'
+                'class': 'form-control',
+                'title': 'When the loan/investment matures'
             }),
             'credit_limit': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
-                'min': '0'
+                'min': '0',
+                'title': 'Maximum credit available (for credit lines)'
             }),
             'is_active': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
@@ -306,50 +331,61 @@ class FXExposureForm(forms.ModelForm):
         widgets = {
             'entity': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Entity with FX exposure'
             }),
             'home_currency': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Your company\'s base currency'
             }),
             'foreign_currency': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Foreign currency in which you have exposure'
             }),
             'exposure_type': forms.Select(attrs={
                 'class': 'form-select',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Type of exposure: AR, AP, Investment, or Cash'
             }),
             'foreign_amount': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Amount in foreign currency'
             }),
             'exchange_rate': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.000000',
                 'step': '0.000001',
                 'min': '0',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Current exchange rate (foreign / home currency)'
             }),
             'home_currency_amount': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
-                'required': 'required'
+                'readonly': 'readonly',
+                'id': 'home_currency_amount_display',
+                'title': 'Automatically calculated: Foreign Amount × Exchange Rate'
             }),
             'exposure_date': forms.DateInput(attrs={
                 'type': 'date',
                 'class': 'form-control',
-                'required': 'required'
+                'required': 'required',
+                'title': 'Date when exposure originated'
             }),
             'maturity_date': forms.DateInput(attrs={
                 'type': 'date',
-                'class': 'form-control'
+                'class': 'form-control',
+                'title': 'Date when exposure will settle or mature'
             }),
             'is_hedged': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
+                'class': 'form-check-input',
+                'title': 'Check if this exposure has been hedged'
             }),
         }
 

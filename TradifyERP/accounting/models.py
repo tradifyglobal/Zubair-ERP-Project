@@ -1233,6 +1233,138 @@ class BankPaymentLine(models.Model):
         return f"Bank Payment - {self.date} - {self.debit_amount}"
 
 
+class ShareholderInvestmentLimit(models.Model):
+    """Investment limits and commitments for shareholders."""
+    
+    entity = models.ForeignKey(
+        Entity,
+        on_delete=models.CASCADE,
+        related_name='shareholder_limits'
+    )
+    stakeholder = models.OneToOneField(
+        Stakeholder,
+        on_delete=models.CASCADE,
+        related_name='investment_limit'
+    )
+    currency = models.ForeignKey(
+        Currency,
+        on_delete=models.PROTECT,
+        default=1  # Assuming INR is currency_id 1
+    )
+    
+    # Investment Commitment
+    target_investment_amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        default=1000000,  # 10 lacs default
+        help_text="Target investment amount per shareholder"
+    )
+    
+    # Tracking
+    total_invested = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        default=0,
+        editable=False,
+        help_text="Total amount already invested"
+    )
+    balance_to_invest = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        default=0,
+        editable=False,
+        help_text="Remaining amount to meet target"
+    )
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('entity', 'stakeholder')
+        verbose_name_plural = "Shareholder Investment Limits"
+    
+    def __str__(self):
+        return f"{self.stakeholder.full_name} - {self.target_investment_amount} limit"
+    
+    def update_totals(self):
+        """Update total_invested and balance_to_invest from capital contributions."""
+        # Sum all completed contributions
+        completed_contributions = self.stakeholder.capital_contributions.filter(
+            status='COMPLETED',
+            entity=self.entity
+        ).aggregate(total=models.Sum('amount_company_currency'))['total'] or 0
+        
+        self.total_invested = completed_contributions
+        self.balance_to_invest = self.target_investment_amount - self.total_invested
+        self.save()
+    
+    @property
+    def invested_percentage(self):
+        """Calculate investment percentage."""
+        if self.target_investment_amount == 0:
+            return 0
+        return (self.total_invested / self.target_investment_amount) * 100
+
+
+class ShareholderPaymentCommitment(models.Model):
+    """Track promised payment dates and commitments from shareholders."""
+    
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('PAID', 'Paid'),
+        ('OVERDUE', 'Overdue'),
+        ('RESCHEDULED', 'Rescheduled'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    entity = models.ForeignKey(
+        Entity,
+        on_delete=models.CASCADE,
+        related_name='shareholder_commitments'
+    )
+    stakeholder = models.ForeignKey(
+        Stakeholder,
+        on_delete=models.CASCADE,
+        related_name='payment_commitments'
+    )
+    
+    # Commitment Details
+    committed_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
+    promised_payment_date = models.DateField(help_text="Date shareholder promised to pay")
+    
+    # Status Tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    actual_payment_date = models.DateField(null=True, blank=True)
+    
+    # Reference
+    notes = models.TextField(blank=True, null=True)
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-promised_payment_date']
+        verbose_name_plural = "Shareholder Payment Commitments"
+        indexes = [
+            models.Index(fields=['stakeholder', 'status']),
+            models.Index(fields=['promised_payment_date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.stakeholder.full_name} - {self.committed_amount} on {self.promised_payment_date}"
+    
+    @property
+    def is_overdue(self):
+        """Check if payment is overdue."""
+        if self.status == 'PENDING':
+            return timezone.now().date() > self.promised_payment_date
+        return False
+
+
 # Import RBAC models to register them with Django ORM
 from .role_models import Role, UserRole, Permission, UserPermissionLog  # noqa: F401
 from .module_permissions import ModulePermission, UserModuleAccessLog  # noqa: F401

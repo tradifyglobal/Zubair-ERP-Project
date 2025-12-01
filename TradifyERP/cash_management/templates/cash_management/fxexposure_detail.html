@@ -252,9 +252,8 @@
                             <div class="mb-3">
                                 <label class="form-label text-muted">Hedging Coverage</label>
                                 {% if fxexposure.foreign_amount > 0 %}
-                                {% with coverage=fxexposure.hedge_amount|add:fxexposure.foreign_amount|mul:100|stringformat:".0f" %}
+                                {% widthratio fxexposure.hedge_amount fxexposure.foreign_amount 100 as coverage %}
                                 <p class="h6">{{ coverage }}%</p>
-                                {% endwith %}
                                 {% else %}
                                 <p class="text-muted">N/A</p>
                                 {% endif %}

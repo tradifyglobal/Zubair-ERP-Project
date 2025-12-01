@@ -28,4 +28,11 @@ urlpatterns = [
     path('shareholdings/create/', views.ShareholdingCreateView.as_view(), name='shareholding-create'),
     path('shareholdings/create/<int:stakeholder_id>/', views.ShareholdingCreateView.as_view(), name='shareholding-create-for-stakeholder'),
     path('shareholdings/<int:pk>/edit/', views.ShareholdingUpdateView.as_view(), name='shareholding-edit'),
+
+    # Investment Tracking URLs
+    path('investment-report/', views.ShareholderInvestmentReportView.as_view(), name='investment_report'),
+    path('investment-limits/create/', views.ShareholderInvestmentLimitCreateView.as_view(), name='investment_limit_create'),
+    path('investment-limits/<int:pk>/edit/', views.ShareholderInvestmentLimitUpdateView.as_view(), name='investment_limit_edit'),
+    path('payment-commitments/create/', views.ShareholderPaymentCommitmentCreateView.as_view(), name='payment_commitment_create'),
+    path('payment-commitments/<int:pk>/edit/', views.ShareholderPaymentCommitmentUpdateView.as_view(), name='payment_commitment_edit'),
 ]
