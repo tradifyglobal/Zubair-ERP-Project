@@ -436,12 +436,17 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
                     status='PAID'
                 ).order_by('-actual_payment_date').first()
             
+            # Use the stakeholder's total_invested property (includes completed contributions + paid commitments)
+            actual_invested_amount = limit.stakeholder.total_invested
+            balance_to_invest = limit.target_investment_amount - actual_invested_amount
+            invested_percentage = (actual_invested_amount / limit.target_investment_amount * 100) if limit.target_investment_amount > 0 else 0
+            
             investment_data.append({
                 'stakeholder': limit.stakeholder,
                 'target_amount': limit.target_investment_amount,
-                'invested_amount': limit.total_invested,
-                'balance_to_invest': limit.balance_to_invest,
-                'invested_percentage': limit.invested_percentage,
+                'invested_amount': actual_invested_amount,
+                'balance_to_invest': balance_to_invest,
+                'invested_percentage': invested_percentage,
                 'currency': limit.currency,
                 'next_payment_date': pending_commitments.promised_payment_date if pending_commitments else (paid_commitment.actual_payment_date if paid_commitment else None),
                 'next_payment_amount': pending_commitments.committed_amount if pending_commitments else (paid_commitment.committed_amount if paid_commitment else None),
