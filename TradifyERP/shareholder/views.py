@@ -438,8 +438,12 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
             
             # Use the stakeholder's total_invested property (includes completed contributions + paid commitments)
             actual_invested_amount = limit.stakeholder.total_invested
-            balance_to_invest = limit.target_investment_amount - actual_invested_amount
-            invested_percentage = (actual_invested_amount / limit.target_investment_amount * 100) if limit.target_investment_amount > 0 else 0
+            # Convert to Decimal for calculation consistency
+            from decimal import Decimal
+            target_amount = Decimal(str(limit.target_investment_amount))
+            invested_amount = Decimal(str(actual_invested_amount))
+            balance_to_invest = target_amount - invested_amount
+            invested_percentage = float((invested_amount / target_amount * 100)) if target_amount > 0 else 0
             
             investment_data.append({
                 'stakeholder': limit.stakeholder,
