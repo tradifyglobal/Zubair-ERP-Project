@@ -26,11 +26,12 @@ import matplotlib.patches as patches
 from io import BytesIO
 
 # Set Django settings
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'TradifyERP.settings')
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'TradifyERP'))
+sys.path.insert(0, project_root)
 
 # Add base path
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = project_root
 OUTPUT_DIR = os.path.join(BASE_DIR, 'documentation_pdfs')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

@@ -1,8 +1,11 @@
 import django
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'TradifyERP.settings')
 import sys
-sys.path.insert(0, 'g:\\TradifyERP\\TradifyERP')
+
+# Navigate to parent project directory
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'TradifyERP.settings')
+sys.path.insert(0, project_root)
 django.setup()
 
 from accounting.models_theme import UserThemePreference, Theme
