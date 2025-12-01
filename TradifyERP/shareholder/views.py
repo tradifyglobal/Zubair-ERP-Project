@@ -108,6 +108,10 @@ class ShareholderDetailView(SessionEntityMixin, LoginRequiredMixin, PermissionRe
         stakeholder = self.get_object()
         entity_id = self.request.session.get('selected_entity_id')
         
+        # Get entity for currency display
+        entity = Entity.objects.filter(id=entity_id).first() if entity_id else None
+        context['entity'] = entity
+        
         # Get contributions and shareholdings
         context['contributions'] = CapitalContribution.objects.filter(stakeholder=stakeholder).order_by('-contribution_date')
         context['shareholdings'] = Shareholding.objects.filter(stakeholder=stakeholder).order_by('-acquisition_date')
