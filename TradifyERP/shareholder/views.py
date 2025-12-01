@@ -445,6 +445,14 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
             balance_to_invest = target_amount - invested_amount
             invested_percentage = float((invested_amount / target_amount * 100)) if target_amount > 0 else 0
             
+            # Determine if investment is completed
+            is_completed = balance_to_invest <= 0
+            
+            # Clear next payment info if investment is completed
+            if is_completed:
+                pending_commitments = None
+                paid_commitment = None
+            
             investment_data.append({
                 'stakeholder': limit.stakeholder,
                 'target_amount': limit.target_investment_amount,
@@ -457,6 +465,7 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
                 'is_overdue': pending_commitments.is_overdue if pending_commitments else False,
                 'next_payment_id': pending_commitments.id if pending_commitments else (paid_commitment.id if paid_commitment else None),
                 'payment_status': pending_commitments.status if pending_commitments else (paid_commitment.status if paid_commitment else None),
+                'is_completed': is_completed,
             })
         
         context['investment_data'] = investment_data

@@ -79,7 +79,9 @@
                                         </div>
                                     </td>
                                     <td>
-                                        {% if investment.next_payment_date %}
+                                        {% if investment.is_completed %}
+                                            <span class="text-muted">-</span>
+                                        {% elif investment.next_payment_date %}
                                         <div>
                                             <small class="text-muted">{{ investment.next_payment_date|date:"M d, Y" }}</small>
                                             <br>
