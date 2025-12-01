@@ -1,6 +1,9 @@
 import os
 import sys
-sys.path.insert(0, 'G:\\TradifyERP')
+
+# Navigate to parent project directory
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(project_root))  # G:\TradifyERP
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'TradifyERP.settings')
 
 import django
