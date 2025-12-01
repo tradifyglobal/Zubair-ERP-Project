@@ -35,7 +35,13 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Pending Amount</h5>
-                        <p class="text-muted">${{ pending_total|floatformat:2 }}</p>
+                        <p class="text-muted">
+                            {% if entity.company_currency %}
+                                {{ entity.company_currency.symbol }}{{ pending_total|floatformat:2 }}
+                            {% else %}
+                                ${{ pending_total|floatformat:2 }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -43,7 +49,13 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Completed Amount</h5>
-                        <p class="text-muted">${{ completed_total|floatformat:2 }}</p>
+                        <p class="text-muted">
+                            {% if entity.company_currency %}
+                                {{ entity.company_currency.symbol }}{{ completed_total|floatformat:2 }}
+                            {% else %}
+                                ${{ completed_total|floatformat:2 }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -85,8 +97,14 @@
                                                 <span class="badge bg-secondary">{{ contribution.get_status_display }}</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ contribution.amount|floatformat:2 }}</td>
-                                        <td>{{ contribution.amount_company_currency|floatformat:2 }}</td>
+                                        <td>{{ contribution.currency.symbol }}{{ contribution.amount|floatformat:2 }}</td>
+                                        <td>
+                                            {% if entity.company_currency %}
+                                                {{ entity.company_currency.symbol }}{{ contribution.amount_company_currency|floatformat:2 }}
+                                            {% else %}
+                                                ${{ contribution.amount_company_currency|floatformat:2 }}
+                                            {% endif %}
+                                        </td>
                                         <td>{{ contribution.currency_destination.code }}</td>
                                         <td>{{ contribution.get_payment_mode_display }}</td>
                                         <td>

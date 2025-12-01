@@ -257,6 +257,13 @@ class CapitalContributionListView(SessionEntityMixin, LoginRequiredMixin, Permis
         context['total_contributions'] = queryset.count()
         context['pending_total'] = queryset.filter(status='PENDING').aggregate(total=Sum('amount'))['total'] or 0
         context['completed_total'] = queryset.filter(status='COMPLETED').aggregate(total=Sum('amount_company_currency'))['total'] or 0
+        
+        # Get entity for currency display
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            entity = Entity.objects.filter(id=entity_id).first()
+            context['entity'] = entity
+        
         return context
 
 
