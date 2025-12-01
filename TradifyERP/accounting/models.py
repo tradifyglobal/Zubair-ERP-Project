@@ -9,6 +9,14 @@ class Entity(models.Model):
     name = models.CharField(max_length=255, unique=True)
     code = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
+    company_currency = models.ForeignKey(
+        'Currency',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='entities',
+        help_text="Default currency for this entity (e.g., INR)"
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
