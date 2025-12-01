@@ -20,14 +20,18 @@ class ShareholderDashboardView(SessionEntityMixin, LoginRequiredMixin, Permissio
         
         if entity_id:
             # Filter by entity
+            entity = Entity.objects.filter(id=entity_id).first()
             stakeholders = Stakeholder.objects.filter(entity_id=entity_id)
             contributions = CapitalContribution.objects.filter(entity_id=entity_id)
             shareholdings = Shareholding.objects.filter(entity_id=entity_id)
         else:
             # If no entity selected, show all (shouldn't happen with SessionEntityMixin)
+            entity = None
             stakeholders = Stakeholder.objects.all()
             contributions = CapitalContribution.objects.all()
             shareholdings = Shareholding.objects.all()
+        
+        context['entity'] = entity
         
         # Dashboard statistics
         context['total_stakeholders'] = stakeholders.count()
