@@ -159,6 +159,7 @@ class LiquidityForecast(models.Model):
     # Forecast Period
     forecast_period = models.CharField(
         max_length=100,
+        default="Base Forecast",
         help_text="e.g., Q1 2025, Jan-Mar 2025, etc."
     )
     scenario_type = models.CharField(
@@ -171,16 +172,16 @@ class LiquidityForecast(models.Model):
         default='BASE',
         help_text="Forecast scenario type"
     )
-    forecast_start_date = models.DateField()
-    forecast_end_date = models.DateField()
-    forecast_horizon_days = models.IntegerField()  # e.g., 90 days
+    forecast_start_date = models.DateField(default=timezone.now)
+    forecast_end_date = models.DateField(default=timezone.now)
+    forecast_horizon_days = models.IntegerField(default=90)  # e.g., 90 days
     is_active = models.BooleanField(
         default=True,
         help_text="Mark as inactive to archive this forecast"
     )
     
     # Opening Position
-    opening_balance = models.DecimalField(max_digits=18, decimal_places=2)
+    opening_balance = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     
     # Forecasted Inflows
     forecasted_inflows = models.DecimalField(max_digits=18, decimal_places=2, default=0)
@@ -189,17 +190,18 @@ class LiquidityForecast(models.Model):
     forecasted_outflows = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     
     # Closing Position
-    forecasted_closing_balance = models.DecimalField(max_digits=18, decimal_places=2)
+    forecasted_closing_balance = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     
     # Minimum Cash Level
     minimum_cash_level = models.DecimalField(
         max_digits=18,
         decimal_places=2,
+        default=0,
         help_text="Minimum cash required for operations"
     )
     
     # Risk Assessment
-    surplus_deficit = models.DecimalField(max_digits=18, decimal_places=2)  # Closing - Minimum
+    surplus_deficit = models.DecimalField(max_digits=18, decimal_places=2, default=0)  # Closing - Minimum
     risk_level = models.CharField(
         max_length=20,
         choices=[
