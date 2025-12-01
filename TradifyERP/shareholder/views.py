@@ -79,7 +79,9 @@ class ShareholderListView(SessionEntityMixin, LoginRequiredMixin, PermissionRequ
         
         # Calculate total capital invested for this entity only
         entity_id = self.request.session.get('selected_entity_id')
+        entity = None
         if entity_id:
+            entity = Entity.objects.filter(id=entity_id).first()
             entity_contributions = CapitalContribution.objects.filter(entity_id=entity_id)
             entity_shareholdings = Shareholding.objects.filter(entity_id=entity_id)
         else:
@@ -90,6 +92,7 @@ class ShareholderListView(SessionEntityMixin, LoginRequiredMixin, PermissionRequ
         for cc in entity_contributions:
             total_capital += float(cc.amount_company_currency or 0)
         context['total_capital'] = total_capital
+        context['entity'] = entity
         context['total_shares'] = entity_shareholdings.aggregate(total=Sum('number_of_shares'))['total'] or 0
         return context
 

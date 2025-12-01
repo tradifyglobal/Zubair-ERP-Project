@@ -35,7 +35,13 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Total Capital Invested</h5>
-                        <p class="text-muted">${{ total_capital|floatformat:2 }}</p>
+                        <p class="text-muted">
+                            {% if entity.company_currency %}
+                                {{ entity.company_currency.symbol }}{{ total_capital|floatformat:2 }}
+                            {% else %}
+                                ${{ total_capital|floatformat:2 }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -93,7 +99,13 @@
                                                 <span class="badge bg-secondary">{{ stakeholder.get_status_display }}</span>
                                             {% endif %}
                                         </td>
-                                        <td>${{ stakeholder.total_invested|floatformat:2 }}</td>
+                                        <td>
+                                            {% if entity.company_currency %}
+                                                {{ entity.company_currency.symbol }}{{ stakeholder.total_invested|floatformat:2 }}
+                                            {% else %}
+                                                ${{ stakeholder.total_invested|floatformat:2 }}
+                                            {% endif %}
+                                        </td>
                                         <td>{{ stakeholder.total_shares }}</td>
                                         <td>
                                             <a href="{% url 'shareholder:stakeholder-detail' stakeholder.pk %}" class="btn btn-sm btn-info" title="View">
