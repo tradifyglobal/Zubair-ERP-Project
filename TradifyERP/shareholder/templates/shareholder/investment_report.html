@@ -83,8 +83,8 @@
                                         <div>
                                             <small class="text-muted">{{ investment.next_payment_date|date:"M d, Y" }}</small>
                                             <br>
-                                            <span class="badge {% if investment.is_overdue %}bg-danger{% else %}bg-primary{% endif %}">
-                                                {{ investment.next_payment_amount|floatformat:2 }}
+                                            <span class="badge {% if investment.payment_status == 'PAID' %}bg-success{% elif investment.is_overdue %}bg-danger{% else %}bg-primary{% endif %}">
+                                                {% if investment.payment_status == 'PAID' %}Paid{% else %}{{ investment.next_payment_amount|floatformat:2 }}{% endif %}
                                             </span>
                                         </div>
                                         {% else %}
@@ -101,9 +101,20 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{% url 'shareholder:shareholders_detail' investment.stakeholder.id %}" class="btn btn-sm btn-outline-primary">
+                                        {% if investment.next_payment_date %}
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'shareholder:stakeholder-detail' investment.stakeholder.id %}" class="btn btn-sm btn-outline-primary" title="View shareholder">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                            <a href="{% url 'shareholder:payment_commitment_edit' investment.next_payment_id %}" class="btn btn-sm btn-outline-success" title="Edit payment commitment">
+                                                <i class="ri-edit-line"></i>
+                                            </a>
+                                        </div>
+                                        {% else %}
+                                        <a href="{% url 'shareholder:stakeholder-detail' investment.stakeholder.id %}" class="btn btn-sm btn-outline-primary">
                                             <i class="ri-eye-line"></i> View
                                         </a>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}

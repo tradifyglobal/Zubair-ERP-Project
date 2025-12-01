@@ -388,12 +388,21 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
         
         investment_data = []
         for limit in limits:
-            # Get pending commitments
+            # Get next pending/overdue commitment OR most recent paid commitment
             pending_commitments = ShareholderPaymentCommitment.objects.filter(
                 stakeholder=limit.stakeholder,
                 entity=entity,
                 status__in=['PENDING', 'OVERDUE']
             ).first()
+            
+            # If no pending, get the most recent paid commitment for display
+            paid_commitment = None
+            if not pending_commitments:
+                paid_commitment = ShareholderPaymentCommitment.objects.filter(
+                    stakeholder=limit.stakeholder,
+                    entity=entity,
+                    status='PAID'
+                ).order_by('-actual_payment_date').first()
             
             investment_data.append({
                 'stakeholder': limit.stakeholder,
@@ -402,9 +411,11 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
                 'balance_to_invest': limit.balance_to_invest,
                 'invested_percentage': limit.invested_percentage,
                 'currency': limit.currency,
-                'next_payment_date': pending_commitments.promised_payment_date if pending_commitments else None,
-                'next_payment_amount': pending_commitments.committed_amount if pending_commitments else None,
+                'next_payment_date': pending_commitments.promised_payment_date if pending_commitments else (paid_commitment.actual_payment_date if paid_commitment else None),
+                'next_payment_amount': pending_commitments.committed_amount if pending_commitments else (paid_commitment.committed_amount if paid_commitment else None),
                 'is_overdue': pending_commitments.is_overdue if pending_commitments else False,
+                'next_payment_id': pending_commitments.id if pending_commitments else (paid_commitment.id if paid_commitment else None),
+                'payment_status': pending_commitments.status if pending_commitments else (paid_commitment.status if paid_commitment else None),
             })
         
         context['investment_data'] = investment_data
@@ -473,4 +484,21 @@ class ShareholderPaymentCommitmentUpdateView(SessionEntityMixin, LoginRequiredMi
     template_name = 'shareholder/payment_commitment_form.html'
     permission_required = 'accounting.change_shareholderpaymentcommitment'
     success_url = reverse_lazy('shareholder:investment_report')
+
+    def form_valid(self, form):
+        commitment = form.instance
+        
+        # When status is changed to PAID, update investment limit totals
+        if form.cleaned_data.get('status') == 'PAID':
+            try:
+                investment_limit = ShareholderInvestmentLimit.objects.get(
+                    stakeholder=commitment.stakeholder,
+                    entity=commitment.entity
+                )
+                # Recalculate totals after payment is marked as paid
+                investment_limit.update_totals()
+            except ShareholderInvestmentLimit.DoesNotExist:
+                pass
+        
+        return super().form_valid(form)
 
