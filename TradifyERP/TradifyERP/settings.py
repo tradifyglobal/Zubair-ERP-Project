@@ -38,6 +38,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '0.0.0.0',
     '192.168.2.55',
+    'www.tradifyglobal.com',
+    'tradifyglobal.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -46,6 +48,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://0.0.0.0:8000',
     'http://192.168.2.55:8000',
+    'https://www.tradifyglobal.com',
+    'https://tradifyglobal.com',
+    'http://www.tradifyglobal.com',
+    'http://tradifyglobal.com',
 ]
 
 CSRF_COOKIE_SECURE = False
@@ -331,6 +337,17 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 # --- end Tradify Global Starterkit selective settings ---
+
+# HTTPS and Security Settings
+SECURE_SSL_REDIRECT = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = False  # Set to True in production
+CSRF_COOKIE_SECURE = False  # Set to True in production
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_SECURITY_POLICY = {
+    "default-src": ("'self'",),
+}
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 
 # Load local overrides when present (local_settings.py is ignored by git by default)
 try:
