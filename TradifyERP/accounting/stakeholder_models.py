@@ -244,13 +244,16 @@ class CapitalContribution(models.Model):
         
         self.amount_company_currency = self.amount * self.exchange_rate
         
-        # Calculate USD equivalent (assuming company currency exchange rate is set)
+        # Calculate USD equivalent
+        # currency_destination.exchange_rate is the rate from that currency to USD
+        # So multiply to convert to USD
         try:
             usd_currency = Currency.objects.get(code='USD')
             if self.currency_destination == usd_currency:
                 self.amount_usd = self.amount_company_currency
             else:
-                self.amount_usd = self.amount_company_currency / self.currency_destination.exchange_rate
+                # Multiply by the exchange rate to get USD amount
+                self.amount_usd = self.amount_company_currency * self.currency_destination.exchange_rate
         except:
             self.amount_usd = self.amount_company_currency
         

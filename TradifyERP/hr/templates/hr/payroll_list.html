@@ -18,13 +18,26 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" class="d-flex gap-2">
+                <input type="text" name="search" class="form-control" placeholder="Search by payroll number..." value="{{ search }}">
+                <button type="submit" class="btn btn-primary">Search</button>
+                {% if search %}
+                <a href="{% url 'hr:payroll-list' %}" class="btn btn-light">Reset</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
     <!-- Status Summary -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
                     <h6 class="card-title text-muted">Draft</h6>
-                    <h2 class="text-primary">0</h2>
+                    <h2 class="text-primary">{{ draft_count }}</h2>
                 </div>
             </div>
         </div>
@@ -32,7 +45,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h6 class="card-title text-muted">Approved</h6>
-                    <h2 class="text-success">0</h2>
+                    <h2 class="text-success">{{ approved_count }}</h2>
                 </div>
             </div>
         </div>
@@ -40,7 +53,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h6 class="card-title text-muted">Posted</h6>
-                    <h2 class="text-info">0</h2>
+                    <h2 class="text-info">{{ posted_count }}</h2>
                 </div>
             </div>
         </div>
@@ -48,7 +61,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h6 class="card-title text-muted">Pending</h6>
-                    <h2 class="text-warning">0</h2>
+                    <h2 class="text-warning">{{ pending_count }}</h2>
                 </div>
             </div>
         </div>

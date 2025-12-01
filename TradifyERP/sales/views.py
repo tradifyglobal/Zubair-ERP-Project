@@ -14,6 +14,7 @@ from django.db.models import Q, Sum, Count
 from django.middleware.csrf import get_token
 from decimal import Decimal
 
+from accounting.mixins import SessionEntityMixin
 from accounting.role_models import UserRole
 from accounting.models import Entity
 from .models import Customer, SalesOrder, SalesOrderLine, Invoice
@@ -43,7 +44,7 @@ def get_filtered_queryset(model, user, base_queryset=None):
 # ==================== Customer Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class CustomerListView(LoginRequiredMixin, ListView):
+class CustomerListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = Customer
     template_name = 'sales/customer_list.html'
     context_object_name = 'customers'
@@ -71,7 +72,7 @@ class CustomerListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class CustomerCreateView(LoginRequiredMixin, CreateView):
+class CustomerCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = Customer
     form_class = CustomerForm
     template_name = 'sales/customer_form.html'
@@ -96,7 +97,7 @@ class CustomerCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class CustomerUpdateView(LoginRequiredMixin, UpdateView):
+class CustomerUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = Customer
     form_class = CustomerForm
     template_name = 'sales/customer_form.html'
@@ -113,7 +114,7 @@ class CustomerUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("sales", "delete"), name='dispatch')
-class CustomerDeleteView(LoginRequiredMixin, DeleteView):
+class CustomerDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = Customer
     template_name = 'sales/customer_confirm_delete.html'
     success_url = reverse_lazy('sales:customer_list')
@@ -125,7 +126,7 @@ class CustomerDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Sales Order Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class SalesOrderListView(LoginRequiredMixin, ListView):
+class SalesOrderListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = SalesOrder
     template_name = 'sales/salesorder_list.html'
     context_object_name = 'sales_orders'
@@ -153,7 +154,7 @@ class SalesOrderListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class SalesOrderCreateView(LoginRequiredMixin, CreateView):
+class SalesOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = SalesOrder
     form_class = SalesOrderForm
     template_name = 'sales/salesorder_form.html'
@@ -178,7 +179,7 @@ class SalesOrderCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class SalesOrderUpdateView(LoginRequiredMixin, UpdateView):
+class SalesOrderUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = SalesOrder
     form_class = SalesOrderForm
     template_name = 'sales/salesorder_form.html'
@@ -195,7 +196,7 @@ class SalesOrderUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("sales", "delete"), name='dispatch')
-class SalesOrderDeleteView(LoginRequiredMixin, DeleteView):
+class SalesOrderDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = SalesOrder
     template_name = 'sales/salesorder_confirm_delete.html'
     success_url = reverse_lazy('sales:salesorder_list')
@@ -207,7 +208,7 @@ class SalesOrderDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Invoice Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class InvoiceListView(LoginRequiredMixin, ListView):
+class InvoiceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = Invoice
     template_name = 'sales/invoice_list.html'
     context_object_name = 'invoices'
@@ -235,7 +236,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class InvoiceCreateView(LoginRequiredMixin, CreateView):
+class InvoiceCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = Invoice
     form_class = InvoiceForm
     template_name = 'sales/invoice_form.html'
@@ -272,7 +273,7 @@ class InvoiceCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
+class InvoiceUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = Invoice
     form_class = InvoiceForm
     template_name = 'sales/invoice_form.html'
@@ -316,7 +317,7 @@ class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("sales", "delete"), name='dispatch')
-class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
+class InvoiceDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = Invoice
     template_name = 'sales/invoice_confirm_delete.html'
     success_url = reverse_lazy('sales:invoice_list')
@@ -337,7 +338,7 @@ class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Sales Dashboard ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class SalesDashboardView(LoginRequiredMixin, TemplateView):
+class SalesDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """Sales dashboard with KPIs and metrics."""
     template_name = 'sales/dashboard.html'
     

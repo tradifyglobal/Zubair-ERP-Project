@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Spare Part{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">{% if form.instance.pk %}Edit Spare Part{% else %}New Spare Part{% endif %}</h5></div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.part_code.id_for_label }}" class="form-label">Part Code *</label>
+                            {{ form.part_code }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.part_name.id_for_label }}" class="form-label">Part Name *</label>
+                            {{ form.part_name }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.unit_cost.id_for_label }}" class="form-label">Unit Cost</label>
+                                    {{ form.unit_cost }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.current_stock.id_for_label }}" class="form-label">Current Stock</label>
+                                    {{ form.current_stock }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.reorder_level.id_for_label }}" class="form-label">Reorder Level</label>
+                            {{ form.reorder_level }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                            {{ form.supplier }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                                {{ form.is_active }} Active
+                            </label>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary"><i data-feather="save"></i> Save</button>
+                            <a href="{% url 'maintenance:sparepart-list' %}" class="btn btn-secondary"><i data-feather="x"></i> Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.form-control, .form-select { border-radius: 0.25rem; border: 1px solid #dee2e6; padding: 0.5rem 0.75rem; }
+.form-control:focus, .form-select:focus { border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

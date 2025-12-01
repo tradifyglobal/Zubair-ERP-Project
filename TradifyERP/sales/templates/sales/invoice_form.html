@@ -130,4 +130,31 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Auto-calculate Total Amount = Subtotal + Tax Amount
+    document.addEventListener('DOMContentLoaded', function() {
+        const subtotalField = document.getElementById('{{ form.subtotal.id_for_label }}');
+        const taxField = document.getElementById('{{ form.tax_amount.id_for_label }}');
+        const totalField = document.getElementById('{{ form.total_amount.id_for_label }}');
+        
+        function calculateTotal() {
+            const subtotal = parseFloat(subtotalField.value) || 0;
+            const tax = parseFloat(taxField.value) || 0;
+            const total = (subtotal + tax).toFixed(2);
+            totalField.value = total;
+        }
+        
+        // Calculate on page load
+        calculateTotal();
+        
+        // Calculate whenever subtotal or tax changes
+        subtotalField.addEventListener('input', calculateTotal);
+        taxField.addEventListener('input', calculateTotal);
+        
+        // Also handle change event for better compatibility
+        subtotalField.addEventListener('change', calculateTotal);
+        taxField.addEventListener('change', calculateTotal);
+    });
+</script>
 {% endblock %}

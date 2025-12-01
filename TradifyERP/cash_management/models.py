@@ -157,9 +157,27 @@ class LiquidityForecast(models.Model):
     )
     
     # Forecast Period
+    forecast_period = models.CharField(
+        max_length=100,
+        help_text="e.g., Q1 2025, Jan-Mar 2025, etc."
+    )
+    scenario_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('BASE', 'Base Case'),
+            ('OPTIMISTIC', 'Optimistic'),
+            ('PESSIMISTIC', 'Pessimistic'),
+        ],
+        default='BASE',
+        help_text="Forecast scenario type"
+    )
     forecast_start_date = models.DateField()
     forecast_end_date = models.DateField()
     forecast_horizon_days = models.IntegerField()  # e.g., 90 days
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Mark as inactive to archive this forecast"
+    )
     
     # Opening Position
     opening_balance = models.DecimalField(max_digits=18, decimal_places=2)
@@ -220,6 +238,33 @@ class LiquidityForecast(models.Model):
     
     def __str__(self):
         return f"Liquidity Forecast - {self.entity.code} ({self.forecast_start_date} to {self.forecast_end_date})"
+    
+    def get_risk_calculation(self):
+        """
+        Return risk level calculation details for display purposes.
+        
+        Returns:
+            dict: Contains risk_level, surplus_percentage, threshold_low, threshold_high
+        
+        Industry Best Practices:
+        - LOW: Surplus >= 30% of minimum cash level (strong position)
+        - MEDIUM: -30% to +30% of minimum cash level (adequate but needs monitoring)
+        - HIGH: Deficit < -30% of minimum cash level (concerning shortage)
+        """
+        result = {
+            'risk_level': self.risk_level,
+            'surplus_amount': self.surplus_deficit,
+            'minimum_cash_level': self.minimum_cash_level,
+            'threshold_low': -30,  # -30% threshold for HIGH risk
+            'threshold_high': 30,  # +30% threshold for LOW risk
+            'calculation_note': 'Based on industry best practices percentage thresholds'
+        }
+        
+        if self.minimum_cash_level and self.minimum_cash_level > 0:
+            surplus_percentage = (self.surplus_deficit / self.minimum_cash_level) * 100
+            result['surplus_percentage'] = round(surplus_percentage, 2)
+        
+        return result
 
 
 class LiquidityForecastLine(models.Model):

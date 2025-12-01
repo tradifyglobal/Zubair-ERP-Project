@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ contact.contact_name }} - Contact - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8"><h4 class="page-title mb-0">{{ contact.contact_name }}</h4></div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'crm:contact_update' contact.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                <a href="{% url 'crm:contact_delete' contact.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</a>
+                <a href="{% url 'crm:contacts' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card"><div class="card-header"><h5 class="card-title mb-0">Contact Information</h5></div><div class="card-body">
+                <div class="row">
+                    <div class="col-md-6"><div class="mb-3"><label class="text-muted">Name</label><p class="mb-0"><strong>{{ contact.contact_name }}</strong></p></div></div>
+                    <div class="col-md-6"><div class="mb-3"><label class="text-muted">Company</label><p class="mb-0">{{ contact.company|default:"—" }}</p></div></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"><div class="mb-3"><label class="text-muted">Email</label><p class="mb-0">{{ contact.email|default:"—" }}</p></div></div>
+                    <div class="col-md-6"><div class="mb-3"><label class="text-muted">Phone</label><p class="mb-0">{{ contact.phone|default:"—" }}</p></div></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"><div class="mb-3"><label class="text-muted">Mobile</label><p class="mb-0">{{ contact.mobile|default:"—" }}</p></div></div>
+                    <div class="col-md-6"><div class="mb-3"><label class="text-muted">Designation</label><p class="mb-0">{{ contact.designation|default:"—" }}</p></div></div>
+                </div>
+                {% if contact.address %}<div class="mb-0"><label class="text-muted">Address</label><p class="mb-0">{{ contact.address }}</p></div>{% endif %}
+            </div></div>
+
+            <div class="card mt-3"><div class="card-header"><h5 class="card-title mb-0">Audit Trail</h5></div><div class="card-body">
+                <div class="row">
+                    <div class="col-md-6"><div class="mb-0"><label class="text-muted">Created</label><p class="mb-0">{{ contact.created_at|date:"M d, Y" }}</p></div></div>
+                    <div class="col-md-6"><div class="mb-0"><label class="text-muted">Updated</label><p class="mb-0">{{ contact.updated_at|date:"M d, Y" }}</p></div></div>
+                </div>
+            </div></div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card"><div class="card-header"><h5 class="card-title mb-0">Quick Actions</h5></div><div class="card-body">
+                <a href="{% url 'crm:contact_update' contact.pk %}" class="btn btn-warning btn-block mb-2"><i class="fas fa-edit"></i> Edit Contact</a>
+                <a href="{% url 'crm:contacts' %}" class="btn btn-secondary btn-block"><i class="fas fa-list"></i> View All</a>
+            </div></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

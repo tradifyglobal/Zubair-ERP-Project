@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Downtime Records{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Downtime Records</h4>
+                <a href="{% url 'maintenance:downtime-create' %}" class="btn btn-primary"><i data-feather="plus"></i> Log Downtime</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-10">
+                            <input type="text" name="q" class="form-control" placeholder="Search downtime..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Asset</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Reason</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in downtime_records %}
+                            <tr>
+                                <td><a href="{% url 'maintenance:asset-detail' record.asset.pk %}">{{ record.asset.asset_name }}</a></td>
+                                <td>{{ record.start_time|date:"Y-m-d H:i" }}</td>
+                                <td>{{ record.end_time|date:"Y-m-d H:i"|default:"-" }}</td>
+                                <td>{{ record.duration_minutes|default:"-" }} min</td>
+                                <td>{{ record.reason|default:"N/A" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'maintenance:downtime-detail' record.pk %}" class="btn btn-info"><i data-feather="eye"></i></a>
+                                        <a href="{% url 'maintenance:downtime-update' record.pk %}" class="btn btn-warning"><i data-feather="edit-2"></i></a>
+                                        <a href="{% url 'maintenance:downtime-delete' record.pk %}" class="btn btn-danger" onclick="return confirm('Sure?')"><i data-feather="trash-2"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No downtime records found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

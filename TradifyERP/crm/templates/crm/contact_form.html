@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Contact - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title mb-0">{% if form.instance.pk %}Edit Contact{% else %}New Contact{% endif %}</h4>
+            </div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'crm:contacts' %}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">Contact Details</h5></div>
+                <div class="card-body">
+                    <form method="post" class="form">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="col-md-6"><div class="form-group"><label>{{ form.contact_name.label }}<span class="text-danger">*</span></label>{{ form.contact_name }}{% if form.contact_name.errors %}<small class="form-text text-danger">{{ form.contact_name.errors }}</small>{% endif %}</div></div>
+                            <div class="col-md-6"><div class="form-group"><label>{{ form.company.label }}</label>{{ form.company }}</div></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-6"><div class="form-group"><label>{{ form.designation.label }}</label>{{ form.designation }}</div></div>
+                            <div class="col-md-6"><div class="form-group"><label>{{ form.email.label }}</label>{{ form.email }}</div></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-6"><div class="form-group"><label>{{ form.phone.label }}</label>{{ form.phone }}</div></div>
+                            <div class="col-md-6"><div class="form-group"><label>{{ form.mobile.label }}</label>{{ form.mobile }}</div></div>
+                        </div>
+                        <div class="form-group"><label>{{ form.address.label }}</label>{{ form.address }}</div>
+                        <div class="form-footer mt-4">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %}</button>
+                            <a href="{% url 'crm:contacts' %}" class="btn btn-light"><i class="fas fa-times"></i> Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card"><div class="card-header"><h5 class="card-title mb-0">Information</h5></div><div class="card-body"><p class="text-muted">Enter contact information and details.</p></div></div>
+        </div>
+    </div>
+</div>
+<style>.form-footer { display: sticky; position: sticky; bottom: 0; background-color: #f8f9fa; padding: 15px 0; border-top: 1px solid #dee2e6; margin-left: -15px; margin-right: -15px; margin-bottom: -15px; padding-left: 15px; padding-right: 15px; }</style>
+{% endblock %}

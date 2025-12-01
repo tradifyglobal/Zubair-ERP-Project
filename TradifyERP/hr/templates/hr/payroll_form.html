@@ -24,7 +24,20 @@
                     <h5 class="mb-0">Payroll Details</h5>
                 </div>
                 <div class="card-body">
-                    <form method="post" class="needs-validation" novalidate>
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>Form Errors:</strong>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info small">
+                        <strong>Debug:</strong> Form method: POST | CSRF: {% if csrf_token %}Present{% else %}Missing{% endif %} | Request method: {{ request.method }}
+                    </div>
+                    
+                    <form method="post" action="">
                         {% csrf_token %}
                         
                         <div class="row">
@@ -32,15 +45,15 @@
                                 <label for="{{ form.entity.id_for_label }}" class="form-label">Entity *</label>
                                 {{ form.entity }}
                                 {% if form.entity.errors %}
-                                <div class="invalid-feedback d-block">{{ form.entity.errors.0 }}</div>
+                                <div class="alert alert-danger d-block">{{ form.entity.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.payroll_number.id_for_label }}" class="form-label">Payroll Number *</label>
+                                <label for="{{ form.payroll_number.id_for_label }}" class="form-label">Payroll Number</label>
                                 {{ form.payroll_number }}
-                                <small class="text-muted">Auto-generated if left blank</small>
+                                <small class="text-muted d-block">Leave blank to auto-generate</small>
                                 {% if form.payroll_number.errors %}
-                                <div class="invalid-feedback d-block">{{ form.payroll_number.errors.0 }}</div>
+                                <div class="alert alert-danger d-block">{{ form.payroll_number.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -50,14 +63,14 @@
                                 <label for="{{ form.payroll_date.id_for_label }}" class="form-label">Payroll Date *</label>
                                 {{ form.payroll_date }}
                                 {% if form.payroll_date.errors %}
-                                <div class="invalid-feedback d-block">{{ form.payroll_date.errors.0 }}</div>
+                                <div class="alert alert-danger d-block">{{ form.payroll_date.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.period_start.id_for_label }}" class="form-label">Period Start *</label>
                                 {{ form.period_start }}
                                 {% if form.period_start.errors %}
-                                <div class="invalid-feedback d-block">{{ form.period_start.errors.0 }}</div>
+                                <div class="alert alert-danger d-block">{{ form.period_start.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -67,7 +80,7 @@
                                 <label for="{{ form.period_end.id_for_label }}" class="form-label">Period End *</label>
                                 {{ form.period_end }}
                                 {% if form.period_end.errors %}
-                                <div class="invalid-feedback d-block">{{ form.period_end.errors.0 }}</div>
+                                <div class="alert alert-danger d-block">{{ form.period_end.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>

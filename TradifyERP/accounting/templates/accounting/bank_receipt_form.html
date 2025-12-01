@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Accounting{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="#">Cash Management</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:bank_receipt_list' %}">Bank Receipts</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-header-shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ page_title }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card with Responsive Scroll -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-form-container">
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_date" class="form-label">{{ form.date.label }}</label>
+                                    {{ form.date }}
+                                    {% if form.date.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_reference_number" class="form-label">{{ form.reference_number.label }}</label>
+                                    {{ form.reference_number }}
+                                    {% if form.reference_number.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.reference_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_account" class="form-label">{{ form.account.label }}</label>
+                                    {{ form.account }}
+                                    {% if form.account.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.account.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_credit_account" class="form-label">{{ form.credit_account.label }}</label>
+                                    {{ form.credit_account }}
+                                    {% if form.credit_account.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.credit_account.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_currency" class="form-label">{{ form.currency.label }}</label>
+                                    {{ form.currency }}
+                                    {% if form.currency.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.currency.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="id_description" class="form-label">{{ form.description.label }}</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_debit_amount" class="form-label">{{ form.debit_amount.label }}</label>
+                                    {{ form.debit_amount }}
+                                    {% if form.debit_amount.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.debit_amount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_credit_amount" class="form-label">{{ form.credit_amount.label }}</label>
+                                    {{ form.credit_amount }}
+                                    {% if form.credit_amount.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.credit_amount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="id_notes" class="form-label">{{ form.notes.label }}</label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Non-field Errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+
+                        <!-- Form Actions -->
+                        <div class="row mt-5">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Receipt
+                                </button>
+                                
+                                {% if object.pk %}
+                                    <!-- View & Print Dropdown -->
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'accounting:bank_receipt_detail' object.pk %}" target="_blank">
+                                                    <i class="fas fa-external-link-alt"></i> View Receipt
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'accounting:bank_receipt_print' object.pk %}" target="_blank">
+                                                    <i class="fas fa-print"></i> Print Receipt
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                                
+                                <a href="{% url 'accounting:bank_receipt_list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+    }
+    
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    /* Make form action buttons sticky and always accessible */
+    .row.mt-5 {
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 10 !important;
+        background-color: #fff !important;
+        padding: 1.5rem 1.5rem !important;
+        margin-left: -1.5rem !important;
+        margin-right: -1.5rem !important;
+        margin-bottom: -1.5rem !important;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Responsive form container for small screens */
+    @media (max-width: 768px) {
+        .container-xxl {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+            overflow-x: auto;
+        }
+        
+        .card-form-container {
+            overflow: visible;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .row {
+            margin-left: -0.375rem;
+            margin-right: -0.375rem;
+        }
+        
+        .col-md-6,
+        .col-12 {
+            padding-left: 0.375rem;
+            padding-right: 0.375rem;
+        }
+        
+        .form-control,
+        .form-select {
+            font-size: 16px;
+        }
+        
+        .breadcrumb {
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .card-header {
+            padding: 0.75rem 1rem;
+        }
+        
+        h5 {
+            font-size: 1.1rem;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn + .btn {
+            margin-top: 0.5rem;
+        }
+    }
+    
+    /* Extra small screens */
+    @media (max-width: 576px) {
+        .container-xxl {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+        
+        .card-form-container {
+            overflow: visible;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .card-body {
+            padding: 0.75rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem !important;
+        }
+        
+        .row {
+            margin-left: -0.25rem;
+            margin-right: -0.25rem;
+        }
+        
+        .col-md-6,
+        .col-12 {
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .invalid-feedback {
+            font-size: 0.75rem;
+        }
+
+        /* Sticky buttons on small screens */
+        .row.mt-5 {
+            position: sticky !important;
+            bottom: 0 !important;
+            z-index: 10 !important;
+            background-color: #fff !important;
+            padding: 1rem 0.75rem !important;
+            margin-left: -0.75rem !important;
+            margin-right: -0.75rem !important;
+            margin-bottom: -0.75rem !important;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
+        }
+    }
+    
+    /* Ensure content is never cut off */
+    body {
+        overflow-x: hidden;
+    }
+    
+    /* Card form container - use browser default scrollbar */
+    .card-form-container {
+        scroll-behavior: smooth;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scrollbar-width: auto !important;
+        -ms-overflow-style: auto !important;
+    }
+</style>
+
+<script>
+    // Form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.needs-validation');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+</script>
+{% endblock %}

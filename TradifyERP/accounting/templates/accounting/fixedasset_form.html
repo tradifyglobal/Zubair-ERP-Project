@@ -1,0 +1,295 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>{% if form.instance.id %}Edit{% else %}Add{% endif %} Fixed Asset | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">{% if form.instance.id %}Edit{% else %}Add{% endif %} Fixed Asset</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:fixed_asset_list' %}">Fixed Assets</a></li>
+                                <li class="breadcrumb-item active">{% if form.instance.id %}Edit{% else %}Add{% endif %}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-xl-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" class="needs-validation">
+                                {% csrf_token %}
+
+                                <!-- Asset Code -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.asset_code.id_for_label }}" class="col-md-3 col-form-label">
+                                        Asset Code <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="input-group">
+                                            {{ form.asset_code }}
+                                            {% if not form.instance.id %}
+                                            <span class="input-group-text bg-light">
+                                                <small class="text-muted">Auto-generated</small>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        {% if form.asset_code.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.asset_code.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Asset Name -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="col-md-3 col-form-label">
+                                        Asset Name <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.name.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Category -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.category.id_for_label }}" class="col-md-3 col-form-label">
+                                        Category <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.category }}
+                                        {% if form.category.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.category.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Purchase Date -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.purchase_date.id_for_label }}" class="col-md-3 col-form-label">
+                                        Purchase Date <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.purchase_date }}
+                                        {% if form.purchase_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.purchase_date.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Purchase Cost -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.purchase_cost.id_for_label }}" class="col-md-3 col-form-label">
+                                        Purchase Cost <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.purchase_cost }}
+                                        {% if form.purchase_cost.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.purchase_cost.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Useful Life (Years) -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.useful_life_years.id_for_label }}" class="col-md-3 col-form-label">
+                                        Useful Life (Years) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.useful_life_years }}
+                                        {% if form.useful_life_years.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.useful_life_years.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Annual Depreciation -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.annual_depreciation.id_for_label }}" class="col-md-3 col-form-label">
+                                        Annual Depreciation <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.annual_depreciation }}
+                                        {% if form.annual_depreciation.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.annual_depreciation.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Is Active (only on edit) -->
+                                {% if form.instance.id %}
+                                <div class="row mb-3">
+                                    <label for="{{ form.is_active.id_for_label }}" class="col-md-3 col-form-label">
+                                        Active
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="form-check">
+                                            {{ form.is_active }}
+                                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                Mark as active
+                                            </label>
+                                        </div>
+                                        {% if form.is_active.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.is_active.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Form Errors -->
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <h4 class="alert-heading">Error!</h4>
+                                    {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Buttons -->
+                                <div class="row">
+                                    <div class="col-md-9 offset-md-3">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ri-save-line me-2"></i>{% if form.instance.id %}Update{% else %}Create{% endif %} Asset
+                                        </button>
+                                        <a href="{% url 'accounting:fixed_asset_list' %}" class="btn btn-secondary">
+                                            <i class="ri-close-line me-2"></i>Cancel
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Card -->
+                <div class="col-xl-4">
+                    <div class="card">
+                        <div class="card-header bg-light-subtle">
+                            <h5 class="card-title mb-0">Fixed Asset Details</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if not form.instance.id %}
+                            <div class="alert alert-info mb-3" role="alert">
+                                <i class="mdi mdi-information"></i>
+                                <small>
+                                    <strong>Asset Code:</strong> Will be auto-generated in format FA-YYYY-XXX
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <p class="text-muted font-size-13">
+                                Add or edit fixed asset information for your organization.
+                            </p>
+                            
+                            <h6 class="mt-3">Asset Categories:</h6>
+                            <ul class="ps-3 font-size-13 mb-3">
+                                <li><strong>Building:</strong> Office/warehouse structures</li>
+                                <li><strong>Vehicle:</strong> Company cars, trucks, etc.</li>
+                                <li><strong>Equipment:</strong> Machinery, tools</li>
+                                <li><strong>Furniture:</strong> Desks, chairs, cabinets</li>
+                                <li><strong>Computer:</strong> PCs, laptops, servers</li>
+                                <li><strong>Other:</strong> Miscellaneous assets</li>
+                            </ul>
+                            
+                            <div class="alert alert-warning mt-3" role="alert">
+                                <small>
+                                    <strong>Depreciation:</strong> Annual depreciation amount should equal (Purchase Cost / Useful Life)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-color: #dee2e6;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const costInput = document.querySelector('[name="purchase_cost"]');
+        const lifeInput = document.querySelector('[name="useful_life_years"]');
+        const depreciationInput = document.querySelector('[name="annual_depreciation"]');
+        
+        function calculateDepreciation() {
+            const cost = parseFloat(costInput.value) || 0;
+            const life = parseInt(lifeInput.value) || 0;
+            
+            if (cost > 0 && life > 0) {
+                const depreciation = (cost / life).toFixed(2);
+                depreciationInput.value = depreciation;
+            }
+        }
+        
+        // Calculate depreciation when inputs change
+        if (costInput) costInput.addEventListener('input', calculateDepreciation);
+        if (lifeInput) lifeInput.addEventListener('input', calculateDepreciation);
+        
+        // Initialize if editing and values exist
+        if (form.instance.id && depreciationInput.value === '') {
+            calculateDepreciation();
+        }
+    });
+</script>
+{% endblock %}

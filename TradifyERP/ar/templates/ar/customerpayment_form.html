@@ -1,0 +1,294 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>{% if form.instance.pk %}Edit{% else %}Record{% endif %} Payment | AR</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">{% if form.instance.pk %}Edit{% else %}Record{% endif %} Payment</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'ar:payment_list' %}">Payments</a></li>
+                                <li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}Record{% endif %}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Form Card -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Payment Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" class="needs-validation" novalidate>
+                                {% csrf_token %}
+
+                                <!-- Customer Selection -->
+                                <div class="mb-3">
+                                    <label for="{{ form.customer.id_for_label }}" class="form-label">
+                                        Customer <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.customer }}
+                                    {% if form.customer.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.customer.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Invoice Selection -->
+                                <div class="mb-3">
+                                    <label for="{{ form.invoice.id_for_label }}" class="form-label">
+                                        Invoice <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.invoice }}
+                                    {% if form.invoice.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.invoice.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                    <small class="text-muted d-block mt-1">Select the invoice this payment is for</small>
+                                </div>
+
+                                <!-- Payment Date -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.payment_date.id_for_label }}" class="form-label">
+                                                Payment Date <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.payment_date }}
+                                            {% if form.payment_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.payment_date.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Amount -->
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                                Amount <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.amount }}
+                                            {% if form.amount.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.amount.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Method -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.payment_method.id_for_label }}" class="form-label">
+                                                Payment Method <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.payment_method }}
+                                            {% if form.payment_method.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.payment_method.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Currency -->
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.currency.id_for_label }}" class="form-label">
+                                                Currency <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.currency }}
+                                            {% if form.currency.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.currency.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Reference Number -->
+                                <div class="mb-3">
+                                    <label for="{{ form.reference_number.id_for_label }}" class="form-label">
+                                        Reference Number
+                                    </label>
+                                    {{ form.reference_number }}
+                                    {% if form.reference_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.reference_number.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                    <small class="text-muted d-block mt-1">Check number, transaction ID, or other reference</small>
+                                </div>
+
+                                <!-- Bank Account -->
+                                <div class="mb-3">
+                                    <label for="{{ form.bank_account_id.id_for_label }}" class="form-label">
+                                        Bank Account
+                                    </label>
+                                    {{ form.bank_account_id }}
+                                    {% if form.bank_account_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.bank_account_id.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="mb-3">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                        Notes
+                                    </label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.notes.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Form Non-field Errors -->
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Buttons -->
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        {% if form.instance.pk %}Update Payment{% else %}Record Payment{% endif %}
+                                    </button>
+                                    <a href="{% url 'ar:payment_list' %}" class="btn btn-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Info -->
+                <div class="col-lg-4">
+                    <!-- Invoice Info Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Invoice Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-2">Select an invoice to see details</p>
+                            <div id="invoiceInfo" class="d-none">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <td class="ps-0">Invoice #:</td>
+                                        <td class="text-end pe-0"><span id="invoiceNumber">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-0">Invoice Date:</td>
+                                        <td class="text-end pe-0"><span id="invoiceDate">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-0">Due Date:</td>
+                                        <td class="text-end pe-0"><span id="dueDate">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-0">Total Amount:</td>
+                                        <td class="text-end pe-0"><strong id="totalAmount">-</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-0">Paid Amount:</td>
+                                        <td class="text-end pe-0"><span id="paidAmount">-</span></td>
+                                    </tr>
+                                    <tr class="border-top">
+                                        <td class="ps-0"><strong>Outstanding:</strong></td>
+                                        <td class="text-end pe-0"><strong id="outstandingAmount" class="text-danger">-</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Help Card -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Recording Payment</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small mb-2"><strong>Steps:</strong></p>
+                            <ol class="small ps-3 mb-0">
+                                <li>Select the customer who made the payment</li>
+                                <li>Choose the invoice this payment covers</li>
+                                <li>Enter the payment date and amount</li>
+                                <li>Select the payment method (Cash, Check, ACH, etc.)</li>
+                                <li>Add reference number if applicable</li>
+                                <li>Click "Record Payment" to complete</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const invoiceSelect = document.getElementById('id_invoice');
+    const invoiceInfo = document.getElementById('invoiceInfo');
+    
+    if (invoiceSelect) {
+        invoiceSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                // Parse the option text to get invoice details
+                const optionText = selectedOption.text;
+                document.getElementById('invoiceInfo').classList.remove('d-none');
+                // Note: This is a simplified approach. In production, you'd fetch via AJAX
+            } else {
+                invoiceInfo.classList.add('d-none');
+            }
+        });
+    }
+});
+</script>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 0.25rem;
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .card {
+        border: 1px solid #dee2e6;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

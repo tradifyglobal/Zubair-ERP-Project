@@ -4,8 +4,20 @@ from decimal import Decimal
 from .models import (
     LedgerEntry, Account, Entity, Customer, Vendor, Currency, VendorInvoice,
     VendorPayment, FixedAsset, DeferredExpense, DeferredRevenue, CashTransaction,
-    BankProfile, TaxRate, ReconciliationRecord
+    BankProfile, TaxRate, ReconciliationRecord, CapitalContribution, Stakeholder
 )
+
+
+class AccountChoiceField(forms.ModelChoiceField):
+    """Custom ModelChoiceField that formats account display."""
+    
+    def label_from_instance(self, obj):
+        """Format account label to show only account_number - first part of name."""
+        if obj.name and '-' in obj.name:
+            # Get only the first part before the dash (e.g., "Capital" from "Capital - Imteyazuddin Sameer Mohammed")
+            name_part = obj.name.split('-')[0].strip()
+            return f"{obj.account_number} - {name_part}"
+        return f"{obj.account_number} - {obj.name}"
 
 
 class DoubleEntryJournalForm(forms.Form):
@@ -41,13 +53,24 @@ class DoubleEntryJournalForm(forms.Form):
     )
     
     # Debit side
-    debit_account = forms.ModelChoiceField(
+    debit_account = AccountChoiceField(
         queryset=Account.objects.none(),
         widget=forms.Select(attrs={
             'class': 'form-select',
-            'required': 'required'
+            'required': 'required',
+            'id': 'id_debit_account_select'
         }),
         label='Debit Account'
+    )
+    
+    debit_investor = forms.ModelChoiceField(
+        queryset=Stakeholder.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'id': 'id_debit_investor_select'
+        }),
+        label='Investor/Shareholder (Select if Capital Account)'
     )
     
     debit_amount = forms.DecimalField(
@@ -64,13 +87,24 @@ class DoubleEntryJournalForm(forms.Form):
     )
     
     # Credit side
-    credit_account = forms.ModelChoiceField(
+    credit_account = AccountChoiceField(
         queryset=Account.objects.none(),
         widget=forms.Select(attrs={
             'class': 'form-select',
-            'required': 'required'
+            'required': 'required',
+            'id': 'id_credit_account_select'
         }),
         label='Credit Account'
+    )
+    
+    credit_investor = forms.ModelChoiceField(
+        queryset=Stakeholder.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'id': 'id_credit_investor_select'
+        }),
+        label='Investor/Shareholder (Select if Capital Account)'
     )
     
     credit_amount = forms.DecimalField(
@@ -95,17 +129,31 @@ class DoubleEntryJournalForm(forms.Form):
         initial=True
     )
     
+    workflow_action = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.HiddenInput()
+    )
+    
     def __init__(self, entity=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
+        self.entity = entity
+        
         # Set the queryset for account fields based on entity
+        # Include all accounts (parent and sub-accounts)
         if entity:
             accounts = Account.objects.filter(entity=entity, is_active=True).order_by('account_number')
+            stakeholders = Stakeholder.objects.filter(entity=entity, status='ACTIVE').order_by('company_name', 'last_name', 'first_name')
             self.fields['debit_account'].queryset = accounts
             self.fields['credit_account'].queryset = accounts
+            self.fields['debit_investor'].queryset = stakeholders
+            self.fields['credit_investor'].queryset = stakeholders
         else:
             self.fields['debit_account'].queryset = Account.objects.filter(is_active=True)
             self.fields['credit_account'].queryset = Account.objects.filter(is_active=True)
+            self.fields['debit_investor'].queryset = Stakeholder.objects.filter(status='ACTIVE')
+            self.fields['credit_investor'].queryset = Stakeholder.objects.filter(status='ACTIVE')
     
     def clean(self):
         cleaned_data = super().clean()
@@ -426,7 +474,8 @@ class QuickAddVendorInvoiceForm(forms.ModelForm):
                 'placeholder': '0.00',
                 'min': '0',
                 'step': '0.01',
-                'required': 'required'
+                'required': 'required',
+                'readonly': 'readonly'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -444,9 +493,8 @@ class QuickAddVendorInvoiceForm(forms.ModelForm):
             self.fields['vendor'].queryset = Vendor.objects.filter(is_active=True)
 
 
+
 class QuickAddVendorPaymentForm(forms.ModelForm):
-    """Quick add form for vendor payments."""
-    
     class Meta:
         model = VendorPayment
         fields = ['vendor_invoice', 'payment_date', 'amount', 'payment_method', 'reference_number', 'notes']
@@ -481,7 +529,7 @@ class QuickAddVendorPaymentForm(forms.ModelForm):
                 'placeholder': 'Payment notes'
             })
         }
-    
+
     def __init__(self, entity=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if entity:
@@ -542,6 +590,106 @@ class QuickAddFixedAssetForm(forms.ModelForm):
     def __init__(self, entity=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.entity = entity
+
+
+class FixedAssetForm(forms.ModelForm):
+    """Form for creating and updating fixed assets with auto-generated asset code."""
+    
+    CATEGORY_CHOICES = [
+        ('BUILDING', 'Building'),
+        ('VEHICLE', 'Vehicle'),
+        ('EQUIPMENT', 'Equipment'),
+        ('FURNITURE', 'Furniture'),
+        ('COMPUTER', 'Computer'),
+        ('OTHER', 'Other'),
+    ]
+    
+    category = forms.ChoiceField(
+        choices=CATEGORY_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'required': 'required'
+        }),
+        label='Category'
+    )
+    
+    class Meta:
+        model = FixedAsset
+        fields = ['asset_code', 'name', 'category', 'purchase_date', 'purchase_cost', 
+                  'useful_life_years', 'annual_depreciation', 'is_active']
+        widgets = {
+            'asset_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Auto-generated',
+                'readonly': 'readonly',
+                'required': 'required'
+            }),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Office Building, Company Car',
+                'required': 'required'
+            }),
+            'purchase_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'purchase_cost': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'min': '0',
+                'step': '0.01',
+                'required': 'required'
+            }),
+            'useful_life_years': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., 10',
+                'min': '1',
+                'required': 'required'
+            }),
+            'annual_depreciation': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'min': '0',
+                'step': '0.01',
+                'required': 'required'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Auto-generate asset code if creating new instance
+        if not self.instance.pk:
+            next_code = self._generate_asset_code()
+            self.fields['asset_code'].initial = next_code
+    
+    def _generate_asset_code(self):
+        """Generate next asset code in format: FA-YYYY-XXX."""
+        from datetime import datetime
+        
+        year = datetime.now().year
+        # Get the highest number for current year
+        prefix = f"FA-{year}-"
+        
+        latest_asset = FixedAsset.objects.filter(
+            asset_code__startswith=prefix
+        ).order_by('-asset_code').first()
+        
+        if latest_asset:
+            # Extract the numeric part from the code (e.g., "FA-2025-005" -> 5)
+            try:
+                last_num = int(latest_asset.asset_code.split('-')[-1])
+                next_num = last_num + 1
+            except (ValueError, IndexError):
+                next_num = 1
+        else:
+            next_num = 1
+        
+        return f"{prefix}{next_num:03d}"
 
 
 class QuickAddCashTransactionForm(forms.ModelForm):

@@ -18,6 +18,13 @@
             {% for message in messages %}
                 <input type="hidden" id="login-msg" value="{{message}}">
             {% endfor %}
+
+            <!-- Back Button (appears on every page) -->
+            <div class="container-fluid pt-2 pb-0">
+                <button class="btn btn-outline-secondary btn-sm mb-2" onclick="window.history.back();">
+                    <i class="mdi mdi-arrow-left"></i> Back
+                </button>
+            </div>
             <div class="main-content">
 
                 <div class="page-content">

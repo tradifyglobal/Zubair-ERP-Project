@@ -1,0 +1,178 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{% if action == "submit" %}Submit{% elif action == "approve" %}Approve{% else %}Reject{% endif %} Leave - HR Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">
+                {% if action == "submit" %}Submit Leave for Approval{% elif action == "approve" %}Approve Leave Type{% else %}Reject Leave Type{% endif %}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:leave-detail' leave.pk %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header {% if action == "approve" %}bg-success{% elif action == "reject" %}bg-danger{% else %}bg-warning{% endif %} text-white">
+                    <h5 class="mb-0">
+                        {% if action == "submit" %}Submit for Approval{% elif action == "approve" %}Approve Leave{% else %}Reject Leave{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Leave Details</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">Leave Type:</td>
+                                <td>{{ leave.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Code:</td>
+                                <td>{{ leave.code }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Annual Allocation:</td>
+                                <td>{{ leave.annual_allocation }} days</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Accrual Method:</td>
+                                <td>{{ leave.get_accrual_method_display }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Current Status:</td>
+                                <td>
+                                    <span class="badge bg-{% if leave.status == 'DRAFT' %}secondary{% elif leave.status == 'SUBMITTED' %}warning{% elif leave.status == 'APPROVED' %}success{% else %}danger{% endif %}">
+                                        {{ leave.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    {% if action == "reject" %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="rejection_reason" class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                            <textarea name="rejection_reason" id="rejection_reason" class="form-control" rows="4" required placeholder="Please provide a reason for rejection..."></textarea>
+                        </div>
+                        
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> This action will reject the leave type. Please provide a clear reason.
+                        </div>
+                        
+                        <div>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Confirm Rejection
+                            </button>
+                            <a href="{% url 'hr:leave-detail' leave.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-{% if action == "approve" %}success{% else %}warning{% endif %}">
+                            <i class="fas fa-info-circle"></i>
+                            {% if action == "submit" %}
+                                Please confirm that you want to submit this leave type for approval.
+                            {% else %}
+                                Please confirm that you want to approve this leave type.
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <button type="submit" class="btn btn-{% if action == "approve" %}success{% else %}warning{% endif %}">
+                                <i class="fas fa-check"></i> 
+                                {% if action == "submit" %}Submit for Approval{% else %}Approve{% endif %}
+                            </button>
+                            <a href="{% url 'hr:leave-detail' leave.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Approval Workflow</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Steps:</strong></p>
+                    <ol>
+                        <li><span class="badge bg-secondary">Draft</span> - Initial creation</li>
+                        <li><span class="badge bg-warning">Submitted</span> - Waiting for approval</li>
+                        <li><span class="badge bg-success">Approved</span> - Ready to use</li>
+                        <li><span class="badge bg-danger">Rejected</span> - Not approved</li>
+                    </ol>
+                    
+                    <hr>
+                    <p><strong>Current Status:</strong></p>
+                    <p>
+                        <span class="badge bg-{% if leave.status == 'DRAFT' %}secondary{% elif leave.status == 'SUBMITTED' %}warning{% elif leave.status == 'APPROVED' %}success{% else %}danger{% endif %} fs-6">
+                            {{ leave.get_status_display }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            {% if leave.submitted_by %}
+            <div class="card mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Submission Info</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Submitted by:</strong> {{ leave.submitted_by.get_full_name }}</p>
+                    <p><strong>Submitted on:</strong> {{ leave.submitted_date|date:"M d, Y H:i" }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if leave.approved_by %}
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Approval Info</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Approved by:</strong> {{ leave.approved_by.get_full_name }}</p>
+                    <p><strong>Approved on:</strong> {{ leave.approval_date|date:"M d, Y H:i" }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if leave.rejection_reason %}
+            <div class="card mt-3">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Rejection Reason</h5>
+                </div>
+                <div class="card-body small">
+                    <p>{{ leave.rejection_reason }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-borderless td:first-child {
+        width: 20%;
+    }
+</style>
+{% endblock %}

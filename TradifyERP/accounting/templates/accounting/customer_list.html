@@ -58,7 +58,12 @@
                     <div class="card">
                         <div class="card-header align-items-center d-flex">
                             <h4 class="card-title mb-0 flex-grow-1">Customers ({{ customers|length }})</h4>
-                            <div class="flex-shrink-0">
+                            <div class="flex-shrink-0 d-flex gap-2">
+                                {% if perms.accounting.add_customer %}
+                                    <a href="{% url 'accounting:quick_add_customer' %}" class="btn btn-success btn-sm">
+                                        <i class="mdi mdi-plus"></i> Add Customer
+                                    </a>
+                                {% endif %}
                                 {% include 'accounting/components/import_export_toolbar.html' with module_name='accounting' model_name='Customer' import_url='accounting:customer_import' export_url='accounting:customer_export' template_url='accounting:customer_import_template' %}
                             </div>
                         </div>
@@ -75,6 +80,7 @@
                                             <th>City</th>
                                             <th>Status</th>
                                             <th>Created</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -108,6 +114,15 @@
                                             </td>
                                             <td>
                                                 <small>{{ customer.created_at|date:"d M Y" }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    {% if perms.accounting.change_customer %}
+                                                        <a href="{% url 'accounting:customer_edit' customer.id %}" class="btn btn-info btn-sm" title="Edit Customer">
+                                                            <i class="mdi mdi-pencil"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
                                             </td>
                                         </tr>
                                         {% endfor %}

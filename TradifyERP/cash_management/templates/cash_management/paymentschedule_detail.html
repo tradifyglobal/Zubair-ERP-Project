@@ -1,0 +1,269 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block head_title %}
+<title>Payment Schedule Detail | Cash Management</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="page-title mb-0">Payment Schedule Detail</h4>
+                            <p class="text-muted mt-2">Reference: {{ paymentschedule.reference_document }}</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'cash_management:payment_list' %}" class="btn btn-secondary btn-sm">
+                                <i class="ri-arrow-left-line"></i> Back
+                            </a>
+                            {% if perms.cash_management.change_paymentschedule %}
+                            <a href="{% url 'cash_management:payment_edit' paymentschedule.pk %}" class="btn btn-primary btn-sm">
+                                <i class="ri-edit-line"></i> Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Payment Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Status Badge -->
+                            <div class="mb-4">
+                                <label class="form-label text-muted">Status</label>
+                                <p>
+                                    {% if paymentschedule.status == 'SCHEDULED' %}
+                                    <span class="badge bg-info">
+                                        <i class="ri-calendar-line"></i> Scheduled
+                                    </span>
+                                    {% elif paymentschedule.status == 'APPROVED' %}
+                                    <span class="badge bg-primary">
+                                        <i class="ri-checkbox-circle-line"></i> Approved
+                                    </span>
+                                    {% elif paymentschedule.status == 'PROCESSED' %}
+                                    <span class="badge bg-secondary">
+                                        <i class="ri-loop-left-line"></i> Processed
+                                    </span>
+                                    {% elif paymentschedule.status == 'PAID' %}
+                                    <span class="badge bg-success">
+                                        <i class="ri-check-line"></i> Paid
+                                    </span>
+                                    {% elif paymentschedule.status == 'CANCELLED' %}
+                                    <span class="badge bg-dark">
+                                        <i class="ri-close-line"></i> Cancelled
+                                    </span>
+                                    {% elif paymentschedule.status == 'OVERDUE' %}
+                                    <span class="badge bg-danger">
+                                        <i class="ri-alarm-warning-line"></i> Overdue
+                                    </span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Reference Document</label>
+                                        <p class="h6">{{ paymentschedule.reference_document }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Reference Type</label>
+                                        <p class="h6">{{ paymentschedule.reference_type }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Entity</label>
+                                        <p class="h6">{{ paymentschedule.entity.entity_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Currency</label>
+                                        <p class="h6">{{ paymentschedule.currency.code }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Payment Amount</label>
+                                        <p class="h5 text-primary">
+                                            {{ paymentschedule.currency.symbol }}
+                                            {{ paymentschedule.payment_amount|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">From Account</label>
+                                        <p class="h6">{{ paymentschedule.from_account.bank_name }}</p>
+                                        <p class="text-muted small">{{ paymentschedule.from_account.account_number }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Dates Section -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Scheduled Date</label>
+                                        <p class="h6">{{ paymentschedule.scheduled_date|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Due Date</label>
+                                        <p class="h6">{{ paymentschedule.due_date|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Actual Payment Date</label>
+                                        <p class="h6">
+                                            {% if paymentschedule.actual_payment_date %}
+                                            {{ paymentschedule.actual_payment_date|date:"M d, Y" }}
+                                            {% else %}
+                                            <span class="text-muted">Not yet paid</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payee Info -->
+                            <hr class="my-4">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Payee Account Details</label>
+                                        <p class="h6">{{ paymentschedule.to_account_details }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            {% if paymentschedule.notes %}
+                            <hr class="my-4">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Notes</label>
+                                        <p>{{ paymentschedule.notes }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- GL Integration -->
+                    {% if paymentschedule.gl_entry %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">GL Integration</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">GL Entry ID</label>
+                                <p class="h6">
+                                    <a href="{% url 'accounting:ledger_entry_detail' paymentschedule.gl_entry.pk %}">
+                                        {{ paymentschedule.gl_entry.entry_number }}
+                                    </a>
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">GL Entry Date</label>
+                                <p class="h6">{{ paymentschedule.gl_entry.entry_date|date:"M d, Y" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">GL Entry Amount</label>
+                                <p class="h6">{{ paymentschedule.gl_entry.total_debit|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Created By -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Audit Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Created By</label>
+                                {% if paymentschedule.created_by %}
+                                <p class="h6">{{ paymentschedule.created_by.get_full_name|default:paymentschedule.created_by.username|default:"Unknown" }}</p>
+                                {% else %}
+                                <p class="h6 text-muted">Not specified</p>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Created Date</label>
+                                <p class="h6">{{ paymentschedule.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Last Updated</label>
+                                <p class="h6">{{ paymentschedule.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payer Info -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Payment Source</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Bank Name</label>
+                                <p class="h6">{{ paymentschedule.from_account.bank_name }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Account Number</label>
+                                <p class="h6">{{ paymentschedule.from_account.account_number }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Account Status</label>
+                                <p class="h6">
+                                    {% if paymentschedule.from_account.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

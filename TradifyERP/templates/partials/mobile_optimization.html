@@ -1,0 +1,241 @@
+{% load static %}
+<!-- Mobile Optimization Styles -->
+<style>
+    /* Ensure proper mobile viewport */
+    * {
+        box-sizing: border-box;
+    }
+
+    /* Mobile-first responsive design */
+    @media (max-width: 768px) {
+        /* Reduce padding on mobile */
+        .container-fluid {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .card {
+            margin-bottom: 1rem;
+        }
+
+        /* Stack columns on mobile */
+        .row > [class*='col-'] {
+            margin-bottom: 1rem;
+        }
+
+        /* Make tables scrollable on mobile */
+        .table-responsive {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        table {
+            font-size: 0.85rem;
+        }
+
+        /* Optimize form inputs for touch */
+        .form-control,
+        .form-select,
+        button,
+        a.btn {
+            min-height: 44px;
+            font-size: 16px; /* Prevents zoom on iOS */
+            padding: 10px 12px;
+        }
+
+        /* Better button spacing on mobile */
+        .btn {
+            margin: 5px 5px 5px 0;
+            display: inline-block;
+        }
+
+        /* Stack buttons vertically on mobile */
+        .btn-group-vertical {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Reduce header spacing */
+        h1, h2, h3 {
+            font-size: 1.25rem;
+        }
+
+        /* Optimize navbar for mobile */
+        .navbar-nav {
+            gap: 0.5rem;
+        }
+
+        .sidebar {
+            width: 100% !important;
+            max-width: 250px;
+        }
+
+        /* Make modal full-width on mobile */
+        .modal-dialog {
+            margin: 0;
+        }
+
+        .modal-content {
+            border-radius: 0;
+        }
+
+        /* Optimize badge sizing */
+        .badge {
+            padding: 5px 8px;
+            font-size: 0.75rem;
+        }
+
+        /* Better card header sizing */
+        .card-header {
+            padding: 0.75rem;
+        }
+
+        /* Optimize form labels */
+        label {
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+
+        /* Improve list readability */
+        .list-group-item {
+            padding: 0.75rem;
+        }
+
+        /* Touch-friendly dropdowns */
+        .dropdown-menu {
+            min-width: 180px;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        /* Extra small devices */
+        .container-fluid {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        h1, h2, h3, h4 {
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            font-size: 0.9rem;
+            padding: 8px 10px;
+        }
+
+        /* Stack everything on very small screens */
+        .col-sm-6,
+        .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        /* Hide unnecessary columns in tables */
+        table .d-none-sm {
+            display: none !important;
+        }
+
+        /* Make form full width */
+        .form-control,
+        .form-select {
+            width: 100%;
+        }
+
+        /* Optimize spacing */
+        .mb-3 {
+            margin-bottom: 0.75rem !important;
+        }
+
+        .mt-3 {
+            margin-top: 0.75rem !important;
+        }
+
+        /* Better card layout */
+        .card-body {
+            padding: 0.75rem;
+        }
+    }
+
+    /* Touch-friendly targets */
+    @media (hover: none) and (pointer: coarse) {
+        /* Mobile devices without hover */
+        button,
+        a.btn,
+        .nav-link,
+        .dropdown-item {
+            padding: 12px 16px;
+        }
+
+        /* Remove hover effects on mobile */
+        button:hover,
+        a:hover,
+        .nav-link:hover {
+            background-color: transparent;
+        }
+
+        /* Add active state instead */
+        button:active,
+        a:active,
+        .nav-link:active {
+            opacity: 0.8;
+        }
+    }
+
+    /* Optimize specific components */
+    .navbar-toggler {
+        padding: 0.5rem;
+    }
+
+    .navbar-toggler:focus {
+        outline: 2px solid #0d6efd;
+        box-shadow: none;
+    }
+
+    /* Better spacing for mobile forms */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Optimize alerts for mobile */
+    .alert {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    /* Optimize pagination for mobile */
+    .pagination {
+        gap: 0.25rem;
+    }
+
+    .page-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    /* Better breadcrumb on mobile */
+    .breadcrumb {
+        font-size: 0.85rem;
+        gap: 0.25rem;
+    }
+
+    /* Landscape mode optimization */
+    @media (max-height: 500px) and (orientation: landscape) {
+        .navbar {
+            padding: 0.4rem 0;
+        }
+
+        .card {
+            margin-bottom: 0.5rem;
+        }
+
+        h1, h2 {
+            font-size: 1rem;
+        }
+    }
+</style>

@@ -29,8 +29,21 @@
                                         <i data-feather="book"></i><span data-key="t-accounting">Accounting</span> <div class="arrow-down"></div>
                                     </a>
                                     <div class="dropdown-menu" aria-labelledby="topnav-accounting">
+                                        <div class="dropdown-header">Cash Management</div>
+                                        <a href="{% url 'accounting:cash_receipt_list' %}" class="dropdown-item">Cash Receipts</a>
+                                        <a href="{% url 'accounting:cash_payment_list' %}" class="dropdown-item">Cash Payments</a>
+                                        <a href="{% url 'accounting:bank_receipt_list' %}" class="dropdown-item">Bank Receipts</a>
+                                        <a href="{% url 'accounting:bank_payment_list' %}" class="dropdown-item">Bank Payments</a>
+                                        <a href="{% url 'cash_management:dashboard' %}" class="dropdown-item">Cash Dashboard</a>
+                                        <a href="{% url 'cash_management:payment_list' %}" class="dropdown-item">Payment Schedule</a>
+                                        <a href="{% url 'cash_management:position_list' %}" class="dropdown-item">Cash Positions</a>
+                                        <a href="{% url 'cash_management:forecast_list' %}" class="dropdown-item">Liquidity Forecast</a>
+                                        <a href="{% url 'cash_management:treasury_list' %}" class="dropdown-item">Treasury Accounts</a>
+                                        <a href="{% url 'cash_management:fx_list' %}" class="dropdown-item">FX Exposure</a>
+                                        <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Financial Reports</div>
                                         <a href="{% url 'accounting:gl_dashboard' %}" class="dropdown-item">General Ledger Dashboard</a>
+                                        <a href="{% url 'accounting:cash_position' %}" class="dropdown-item"><i class="feather-trending-up me-2"></i>Capital & Cash Position</a>
                                         <a href="{% url 'accounting:account_list' %}" class="dropdown-item">Accounts</a>
                                         <a href="{% url 'accounting:ledger_entry_list' %}" class="dropdown-item">Ledger Entries</a>
                                         <a href="{% url 'accounting:trial_balance_list' %}" class="dropdown-item">Trial Balances</a>
@@ -57,14 +70,6 @@
                                         <a href="{% url 'accounting:bank_statements_list' %}" class="dropdown-item">Bank Statements</a>
                                         <a href="{% url 'accounting:cash_transactions_list' %}" class="dropdown-item">Cash Transactions</a>
                                         <a href="{% url 'accounting:cash_flow_forecast_list' %}" class="dropdown-item">Cash Flow Forecast</a>
-                                        <div class="dropdown-divider"></div>
-                                        <div class="dropdown-header">Cash Management</div>
-                                        <a href="{% url 'cash_management:dashboard' %}" class="dropdown-item">Cash Dashboard</a>
-                                        <a href="{% url 'cash_management:payment_list' %}" class="dropdown-item">Payment Schedule</a>
-                                        <a href="{% url 'cash_management:position_list' %}" class="dropdown-item">Cash Positions</a>
-                                        <a href="{% url 'cash_management:forecast_list' %}" class="dropdown-item">Liquidity Forecast</a>
-                                        <a href="{% url 'cash_management:treasury_list' %}" class="dropdown-item">Treasury Accounts</a>
-                                        <a href="{% url 'cash_management:fx_list' %}" class="dropdown-item">FX Exposure</a>
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Reconciliation</div>
                                         <a href="{% url 'accounting:reconciliation_entries_list' %}" class="dropdown-item">Reconciliation Entries</a>
@@ -97,6 +102,8 @@
                                         <i data-feather="users"></i><span data-key="t-shareholder">Shareholder Management</span> <div class="arrow-down"></div>
                                     </a>
                                     <div class="dropdown-menu" aria-labelledby="topnav-shareholder">
+                                        <a href="{% url 'shareholder:dashboard' %}" class="dropdown-item"><i class="feather-pie-chart me-2"></i>Dashboard</a>
+                                        <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Stakeholder Management</div>
                                         <a href="{% url 'shareholder:stakeholder-list' %}" class="dropdown-item">All Shareholders</a>
                                         <a href="{% url 'shareholder:stakeholder-create' %}" class="dropdown-item">Add New Shareholder</a>
@@ -119,18 +126,35 @@
                                     </a>
                                     <div class="dropdown-menu" aria-labelledby="topnav-hr">
                                         <div class="dropdown-header">Employee Management</div>
-                                        <a href="{% url 'hr:employee-list' %}" class="dropdown-item">All Employees</a>
+                                        <a href="{% url 'hr:employee-list' %}" class="dropdown-item">Employees</a>
                                         <a href="{% url 'hr:employee-create' %}" class="dropdown-item">Add Employee</a>
                                         <div class="dropdown-divider"></div>
+                                    <div class="dropdown-header">Attendance</div>
+                                        <a href="{% url 'hr:attendance-list' %}" class="dropdown-item">Attendances</a>
+                                        <a href="{% url 'hr:attendance-list' %}" class="dropdown-item">Add Attendance</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Organization</div>
+                                        <a href="{% url 'hr:position-list' %}" class="dropdown-item">Positions</a>
+                                        <a href="{% url 'hr:department-list' %}" class="dropdown-item">Departments</a>
+                                        <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Payroll Management</div>
-                                        <a href="{% url 'hr:payroll-list' %}" class="dropdown-item">All Payroll Runs</a>
+                                        <a href="{% url 'hr:payroll-list' %}" class="dropdown-item">Payrolls</a>
                                         <a href="{% url 'hr:payroll-create' %}" class="dropdown-item">Create Payroll</a>
+                                        <a href="{% url 'hr:payrollrecord-list' %}" class="dropdown-item">Payroll Records</a>
+                                        <a href="{% url 'hr:salaryhistory-list' %}" class="dropdown-item">Salary History</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Benefits</div>
+                                        <a href="{% url 'hr:benefit-list' %}" class="dropdown-item">Benefits</a>
+                                        <a href="{% url 'hr:employeebenefit-list' %}" class="dropdown-item">Employee Benefits</a>
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Leave Management</div>
+                                        <a href="{% url 'hr:leave-list' %}" class="dropdown-item">Leaves</a>
+                                        <a href="{% url 'hr:leavebalance-list' %}" class="dropdown-item">Leave Balances</a>
                                         <a href="{% url 'hr:leave-request-list' %}" class="dropdown-item">Leave Requests</a>
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Performance & Discipline</div>
-                                        <a href="{% url 'hr:performance-list' %}" class="dropdown-item">Performance Reviews</a>
+                                        <a href="{% url 'hr:performance-list' %}" class="dropdown-item">Performances</a>
+                                        <a href="{% url 'hr:disciplinary-list' %}" class="dropdown-item">Disciplinary</a>
                                     </div>
                                 </li>
                                 {% endif %}
@@ -302,6 +326,29 @@
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Campaigns</div>
                                         <a href="{% url 'crm:campaign_list' %}" class="dropdown-item">All Campaigns</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Masters</div>
+                                        <a href="{% url 'crm:territories' %}" class="dropdown-item">Territories</a>
+                                        <a href="{% url 'crm:customer-groups' %}" class="dropdown-item">Customer Groups</a>
+                                        <a href="{% url 'crm:contacts' %}" class="dropdown-item">Contacts</a>
+                                        <a href="{% url 'crm:prospects' %}" class="dropdown-item">Prospects</a>
+                                        <a href="{% url 'crm:salespersons' %}" class="dropdown-item">Sales People</a>
+                                        <a href="{% url 'crm:lead-sources' %}" class="dropdown-item">Lead Sources</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Sales Pipeline</div>
+                                        <a href="{% url 'crm:contracts' %}" class="dropdown-item">Contracts</a>
+                                        <a href="{% url 'crm:appointments' %}" class="dropdown-item">Appointments</a>
+                                        <a href="{% url 'crm:communications' %}" class="dropdown-item">Communications</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Email & SMS</div>
+                                        <a href="{% url 'crm:email-campaigns' %}" class="dropdown-item">Email Campaigns</a>
+                                        <a href="{% url 'crm:sms-campaigns' %}" class="dropdown-item">SMS Campaigns</a>
+                                        <a href="{% url 'crm:email-groups' %}" class="dropdown-item">Email Groups</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Maintenance</div>
+                                        <a href="{% url 'crm:maintenance-schedules' %}" class="dropdown-item">Maintenance Schedules</a>
+                                        <a href="{% url 'crm:maintenance-visits' %}" class="dropdown-item">Maintenance Visits</a>
+                                        <a href="{% url 'crm:warranty-claims' %}" class="dropdown-item">Warranty Claims</a>
                                     </div>
                                 </li>
                                 {% endif %}

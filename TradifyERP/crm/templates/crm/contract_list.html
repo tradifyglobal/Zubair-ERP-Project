@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contracts - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title mb-0">Contracts</h4>
+            </div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'crm:contract_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> New Contract</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if contracts %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Contract #</th>
+                                    <th>Customer</th>
+                                    <th>Value</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contract in contracts %}
+                                <tr>
+                                    <td>{{ contract.contract_number }}</td>
+                                    <td>{{ contract.customer|default:"—" }}</td>
+                                    <td>{{ contract.contract_value|default:"—" }}</td>
+                                    <td><span class="badge badge-primary">{{ contract.get_status_display }}</span></td>
+                                    <td>
+                                        <a href="{% url 'crm:contract_detail' contract.pk %}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                        <a href="{% url 'crm:contract_update' contract.pk %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                        <a href="{% url 'crm:contract_delete' contract.pk %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation"><ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page=1">First</a></li><li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+                        <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li><li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>{% endif %}
+                    </ul></nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-info"><i class="fas fa-info-circle"></i> No contracts found. <a href="{% url 'crm:contract_create' %}">Create one now</a></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

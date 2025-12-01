@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Cost Details{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">Maintenance Cost</h5></div>
+                <div class="card-body">
+                    <p><strong>Work Order:</strong> <a href="{% url 'maintenance:workorder-detail' cost.work_order.pk %}">{{ cost.work_order.work_order_number }}</a></p>
+                    <p><strong>Type:</strong> {{ cost.cost_type }}</p>
+                    <p><strong>Amount:</strong> <strong>${{ cost.amount }}</strong></p>
+                    <p><strong>Date:</strong> {{ cost.date|date:"Y-m-d" }}</p>
+                    {% if cost.description %}<p><strong>Description:</strong> {{ cost.description }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'maintenance:cost-update' cost.pk %}" class="btn btn-warning w-100 mb-2"><i data-feather="edit"></i> Edit</a>
+                    <a href="{% url 'maintenance:cost-list' %}" class="btn btn-secondary w-100"><i data-feather="arrow-left"></i> Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

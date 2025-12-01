@@ -21,9 +21,9 @@
             </div>
             <div class="row">
                 <div class="col-lg-8 mx-auto">
-                    <div class="card">
-                        <div class="card-body">
-                            <form method="post">
+                    <div class="card" style="overflow: visible;">
+                        <div class="card-body" style="overflow: visible; padding-bottom: 150px;">
+                            <form method="post" id="equipment-form" style="overflow: visible;">
                                 {% csrf_token %}
                                 {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
                                 {% for field in form %}
@@ -33,11 +33,11 @@
                                     {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors }}</div>{% endif %}
                                 </div>
                                 {% endfor %}
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary"><i class="mdi mdi-check"></i> Save</button>
-                                    <a href="{% url 'manufacturing:equipment_list' %}" class="btn btn-light">Cancel</a>
-                                </div>
                             </form>
+                        </div>
+                        <div class="card-footer bg-light" style="display: flex; gap: 10px; justify-content: flex-start; padding: 15px;">
+                            <button type="submit" form="equipment-form" class="btn btn-primary"><i class="mdi mdi-check"></i> Save</button>
+                            <a href="{% url 'manufacturing:equipment_list' %}" class="btn btn-secondary">Cancel</a>
                         </div>
                     </div>
                 </div>
@@ -45,5 +45,23 @@
         </div>
     </div>
 </div>
-<style>.form-control, .form-select, textarea { border: 1px solid #e3e6f0; }</style>
+<style>
+.form-control, .form-select, textarea { 
+    border: 1px solid #e3e6f0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+}
+.form-control:focus, .form-select:focus, textarea:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+.btn-primary, .btn-secondary {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+}
+.card-footer {
+    position: relative;
+    z-index: 100;
+}
+</style>
 {% endblock %}

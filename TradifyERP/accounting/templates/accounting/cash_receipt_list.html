@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Cash Receipts - Accounting{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="#">Cash Management</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Cash Receipts</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header with Action Button -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h4 class="mb-0">{{ page_title }}</h4>
+            <small class="text-muted">Manage cash receipts from shareholders and other sources</small>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'accounting:cash_receipt_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Cash Receipt
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title mb-0">{{ status_counts.draft }}</h3>
+                    <small class="text-muted">Draft Receipts</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title mb-0">{{ status_counts.posted }}</h3>
+                    <small class="text-muted">Posted Receipts</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title mb-0">{{ receipts.paginator.count }}</h3>
+                    <small class="text-muted">Total Receipts</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="card-title mb-0">Code: 100001</h3>
+                    <small class="text-muted">Cash Account</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search by description or reference" 
+                           value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                        <option value="POSTED" {% if request.GET.status == 'POSTED' %}selected{% endif %}>Posted</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'accounting:cash_receipt_list' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Debit</th>
+                        <th>Credit</th>
+                        <th>Amount</th>
+                        <th>Workflow Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for receipt in receipts %}
+                        <tr>
+                            <td>{{ receipt.date|date:"M d, Y" }}</td>
+                            <td>{{ receipt.description|truncatewords:10 }}</td>
+                            <td>
+                                <small>
+                                    <strong>{{ receipt.account.account_number }}</strong><br>
+                                    {{ receipt.account.name }}
+                                </small>
+                            </td>
+                            <td>
+                                <small>
+                                    {% if receipt.credit_account %}
+                                        <strong>{{ receipt.credit_account.account_number }}</strong><br>
+                                        {{ receipt.credit_account.name }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-info">{{ receipt.debit_amount|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                {% if receipt.workflow_status == 'DRAFT' %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                {% elif receipt.workflow_status == 'PENDING_APPROVAL' %}
+                                    <span class="badge bg-warning">Pending Approval</span>
+                                {% elif receipt.workflow_status == 'APPROVED' %}
+                                    <span class="badge bg-info">Approved</span>
+                                {% elif receipt.workflow_status == 'AUTHORIZED' %}
+                                    <span class="badge bg-success">Authorized</span>
+                                {% elif receipt.workflow_status == 'REJECTED' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <!-- Print Button -->
+                                    <a href="{% url 'accounting:cash_receipt_print' receipt.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Print Receipt">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    
+                                    {% if receipt.workflow_status == 'DRAFT' or receipt.workflow_status == 'PENDING_APPROVAL' %}
+                                        <form method="post" action="{% url 'accounting:cash_receipt_approve' receipt.id %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'accounting:cash_receipt_reject' receipt.id %}" style="display:inline;" onclick="return confirm('Are you sure?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    {% elif receipt.workflow_status == 'APPROVED' %}
+                                        <form method="post" action="{% url 'accounting:cash_receipt_authorize' receipt.id %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Authorize & Post">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </button>
+                                        </form>
+                                    {% elif receipt.workflow_status == 'AUTHORIZED' %}
+                                        <a href="{% url 'accounting:ledger_entry_list' %}?search={{ receipt.id }}" class="btn btn-sm btn-outline-info" title="View Ledger Entry">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p>No cash receipts found</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

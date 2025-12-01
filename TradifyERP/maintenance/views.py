@@ -698,6 +698,8 @@ class MaintenanceCostCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:cost-list')
 
     def form_valid(self, form):
+        # Set entity from current request
+        form.instance.entity_id = 1
         messages.success(self.request, 'Cost recorded successfully!')
         return super().form_valid(form)
 

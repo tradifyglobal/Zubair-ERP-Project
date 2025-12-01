@@ -1,0 +1,66 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Salary History - HR Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8"><h1 class="h3">Salary History</h1></div>
+        <div class="col-md-4 text-end"><a href="{% url 'hr:salaryhistory-create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Record Salary Update</a></div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6"><input type="text" name="search" class="form-control" placeholder="Search by employee name..." value="{{ request.GET.search }}"></div>
+                <div class="col-md-2"><button type="submit" class="btn btn-secondary w-100"><i class="fas fa-search"></i> Filter</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr>
+                    <th>Employee</th>
+                    <th>Previous Salary</th>
+                    <th>New Salary</th>
+                    <th>Effective Date</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Approved By</th>
+                    <th>Actions</th>
+                </tr></thead>
+                <tbody>
+                    {% for record in salary_histories %}
+                    <tr>
+                        <td>{{ record.employee.first_name }} {{ record.employee.last_name }}</td>
+                        <td>{{ record.salary_before }}</td>
+                        <td><strong>{{ record.salary_after }}</strong></td>
+                        <td>{{ record.effective_date }}</td>
+                        <td>{{ record.get_change_reason_display }}</td>
+                        <td>
+                            {% if record.status == 'APPROVED' %}
+                                <span class="badge bg-success">{{ record.get_status_display }}</span>
+                            {% elif record.status == 'IN_REVIEW' %}
+                                <span class="badge bg-warning">{{ record.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ record.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ record.approved_by.first_name }} {{ record.approved_by.last_name|default:"--" }}</td>
+                        <td>
+                            <a href="{% url 'hr:salaryhistory-detail' record.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                            {% if record.status != 'APPROVED' or user.is_superuser %}
+                                <a href="{% url 'hr:salaryhistory-update' record.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}<tr><td colspan="9" class="text-center text-muted py-4">No salary history records</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

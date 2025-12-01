@@ -12,6 +12,7 @@ from decimal import Decimal
 from django.utils import timezone
 
 from accounting.models import Entity, Account
+from accounting.mixins import SessionEntityMixin
 from accounting.pl_generator import (
     calculate_pl_from_gl,
     generate_pl_report,
@@ -50,7 +51,7 @@ class ProfitLossReportForm(forms.Form):
         self.fields['period_end'].initial = today
 
 
-class ProfitLossDetailView(LoginRequiredMixin, FormView):
+class ProfitLossDetailView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Display detailed P&L report with GL data."""
     template_name = 'accounting/profit_loss_detail.html'
     form_class = ProfitLossReportForm
@@ -58,7 +59,8 @@ class ProfitLossDetailView(LoginRequiredMixin, FormView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        entity = Entity.objects.filter(is_active=True).first()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             return context
@@ -119,13 +121,14 @@ class ProfitLossDetailView(LoginRequiredMixin, FormView):
         return self.form_invalid(form)
 
 
-class ProfitLossComparisonView(LoginRequiredMixin, TemplateView):
+class ProfitLossComparisonView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """Compare P&L across multiple periods."""
     template_name = 'accounting/profit_loss_comparison.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        entity = Entity.objects.filter(is_active=True).first()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             return context

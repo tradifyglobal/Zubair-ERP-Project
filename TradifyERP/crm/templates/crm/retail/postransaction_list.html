@@ -50,7 +50,7 @@
                             <td>{{ txn.points_earned|default:0 }}</td>
                             <td>{{ txn.created_at|date:"M d, Y H:i" }}</td>
                             <td class="no-print">
-                                <a href="#" class="btn btn-sm btn-info" title="View">
+                                <a href="{% url 'crm:postransaction_detail' txn.pk %}" class="btn btn-sm btn-info" title="View">
                                     <i class="mdi mdi-eye"></i>
                                 </a>
                             </td>

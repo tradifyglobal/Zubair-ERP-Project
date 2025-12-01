@@ -1,0 +1,28 @@
+{% if breadcrumbs %}
+<div class="page-title-box d-sm-flex align-items-center justify-content-between">
+    <h4 class="mb-sm-0 font-size-18">
+        {% for item in breadcrumbs %}
+            {% if forloop.last %}
+                {{ item.title }}
+            {% endif %}
+        {% endfor %}
+    </h4>
+    <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+            {% for item in breadcrumbs %}
+                {% if forloop.last %}
+                    <li class="breadcrumb-item active">{{ item.title }}</li>
+                {% else %}
+                    <li class="breadcrumb-item">
+                        {% if item.url %}
+                            <a href="{{ item.url }}">{{ item.title }}</a>
+                        {% else %}
+                            {{ item.title }}
+                        {% endif %}
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </div>
+</div>
+{% endif %}

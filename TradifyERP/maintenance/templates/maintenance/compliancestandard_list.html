@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Compliance Standards{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Compliance Standards</h4>
+                <a href="{% url 'maintenance:standard-create' %}" class="btn btn-primary"><i data-feather="plus"></i> Add Standard</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-10">
+                            <input type="text" name="q" class="form-control" placeholder="Search standards..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Standard Code</th>
+                                <th>Standard Name</th>
+                                <th>Requirement</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for standard in standards %}
+                            <tr>
+                                <td><strong>{{ standard.standard_code }}</strong></td>
+                                <td>{{ standard.standard_name }}</td>
+                                <td>{{ standard.requirement|default:"N/A"|truncatewords:10 }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'maintenance:standard-detail' standard.pk %}" class="btn btn-info"><i data-feather="eye"></i></a>
+                                        <a href="{% url 'maintenance:standard-update' standard.pk %}" class="btn btn-warning"><i data-feather="edit-2"></i></a>
+                                        <a href="{% url 'maintenance:standard-delete' standard.pk %}" class="btn btn-danger" onclick="return confirm('Sure?')"><i data-feather="trash-2"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No standards found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

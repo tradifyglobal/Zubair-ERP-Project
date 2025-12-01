@@ -14,7 +14,7 @@
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="page-title mb-0">FX Exposures</h4>
-                        <a href="#" class="btn btn-primary btn-sm">Record Exposure</a>
+                        <a href="{% url 'cash_management:fx_create' %}" class="btn btn-primary btn-sm">Record Exposure</a>
                     </div>
                 </div>
             </div>
@@ -76,8 +76,8 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="#" class="btn btn-sm btn-info">View</a>
-                                                <a href="#" class="btn btn-sm btn-warning">Edit</a>
+                                                <a href="{% url 'cash_management:fx_detail' exposure.pk %}" class="btn btn-sm btn-info">View</a>
+                                                <a href="{% url 'cash_management:fx_edit' exposure.pk %}" class="btn btn-sm btn-warning">Edit</a>
                                             </td>
                                         </tr>
                                         {% empty %}

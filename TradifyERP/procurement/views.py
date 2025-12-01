@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from accounting.mixins import SessionEntityMixin
 from django.urls import reverse_lazy
 from django.db.models import Q, Sum, F
 from django.utils import timezone
@@ -15,7 +16,7 @@ from .forms import (
 )
 
 
-class ProcurementDashboardView(LoginRequiredMixin, TemplateView):
+class ProcurementDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """Procurement Module Dashboard - overview of POs, receipts, and RFQs."""
     template_name = 'procurement/dashboard.html'
     login_url = 'login'
@@ -69,7 +70,7 @@ class ProcurementDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class PurchaseOrderListView(LoginRequiredMixin, ListView):
+class PurchaseOrderListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all purchase orders with filtering and search."""
     model = PurchaseOrder
     template_name = 'procurement/purchaseorder_list.html'
@@ -101,7 +102,7 @@ class PurchaseOrderListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class PurchaseOrderDetailView(LoginRequiredMixin, DetailView):
+class PurchaseOrderDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display detailed view of a purchase order with line items."""
     model = PurchaseOrder
     template_name = 'procurement/purchaseorder_detail.html'
@@ -116,7 +117,7 @@ class PurchaseOrderDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class PurchaseOrderCreateView(LoginRequiredMixin, CreateView):
+class PurchaseOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new purchase order."""
     model = PurchaseOrder
     form_class = PurchaseOrderForm
@@ -125,7 +126,7 @@ class PurchaseOrderCreateView(LoginRequiredMixin, CreateView):
     login_url = 'login'
 
 
-class PurchaseOrderUpdateView(LoginRequiredMixin, UpdateView):
+class PurchaseOrderUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing purchase order."""
     model = PurchaseOrder
     form_class = PurchaseOrderForm
@@ -134,7 +135,7 @@ class PurchaseOrderUpdateView(LoginRequiredMixin, UpdateView):
     login_url = 'login'
 
 
-class PurchaseOrderApproveView(LoginRequiredMixin, UpdateView):
+class PurchaseOrderApproveView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Approve a purchase order."""
     model = PurchaseOrder
     fields = []
@@ -148,7 +149,7 @@ class PurchaseOrderApproveView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class GoodsReceiptListView(LoginRequiredMixin, ListView):
+class GoodsReceiptListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all goods receipts with filtering."""
     model = GoodsReceipt
     template_name = 'procurement/goodsreceipt_list.html'
@@ -175,7 +176,7 @@ class GoodsReceiptListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class GoodsReceiptDetailView(LoginRequiredMixin, DetailView):
+class GoodsReceiptDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display detailed view of a goods receipt."""
     model = GoodsReceipt
     template_name = 'procurement/goodsreceipt_detail.html'
@@ -189,7 +190,7 @@ class GoodsReceiptDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class GoodsReceiptCreateView(LoginRequiredMixin, CreateView):
+class GoodsReceiptCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new goods receipt."""
     model = GoodsReceipt
     form_class = GoodsReceiptForm
@@ -198,7 +199,7 @@ class GoodsReceiptCreateView(LoginRequiredMixin, CreateView):
     login_url = 'login'
 
 
-class RequestForQuotationListView(LoginRequiredMixin, ListView):
+class RequestForQuotationListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all RFQs with filtering."""
     model = RequestForQuotation
     template_name = 'procurement/requestforquotation_list.html'
@@ -219,7 +220,7 @@ class RequestForQuotationListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class RequestForQuotationDetailView(LoginRequiredMixin, DetailView):
+class RequestForQuotationDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display detailed view of an RFQ with vendor quotations."""
     model = RequestForQuotation
     template_name = 'procurement/requestforquotation_detail.html'
@@ -233,7 +234,7 @@ class RequestForQuotationDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class RequestForQuotationCreateView(LoginRequiredMixin, CreateView):
+class RequestForQuotationCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new RFQ."""
     model = RequestForQuotation
     form_class = RequestForQuotationForm
@@ -242,7 +243,7 @@ class RequestForQuotationCreateView(LoginRequiredMixin, CreateView):
     login_url = 'login'
 
 
-class VendorQuotationListView(LoginRequiredMixin, ListView):
+class VendorQuotationListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all vendor quotations with filtering."""
     model = VendorQuotation
     template_name = 'procurement/vendorquotation_list.html'
@@ -261,7 +262,7 @@ class VendorQuotationListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class ThreeWayMatchingListView(LoginRequiredMixin, ListView):
+class ThreeWayMatchingListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List 3-way matching results to identify discrepancies."""
     model = ThreeWayMatching
     template_name = 'procurement/threewymatching_list.html'
@@ -290,7 +291,7 @@ class ThreeWayMatchingListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class ThreeWayMatchingDetailView(LoginRequiredMixin, DetailView):
+class ThreeWayMatchingDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display 3-way matching details and allow resolution."""
     model = ThreeWayMatching
     template_name = 'procurement/threewymatching_detail.html'

@@ -49,11 +49,11 @@
                                     {% for opp in opportunities %}
                                         <tr>
                                             <td>{{ opp.opportunity_name }}</td>
-                                            <td>${{ opp.deal_amount|floatformat:2 }}</td>
-                                            <td>{{ opp.probability }}%</td>
-                                            <td><span class="badge bg-info">{{ opp.status }}</span></td>
+                                            <td>${{ opp.deal_amount|floatformat:2 }} {{ opp.currency }}</td>
+                                            <td>{{ opp.win_probability }}%</td>
+                                            <td><span class="badge bg-info">{{ opp.get_status_display }}</span></td>
                                             <td>
-                                                <button class="btn btn-sm btn-info">View</button>
+                                                <a href="{% url 'crm:opportunity_detail' opp.pk %}" class="btn btn-sm btn-info">View</a>
                                             </td>
                                         </tr>
                                     {% empty %}

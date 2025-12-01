@@ -12,11 +12,16 @@ class CustomerInvoiceForm(forms.ModelForm):
     
     class Meta:
         model = CustomerInvoice
-        fields = ['customer', 'invoice_date', 'due_date', 'reference_number', 
-                  'currency', 'subject', 'notes', 'status']
+        fields = ['customer', 'invoice_number', 'invoice_date', 'due_date', 'total_amount', 
+                  'reference_number', 'currency', 'subject', 'notes', 'status']
         widgets = {
             'customer': forms.Select(attrs={
                 'class': 'form-select',
+                'required': 'required'
+            }),
+            'invoice_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Auto-generated invoice number',
                 'required': 'required'
             }),
             'invoice_date': forms.DateInput(attrs={
@@ -29,19 +34,23 @@ class CustomerInvoiceForm(forms.ModelForm):
                 'class': 'form-control',
                 'required': 'required'
             }),
-            'reference_number': forms.TextInput(attrs={
+            'total_amount': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Reference number',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'min': '0.01',
                 'required': 'required'
             }),
+            'reference_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Reference number'
+            }),
             'currency': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
+                'class': 'form-select'
             }),
             'subject': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Invoice subject',
-                'required': 'required'
+                'placeholder': 'Invoice subject'
             }),
             'notes': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -52,6 +61,26 @@ class CustomerInvoiceForm(forms.ModelForm):
                 'class': 'form-select'
             }),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make status field not required for form
+        self.fields['status'].required = False
+    
+    def clean(self):
+        """Validate the form."""
+        cleaned_data = super().clean()
+        invoice_date = cleaned_data.get('invoice_date')
+        due_date = cleaned_data.get('due_date')
+        
+        # Validate due_date is after invoice_date
+        if invoice_date and due_date:
+            if due_date < invoice_date:
+                self.add_error('due_date', 'Due date must be after or equal to invoice date.')
+        
+        print(f"Form clean called - cleaned_data: {cleaned_data}")
+        print(f"Form errors after validation: {self.errors}")
+        return cleaned_data
 
 
 class InvoiceLineItemForm(forms.ModelForm):
@@ -59,7 +88,7 @@ class InvoiceLineItemForm(forms.ModelForm):
     
     class Meta:
         model = InvoiceLineItem
-        fields = ['invoice', 'description', 'quantity', 'unit_price', 'gl_account', 'tax_rate', 'amount']
+        fields = ['invoice', 'description', 'quantity', 'unit_price', 'revenue_account', 'tax_rate', 'amount']
         widgets = {
             'invoice': forms.Select(attrs={
                 'class': 'form-select',
@@ -84,7 +113,7 @@ class InvoiceLineItemForm(forms.ModelForm):
                 'min': '0',
                 'required': 'required'
             }),
-            'gl_account': forms.Select(attrs={
+            'revenue_account': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
             }),
@@ -110,7 +139,7 @@ class CustomerPaymentForm(forms.ModelForm):
     class Meta:
         model = CustomerPayment
         fields = ['customer', 'invoice', 'payment_date', 'amount', 'payment_method', 
-                  'reference_number', 'bank_account', 'currency', 'notes']
+                  'reference_number', 'bank_account_id', 'currency', 'notes']
         widgets = {
             'customer': forms.Select(attrs={
                 'class': 'form-select',
@@ -140,9 +169,9 @@ class CustomerPaymentForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Check/Reference number'
             }),
-            'bank_account': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
+            'bank_account_id': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Bank account'
             }),
             'currency': forms.Select(attrs={
                 'class': 'form-select',
@@ -193,8 +222,8 @@ class ARDiscountForm(forms.ModelForm):
                 'rows': 2,
                 'placeholder': 'Discount reason'
             }),
-            'status': forms.Select(attrs={
-                'class': 'form-select'
+            'status': forms.TextInput(attrs={
+                'class': 'form-control'
             }),
         }
 

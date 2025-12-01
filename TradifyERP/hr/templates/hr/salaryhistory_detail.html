@@ -1,0 +1,233 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Salary History - {{ salary_history.employee.first_name }} {{ salary_history.employee.last_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">Salary Update Record</h1>
+            <p class="text-muted">{{ salary_history.employee.first_name }} {{ salary_history.employee.last_name }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:salaryhistory-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6">
+            <!-- Employee Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Employee Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Employee</h6>
+                            <p class="mb-0"><strong>{{ salary_history.employee.first_name }} {{ salary_history.employee.last_name }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Employee ID</h6>
+                            <p class="mb-0"><strong>{{ salary_history.employee.employee_id }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Department</h6>
+                            <p class="mb-0">{{ salary_history.employee.department.name|default:"--" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Position</h6>
+                            <p class="mb-0">{{ salary_history.employee.position.title|default:"--" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salary Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Salary Change Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Previous Salary</h6>
+                            <p class="mb-0"><strong class="text-secondary" style="font-size: 1.1em;">{{ salary_history.salary_before }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">New Salary</h6>
+                            <p class="mb-0"><strong class="text-success" style="font-size: 1.1em;">{{ salary_history.salary_after }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <hr class="my-2">
+                            <h6 class="text-muted mb-2">Salary Difference</h6>
+                            <div id="salary-diff-display">
+                                <span style="font-weight: bold; font-size: 1.2em;">Calculating...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const before = parseFloat('{{ salary_history.salary_before }}');
+                            const after = parseFloat('{{ salary_history.salary_after }}');
+                            const diff = after - before;
+                            const sign = diff >= 0 ? '+' : '';
+                            const color = diff >= 0 ? 'green' : 'red';
+                            const formatted = (Math.round(diff * 100) / 100).toFixed(2);
+                            document.getElementById('salary-diff-display').innerHTML = 
+                                `<span style="color: ${color}; font-weight: bold; font-size: 1.2em;">${sign}${formatted}</span>`;
+                        });
+                    </script>
+                </div>
+            </div>
+
+            <!-- Change Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Change Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Reason for Change</h6>
+                            <p class="mb-0"><strong>{{ salary_history.get_change_reason_display }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Effective Date</h6>
+                            <p class="mb-0"><strong>{{ salary_history.effective_date|date:"M d, Y" }}</strong></p>
+                        </div>
+                    </div>
+                    {% if salary_history.performance_rating %}
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Performance Rating</h6>
+                            <p class="mb-0">
+                                <span class="badge bg-warning">{{ salary_history.performance_rating }}/5</span>
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6">
+            <!-- Quick Actions & Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'hr:salaryhistory-list' %}" class="btn btn-secondary w-100 mb-2">
+                        <i class="fas fa-list"></i> Back to History
+                    </a>
+                </div>
+            </div>
+
+            <!-- Approval Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Workflow & Approval</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-2">Workflow Status</h6>
+                            <p class="mb-0">
+                                {% if salary_history.status == 'APPROVED' %}
+                                    <span class="badge bg-success" style="font-size: 0.9em; padding: 0.5em 0.75em;">
+                                        <i class="fas fa-check-circle"></i> {{ salary_history.get_status_display }}
+                                    </span>
+                                {% elif salary_history.status == 'IN_REVIEW' %}
+                                    <span class="badge bg-warning" style="font-size: 0.9em; padding: 0.5em 0.75em;">
+                                        <i class="fas fa-clock"></i> {{ salary_history.get_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-info" style="font-size: 0.9em; padding: 0.5em 0.75em;">
+                                        <i class="fas fa-hourglass-start"></i> {{ salary_history.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Approved By</h6>
+                            <p class="mb-0">{{ salary_history.approved_by.first_name }} {{ salary_history.approved_by.last_name|default:"--" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Approved Date</h6>
+                            <p class="mb-0">{{ salary_history.approved_date|date:"M d, Y H:i"|default:"Pending" }}</p>
+                        </div>
+                    </div>
+                    {% if salary_history.approval_notes %}
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Approval Notes</h6>
+                            <p class="mb-0">{{ salary_history.approval_notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">System Information</h5>
+                </div>
+                <div class="card-body small">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Created</h6>
+                            <p class="mb-0">{{ salary_history.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Last Updated</h6>
+                            <p class="mb-0">{{ salary_history.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Entity</h6>
+                            <p class="mb-0">{{ salary_history.employee.entity.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

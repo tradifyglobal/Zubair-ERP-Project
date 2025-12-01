@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Work Orders{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Work Orders</h4>
+                <div class="page-title-right">
+                    <a href="{% url 'maintenance:workorder-create' %}" class="btn btn-primary">
+                        <i data-feather="plus"></i> New Work Order
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" name="q" class="form-control" placeholder="Search by work order or asset..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="status" class="form-select">
+                                <option value="">-- All Statuses --</option>
+                                {% for status_id, status_name in status_choices %}
+                                <option value="{{ status_id }}" {% if status_filter == status_id %}selected{% endif %}>{{ status_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i data-feather="search"></i> Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Orders Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">All Work Orders</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>WO Number</th>
+                                <th>Asset</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Assigned To</th>
+                                <th>Start Date</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for wo in work_orders %}
+                            <tr>
+                                <td><strong>{{ wo.work_order_number }}</strong></td>
+                                <td>{{ wo.asset.asset_name }}</td>
+                                <td>
+                                    <span class="badge {% if wo.status == 'Open' %}bg-secondary{% elif wo.status == 'In Progress' %}bg-info{% elif wo.status == 'Completed' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ wo.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if wo.priority == 'High' %}
+                                    <span class="badge bg-danger">{{ wo.priority }}</span>
+                                    {% elif wo.priority == 'Medium' %}
+                                    <span class="badge bg-warning">{{ wo.priority }}</span>
+                                    {% else %}
+                                    <span class="badge bg-info">{{ wo.priority }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ wo.assigned_to.get_full_name|default:"Unassigned" }}</td>
+                                <td>{{ wo.start_date|date:"Y-m-d"|default:"-" }}</td>
+                                <td>{{ wo.due_date|date:"Y-m-d"|default:"-" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'maintenance:workorder-detail' wo.pk %}" class="btn btn-info" title="View">
+                                            <i data-feather="eye"></i>
+                                        </a>
+                                        <a href="{% url 'maintenance:workorder-update' wo.pk %}" class="btn btn-warning" title="Edit">
+                                            <i data-feather="edit-2"></i>
+                                        </a>
+                                        <a href="{% url 'maintenance:workorder-delete' wo.pk %}" class="btn btn-danger" title="Delete" onclick="return confirm('Are you sure?')">
+                                            <i data-feather="trash-2"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    No work orders found. <a href="{% url 'maintenance:workorder-create' %}">Create one now</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                    {% endif %}
+                    
+                    <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>
+    feather.replace();
+</script>
+{% endblock %}

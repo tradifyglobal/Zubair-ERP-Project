@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ prospect.prospect_name }} - Prospect - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8"><h4 class="page-title mb-0">{{ prospect.prospect_name }}</h4></div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'crm:prospect_update' prospect.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                <a href="{% url 'crm:prospect_delete' prospect.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</a>
+                <a href="{% url 'crm:prospects' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+            </div>
+        </div>
+    </div>
+    <div class="row"><div class="col-lg-8"><div class="card"><div class="card-header"><h5 class="card-title mb-0">Prospect Information</h5></div><div class="card-body">
+        <div class="row">
+            <div class="col-md-6"><div class="mb-3"><label class="text-muted">Name</label><p class="mb-0"><strong>{{ prospect.prospect_name }}</strong></p></div></div>
+            <div class="col-md-6"><div class="mb-3"><label class="text-muted">Status</label><p class="mb-0"><span class="badge badge-primary">{{ prospect.get_status_display }}</span></p></div></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6"><div class="mb-3"><label class="text-muted">Probability</label><p class="mb-0">{{ prospect.probability }}%</p></div></div>
+            <div class="col-md-6"><div class="mb-3"><label class="text-muted">Estimated Value</label><p class="mb-0">{{ prospect.estimated_value|default:"—" }}</p></div></div>
+        </div>
+        {% if prospect.expected_closing_date %}<div class="mb-3"><label class="text-muted">Expected Closing</label><p class="mb-0">{{ prospect.expected_closing_date|date:"M d, Y" }}</p></div>{% endif %}
+        {% if prospect.notes %}<div class="mb-0"><label class="text-muted">Notes</label><p class="mb-0">{{ prospect.notes }}</p></div>{% endif %}
+    </div></div></div></div>
+</div>
+{% endblock %}

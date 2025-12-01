@@ -232,3 +232,40 @@ def check_action_permission(user, module, action):
         return True, f'{action.capitalize()} permission granted'
     else:
         return False, f'No {action} permission for {module}'
+
+
+def get_user_accessible_entities(user):
+    """
+    Get list of entities accessible to a user.
+    
+    Returns:
+        QuerySet or list of Entity objects
+        - If superuser: all active entities
+        - If has UserEntity assignments: only assigned entities  
+        - If no assignments: EMPTY (require admin to assign)
+    
+    This enforces that users MUST be explicitly assigned to entities.
+    Admin users must create UserEntity records for each user.
+    """
+    from accounting.models import Entity, UserEntity
+    
+    if not user.is_authenticated:
+        return Entity.objects.none()
+    
+    if user.is_superuser:
+        # Superusers see all active entities
+        return Entity.objects.filter(is_active=True).order_by('name')
+    
+    # Check if user has UserEntity assignments
+    user_entities = UserEntity.objects.filter(
+        user=user,
+        entity__is_active=True
+    ).select_related('entity').order_by('entity__name')
+    
+    if user_entities.exists():
+        # Return assigned entities
+        return [ue.entity for ue in user_entities]
+    
+    # No assignments found - return empty list (strict mode)
+    # User cannot access any entity until admin assigns them
+    return Entity.objects.none()

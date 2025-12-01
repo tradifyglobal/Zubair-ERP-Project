@@ -54,3 +54,31 @@ def create_user_role_for_new_user(sender, instance, created, **kwargs):
     except Exception as e:
         # Silently fail - don't break user creation if role assignment fails
         pass
+
+
+@receiver(post_save, sender='accounting.Stakeholder')
+def auto_create_capital_subaccounts(sender, instance, created, **kwargs):
+    """
+    When a shareholder/stakeholder is added, automatically create sub-accounts
+    under all capital accounts for that entity.
+    """
+    if not created:
+        return  # Only for new stakeholders
+    
+    from .models import Account
+    
+    try:
+        # Find all capital accounts for this entity
+        capital_accounts = Account.objects.filter(
+            entity=instance.entity,
+            account_type='EQUITY',
+            is_active=True
+        ).filter(name__icontains='capital')
+        
+        # Create sub-accounts for this stakeholder under each capital account
+        for capital_account in capital_accounts:
+            capital_account.get_shareholder_subaccount(instance)
+            
+    except Exception as e:
+        # Silently fail - don't break stakeholder creation
+        pass

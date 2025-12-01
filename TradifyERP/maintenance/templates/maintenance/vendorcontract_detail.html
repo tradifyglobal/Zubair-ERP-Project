@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% extends "base.html" %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% endblock %}<script>feather.replace();</script><script src="{% static 'js/feather.min.js' %}"></script>{% block extra_js %}{% endblock %}</div>    </div>        </div>            </div>                </div>                    <a href="{% url 'maintenance:contract-list' %}" class="btn btn-secondary w-100"><i data-feather="arrow-left"></i> Back</a>                    <a href="{% url 'maintenance:contract-update' contract.pk %}" class="btn btn-warning w-100 mb-2"><i data-feather="edit"></i> Edit</a>                <div class="card-body">            <div class="card">        <div class="col-lg-4">        </div>            </div>                </div>                    <p><strong>Terms:</strong> {{ contract.terms|default:"N/A" }}</p>                    <p><strong>Amount:</strong> ${{ contract.contract_value }}</p>                    <p><strong>End Date:</strong> {{ contract.end_date|date:"Y-m-d" }}</p>                    <p><strong>Start Date:</strong> {{ contract.start_date|date:"Y-m-d" }}</p>                    <p><strong>Vendor:</strong> {{ contract.vendor.vendor_name }}</p>                <div class="card-body">                <div class="card-header"><h5 class="mb-0">Contract {{ contract.contract_number }}</h5></div>            <div class="card">        <div class="col-lg-8">    <div class="row"><div class="container-fluid">{% block content %}{% block title %}{{ contract.contract_number }}{% endblock %}{% load static %}{% load static %}
+{% block title %}{{ contract.contract_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">Contract {{ contract.contract_number }}</h5></div>
+                <div class="card-body">
+                    <p><strong>Vendor:</strong> {{ contract.vendor.vendor_name }}</p>
+                    <p><strong>Start Date:</strong> {{ contract.start_date|date:"Y-m-d" }}</p>
+                    <p><strong>End Date:</strong> {{ contract.end_date|date:"Y-m-d" }}</p>
+                    <p><strong>Amount:</strong> ${{ contract.contract_value }}</p>
+                    <p><strong>Terms:</strong> {{ contract.terms|default:"N/A" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'maintenance:contract-update' contract.pk %}" class="btn btn-warning w-100 mb-2"><i data-feather="edit"></i> Edit</a>
+                    <a href="{% url 'maintenance:contract-list' %}" class="btn btn-secondary w-100"><i data-feather="arrow-left"></i> Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

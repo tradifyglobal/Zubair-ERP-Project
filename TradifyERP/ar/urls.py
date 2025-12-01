@@ -9,10 +9,13 @@ urlpatterns = [
     
     # Invoices
     path('invoices/', views.CustomerInvoiceListView.as_view(), name='invoice_list'),
+    path('invoices/create/', views.CustomerInvoiceCreateView.as_view(), name='invoice_create'),
     path('invoices/<int:pk>/', views.CustomerInvoiceDetailView.as_view(), name='invoice_detail'),
+    path('invoices/<int:pk>/edit/', views.CustomerInvoiceUpdateView.as_view(), name='invoice_edit'),
     
     # Payments
     path('payments/', views.CustomerPaymentListView.as_view(), name='payment_list'),
+    path('payments/create/', views.CustomerPaymentCreateView.as_view(), name='payment_create'),
     path('payments/<int:pk>/', views.CustomerPaymentDetailView.as_view(), name='payment_detail'),
     
     # Reports

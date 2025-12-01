@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ task.task_name }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">{{ task.task_name }}</h5></div>
+                <div class="card-body">
+                    <p><strong>Code:</strong> {{ task.task_code }}</p>
+                    <p><strong>Frequency:</strong> {{ task.frequency|default:"N/A" }}</p>
+                    <p><strong>Est. Duration:</strong> {{ task.estimated_duration_hours|default:"N/A" }} hours</p>
+                    {% if task.description %}<p><strong>Description:</strong> {{ task.description }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'maintenance:task-update' task.pk %}" class="btn btn-warning w-100 mb-2"><i data-feather="edit"></i> Edit</a>
+                    <a href="{% url 'maintenance:task-list' %}" class="btn btn-secondary w-100"><i data-feather="arrow-left"></i> Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

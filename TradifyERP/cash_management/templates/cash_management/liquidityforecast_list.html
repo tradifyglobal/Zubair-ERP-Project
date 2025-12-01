@@ -13,8 +13,8 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="page-title mb-0">Liquidity Forecasts</h4>
-                        <a href="#" class="btn btn-primary btn-sm">Create Forecast</a>
+                        <h4 class="page-title mb-0">Liquidity Forecast</h4>
+                        <a href="{% url 'cash_management:forecast_create' %}" class="btn btn-primary btn-sm">Create Forecast</a>
                     </div>
                 </div>
             </div>
@@ -58,8 +58,8 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="#" class="btn btn-sm btn-info">View</a>
-                                                <a href="#" class="btn btn-sm btn-warning">Edit</a>
+                                                <a href="{% url 'cash_management:forecast_detail' forecast.pk %}" class="btn btn-sm btn-info">View</a>
+                                                <a href="{% url 'cash_management:forecast_edit' forecast.pk %}" class="btn btn-sm btn-warning">Edit</a>
                                             </td>
                                         </tr>
                                         {% empty %}

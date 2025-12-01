@@ -122,9 +122,12 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.template.context_processors.csrf',
+                'django.template.context_processors.media',  # Make MEDIA_URL available in templates
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounting.context_processors.user_module_permissions',  # Module permissions
+                'accounting.context_processors.session_entity_context',  # Session entity info
+                'accounting.context_processors.theme_context',  # Theme settings
             ],
         },
     },
@@ -190,6 +193,10 @@ STATICFILES_DIRS = [
     str(ADMIN_PATH / 'static'),
 ]
 
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -215,7 +222,7 @@ AUTHENTICATION_BACKENDS = [
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-LOGIN_REDIRECT_URL = "/"  # Main dashboard
+LOGIN_REDIRECT_URL = "/dashboard/"  # Main dashboard with entity selection
 LOGIN_URL = "account_login"
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_EMAIL_REQUIRED = True

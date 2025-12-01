@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Standard{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">{% if form.instance.pk %}Edit Standard{% else %}New Standard{% endif %}</h5></div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary"><i data-feather="save"></i> Save</button>
+                            <a href="{% url 'maintenance:standard-list' %}" class="btn btn-secondary"><i data-feather="x"></i> Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.form-control, .form-select { border-radius: 0.25rem; border: 1px solid #dee2e6; padding: 0.5rem 0.75rem; }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

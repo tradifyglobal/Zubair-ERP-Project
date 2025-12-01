@@ -81,7 +81,7 @@
                                                 <strong>{{ order.order_number }}</strong>
                                             </td>
                                             <td>
-                                                {{ order.distributor.name }}
+                                                {{ order.distributor.distributor_name }}
                                             </td>
                                             <td>
                                                 {{ order.order_date|date:"d M Y" }}
@@ -90,13 +90,16 @@
                                                 {{ order.total_amount|floatformat:2 }}
                                             </td>
                                             <td>
-                                                <span class="badge bg-info-subtle text-info">{{ order.status }}</span>
+                                                <span class="badge {% if order.status == 'SUBMITTED' %}bg-info{% elif order.status == 'CONFIRMED' %}bg-success{% elif order.status == 'SHIPPED' %}bg-primary{% elif order.status == 'DELIVERED' %}bg-success{% elif order.status == 'CANCELLED' %}bg-danger{% else %}bg-secondary{% endif %}">{{ order.get_status_display }}</span>
                                             </td>
                                             <td>
                                                 {{ order.created_at|date:"d M Y" }}
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'manufacturing:distributororder_detail' order.pk %}" class="btn btn-info btn-sm" title="View">
+                                                        <i class="mdi mdi-eye"></i>
+                                                    </a>
                                                     <a href="{% url 'manufacturing:distributororder_update' order.pk %}" class="btn btn-warning btn-sm" title="Edit">
                                                         <i class="mdi mdi-pencil"></i>
                                                     </a>

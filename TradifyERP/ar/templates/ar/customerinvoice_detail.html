@@ -1,0 +1,453 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Invoice {{ customerinvoice.invoice_number }} | AR</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-3 no-print">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Invoice {{ customerinvoice.invoice_number }}</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'ar:invoice_list' %}">Invoices</a></li>
+                                <li class="breadcrumb-item active">{{ customerinvoice.invoice_number }}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Print Header (Hidden on screen, visible when printing) -->
+            <div class="print-header-section" style="display: none; text-align: center; margin-bottom: 20px;">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" style="max-height: 50px; margin-bottom: 10px;">
+                <h1 style="font-size: 28px; font-weight: bold; margin: 5px 0;">CUSTOMER INVOICE</h1>
+                <p style="font-size: 12px; color: #666; margin: 5px 0;">TradifyERP - Enterprise Resource Planning System</p>
+            </div>
+
+            <div class="row">
+                <!-- Main Content (Left Column) -->
+                <div class="col-md-8">
+                    <!-- Invoice Information Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0 fw-bold">Invoice Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Customer</p>
+                                    <h6 class="fw-bold">{{ customerinvoice.customer.name }}</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Invoice Number</p>
+                                    <h6 class="fw-bold">{{ customerinvoice.invoice_number }}</h6>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Invoice Date</p>
+                                    <p class="mb-0">{{ customerinvoice.invoice_date|date:"F j, Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Due Date</p>
+                                    <p class="mb-0">{{ customerinvoice.due_date|date:"F j, Y" }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Entity</p>
+                                    <p class="mb-0">{{ customerinvoice.entity.name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Status</p>
+                                    <p class="mb-0">
+                                        {% if customerinvoice.status == 'DRAFT' %}
+                                            <span class="badge bg-secondary">Draft</span>
+                                        {% elif customerinvoice.status == 'ISSUED' %}
+                                            <span class="badge bg-warning">Issued</span>
+                                        {% elif customerinvoice.status == 'SENT' %}
+                                            <span class="badge bg-info">Sent</span>
+                                        {% elif customerinvoice.status == 'PARTIALLY_PAID' %}
+                                            <span class="badge bg-primary">Partially Paid</span>
+                                        {% elif customerinvoice.status == 'PAID' %}
+                                            <span class="badge bg-success">Paid</span>
+                                        {% elif customerinvoice.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {% if customerinvoice.reference_number or customerinvoice.po_number %}
+                            <div class="row">
+                                {% if customerinvoice.reference_number %}
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Reference Number</p>
+                                    <p class="mb-0">{{ customerinvoice.reference_number }}</p>
+                                </div>
+                                {% endif %}
+                                {% if customerinvoice.po_number %}
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">PO Number</p>
+                                    <p class="mb-0">{{ customerinvoice.po_number }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Billed To Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0 fw-bold">Billed To</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-2">{{ customerinvoice.customer.name }}</h6>
+                            {% if customerinvoice.customer.address %}
+                            <p class="mb-1 text-muted">{{ customerinvoice.customer.address }}</p>
+                            {% endif %}
+                            {% if customerinvoice.customer.email %}
+                            <p class="mb-1">{{ customerinvoice.customer.email }}</p>
+                            {% endif %}
+                            {% if customerinvoice.customer.phone %}
+                            <p class="mb-0">{{ customerinvoice.customer.phone }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if customerinvoice.subject %}
+                    <!-- Subject Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0 fw-bold">Subject</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">{{ customerinvoice.subject }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Line Items Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0 fw-bold">Invoice Items</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if line_items %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 50px;">No.</th>
+                                            <th>Description</th>
+                                            <th class="text-end" style="width: 80px;">Qty</th>
+                                            <th class="text-end" style="width: 100px;">Unit Price</th>
+                                            <th class="text-end" style="width: 100px;">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in line_items %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ item.description }}</td>
+                                            <td class="text-end">{{ item.quantity|floatformat:2 }}</td>
+                                            <td class="text-end">{{ customerinvoice.currency.currency_symbol }}{{ item.unit_price|floatformat:2 }}</td>
+                                            <td class="text-end"><strong>{{ customerinvoice.currency.currency_symbol }}{{ item.line_total|floatformat:2 }}</strong></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info mb-0">
+                                <p class="mb-0">No line items added to this invoice</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if customerinvoice.notes %}
+                    <!-- Notes Card -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0 fw-bold">Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0 text-muted">{{ customerinvoice.notes|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Summary Sidebar (Right Column) -->
+                <div class="col-md-4">
+                    <!-- Amount Summary Card (Prominent Box) -->
+                    <div class="card mb-3" style="border: 2px solid #333; background-color: #f8f9fa;">
+                        <div class="card-header" style="background-color: #f8f9fa; border-bottom: 1px solid #333;">
+                            <h5 class="card-title mb-0 fw-bold">Amount Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2 pb-2 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Subtotal:</span>
+                                    <strong>{{ customerinvoice.currency.currency_symbol }}{{ customerinvoice.subtotal_amount|floatformat:2 }}</strong>
+                                </div>
+                            </div>
+
+                            {% if customerinvoice.tax_amount > 0 %}
+                            <div class="mb-2 pb-2 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Tax:</span>
+                                    <strong>{{ customerinvoice.currency.currency_symbol }}{{ customerinvoice.tax_amount|floatformat:2 }}</strong>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold">Total Amount:</span>
+                                    <h5 class="mb-0 text-primary fw-bold">{{ customerinvoice.currency.currency_symbol }}{{ customerinvoice.total_amount|floatformat:2 }}</h5>
+                                </div>
+                            </div>
+
+                            <div class="mb-2 pb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Amount Paid:</span>
+                                    <strong class="text-success">{{ customerinvoice.currency.currency_symbol }}{{ customerinvoice.amount_paid|floatformat:2 }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-top">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold">Outstanding:</span>
+                                    <h5 class="mb-0 fw-bold {% if customerinvoice.get_outstanding_amount > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ customerinvoice.currency.currency_symbol }}{{ customerinvoice.get_outstanding_amount|floatformat:2 }}
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Currency Card -->
+                    {% if customerinvoice.currency %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0 fw-bold">Currency</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1">{{ customerinvoice.currency.currency_code }} ({{ customerinvoice.currency.currency_symbol }})</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions Card -->
+                    <div class="card mb-3 no-print">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0 fw-bold">Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button onclick="window.print()" class="btn btn-success btn-sm">
+                                    <i class="ri-printer-line"></i> Print Invoice
+                                </button>
+                                <a href="{% url 'ar:invoice_edit' customerinvoice.pk %}" class="btn btn-info btn-sm">
+                                    <i class="ri-pencil-line"></i> Edit Invoice
+                                </a>
+                                <a href="{% url 'ar:invoice_list' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="ri-arrow-left-line"></i> Back to List
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metadata Card -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0 fw-bold">Metadata</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2">
+                                <span class="text-muted small">Created:</span><br>
+                                <small>{{ customerinvoice.created_date|date:"M d, Y H:i" }}</small>
+                            </p>
+                            <p class="mb-0">
+                                <span class="text-muted small">Updated:</span><br>
+                                <small>{{ customerinvoice.updated_date|date:"M d, Y H:i" }}</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Print Footer -->
+            <div class="print-footer-section" style="display: none; text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #000; font-size: 10px; color: #666;">
+                <p style="margin: 2px 0;"><strong>TradifyERP</strong> - Enterprise Resource Planning System</p>
+                <p style="margin: 2px 0;">This is a computer-generated document. No signature required.</p>
+                <p style="margin: 2px 0;">Generated on {{ "now"|date:"F j, Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-content {
+        overflow-y: auto;
+    }
+
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid #dee2e6;
+    }
+
+    .card-header {
+        background-color: #f8f9fa !important;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .card-body {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .table {
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .table td {
+        padding: 8px;
+        vertical-align: middle;
+    }
+
+    h5, h6 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .text-muted {
+        color: #6c757d !important;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .no-print {
+        display: block !important;
+    }
+
+    @media print {
+        /* Hide UI elements */
+        .no-print, .page-title-box, .breadcrumb {
+            display: none !important;
+        }
+
+        /* Show print elements */
+        .print-header-section, .print-footer-section {
+            display: block !important;
+        }
+
+        /* Page setup */
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 12px;
+        }
+
+        .main-content, .page-content, .container-fluid {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            background: white !important;
+        }
+
+        .card {
+            border: 1px solid #333 !important;
+            page-break-inside: avoid;
+            margin-bottom: 10px !important;
+            box-shadow: none !important;
+        }
+
+        .card-header {
+            background-color: #f8f9fa !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .card-body {
+            padding: 10px !important;
+        }
+
+        .table {
+            font-size: 11px !important;
+            border-collapse: collapse;
+        }
+
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 6px !important;
+        }
+
+        .table th {
+            background-color: #f8f9fa !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-weight: bold;
+        }
+
+        .badge {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .col-md-8, .col-md-4 {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .row {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        /* Ensure summary is visible in print */
+        .col-md-4 {
+            margin-top: 20px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+    }
+
+    /* Additional print optimizations */
+    @media (max-width: 768px) {
+        .col-md-8, .col-md-4 {
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}

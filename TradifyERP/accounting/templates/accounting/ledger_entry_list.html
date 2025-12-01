@@ -24,26 +24,51 @@
             </div>
             <!-- end page title -->
 
+            <!-- Debug Info Alert -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+                        <small>
+                            <strong>THIS ENTITY:</strong> {{ total_entries }} total | Draft: {{ draft_count }} | Pending: {{ pending_count }} | Approved: {{ approved_count }} | Authorized: {{ authorized_count }} | Rejected: {{ rejected_count }}
+                            <br>
+                            <strong style="color: orange;">ALL ENTITIES (Debug):</strong> {{ total_all_entities }} total | Approved: {{ approved_all_entities }} | Authorized: {{ authorized_all_entities }}
+                        </small>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Filters -->
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
                             <form method="get" class="row g-2">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by account or reference" value="{{ request.GET.search|default:'' }}">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <select name="entry_type" class="form-select form-select-sm">
                                         <option value="">All Types</option>
                                         <option value="DEBIT" {% if request.GET.entry_type == 'DEBIT' %}selected{% endif %}>Debit</option>
                                         <option value="CREDIT" {% if request.GET.entry_type == 'CREDIT' %}selected{% endif %}>Credit</option>
                                     </select>
                                 </div>
+                                <div class="col-md-3">
+                                    <select name="status" class="form-select form-select-sm">
+                                        <option value="" {% if not request.GET.status %}selected{% endif %}>Approved & Authorized (default)</option>
+                                        <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                                        <option value="PENDING_APPROVAL" {% if request.GET.status == 'PENDING_APPROVAL' %}selected{% endif %}>Pending Approval</option>
+                                        <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved Only</option>
+                                        <option value="AUTHORIZED" {% if request.GET.status == 'AUTHORIZED' %}selected{% endif %}>Authorized Only</option>
+                                        <option value="REJECTED" {% if request.GET.status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                                        <option value="all" {% if request.GET.status == 'all' %}selected{% endif %}>All Statuses</option>
+                                    </select>
+                                </div>
                                 <div class="col-md-2">
                                     <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-light btn-sm w-100">Reset</a>
                                 </div>
                             </form>
@@ -108,16 +133,32 @@
                                                 {{ entry.reference_number|default:"—" }}
                                             </td>
                                             <td>
-                                                {% if entry.is_posted %}
-                                                    <span class="badge bg-success-subtle text-success">Posted</span>
+                                                {% if entry.workflow_status == 'AUTHORIZED' %}
+                                                    <span class="badge bg-success">Authorized</span>
+                                                {% elif entry.workflow_status == 'APPROVED' %}
+                                                    <span class="badge bg-info">Approved</span>
+                                                {% elif entry.workflow_status == 'PENDING_APPROVAL' %}
+                                                    <span class="badge bg-warning">Pending</span>
+                                                {% elif entry.workflow_status == 'REJECTED' %}
+                                                    <span class="badge bg-danger">Rejected</span>
                                                 {% else %}
-                                                    <span class="badge bg-warning-subtle text-warning">Draft</span>
+                                                    <span class="badge bg-secondary">{{ entry.workflow_status|default:"Draft" }}</span>
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{% url 'accounting:account_detail' entry.account.id %}" class="btn btn-sm btn-info">
-                                                    <i class="mdi mdi-eye"></i> View
-                                                </a>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'accounting:ledger_entry_detail' entry.id %}" class="btn btn-sm btn-info" title="View Entry">
+                                                        <i class="mdi mdi-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'accounting:ledger_entry_print' entry.id %}" class="btn btn-sm btn-secondary" title="Print Entry" target="_blank">
+                                                        <i class="mdi mdi-printer"></i>
+                                                    </a>
+                                                    {% if entry.workflow_status != 'AUTHORIZED' %}
+                                                    <a href="{% url 'accounting:ledger_entry_edit_workflow' entry.id %}" class="btn btn-sm btn-warning" title="Edit Workflow">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
                                             </td>
                                         </tr>
                                         {% endfor %}

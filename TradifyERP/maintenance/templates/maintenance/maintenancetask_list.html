@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Maintenance Tasks{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Maintenance Tasks</h4>
+                <div class="page-title-right">
+                    <a href="{% url 'maintenance:task-create' %}" class="btn btn-primary">
+                        <i data-feather="plus"></i> Create Task
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-10">
+                            <input type="text" name="q" class="form-control" placeholder="Search by task code or name..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Task Code</th>
+                                <th>Task Name</th>
+                                <th>Frequency</th>
+                                <th>Estimated Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks %}
+                            <tr>
+                                <td><strong>{{ task.task_code }}</strong></td>
+                                <td>{{ task.task_name }}</td>
+                                <td>{{ task.frequency|default:"N/A" }}</td>
+                                <td>{{ task.estimated_duration_hours|default:"N/A" }} hrs</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'maintenance:task-detail' task.pk %}" class="btn btn-info"><i data-feather="eye"></i></a>
+                                        <a href="{% url 'maintenance:task-update' task.pk %}" class="btn btn-warning"><i data-feather="edit-2"></i></a>
+                                        <a href="{% url 'maintenance:task-delete' task.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure?')"><i data-feather="trash-2"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No tasks found. <a href="{% url 'maintenance:task-create' %}">Create one</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

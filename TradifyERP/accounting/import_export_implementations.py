@@ -105,11 +105,12 @@ class CustomerExporter(BaseExporter):
     
     model_class = Customer
     export_fields = [
-        'name', 'email', 'phone', 'address', 'city',
+        'customer_code', 'name', 'email', 'phone', 'address', 'city',
         'state', 'country', 'postal_code', 'tax_id',
         'credit_limit', 'is_active', 'created_at'
     ]
     export_headers = {
+        'customer_code': 'Customer Code',
         'name': 'Customer Name',
         'email': 'Email',
         'phone': 'Phone',

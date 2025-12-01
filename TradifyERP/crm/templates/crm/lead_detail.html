@@ -1,0 +1,200 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Lead: {{ lead.lead_name }} | CRM</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content" style="padding-bottom: 120px;">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Lead Details</h4>
+                        <div>
+                            <a href="{% url 'crm:lead_update' lead.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            <a href="{% url 'crm:lead_delete' lead.pk %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
+                            <a href="{% url 'crm:lead_list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lead Information -->
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <!-- Basic Information Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Basic Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Lead Number</label>
+                                    <strong>{{ lead.lead_number }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Lead Name</label>
+                                    <strong>{{ lead.lead_name }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Company Name</label>
+                                    <strong>{{ lead.company_name }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Status</label>
+                                    <span class="badge bg-{% if lead.status == 'NEW' %}info{% elif lead.status == 'QUALIFIED' %}success{% elif lead.status == 'LOST' %}danger{% elif lead.status == 'CONVERTED' %}primary{% else %}secondary{% endif %}">
+                                        {{ lead.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Contact Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Email</label>
+                                    <strong><a href="mailto:{{ lead.email }}">{{ lead.email }}</a></strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Phone</label>
+                                    <strong>{{ lead.phone|default:"N/A" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address Card -->
+                    {% if lead.address or lead.city or lead.state or lead.postal_code or lead.country %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Address</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="text-muted small d-block">Street Address</label>
+                                    <strong>{{ lead.address|default:"N/A" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">City</label>
+                                    <strong>{{ lead.city|default:"N/A" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">State/Province</label>
+                                    <strong>{{ lead.state|default:"N/A" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Postal Code</label>
+                                    <strong>{{ lead.postal_code|default:"N/A" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Country</label>
+                                    <strong>{{ lead.country|default:"N/A" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Lead Details Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Lead Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Lead Source</label>
+                                    <strong>{% if lead.source %}{{ lead.source.source_name }}{% else %}<span class="text-muted">No source assigned</span>{% endif %}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Lead Score</label>
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ lead.lead_score }}%;" aria-valuenow="{{ lead.lead_score }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ lead.lead_score }}/100
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if lead.estimated_deal_size %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Estimated Deal Size</label>
+                                    <strong>${{ lead.estimated_deal_size|floatformat:2 }}</strong>
+                                </div>
+                                {% endif %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Assigned To</label>
+                                    <strong>{{ lead.assigned_to|default:"Unassigned" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dates Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Dates</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Created Date</label>
+                                    <strong>{{ lead.created_date|date:"M d, Y" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Last Contact Date</label>
+                                    <strong>{{ lead.last_contact_date|default:"Not contacted yet" }}</strong>
+                                </div>
+                                {% if lead.qualified_date %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Qualified Date</label>
+                                    <strong>{{ lead.qualified_date|date:"M d, Y" }}</strong>
+                                </div>
+                                {% endif %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Created By</label>
+                                    <strong>{{ lead.created_by|default:"System" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes Card -->
+                    {% if lead.notes %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ lead.notes|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Footer Button Bar -->
+<div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #dee2e6; padding: 15px 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); z-index: 100;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <a href="{% url 'crm:lead_update' lead.pk %}" class="btn btn-primary">Edit Lead</a>
+                <a href="{% url 'crm:lead_list' %}" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

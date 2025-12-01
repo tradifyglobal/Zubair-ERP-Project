@@ -43,6 +43,10 @@ class CustomerInvoice(models.Model):
     invoice_date = models.DateField(default=timezone.now)
     due_date = models.DateField()
     po_number = models.CharField(max_length=50, null=True, blank=True)
+    reference_number = models.CharField(max_length=100, null=True, blank=True)
+    subject = models.CharField(max_length=200, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, null=True, blank=True)
     
     # Amounts
     subtotal_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
@@ -104,7 +108,10 @@ class InvoiceLineItem(models.Model):
     
     # GL coding
     revenue_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='ar_invoice_lines')
+    gl_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='ar_invoice_lines_gl', null=True, blank=True)
     cost_center = models.CharField(max_length=100, null=True, blank=True)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0'))
+    amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
     
     class Meta:
         verbose_name = 'Invoice Line Item'
@@ -130,9 +137,13 @@ class CustomerPayment(models.Model):
     entity = models.ForeignKey(Entity, on_delete=models.PROTECT)
     payment_date = models.DateField(default=timezone.now)
     payment_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    invoice = models.ForeignKey(CustomerInvoice, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoice_payments')
     
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     reference_number = models.CharField(max_length=100, null=True, blank=True)
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
     
     # Multiple invoices can be paid with one payment
     invoices = models.ManyToManyField(CustomerInvoice, through='ARReconciliation', related_name='payments')
@@ -171,6 +182,9 @@ class ARDiscount(models.Model):
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
     discount_days = models.IntegerField(help_text="Days from invoice date to claim discount")
     discount_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+    discount_due_date = models.DateField(null=True, blank=True)
+    reason = models.TextField(null=True, blank=True)
+    status = models.CharField(max_length=20, null=True, blank=True)
     
     # GL account for discount
     discount_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='ar_discounts')
@@ -194,6 +208,9 @@ class ARReconciliation(models.Model):
     invoice = models.ForeignKey(CustomerInvoice, on_delete=models.CASCADE, related_name='reconciliations')
     payment = models.ForeignKey(CustomerPayment, on_delete=models.CASCADE, related_name='reconciliations')
     matched_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    reconciliation_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    reconciliation_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
     
     is_matched = models.BooleanField(default=True)
     matched_date = models.DateTimeField(auto_now_add=True)

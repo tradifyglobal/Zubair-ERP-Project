@@ -1,0 +1,288 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Shareholder Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Shareholder Management Dashboard</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards Row 1 -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted d-block text-truncate">Total Shareholders</span>
+                                <h4 class="my-2">{{ total_stakeholders }}</h4>
+                            </div>
+                            <div class="avatar-md bg-light rounded">
+                                <i data-feather="users" class="avatar-title font-size-24 text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted d-block text-truncate">Total Capital Invested</span>
+                                <h4 class="my-2">{{ total_capital_invested|floatformat:2 }}</h4>
+                            </div>
+                            <div class="avatar-md bg-light rounded">
+                                <i data-feather="dollar-sign" class="avatar-title font-size-24 text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted d-block text-truncate">Total Shares</span>
+                                <h4 class="my-2">{{ total_shares }}</h4>
+                            </div>
+                            <div class="avatar-md bg-light rounded">
+                                <i data-feather="pie-chart" class="avatar-title font-size-24 text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted d-block text-truncate">Pending Contributions</span>
+                                <h4 class="my-2">{{ pending_contributions }}</h4>
+                            </div>
+                            <div class="avatar-md bg-light rounded">
+                                <i data-feather="alert-circle" class="avatar-title font-size-24 text-danger"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Row -->
+        <div class="row">
+            <!-- Top Contributors -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Top Contributors</h5>
+                        <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-sm btn-secondary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if top_contributors %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Shareholder</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for shareholder in top_contributors %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{% url 'shareholder:stakeholder-detail' shareholder.pk %}" class="text-primary">
+                                                        {{ shareholder.first_name }} {{ shareholder.last_name }}
+                                                    </a>
+                                                </td>
+                                                <td class="text-end text-success">
+                                                    <strong>{{ shareholder.total_contributed|floatformat:2 }}</strong>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">No contributions recorded yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share Distribution -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Share Distribution</h5>
+                        <a href="{% url 'shareholder:shareholding-list' %}" class="btn btn-sm btn-secondary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if share_distribution %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Share Type</th>
+                                            <th>Count</th>
+                                            <th class="text-end">Total Shares</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for share in share_distribution %}
+                                            <tr>
+                                                <td>{{ share.share_type|default:"Standard" }}</td>
+                                                <td>{{ share.count }}</td>
+                                                <td class="text-end text-primary">
+                                                    <strong>{{ share.total_shares }}</strong>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">No shares recorded yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Row -->
+        <div class="row">
+            <!-- Recent Contributions -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Recent Contributions</h5>
+                        <a href="{% url 'shareholder:capital-contribution-list' %}" class="btn btn-sm btn-secondary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_contributions %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Shareholder</th>
+                                            <th>Date</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for contribution in recent_contributions %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{% url 'shareholder:stakeholder-detail' contribution.stakeholder.pk %}" class="text-primary">
+                                                        {{ contribution.stakeholder.first_name }} {{ contribution.stakeholder.last_name }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
+                                                <td class="text-end">
+                                                    <span class="badge bg-success">{{ contribution.amount_company_currency|floatformat:2 }}</span>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">No recent contributions</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Shareholdings -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Recent Shareholdings</h5>
+                        <a href="{% url 'shareholder:shareholding-list' %}" class="btn btn-sm btn-secondary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_shareholdings %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Shareholder</th>
+                                            <th>Shares</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for shareholding in recent_shareholdings %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{% url 'shareholder:stakeholder-detail' shareholding.stakeholder.pk %}" class="text-primary">
+                                                        {{ shareholding.stakeholder.first_name }} {{ shareholding.stakeholder.last_name }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ shareholding.number_of_shares }}</td>
+                                                <td>{{ shareholding.acquisition_date|date:"M d, Y" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">No recent shareholdings</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <a href="{% url 'shareholder:stakeholder-create' %}" class="card text-decoration-none">
+                    <div class="card-body text-center">
+                        <i data-feather="user-plus" class="font-size-36 text-primary mb-3"></i>
+                        <h5 class="card-title">Add New Shareholder</h5>
+                        <p class="text-muted mb-0">Register a new shareholder</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'shareholder:capital-contribution-create' %}" class="card text-decoration-none">
+                    <div class="card-body text-center">
+                        <i data-feather="plus-circle" class="font-size-36 text-success mb-3"></i>
+                        <h5 class="card-title">Record Contribution</h5>
+                        <p class="text-muted mb-0">Add a capital contribution</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'shareholder:shareholding-create' %}" class="card text-decoration-none">
+                    <div class="card-body text-center">
+                        <i data-feather="award" class="font-size-36 text-warning mb-3"></i>
+                        <h5 class="card-title">Add Shareholding</h5>
+                        <p class="text-muted mb-0">Allocate shares to shareholder</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

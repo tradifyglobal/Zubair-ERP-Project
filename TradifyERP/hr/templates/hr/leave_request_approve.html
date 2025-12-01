@@ -1,0 +1,134 @@
+{% extends "dashboard.html" %}
+{% load static %}
+
+{% block content %}
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Approve Leave Request
+                </h2>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'hr:leave-request-list' %}" class="btn btn-outline-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M9 6l-6 6l6 6m3 -12v12" />
+                    </svg>
+                    Back to Requests
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="card-title">Confirm Approval</h3>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Request Summary -->
+                            <div class="mb-4">
+                                <h5 class="mb-3">Request Summary</h5>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Employee</label>
+                                        <p class="form-control-plaintext">
+                                            <strong>{{ leave_request.employee }}</strong>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Leave Type</label>
+                                        <p class="form-control-plaintext">
+                                            <strong>{{ leave_request.leave_type }}</strong>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Start Date</label>
+                                        <p class="form-control-plaintext">{{ leave_request.start_date|date:"d M Y" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">End Date</label>
+                                        <p class="form-control-plaintext">{{ leave_request.end_date|date:"d M Y" }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Duration</label>
+                                        <p class="form-control-plaintext">
+                                            <strong>{{ leave_request.duration }} days</strong>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Status</label>
+                                        <p class="form-control-plaintext">
+                                            <span class="badge bg-warning">{{ leave_request.get_status_display }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Reason</label>
+                                    <p class="form-control-plaintext">{{ leave_request.reason|linebreaks }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Approval Alert -->
+                            <div class="alert alert-success">
+                                <div class="d-flex">
+                                    <div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M5 12l5 5l10 -10" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="alert-title">Ready to Approve</h4>
+                                        <div class="text-muted">
+                                            Click the "Approve" button below to approve this leave request. Once approved, the employee will be notified and the status will be changed to "Approved".
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Approval Form -->
+                            <form method="POST" class="mt-4">
+                                {% csrf_token %}
+
+                                <div class="mb-3">
+                                    <label class="form-label">Comments (Optional)</label>
+                                    <textarea name="comments" class="form-control" rows="3" placeholder="Add any approval comments here..."></textarea>
+                                    <small class="text-muted">These comments will be visible to the employee.</small>
+                                </div>
+
+                                <div class="form-footer">
+                                    <a href="{% url 'hr:leave-request-detail' leave_request.id %}" class="btn btn-secondary">
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-success">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M5 12l5 5l10 -10" />
+                                        </svg>
+                                        Approve Request
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

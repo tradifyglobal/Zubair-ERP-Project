@@ -1,9 +1,10 @@
 """
-Context processors for module permissions.
-Adds user's accessible modules to all template contexts.
+Context processors for module permissions and session entity.
+Adds user's accessible modules and session entity to all template contexts.
 """
 
 from accounting.permission_utils import get_user_accessible_modules
+from accounting.models import Entity, UserEntity
 
 
 def user_module_permissions(request):
@@ -35,3 +36,93 @@ def user_module_permissions(request):
         'can_access_module': lambda x: False,
         'can_perform_action': lambda x, y: False,
     }
+
+
+def session_entity_context(request):
+    """
+    Add session entity information to all templates.
+    Available as 'session_entity', 'selected_entity_id', 'selected_entity_code', 'selected_entity_name'.
+    Also provides 'all_entities' for entity switching in navbar.
+    
+    Filters entities based on user assignments:
+    - If user is superuser: show all active entities
+    - If user has UserEntity assignments: show only assigned entities
+    - Otherwise: show all active entities (backward compatibility)
+    """
+    entity_id = request.session.get('selected_entity_id')
+    entity_code = request.session.get('selected_entity_code')
+    entity_name = request.session.get('selected_entity_name')
+    
+    session_entity = None
+    if entity_id:
+        try:
+            session_entity = Entity.objects.get(id=entity_id, is_active=True)
+        except Entity.DoesNotExist:
+            pass
+    
+    # Determine which entities to show
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            # Superusers see all active entities
+            all_entities = Entity.objects.filter(is_active=True).order_by('name')
+        else:
+            # Check if user has UserEntity assignments
+            user_entities = UserEntity.objects.filter(
+                user=request.user,
+                entity__is_active=True
+            ).select_related('entity').order_by('entity__name')
+            
+            if user_entities.exists():
+                # Show only assigned entities
+                all_entities = [ue.entity for ue in user_entities]
+            else:
+                # STRICT MODE: No assignments = No entities visible
+                all_entities = []
+    else:
+        # Not authenticated
+        all_entities = Entity.objects.filter(is_active=True).order_by('name')
+    
+    return {
+        'session_entity': session_entity,
+        'selected_entity_id': entity_id,
+        'selected_entity_code': entity_code,
+        'selected_entity_name': entity_name,
+        'all_entities': all_entities,
+    }
+
+
+def theme_context(request):
+    """
+    Add theme information to template context.
+    Makes theme settings available in all templates.
+    
+    Usage in templates:
+        - {{ current_theme.name }}
+        - {{ user_theme_pref.sidebar_color }}
+        - {{ user_theme_pref.layout_mode }}
+        - {{ user_theme_pref.layout_size }}
+    """
+    from accounting.models_theme import UserThemePreference, Theme
+    
+    context = {
+        'available_themes': [],
+        'current_theme': None,
+        'user_theme_pref': None,
+    }
+    
+    # Only process for authenticated users
+    if request.user.is_authenticated:
+        try:
+            # Get available themes
+            context['available_themes'] = Theme.objects.filter(is_active=True)
+            
+            # Get user's theme preference
+            user_pref = UserThemePreference.get_or_create_for_user(request.user)
+            context['user_theme_pref'] = user_pref
+            context['current_theme'] = user_pref.theme
+            
+        except Exception:
+            # Silently fail - don't break page rendering if theme system has issues
+            pass
+    
+    return context

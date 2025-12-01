@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete Maintenance Asset{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Delete Asset</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i data-feather="alert-triangle"></i> This action cannot be undone!
+                    </div>
+                    
+                    <p class="mb-3">
+                        Are you sure you want to delete the following maintenance asset?
+                    </p>
+
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <p class="mb-1"><strong>Asset Code:</strong> {{ object.asset_code }}</p>
+                            <p class="mb-1"><strong>Asset Name:</strong> {{ object.asset_name }}</p>
+                            <p class="mb-0"><strong>Location:</strong> {{ object.location|default:"N/A" }}</p>
+                        </div>
+                    </div>
+
+                    <p class="text-muted">
+                        This will permanently remove this asset from the system. All associated records will remain but will reference a deleted asset.
+                    </p>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i data-feather="trash-2"></i> Yes, Delete Permanently
+                            </button>
+                            <a href="{% url 'maintenance:asset-list' %}" class="btn btn-secondary">
+                                <i data-feather="x"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>
+    feather.replace();
+</script>
+{% endblock %}

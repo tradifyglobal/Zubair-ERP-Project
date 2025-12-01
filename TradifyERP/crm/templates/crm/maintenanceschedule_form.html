@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Maintenance Schedule - CRM{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box"><div class="row align-items-center"><div class="col-md-8"><h4 class="page-title">{% if form.instance.pk %}Edit{% else %}New{% endif %} Maintenance Schedule</h4></div><div class="col-md-4 text-right"><a href="{% url 'crm:maintenance-schedules' %}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a></div></div></div>
+    <div class="row"><div class="col-lg-8"><div class="card"><div class="card-body">
+        <form method="post">{% csrf_token %}
+            <div class="form-group"><label>{{ form.schedule_name.label }}</label>{{ form.schedule_name }}</div>
+            <div class="form-row">
+                <div class="col-md-6"><div class="form-group"><label>{{ form.customer.label }}</label>{{ form.customer }}</div></div>
+                <div class="col-md-6"><div class="form-group"><label>{{ form.frequency.label }}</label>{{ form.frequency }}</div></div>
+            </div>
+            <div class="form-group"><label>{{ form.next_maintenance_date.label }}</label>{{ form.next_maintenance_date }}</div>
+            <div class="form-group"><label>{{ form.service_description.label }}</label>{{ form.service_description }}</div>
+            <div class="form-footer mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %}</button>
+                <a href="{% url 'crm:maintenance-schedules' %}" class="btn btn-light"><i class="fas fa-times"></i> Cancel</a>
+            </div>
+        </form>
+    </div></div></div></div>
+</div>
+<style>.form-footer { position: sticky; bottom: 0; background-color: #f8f9fa; padding: 15px 0; border-top: 1px solid #dee2e6; margin-left: -15px; margin-right: -15px; margin-bottom: -15px; padding-left: 15px; padding-right: 15px; }</style>
+{% endblock %}

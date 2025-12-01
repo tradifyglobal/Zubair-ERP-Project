@@ -15,9 +15,178 @@
   <a href="{% url 'maintenance:workorder-create' %}" class="btn btn-success">
     <i class="mdi mdi-plus"></i> Create Work Order
   </a>
+  <a href="{% url 'maintenance:task-create' %}" class="btn btn-info">
+    <i class="mdi mdi-plus"></i> Create Task
+  </a>
+  <a href="{% url 'maintenance:sparepart-create' %}" class="btn btn-warning">
+    <i class="mdi mdi-plus"></i> Add Spare Part
+  </a>
 {% endblock %}
 
 {% block page_content %}
+
+<!-- Your Shortcuts Section -->
+<div class="row mb-5">
+  <div class="col-12">
+    <h5 class="mb-3"><i class="mdi mdi-link"></i> Your Shortcuts</h5>
+    <div class="row">
+      <div class="col-md-2 mb-3">
+        <a href="{% url 'maintenance:asset-create' %}" class="d-flex flex-column align-items-center text-decoration-none text-dark">
+          <div class="btn btn-light rounded-circle mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+            <i class="mdi mdi-plus font-size-24"></i>
+          </div>
+          <span class="text-center text-muted small">Add Asset</span>
+        </a>
+      </div>
+      <div class="col-md-2 mb-3">
+        <a href="{% url 'maintenance:task-create' %}" class="d-flex flex-column align-items-center text-decoration-none text-dark">
+          <div class="btn btn-light rounded-circle mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+            <i class="mdi mdi-checkbox-marked-circle font-size-24"></i>
+          </div>
+          <span class="text-center text-muted small">Create Task</span>
+        </a>
+      </div>
+      <div class="col-md-2 mb-3">
+        <a href="{% url 'maintenance:workorder-create' %}" class="d-flex flex-column align-items-center text-decoration-none text-dark">
+          <div class="btn btn-light rounded-circle mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+            <i class="mdi mdi-clipboard-list font-size-24"></i>
+          </div>
+          <span class="text-center text-muted small">Work Order</span>
+        </a>
+      </div>
+      <div class="col-md-2 mb-3">
+        <a href="{% url 'maintenance:sparepart-list' %}" class="d-flex flex-column align-items-center text-decoration-none text-dark">
+          <div class="btn btn-light rounded-circle mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+            <i class="mdi mdi-package font-size-24"></i>
+          </div>
+          <span class="text-center text-muted small">Inventory</span>
+        </a>
+      </div>
+      <div class="col-md-2 mb-3">
+        <a href="{% url 'maintenance:vendor-list' %}" class="d-flex flex-column align-items-center text-decoration-none text-dark">
+          <div class="btn btn-light rounded-circle mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+            <i class="mdi mdi-briefcase font-size-24"></i>
+          </div>
+          <span class="text-center text-muted small">Vendors</span>
+        </a>
+      </div>
+      <div class="col-md-2 mb-3">
+        <a href="{% url 'maintenance:cost-list' %}" class="d-flex flex-column align-items-center text-decoration-none text-dark">
+          <div class="btn btn-light rounded-circle mb-2" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+            <i class="mdi mdi-currency-usd font-size-24"></i>
+          </div>
+          <span class="text-center text-muted small">Costs</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reports & Masters Section -->
+<div class="row mb-5">
+  <div class="col-12">
+    <h5 class="mb-3"><i class="mdi mdi-file-document"></i> Reports & Masters</h5>
+  </div>
+  
+  <!-- Maintenance Section -->
+  <div class="col-md-3 mb-4">
+    <h6 class="mb-3">Maintenance</h6>
+    <ul class="list-unstyled">
+      <li class="mb-2">
+        <a href="{% url 'maintenance:asset-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-factory"></i> Assets
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="{% url 'maintenance:task-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-tasks"></i> Tasks
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="{% url 'maintenance:workorder-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-clipboard-list"></i> Work Orders
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="{% url 'maintenance:downtime-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-alert-circle"></i> Downtime Tracking
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+  <!-- Spare Parts & Inventory Section -->
+  <div class="col-md-3 mb-4">
+    <h6 class="mb-3">Spare Parts</h6>
+    <ul class="list-unstyled">
+      <li class="mb-2">
+        <a href="{% url 'maintenance:sparepart-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-package"></i> All Parts
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="{% url 'maintenance:sparepart-create' %}" class="text-decoration-none">
+          <i class="mdi mdi-plus-circle"></i> Add Part
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="#" class="text-decoration-none" title="Manage inventory">
+          <i class="mdi mdi-warehouse"></i> Stock Report
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="#" class="text-decoration-none" title="Low stock alerts">
+          <i class="mdi mdi-alert"></i> Low Stock Alert
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+  <!-- Vendors & Contracts Section -->
+  <div class="col-md-3 mb-4">
+    <h6 class="mb-3">Vendors & Services</h6>
+    <ul class="list-unstyled">
+      <li class="mb-2">
+        <a href="{% url 'maintenance:vendor-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-briefcase"></i> Vendors
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="{% url 'maintenance:contract-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-file-contract"></i> Contracts
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="{% url 'maintenance:cost-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-currency-usd"></i> Maintenance Costs
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+  <!-- Compliance Section -->
+  <div class="col-md-3 mb-4">
+    <h6 class="mb-3">Compliance & Quality</h6>
+    <ul class="list-unstyled">
+      <li class="mb-2">
+        <a href="{% url 'maintenance:standard-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-file-check"></i> Standards
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="{% url 'maintenance:audit-list' %}" class="text-decoration-none">
+          <i class="mdi mdi-clipboard-check"></i> Audits
+        </a>
+      </li>
+      <li class="mb-2">
+        <a href="{% url 'maintenance:audit-create' %}" class="text-decoration-none">
+          <i class="mdi mdi-plus-circle"></i> New Audit
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
 <div class="row">
   <!-- Key Metrics -->
   <div class="col-md-3 mb-4">

@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Theme Settings - TradifyERP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .theme-card {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .theme-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .theme-card.active {
+        border-color: #0d6efd;
+        background-color: #f0f6ff;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+    }
+
+    .theme-card .theme-header {
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+    }
+
+    .theme-card.active .theme-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    }
+
+    .theme-card .theme-content {
+        padding: 1.5rem;
+    }
+
+    .theme-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .theme-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        min-height: 40px;
+    }
+
+    .theme-preview-box {
+        width: 100%;
+        height: 80px;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        color: white;
+    }
+
+    .theme-preview-minia {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .theme-preview-starterkit {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .btn-switch-theme {
+        width: 100%;
+        margin-top: auto;
+    }
+
+    .badge-active {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #0d6efd;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+    }
+
+    .layout-settings {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .layout-settings h4 {
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .setting-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .setting-group label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+        color: #555;
+    }
+
+    .btn-group-vertical .btn {
+        text-align: left;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-group-vertical .btn.active {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .success-message {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .theme-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .theme-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Theme Settings</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-header-shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">🎨 Theme Settings</h5>
+                    <p class="text-muted mb-0">Select your preferred theme. All modules will update instantly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show success-message" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Available Themes -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Available Themes</h6>
+                </div>
+                <div class="card-body">
+                    <div class="theme-grid">
+                        {% for theme in themes %}
+                            <div class="theme-card {% if current_theme.id == theme.id %}active{% endif %}" 
+                                 data-theme-id="{{ theme.id }}" 
+                                 data-theme-name="{{ theme.name }}">
+                                
+                                {% if current_theme.id == theme.id %}
+                                    <div class="badge-active">✓ Active</div>
+                                {% endif %}
+
+                                <div class="theme-header">
+                                    <h6 class="mb-0">{{ theme.display_name }}</h6>
+                                </div>
+
+                                <div class="theme-content d-flex flex-column">
+                                    <div class="theme-preview-box theme-preview-{{ theme.name }}">
+                                        Preview
+                                    </div>
+
+                                    <div class="theme-description">
+                                        {{ theme.description }}
+                                    </div>
+
+                                    <button type="button" 
+                                            class="btn btn-sm {% if current_theme.id == theme.id %}btn-primary{% else %}btn-outline-primary{% endif %} btn-switch-theme"
+                                            onclick="switchTheme('{{ theme.name }}', this)">
+                                        {% if current_theme.id == theme.id %}
+                                            ✓ Currently Active
+                                        {% else %}
+                                            Switch Theme
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Settings -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">⚙️ Layout Settings</h6>
+                </div>
+                <div class="card-body">
+                    <div class="layout-settings">
+                        <div class="row">
+                            <!-- Sidebar Color -->
+                            <div class="col-md-4">
+                                <div class="setting-group">
+                                    <label>Sidebar Color</label>
+                                    <div class="btn-group-vertical w-100" role="group">
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary btn-sm {% if user_theme_pref.sidebar_color == 'light' %}active{% endif %}" 
+                                                onclick="updateLayoutSetting('sidebar_color', 'light', this)">
+                                            ☀️ Light Sidebar
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary btn-sm {% if user_theme_pref.sidebar_color == 'dark' %}active{% endif %}" 
+                                                onclick="updateLayoutSetting('sidebar_color', 'dark', this)">
+                                            🌙 Dark Sidebar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Layout Mode -->
+                            <div class="col-md-4">
+                                <div class="setting-group">
+                                    <label>Layout Mode</label>
+                                    <div class="btn-group-vertical w-100" role="group">
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary btn-sm {% if user_theme_pref.layout_mode == 'vertical' %}active{% endif %}" 
+                                                onclick="updateLayoutSetting('layout_mode', 'vertical', this)">
+                                            📊 Vertical Layout
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary btn-sm {% if user_theme_pref.layout_mode == 'horizontal' %}active{% endif %}" 
+                                                onclick="updateLayoutSetting('layout_mode', 'horizontal', this)">
+                                            ↔️ Horizontal Layout
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Layout Size -->
+                            <div class="col-md-4">
+                                <div class="setting-group">
+                                    <label>Container Width</label>
+                                    <div class="btn-group-vertical w-100" role="group">
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary btn-sm {% if user_theme_pref.layout_size == 'fluid' %}active{% endif %}" 
+                                                onclick="updateLayoutSetting('layout_size', 'fluid', this)">
+                                            📱 Fluid Width
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary btn-sm {% if user_theme_pref.layout_size == 'boxed' %}active{% endif %}" 
+                                                onclick="updateLayoutSetting('layout_size', 'boxed', this)">
+                                            📦 Boxed Width
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info Alert -->
+                        <div class="alert alert-info mt-3 mb-0" role="alert">
+                            <h6 class="alert-heading">💡 Pro Tip</h6>
+                            <p class="mb-0">
+                                Your theme and layout preferences are saved automatically. 
+                                Switch between themes anytime - all your data and modules remain intact 
+                                and fully functional. Theme settings are applied globally across all modules 
+                                in TradifyERP including Accounting, HR, CRM, Inventory, and more.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Switch theme
+    function switchTheme(themeName, button) {
+        // Disable button during request
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Switching...';
+
+        fetch('{% url "accounting:theme:switch_theme" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                theme_name: themeName,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                showSuccessAlert(data.message);
+
+                // Update UI
+                document.querySelectorAll('.theme-card').forEach(card => {
+                    card.classList.remove('active');
+                    card.querySelector('.btn-switch-theme').classList.remove('btn-primary');
+                    card.querySelector('.btn-switch-theme').classList.add('btn-outline-primary');
+                    if (card.querySelector('.badge-active')) {
+                        card.querySelector('.badge-active').remove();
+                    }
+                });
+
+                // Mark new active theme
+                const activeCard = document.querySelector(`[data-theme-name="${themeName}"]`);
+                activeCard.classList.add('active');
+                activeCard.querySelector('.btn-switch-theme').classList.remove('btn-outline-primary');
+                activeCard.querySelector('.btn-switch-theme').classList.add('btn-primary');
+                activeCard.querySelector('.btn-switch-theme').innerHTML = '✓ Currently Active';
+                activeCard.innerHTML = '<div class="badge-active">✓ Active</div>' + activeCard.innerHTML;
+
+                // Redirect to dashboard after 1.5 seconds to see new theme applied
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || '/accounting/dashboard/';
+                }, 1500);
+            } else {
+                showErrorAlert(data.message);
+                button.disabled = false;
+                button.innerHTML = 'Switch Theme';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorAlert('Failed to switch theme. Please try again.');
+            button.disabled = false;
+            button.innerHTML = 'Switch Theme';
+        });
+    }
+
+    // Update layout setting
+    function updateLayoutSetting(setting, value, button) {
+        // Update button state
+        button.parentElement.querySelectorAll('button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        button.classList.add('active');
+
+        // Send request
+        fetch('{% url "accounting:theme:update_layout" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                [setting]: value,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessAlert('Layout setting updated');
+                // Reload to apply changes
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showErrorAlert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorAlert('Failed to update setting');
+        });
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Show success alert
+    function showSuccessAlert(message) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success alert-dismissible fade show success-message';
+        alert.setAttribute('role', 'alert');
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        const container = document.querySelector('.container-xxl');
+        container.insertBefore(alert, container.firstChild);
+    }
+
+    // Show error alert
+    function showErrorAlert(message) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-danger alert-dismissible fade show';
+        alert.setAttribute('role', 'alert');
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        const container = document.querySelector('.container-xxl');
+        container.insertBefore(alert, container.firstChild);
+    }
+</script>
+{% endblock %}

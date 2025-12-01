@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Contact - CRM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8"><h4 class="page-title mb-0">Delete Contact</h4></div>
+            <div class="col-md-4 text-right"><a href="{% url 'crm:contacts' %}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white"><h5 class="card-title mb-0"><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h5></div>
+                <div class="card-body">
+                    <div class="alert alert-warning"><strong>Warning!</strong> This action cannot be undone.</div>
+                    <p class="mb-3">Are you sure you want to delete this contact?</p>
+                    <div class="card mb-3 bg-light">
+                        <div class="card-body">
+                            <label class="text-muted small">Contact Name</label><p class="mb-2"><strong>{{ object.contact_name }}</strong></p>
+                            {% if object.company %}<label class="text-muted small">Company</label><p class="mb-0"><strong>{{ object.company }}</strong></p>{% endif %}
+                        </div>
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="confirm" name="confirm" value="yes" required>
+                                <label class="custom-control-label" for="confirm">I understand this cannot be undone. Delete this contact.</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-block"><i class="fas fa-trash"></i> Delete Contact</button>
+                    </form>
+                    <a href="{% url 'crm:contacts' %}" class="btn btn-secondary btn-block mt-2"><i class="fas fa-times"></i> Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

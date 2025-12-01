@@ -4,6 +4,7 @@ CRUD forms for sales orders, customers, and invoices.
 """
 
 from django import forms
+from django.utils import timezone
 from .models import Customer, SalesOrder, SalesOrderLine, Invoice
 
 
@@ -89,3 +90,41 @@ class InvoiceForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Auto-generate invoice number for new invoices
+        if not self.instance.pk:  # Only for new invoices
+            next_invoice_number = self.generate_next_invoice_number()
+            self.fields['invoice_number'].initial = next_invoice_number
+            self.fields['invoice_number'].widget.attrs['readonly'] = True
+            self.fields['invoice_number'].widget.attrs['title'] = 'Auto-generated invoice number'
+        
+        # Make total_amount readonly (will be auto-calculated via JavaScript)
+        self.fields['total_amount'].widget.attrs['readonly'] = True
+        self.fields['total_amount'].widget.attrs['title'] = 'Auto-calculated from Subtotal + Tax Amount'
+    
+    @staticmethod
+    def generate_next_invoice_number():
+        """Generate the next invoice number in format INV-YYYY-XXX"""
+        current_year = timezone.now().year
+        prefix = f'INV-{current_year}-'
+        
+        # Get all invoices for current year
+        invoices_this_year = Invoice.objects.filter(
+            invoice_number__startswith=prefix
+        ).order_by('invoice_number')
+        
+        if not invoices_this_year.exists():
+            next_number = 1
+        else:
+            # Extract the numeric part from the last invoice
+            last_invoice_number = invoices_this_year.last().invoice_number
+            try:
+                last_number = int(last_invoice_number.split('-')[-1])
+                next_number = last_number + 1
+            except (ValueError, IndexError):
+                next_number = 1
+        
+        return f'{prefix}{next_number:03d}'

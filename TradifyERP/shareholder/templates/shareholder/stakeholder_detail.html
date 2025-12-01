@@ -12,6 +12,9 @@
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">{{ stakeholder.full_name }}</h4>
                     <div class="page-title-right">
+                        <a href="{% url 'shareholder:investment-history' stakeholder.pk %}" class="btn btn-info waves-effect waves-light">
+                            <i class="feather-trending-up me-1"></i>Investment History
+                        </a>
                         <a href="{% url 'shareholder:stakeholder-edit' stakeholder.pk %}" class="btn btn-primary waves-effect waves-light">
                             <i class="feather-edit"></i> Edit
                         </a>
@@ -95,50 +98,73 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title">Capital Contributions</h4>
-                        <a href="{% url 'shareholder:capital-contribution-create-for-stakeholder' stakeholder.pk %}" class="btn btn-sm btn-primary">
-                            <i class="feather-plus"></i> Add Contribution
-                        </a>
+                        <div>
+                            <a href="{% url 'shareholder:investment-history' stakeholder.pk %}" class="btn btn-sm btn-info">
+                                <i class="feather-trending-up me-1"></i>View Full History
+                            </a>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#quickAddContributionModal">
+                                <i class="feather-plus"></i> Quick Add
+                            </button>
+                            <a href="{% url 'shareholder:capital-contribution-create-for-stakeholder' stakeholder.pk %}" class="btn btn-sm btn-secondary">
+                                <i class="feather-plus"></i> Detailed Form
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Original Amount</th>
-                                        <th>Converted Amount</th>
-                                        <th>Currency</th>
-                                        <th>Payment Mode</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for contribution in contributions %}
-                                    <tr>
-                                        <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
-                                        <td><span class="badge badge-soft-info">{{ contribution.get_status_display }}</span></td>
-                                        <td>{{ contribution.amount|floatformat:2 }}</td>
-                                        <td>{{ contribution.amount_company_currency|floatformat:2 }}</td>
-                                        <td>{{ contribution.currency_destination.code }}</td>
-                                        <td>{{ contribution.get_payment_mode_display }}</td>
-                                        <td>
-                                            <a href="{% url 'shareholder:capital-contribution-detail' contribution.pk %}" class="btn btn-sm btn-info" title="View">
-                                                <i class="feather-eye"></i>
-                                            </a>
-                                            <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-sm btn-primary" title="Edit">
-                                                <i class="feather-edit"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted">No contributions recorded</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                        {% if contributions %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount (Original)</th>
+                                            <th>Currency</th>
+                                            <th>Conversion Rate</th>
+                                            <th>Amount (Company Currency)</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for contribution in contributions %}
+                                        <tr>
+                                            <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
+                                            <td>{{ contribution.amount|floatformat:2 }}</td>
+                                            <td>{{ contribution.currency.code }}</td>
+                                            <td>{{ contribution.exchange_rate|floatformat:6 }}</td>
+                                            <td><strong class="text-success">{{ contribution.amount_company_currency|floatformat:2 }}</strong></td>
+                                            <td>
+                                                {% if contribution.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% elif contribution.status == 'PENDING' %}
+                                                    <span class="badge bg-warning">Pending</span>
+                                                {% elif contribution.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ contribution.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'shareholder:capital-contribution-detail' contribution.pk %}" class="btn btn-sm btn-info" title="View">
+                                                    <i class="feather-eye"></i>
+                                                </a>
+                                                <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-sm btn-primary" title="Edit">
+                                                    <i class="feather-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-3">No capital contributions recorded yet</p>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#quickAddContributionModal">
+                                    <i class="feather-plus me-1"></i>Record First Contribution
+                                </button>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -200,4 +226,178 @@
         </div>
     </div>
 </div>
+
+<!-- Quick Add Contribution Modal -->
+<div class="modal fade" id="quickAddContributionModal" tabindex="-1" aria-labelledby="quickAddContributionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickAddContributionLabel">Quick Add Capital Contribution</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="quickContributionForm" method="post" action="{% url 'shareholder:capital-contribution-create-for-stakeholder' stakeholder.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="feather-info me-2"></i>
+                        <strong>Shareholder:</strong> {{ stakeholder.first_name }} {{ stakeholder.last_name }}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="contributionDate" class="form-label">Contribution Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="contributionDate" name="contribution_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="contributionStatus" class="form-label">Status <span class="text-danger">*</span></label>
+                                <select class="form-control" id="contributionStatus" name="status" required>
+                                    <option value="">-- Select Status --</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="COMPLETED" selected>Completed</option>
+                                    <option value="CANCELLED">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="contributionAmount" class="form-label">Amount <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="contributionAmount" name="amount" step="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="contributionCurrency" class="form-label">Source Currency <span class="text-danger">*</span></label>
+                                <select class="form-control" id="contributionCurrency" name="currency" required>
+                                    <option value="">-- Select Currency --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="currencyDestination" class="form-label">Destination Currency (Entity Currency) <span class="text-danger">*</span></label>
+                                <select class="form-control" id="currencyDestination" name="currency_destination" required>
+                                    <option value="">-- Select Currency --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="exchangeRate" class="form-label">Exchange Rate <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="exchangeRate" name="exchange_rate" step="0.000001" value="1.0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="paymentMode" class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                                <select class="form-control" id="paymentMode" name="payment_mode" required>
+                                    <option value="">-- Select Payment Mode --</option>
+                                    <option value="BANK_TRANSFER">Bank Transfer</option>
+                                    <option value="CHEQUE">Cheque</option>
+                                    <option value="CASH">Cash</option>
+                                    <option value="CREDIT_CARD">Credit Card</option>
+                                    <option value="WIRE_TRANSFER">Wire Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="referenceNumber" class="form-label">Reference Number</label>
+                                <input type="text" class="form-control" id="referenceNumber" name="reference_number" placeholder="e.g., Cheque #, Transaction ID">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Additional notes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Contribution</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('contributionDate');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+
+    // Load currencies from data attributes or fetch them
+    loadCurrencies();
+});
+
+function loadCurrencies() {
+    // Try to get currencies from a data element or fetch via AJAX
+    const currencySelect = document.getElementById('contributionCurrency');
+    const destCurrencySelect = document.getElementById('currencyDestination');
+    
+    // Fetch currencies from API endpoint
+    fetch('/api/currencies/?format=json', {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.currencies) {
+            data.currencies.forEach(currency => {
+                const option = document.createElement('option');
+                option.value = currency.id;
+                option.textContent = `${currency.code} - ${currency.name}`;
+                currencySelect.appendChild(option);
+                
+                // Also add to destination
+                const destOption = document.createElement('option');
+                destOption.value = currency.id;
+                destOption.textContent = `${currency.code} - ${currency.name}`;
+                destCurrencySelect.appendChild(destOption);
+            });
+        }
+    })
+    .catch(error => {
+        console.warn('Could not load currencies from API:', error);
+        // Fallback: You can manually add common currencies here
+        const commonCurrencies = [
+            { id: 1, code: 'USD', name: 'US Dollar' },
+            { id: 2, code: 'EUR', name: 'Euro' },
+            { id: 3, code: 'GBP', name: 'British Pound' },
+            { id: 4, code: 'INR', name: 'Indian Rupee' },
+            { id: 5, code: 'AED', name: 'UAE Dirham' },
+        ];
+        
+        commonCurrencies.forEach(currency => {
+            const option = document.createElement('option');
+            option.value = currency.id;
+            option.textContent = `${currency.code} - ${currency.name}`;
+            currencySelect.appendChild(option);
+            
+            const destOption = document.createElement('option');
+            destOption.value = currency.id;
+            destOption.textContent = `${currency.code} - ${currency.name}`;
+            destCurrencySelect.appendChild(destOption);
+        });
+    });
+}
+</script>
+
 {% endblock %}
