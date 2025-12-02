@@ -104,6 +104,82 @@
             </div>
             {% endif %}
 
+            <!-- Pending Reviews Notification Card -->
+            {% if total_pending_reviews > 0 %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-info" style="background: linear-gradient(135deg, #e8f4fd 0%, #f0f8fc 100%); border-left: 5px solid #0d6efd;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div style="font-size: 2.5rem; color: #0d6efd; margin-right: 15px;">
+                                            <i class="mdi mdi-bell-check-outline"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="card-title mb-0" style="color: #0d6efd;">📬 Pending Reviews Awaiting Your Action</h4>
+                                            <p class="text-muted mb-0" style="font-size: 0.9rem;">You have <strong style="color: #0d6efd; font-size: 1.1rem;">{{ total_pending_reviews }}</strong> contribution(s) waiting for your review</p>
+                                        </div>
+                                        <div style="background-color: #0d6efd; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; margin-left: 15px;">
+                                            {{ total_pending_reviews }}
+                                        </div>
+                                    </div>
+
+                                    {% if pending_reviews_1 or pending_reviews_2 %}
+                                    <div class="mt-3 pt-3 border-top">
+                                        <h6 class="mb-2" style="color: #333;">Recent Pending Tasks:</h6>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px;">
+                                            {% for review in pending_reviews_1|slice:":2" %}
+                                            <div style="padding: 10px; background-color: rgba(255,255,255,0.7); border-radius: 5px; border-left: 3px solid #ffc107;">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <p class="mb-1" style="font-size: 0.9rem; font-weight: 500; color: #333;">
+                                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none" style="color: #0d6efd;">
+                                                                {{ review.entity.code }}
+                                                            </a>
+                                                        </p>
+                                                        <p class="mb-0" style="font-size: 0.85rem; color: #666;">{{ review.stakeholder.get_full_name }}</p>
+                                                    </div>
+                                                    <span class="badge bg-warning text-dark">1st Review</span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+
+                                            {% for review in pending_reviews_2|slice:":2" %}
+                                            <div style="padding: 10px; background-color: rgba(255,255,255,0.7); border-radius: 5px; border-left: 3px solid #28a745;">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <p class="mb-1" style="font-size: 0.9rem; font-weight: 500; color: #333;">
+                                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none" style="color: #0d6efd;">
+                                                                {{ review.entity.code }}
+                                                            </a>
+                                                        </p>
+                                                        <p class="mb-0" style="font-size: 0.85rem; color: #666;">{{ review.stakeholder.get_full_name }}</p>
+                                                    </div>
+                                                    <span class="badge bg-success">2nd Review</span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mt-4 d-flex gap-2">
+                                <a href="{% url 'shareholder:contribution_list' %}" class="btn btn-primary">
+                                    <i class="mdi mdi-arrow-right me-2"></i>View All Pending Reviews
+                                </a>
+                                <a href="{% url 'accounting:dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="mdi mdi-refresh me-2"></i>Refresh
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Charts Row -->
             <div class="row mb-4">
                 <div class="col-lg-6">
