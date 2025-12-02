@@ -117,6 +117,8 @@ class InvoiceForm(forms.ModelForm):
         self.fields['total_amount'].widget.attrs['title'] = 'Auto-calculated from Subtotal + Tax Amount'
         # Make total_amount not required since it will be calculated by JavaScript
         self.fields['total_amount'].required = False
+        # Make tax_amount not required since it will be filled by user with percentage
+        self.fields['tax_amount'].required = False
     
     def clean(self):
         """Convert tax percentage to actual tax amount before saving."""
