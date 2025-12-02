@@ -164,6 +164,129 @@
                 </div>
             </div>
 
+            <!-- Pending Reviews & Approvals Card -->
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">
+                                <i class="mdi mdi-bell-check-outline me-2" style="font-size: 1.3rem; color: #0d6efd;"></i>Pending Reviews & Approvals
+                            </h4>
+                            <div class="flex-shrink-0">
+                                {% if total_pending_reviews > 0 or total_pending_approvals > 0 %}
+                                <span class="badge bg-danger me-2">
+                                    <i class="mdi mdi-alert-circle-outline me-1"></i>{{ total_pending_reviews|add:total_pending_approvals }} Pending
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success">
+                                    <i class="mdi mdi-check-circle me-1"></i>All Clear
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if total_pending_reviews > 0 or total_pending_approvals > 0 %}
+                            <div class="row">
+                                <!-- Pending Reviews Section -->
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <div style="padding: 20px; background-color: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0" style="color: #856404;">
+                                                <i class="mdi mdi-magnify-scan me-2"></i>Pending Reviews
+                                            </h6>
+                                            <span class="badge bg-warning text-dark">{{ total_pending_reviews }}</span>
+                                        </div>
+                                        <p class="text-muted mb-3" style="font-size: 0.9rem;">Contributions awaiting your review</p>
+                                        
+                                        {% if pending_reviews %}
+                                        <div style="max-height: 180px; overflow-y: auto;">
+                                            {% for review in pending_reviews %}
+                                            <div style="padding: 10px; background: white; border-radius: 5px; margin-bottom: 8px; border-left: 3px solid #ffc107;">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div style="flex-grow: 1;">
+                                                        <p class="mb-1" style="font-weight: 500; font-size: 0.95rem;">
+                                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none" style="color: #0d6efd;">
+                                                                {{ review.entity.code }} - {{ review.id }}
+                                                            </a>
+                                                        </p>
+                                                        <p class="mb-0" style="font-size: 0.85rem; color: #666;">
+                                                            <i class="mdi mdi-account me-1"></i>{{ review.stakeholder.get_full_name }}
+                                                        </p>
+                                                    </div>
+                                                    {% if review.workflow_status == 'SUBMITTED' %}
+                                                    <span class="badge bg-danger" style="font-size: 0.75rem;">1st Review</span>
+                                                    {% else %}
+                                                    <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">2nd Review</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="mt-2">
+                                            <a href="{% url 'shareholder:contribution_list' %}?filter=pending_review" class="btn btn-sm btn-outline-warning">
+                                                <i class="mdi mdi-arrow-right me-1"></i>View All
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pending Approvals Section -->
+                                <div class="col-md-6">
+                                    <div style="padding: 20px; background-color: #f8d7da; border-radius: 8px; border-left: 4px solid #dc3545;">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0" style="color: #721c24;">
+                                                <i class="mdi mdi-check-double me-2"></i>Pending Approvals
+                                            </h6>
+                                            <span class="badge bg-danger">{{ total_pending_approvals }}</span>
+                                        </div>
+                                        <p class="text-muted mb-3" style="font-size: 0.9rem;">Contributions awaiting your approval</p>
+                                        
+                                        {% if pending_approvals %}
+                                        <div style="max-height: 180px; overflow-y: auto;">
+                                            {% for approval in pending_approvals %}
+                                            <div style="padding: 10px; background: white; border-radius: 5px; margin-bottom: 8px; border-left: 3px solid #dc3545;">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div style="flex-grow: 1;">
+                                                        <p class="mb-1" style="font-weight: 500; font-size: 0.95rem;">
+                                                            <a href="{% url 'shareholder:contribution_review' approval.id %}" class="text-decoration-none" style="color: #0d6efd;">
+                                                                {{ approval.entity.code }} - {{ approval.id }}
+                                                            </a>
+                                                        </p>
+                                                        <p class="mb-0" style="font-size: 0.85rem; color: #666;">
+                                                            <i class="mdi mdi-account me-1"></i>{{ approval.stakeholder.get_full_name }}
+                                                        </p>
+                                                    </div>
+                                                    <span class="badge bg-danger" style="font-size: 0.75rem;">Approval</span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="mt-2">
+                                            <a href="{% url 'shareholder:contribution_list' %}?filter=pending_approval" class="btn btn-sm btn-outline-danger">
+                                                <i class="mdi mdi-arrow-right me-1"></i>View All
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div style="padding: 40px 20px; text-align: center;">
+                                <div style="font-size: 3rem; margin-bottom: 15px; color: #28a745;">
+                                    <i class="mdi mdi-check-circle"></i>
+                                </div>
+                                <h5 style="color: #28a745; margin-bottom: 10px;">All Tasks Completed!</h5>
+                                <p class="text-muted mb-0">You have no pending reviews or approvals at this time.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Charts Row -->
             <div class="row">
                 <!-- Revenue Overview Chart -->
