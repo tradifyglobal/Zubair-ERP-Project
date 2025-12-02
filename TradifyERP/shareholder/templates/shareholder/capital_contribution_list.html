@@ -204,6 +204,11 @@
                                                 <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-primary" title="Edit Contribution">
                                                     <i class="feather-edit"></i> Edit
                                                 </a>
+                                                {% if contribution.workflow_status == 'DRAFT' %}
+                                                <a href="{% url 'shareholder:capital-contribution-submit' contribution.pk %}" class="btn btn-warning" title="Submit for Review">
+                                                    <i class="feather-send"></i> Submit
+                                                </a>
+                                                {% endif %}
                                             </div>
                                         </td>
                                     </tr>
