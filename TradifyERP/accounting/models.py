@@ -689,13 +689,27 @@ class Stakeholder(models.Model):
     secondary_phone = models.CharField(max_length=50, blank=True, null=True)
     fax = models.CharField(max_length=50, blank=True, null=True)
     
-    # Address Information
+    # Address Information - Permanent Address
+    permanent_address_line_1 = models.CharField(max_length=255, blank=True, null=True)
+    permanent_address_line_2 = models.CharField(max_length=255, blank=True, null=True)
+    permanent_city = models.CharField(max_length=100, blank=True, null=True)
+    permanent_state_province = models.CharField(max_length=100, blank=True, null=True)
+    permanent_postal_code = models.CharField(max_length=20, blank=True, null=True)
+    permanent_country = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Address Information - Current Address
     address_line_1 = models.CharField(max_length=255)
     address_line_2 = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100)
     state_province = models.CharField(max_length=100, blank=True, null=True)
     postal_code = models.CharField(max_length=20)
     country = models.CharField(max_length=100)
+    same_as_permanent = models.BooleanField(default=False, help_text="Check if current address is same as permanent address")
+    
+    # Identity Documents
+    passport_number = models.CharField(max_length=50, blank=True, null=True)
+    aadhar_number = models.CharField(max_length=50, blank=True, null=True)
+    pan_sin_number = models.CharField(max_length=50, blank=True, null=True)
     
     # Tax & Identification
     tax_identification_number = models.CharField(max_length=50, blank=True, null=True)  # SSN, EIN, VAT ID, etc.

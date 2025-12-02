@@ -14,7 +14,9 @@ class StakeholderForm(forms.ModelForm):
             'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender',
             'company_name', 'registration_number', 'company_type',
             'email', 'phone_number', 'secondary_phone', 'fax',
-            'address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country',
+            'passport_number', 'aadhar_number', 'pan_sin_number',
+            'permanent_address_line_1', 'permanent_address_line_2', 'permanent_city', 'permanent_state_province', 'permanent_postal_code', 'permanent_country',
+            'address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country', 'same_as_permanent',
             'tax_identification_number', 'tax_id_type',
             'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date'
         ]
@@ -84,7 +86,33 @@ class StakeholderForm(forms.ModelForm):
                 )
             ),
             Fieldset(
-                'Address',
+                'Identity Documents',
+                Row(
+                    Column('passport_number', css_class='col-md-4'),
+                    Column('aadhar_number', css_class='col-md-4'),
+                    Column('pan_sin_number', css_class='col-md-4'),
+                )
+            ),
+            Fieldset(
+                'Permanent Address',
+                Row(
+                    Column('permanent_address_line_1', css_class='col-md-12'),
+                    Column('permanent_address_line_2', css_class='col-md-12'),
+                ),
+                Row(
+                    Column('permanent_city', css_class='col-md-4'),
+                    Column('permanent_state_province', css_class='col-md-4'),
+                    Column('permanent_postal_code', css_class='col-md-4'),
+                ),
+                Row(
+                    Column('permanent_country', css_class='col-md-12'),
+                )
+            ),
+            Fieldset(
+                'Current Address',
+                Row(
+                    Column(HTML('<div class="mb-3"><label class="form-check"><input type="checkbox" name="same_as_permanent" class="form-check-input" id="id_same_as_permanent"> Same as Permanent Address</label></div>'), css_class='col-md-12'),
+                ),
                 Row(
                     Column('address_line_1', css_class='col-md-12'),
                     Column('address_line_2', css_class='col-md-12'),
