@@ -271,8 +271,8 @@ class Invoice(models.Model):
     
     # Amounts
     subtotal = models.DecimalField(max_digits=18, decimal_places=2)
-    tax_amount = models.DecimalField(max_digits=18, decimal_places=2)
-    total_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    tax_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     amount_paid = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     
     # Status
