@@ -39,7 +39,7 @@
                         <div class="card-body py-2">
                             <div class="d-flex align-items-center">
                                 <label class="me-2 mb-0 fw-bold">View Users by Entity:</label>
-                                <form method="post" action="{% url 'accounting:select_entity' %}" class="d-inline">
+                                <form method="post" action="{% url 'accounting:switch-entity' %}" class="d-inline">
                                     {% csrf_token %}
                                     <div class="d-flex align-items-center gap-2">
                                         <select name="entity_id" id="entity_selector" class="form-select form-select-sm" style="width: 250px;">
