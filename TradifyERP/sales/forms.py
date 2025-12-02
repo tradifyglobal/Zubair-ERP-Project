@@ -45,6 +45,7 @@ class SalesOrderForm(forms.ModelForm):
         fields = [
             'so_number', 'customer', 'order_date', 'required_date',
             'shipping_method', 'po_reference',
+            'subtotal', 'tax_amount', 'shipping_cost', 'total_amount',
             'status', 'notes'
         ]
         widgets = {
@@ -54,9 +55,19 @@ class SalesOrderForm(forms.ModelForm):
             'required_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'shipping_method': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., FedEx, DHL'}),
             'po_reference': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Customer PO number'}),
+            'subtotal': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_subtotal'}),
+            'tax_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_tax_amount'}),
+            'shipping_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_shipping_cost'}),
+            'total_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'readonly': True, 'id': 'id_total_amount'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make total_amount readonly
+        self.fields['total_amount'].widget.attrs['readonly'] = True
+        self.fields['total_amount'].widget.attrs['title'] = 'Auto-calculated from Subtotal + Tax Amount + Shipping Cost'
 
 
 class SalesOrderLineForm(forms.ModelForm):

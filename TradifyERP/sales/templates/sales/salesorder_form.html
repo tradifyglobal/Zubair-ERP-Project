@@ -93,23 +93,28 @@
                                     <div class="invalid-feedback d-block">{{ form.status.errors }}</div>
                                 {% endif %}
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.payment_status.id_for_label }}" class="form-label">Payment Status</label>
-                                {{ form.payment_status }}
-                                {% if form.payment_status.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.payment_status.errors }}</div>
-                                {% endif %}
-                            </div>
                         </div>
+
+                        <!-- Amount Section -->
+                        <hr class="my-4">
+                        <h6 class="card-subtitle mb-3 text-muted">Order Totals</h6>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.subtotal.id_for_label }}" class="form-label">Subtotal</label>
+                                <label for="{{ form.subtotal.id_for_label }}" class="form-label">Subtotal *</label>
                                 {{ form.subtotal }}
+                                <small class="text-muted">Sum of all line item amounts</small>
+                                {% if form.subtotal.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.subtotal.errors }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.tax_amount.id_for_label }}" class="form-label">Tax Amount</label>
                                 {{ form.tax_amount }}
+                                <small class="text-muted">GST/VAT amount</small>
+                                {% if form.tax_amount.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.tax_amount.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -117,10 +122,18 @@
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.shipping_cost.id_for_label }}" class="form-label">Shipping Cost</label>
                                 {{ form.shipping_cost }}
+                                <small class="text-muted">Delivery/Shipping charges</small>
+                                {% if form.shipping_cost.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.shipping_cost.errors }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.total_amount.id_for_label }}" class="form-label">Total Amount</label>
+                                <label for="{{ form.total_amount.id_for_label }}" class="form-label"><strong>Total Amount</strong></label>
                                 {{ form.total_amount }}
+                                <small class="text-muted text-success"><strong>Auto-calculated</strong></small>
+                                {% if form.total_amount.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.total_amount.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -144,4 +157,31 @@
         </div>
     </div>
 </div>
+
+<!-- Auto-calculation script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const subtotalInput = document.getElementById('id_subtotal');
+    const taxInput = document.getElementById('id_tax_amount');
+    const shippingInput = document.getElementById('id_shipping_cost');
+    const totalInput = document.getElementById('id_total_amount');
+
+    function calculateTotal() {
+        const subtotal = parseFloat(subtotalInput.value) || 0;
+        const tax = parseFloat(taxInput.value) || 0;
+        const shipping = parseFloat(shippingInput.value) || 0;
+        
+        const total = subtotal + tax + shipping;
+        totalInput.value = total.toFixed(2);
+    }
+
+    // Add event listeners to all input fields
+    if (subtotalInput) subtotalInput.addEventListener('input', calculateTotal);
+    if (taxInput) taxInput.addEventListener('input', calculateTotal);
+    if (shippingInput) shippingInput.addEventListener('input', calculateTotal);
+
+    // Calculate total on page load
+    calculateTotal();
+});
+</script>
 {% endblock %}
