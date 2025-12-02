@@ -13,21 +13,21 @@ def export_shareholders_csv(stakeholders):
     
     # Write header
     writer.writerow([
-        'ID', 'First Name', 'Last Name', 'Email', 'Phone', 
-        'Address', 'City', 'State', 'Postal Code', 'Country'
+        'ID', 'First Name', 'Last Name', 'Email', 'Phone Number', 
+        'Address Line 1', 'City', 'State/Province', 'Postal Code', 'Country'
     ])
     
     # Write data
     for stakeholder in stakeholders:
         writer.writerow([
             stakeholder.id,
-            stakeholder.first_name,
-            stakeholder.last_name,
+            stakeholder.first_name or '',
+            stakeholder.last_name or '',
             stakeholder.email or '',
-            stakeholder.phone or '',
-            stakeholder.address or '',
+            stakeholder.phone_number or '',
+            stakeholder.address_line_1 or '',
             stakeholder.city or '',
-            stakeholder.state or '',
+            stakeholder.state_province or '',
             stakeholder.postal_code or '',
             stakeholder.country or '',
         ])
@@ -45,8 +45,8 @@ def export_shareholders_excel(stakeholders):
     ws.title = "Shareholders"
     
     # Write header
-    headers = ['ID', 'First Name', 'Last Name', 'Email', 'Phone', 
-               'Address', 'City', 'State', 'Postal Code', 'Country']
+    headers = ['ID', 'First Name', 'Last Name', 'Email', 'Phone Number', 
+               'Address Line 1', 'City', 'State/Province', 'Postal Code', 'Country']
     ws.append(headers)
     
     # Style header
@@ -62,13 +62,13 @@ def export_shareholders_excel(stakeholders):
     for stakeholder in stakeholders:
         ws.append([
             stakeholder.id,
-            stakeholder.first_name,
-            stakeholder.last_name,
+            stakeholder.first_name or '',
+            stakeholder.last_name or '',
             stakeholder.email or '',
-            stakeholder.phone or '',
-            stakeholder.address or '',
+            stakeholder.phone_number or '',
+            stakeholder.address_line_1 or '',
             stakeholder.city or '',
-            stakeholder.state or '',
+            stakeholder.state_province or '',
             stakeholder.postal_code or '',
             stakeholder.country or '',
         ])
@@ -110,11 +110,11 @@ def import_shareholders_csv(file_content, entity, overwrite=False):
                 first_name = row.get('First Name', '').strip()
                 last_name = row.get('Last Name', '').strip()
                 email = row.get('Email', '').strip()
-                phone = row.get('Phone', '').strip()
+                phone_number = row.get('Phone Number', '').strip()
                 
                 # Validate required fields
-                if not first_name or not last_name:
-                    errors.append(f"Row {row_num}: First name and last name are required")
+                if not first_name or not last_name or not email:
+                    errors.append(f"Row {row_num}: First name, last name, and email are required")
                     continue
                 
                 # Get or create stakeholder
@@ -126,12 +126,12 @@ def import_shareholders_csv(file_content, entity, overwrite=False):
                         stakeholder.first_name = first_name
                         stakeholder.last_name = last_name
                         stakeholder.email = email
-                        stakeholder.phone = phone
-                        stakeholder.address = row.get('Address', '').strip() or None
-                        stakeholder.city = row.get('City', '').strip() or None
-                        stakeholder.state = row.get('State', '').strip() or None
-                        stakeholder.postal_code = row.get('Postal Code', '').strip() or None
-                        stakeholder.country = row.get('Country', '').strip() or None
+                        stakeholder.phone_number = phone_number
+                        stakeholder.address_line_1 = row.get('Address Line 1', '').strip() or ''
+                        stakeholder.city = row.get('City', '').strip() or ''
+                        stakeholder.state_province = row.get('State/Province', '').strip() or ''
+                        stakeholder.postal_code = row.get('Postal Code', '').strip() or ''
+                        stakeholder.country = row.get('Country', '').strip() or ''
                         stakeholder.save()
                         imported_count += 1
                     except Stakeholder.DoesNotExist:
@@ -142,13 +142,14 @@ def import_shareholders_csv(file_content, entity, overwrite=False):
                         first_name=first_name,
                         last_name=last_name,
                         email=email,
-                        phone=phone,
-                        address=row.get('Address', '').strip() or None,
-                        city=row.get('City', '').strip() or None,
-                        state=row.get('State', '').strip() or None,
-                        postal_code=row.get('Postal Code', '').strip() or None,
-                        country=row.get('Country', '').strip() or None,
-                        entity=entity
+                        phone_number=phone_number,
+                        address_line_1=row.get('Address Line 1', '').strip() or '',
+                        city=row.get('City', '').strip() or '',
+                        state_province=row.get('State/Province', '').strip() or '',
+                        postal_code=row.get('Postal Code', '').strip() or '',
+                        country=row.get('Country', '').strip() or '',
+                        entity=entity,
+                        stakeholder_type='INDIVIDUAL'
                     )
                     imported_count += 1
             
@@ -177,7 +178,7 @@ def import_shareholders_excel(file_content, entity, overwrite=False):
                 headers[cell.value] = col_num
         
         # Validate required headers
-        required_headers = ['First Name', 'Last Name']
+        required_headers = ['First Name', 'Last Name', 'Email']
         for req_header in required_headers:
             if req_header not in headers:
                 errors.append(f"Missing required column: {req_header}")
@@ -191,27 +192,27 @@ def import_shareholders_excel(file_content, entity, overwrite=False):
                 # Extract values
                 first_name = (row[headers['First Name']-1].value or '').strip()
                 last_name = (row[headers['Last Name']-1].value or '').strip()
-                email = (row[headers.get('Email', 0)-1].value or '').strip() if 'Email' in headers else ''
-                phone = (row[headers.get('Phone', 0)-1].value or '').strip() if 'Phone' in headers else ''
+                email = (row[headers['Email']-1].value or '').strip()
+                phone_number = (row[headers.get('Phone Number', 0)-1].value or '').strip() if 'Phone Number' in headers else ''
                 
                 # Validate required fields
-                if not first_name or not last_name:
-                    errors.append(f"Row {row_num}: First name and last name are required")
+                if not first_name or not last_name or not email:
+                    errors.append(f"Row {row_num}: First name, last name, and email are required")
                     continue
                 
                 # Get optional fields
-                address = ''
+                address_line_1 = ''
                 city = ''
-                state = ''
+                state_province = ''
                 postal_code = ''
                 country = ''
                 
-                if 'Address' in headers:
-                    address = (row[headers['Address']-1].value or '').strip()
+                if 'Address Line 1' in headers:
+                    address_line_1 = (row[headers['Address Line 1']-1].value or '').strip()
                 if 'City' in headers:
                     city = (row[headers['City']-1].value or '').strip()
-                if 'State' in headers:
-                    state = (row[headers['State']-1].value or '').strip()
+                if 'State/Province' in headers:
+                    state_province = (row[headers['State/Province']-1].value or '').strip()
                 if 'Postal Code' in headers:
                     postal_code = (row[headers['Postal Code']-1].value or '').strip()
                 if 'Country' in headers:
@@ -230,12 +231,12 @@ def import_shareholders_excel(file_content, entity, overwrite=False):
                         stakeholder.first_name = first_name
                         stakeholder.last_name = last_name
                         stakeholder.email = email
-                        stakeholder.phone = phone
-                        stakeholder.address = address or None
-                        stakeholder.city = city or None
-                        stakeholder.state = state or None
-                        stakeholder.postal_code = postal_code or None
-                        stakeholder.country = country or None
+                        stakeholder.phone_number = phone_number
+                        stakeholder.address_line_1 = address_line_1 or ''
+                        stakeholder.city = city or ''
+                        stakeholder.state_province = state_province or ''
+                        stakeholder.postal_code = postal_code or ''
+                        stakeholder.country = country or ''
                         stakeholder.save()
                         imported_count += 1
                     except Stakeholder.DoesNotExist:
@@ -246,13 +247,14 @@ def import_shareholders_excel(file_content, entity, overwrite=False):
                         first_name=first_name,
                         last_name=last_name,
                         email=email,
-                        phone=phone,
-                        address=address or None,
-                        city=city or None,
-                        state=state or None,
-                        postal_code=postal_code or None,
-                        country=country or None,
-                        entity=entity
+                        phone_number=phone_number,
+                        address_line_1=address_line_1 or '',
+                        city=city or '',
+                        state_province=state_province or '',
+                        postal_code=postal_code or '',
+                        country=country or '',
+                        entity=entity,
+                        stakeholder_type='INDIVIDUAL'
                     )
                     imported_count += 1
             
