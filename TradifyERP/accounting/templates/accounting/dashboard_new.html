@@ -69,7 +69,7 @@
                                     <ul class="mb-0 ps-3">
                                         {% for review in pending_reviews_1|slice:":3" %}
                                         <li>
-                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none">
+                                            <a href="{% url 'shareholder:capital-contribution-review' review.id %}" class="text-decoration-none">
                                                 {{ review.entity.code }} - {{ review.stakeholder.get_full_name }} ({{ review.contribution_date|date:"M d, Y" }})
                                             </a>
                                         </li>
@@ -84,7 +84,7 @@
                                     <ul class="mb-0 ps-3">
                                         {% for review in pending_reviews_2|slice:":3" %}
                                         <li>
-                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none">
+                                            <a href="{% url 'shareholder:capital-contribution-review' review.id %}" class="text-decoration-none">
                                                 {{ review.entity.code }} - {{ review.stakeholder.get_full_name }} ({{ review.contribution_date|date:"M d, Y" }})
                                             </a>
                                         </li>
@@ -134,7 +134,7 @@
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div>
                                                         <p class="mb-1" style="font-size: 0.9rem; font-weight: 500; color: #333;">
-                                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none" style="color: #0d6efd;">
+                                                            <a href="{% url 'shareholder:capital-contribution-review' review.id %}" class="text-decoration-none" style="color: #0d6efd;">
                                                                 {{ review.entity.code }}
                                                             </a>
                                                         </p>
@@ -150,7 +150,7 @@
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div>
                                                         <p class="mb-1" style="font-size: 0.9rem; font-weight: 500; color: #333;">
-                                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none" style="color: #0d6efd;">
+                                                            <a href="{% url 'shareholder:capital-contribution-review' review.id %}" class="text-decoration-none" style="color: #0d6efd;">
                                                                 {{ review.entity.code }}
                                                             </a>
                                                         </p>
