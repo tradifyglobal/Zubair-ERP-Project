@@ -15,6 +15,7 @@ urlpatterns = [
     path('receipts/', views.GoodsReceiptListView.as_view(), name='receipt_list'),
     path('receipts/create/', views.GoodsReceiptCreateView.as_view(), name='receipt_create'),
     path('receipts/<int:pk>/', views.GoodsReceiptDetailView.as_view(), name='receipt_detail'),
+    path('receipts/<int:pk>/edit/', views.GoodsReceiptUpdateView.as_view(), name='receipt_update'),
     
     # Request for Quotation
     path('rfq/', views.RequestForQuotationListView.as_view(), name='rfq_list'),
