@@ -1,11 +1,16 @@
-from django.shortcuts import render
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.shortcuts import render, redirect
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.urls import reverse_lazy
 from django.db.models import Sum, Count
+from django.contrib import messages
 from accounting.models import Stakeholder, CapitalContribution, Shareholding, Entity
 from accounting.stakeholder_forms import StakeholderForm, CapitalContributionForm, ShareholdingForm
 from accounting.mixins import SessionEntityMixin
+from shareholder.import_export import (
+    export_shareholders_csv, export_shareholders_excel,
+    import_shareholders_csv, import_shareholders_excel
+)
 
 
 # ==================== Shareholder Dashboard ====================
@@ -569,4 +574,66 @@ class ShareholderPaymentCommitmentUpdateView(SessionEntityMixin, LoginRequiredMi
                 pass
         
         return super().form_valid(form)
+
+
+# ==================== Import/Export Views ====================
+
+class ShareholderExportView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'accounting.view_stakeholder'
+    
+    def get(self, request):
+        entity_id = request.session.get('selected_entity_id')
+        stakeholders = Stakeholder.objects.filter(entity_id=entity_id).order_by('id')
+        
+        format_type = request.GET.get('format', 'csv')
+        
+        if format_type == 'excel':
+            return export_shareholders_excel(stakeholders)
+        else:
+            return export_shareholders_csv(stakeholders)
+
+
+class ShareholderImportView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'accounting.add_stakeholder'
+    
+    def post(self, request):
+        entity_id = request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id).first()
+        
+        if not entity:
+            messages.error(request, 'Entity not found')
+            return redirect('shareholder:stakeholder-list')
+        
+        file = request.FILES.get('file')
+        if not file:
+            messages.error(request, 'No file provided')
+            return redirect('shareholder:stakeholder-list')
+        
+        overwrite = request.POST.get('overwrite') == 'true'
+        imported_count = 0
+        errors = []
+        
+        try:
+            if file.name.endswith('.csv'):
+                imported_count, errors = import_shareholders_csv(file, entity, overwrite)
+            elif file.name.endswith(('.xlsx', '.xls')):
+                imported_count, errors = import_shareholders_excel(file, entity, overwrite)
+            else:
+                messages.error(request, 'Unsupported file format. Please use CSV or Excel (.xlsx, .xls)')
+                return redirect('shareholder:stakeholder-list')
+            
+            if imported_count > 0:
+                messages.success(request, f'Successfully imported {imported_count} shareholder(s)')
+            
+            if errors:
+                for error in errors[:10]:  # Show first 10 errors
+                    messages.warning(request, error)
+                if len(errors) > 10:
+                    messages.warning(request, f'... and {len(errors) - 10} more errors')
+        
+        except Exception as e:
+            messages.error(request, f'Error importing file: {str(e)}')
+        
+        return redirect('shareholder:stakeholder-list')
+
 

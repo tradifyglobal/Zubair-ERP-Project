@@ -14,6 +14,8 @@ urlpatterns = [
     path('shareholders/create/', views.ShareholderCreateView.as_view(), name='stakeholder-create'),
     path('shareholders/<int:pk>/edit/', views.ShareholderUpdateView.as_view(), name='stakeholder-edit'),
     path('shareholders/<int:pk>/delete/', views.ShareholderDeleteView.as_view(), name='stakeholder-delete'),
+    path('shareholders/export/', views.ShareholderExportView.as_view(), name='stakeholder-export'),
+    path('shareholders/import/', views.ShareholderImportView.as_view(), name='stakeholder-import'),
 
     # Capital Contribution URLs
     path('capital-contributions/', views.CapitalContributionListView.as_view(), name='capital-contribution-list'),

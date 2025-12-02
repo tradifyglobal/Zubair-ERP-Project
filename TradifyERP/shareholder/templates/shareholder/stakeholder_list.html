@@ -13,6 +13,18 @@
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">Shareholders</h4>
                     <div class="page-title-right">
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-secondary waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="feather-download"></i> Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'shareholder:stakeholder-export' %}?format=csv">Export as CSV</a></li>
+                                <li><a class="dropdown-item" href="{% url 'shareholder:stakeholder-export' %}?format=excel">Export as Excel</a></li>
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-secondary waves-effect waves-light me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="feather-upload"></i> Import
+                        </button>
                         <a href="{% url 'shareholder:stakeholder-create' %}" class="btn btn-primary waves-effect waves-light">
                             <i class="feather-plus"></i> Add New Shareholder
                         </a>
@@ -159,6 +171,41 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Import Shareholders</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{% url 'shareholder:stakeholder-import' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Select CSV or Excel File</label>
+                        <input class="form-control" type="file" id="importFile" name="file" accept=".csv,.xlsx,.xls" required>
+                        <small class="form-text text-muted">Supported formats: CSV, Excel (.xlsx, .xls)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="overwriteCheckbox" class="form-label">
+                            <input type="checkbox" id="overwriteCheckbox" name="overwrite" value="true">
+                            Overwrite existing shareholders (if ID matches)
+                        </label>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Required columns:</strong> first_name, last_name, email, phone
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
