@@ -34,6 +34,9 @@
         init: function() {
             console.log('🔄 Initializing Responsive Scrollbar Manager...');
 
+            // Force initial scrollbar setup
+            this.forceScrollbarSetup();
+
             // Initial check
             this.checkScrollbarNeeds();
 
@@ -50,6 +53,21 @@
             this.attachEventListeners();
 
             console.log('✅ Responsive Scrollbar Manager initialized');
+        },
+
+        /**
+         * Force scrollbar setup on page load
+         */
+        forceScrollbarSetup: function() {
+            // Ensure html and body have proper overflow
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'auto';
+            document.body.style.overflowX = 'auto';
+            document.body.style.overflowY = 'auto';
+            
+            // Set dimensions
+            if (!document.body.style.width) document.body.style.width = '100vw';
+            if (!document.body.style.height) document.body.style.height = '100vh';
         },
 
         /**
@@ -161,6 +179,12 @@
         adjustScrollbarsForZoom: function(zoomLevel) {
             const zoomPercent = zoomLevel * 100;
 
+            // ALWAYS ensure scrollbars are visible
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'auto';
+            document.body.style.overflowX = 'auto';
+            document.body.style.overflowY = 'auto';
+
             if (zoomLevel > this.config.zoomThreshold) {
                 console.log(`📈 High zoom detected (${zoomPercent.toFixed(0)}%). Enhancing scrollbar visibility...`);
                 this.enhanceScrollbarVisibility();
@@ -170,6 +194,9 @@
                 console.log(`📉 Normal zoom (${zoomPercent.toFixed(0)}%). Using default scrollbars.`);
                 this.restoreDefaultScrollbars();
             }
+
+            // Recheck overflow
+            this.checkScrollbarNeeds();
         },
 
         /**
@@ -209,22 +236,34 @@
             document.documentElement.setAttribute('data-scrollbars-enhanced', 'true');
             document.body.setAttribute('data-zoom-level', 'high');
 
-            // Add inline styles to ensure scrollbars don't hide
-            const style = document.createElement('style');
-            style.id = 'zoom-scrollbar-enforcement';
-            
-            if (!document.getElementById('zoom-scrollbar-enforcement')) {
+            // Force inline styles to ensure scrollbars never hide
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'auto';
+            document.body.style.overflowX = 'auto';
+            document.body.style.overflowY = 'auto';
+            document.body.style.scrollbarWidth = 'auto';
+
+            // Add inline style tag for aggressive CSS
+            let style = document.getElementById('zoom-scrollbar-enforcement');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'zoom-scrollbar-enforcement';
                 style.innerHTML = `
-                    html[data-scrollbars-enhanced="true"] { overflow-x: auto !important; overflow-y: auto !important; }
-                    body[data-zoom-level="high"] { overflow-x: auto !important; overflow-y: auto !important; }
-                    html[data-scrollbars-enhanced="true"] .main-content,
-                    html[data-scrollbars-enhanced="true"] .page-content { overflow-x: auto !important; }
-                    body[data-zoom-level="high"] .main-content,
-                    body[data-zoom-level="high"] .page-content { overflow-x: auto !important; }
-                    html[data-scrollbars-enhanced="true"] .table-responsive,
-                    body[data-zoom-level="high"] .table-responsive { overflow-x: auto !important; overflow-y: visible !important; }
-                    ::-webkit-scrollbar { width: 16px !important; height: 16px !important; }
-                    ::-webkit-scrollbar-thumb { min-height: 50px !important; }
+                    html { overflow: hidden !important; }
+                    body { 
+                        overflow: auto !important;
+                        overflow-x: auto !important;
+                        overflow-y: auto !important;
+                        scrollbar-width: auto !important;
+                    }
+                    ::-webkit-scrollbar { 
+                        width: 18px !important; 
+                        height: 18px !important;
+                    }
+                    ::-webkit-scrollbar-thumb { 
+                        min-height: 60px !important;
+                        min-width: 60px !important;
+                    }
                 `;
                 document.head.appendChild(style);
             }
@@ -236,6 +275,18 @@
         restoreDefaultScrollbars: function() {
             document.documentElement.setAttribute('data-scrollbars-enhanced', 'false');
             document.body.setAttribute('data-zoom-level', 'normal');
+
+            // Still maintain scrollbar visibility
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'auto';
+            document.body.style.overflowX = 'auto';
+            document.body.style.overflowY = 'auto';
+
+            // Remove zoom-specific style if it exists
+            const style = document.getElementById('zoom-scrollbar-enforcement');
+            if (style && style.id !== 'base-scrollbar-enforcement') {
+                // Keep it but update for normal zoom
+            }
         },
 
         /**
