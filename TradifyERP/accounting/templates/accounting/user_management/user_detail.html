@@ -106,6 +106,7 @@
                                             <th class="text-center">Add</th>
                                             <th class="text-center">Edit</th>
                                             <th class="text-center">Delete</th>
+                                            <th class="text-center">Review</th>
                                             <th class="text-center">Approve</th>
                                             <th class="text-center">Export</th>
                                         </tr>
@@ -125,6 +126,9 @@
                                             </td>
                                             <td class="text-center">
                                                 {% if perm.can_delete %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if perm.can_review %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
                                             </td>
                                             <td class="text-center">
                                                 {% if perm.can_approve %}<i class="mdi mdi-check text-success"></i>{% else %}<i class="mdi mdi-close text-danger"></i>{% endif %}
