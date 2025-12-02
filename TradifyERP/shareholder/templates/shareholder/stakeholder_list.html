@@ -177,7 +177,7 @@
 
 <!-- Import Modal -->
 <div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="importModalLabel">Import Shareholders</h5>
@@ -185,19 +185,19 @@
             </div>
             <form method="post" enctype="multipart/form-data" action="{% url 'shareholder:stakeholder-import' %}">
                 {% csrf_token %}
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
                     <div class="mb-3">
                         <label for="importFile" class="form-label">Select CSV or Excel File</label>
                         <input class="form-control" type="file" id="importFile" name="file" accept=".csv,.xlsx,.xls" required>
-                        <small class="form-text text-muted">Supported formats: CSV, Excel (.xlsx, .xls)</small>
+                        <small class="form-text text-muted d-block mt-1">Supported formats: CSV, Excel (.xlsx, .xls)</small>
                     </div>
                     <div class="mb-3">
-                        <label for="overwriteCheckbox" class="form-label">
-                            <input type="checkbox" id="overwriteCheckbox" name="overwrite" value="true">
+                        <label for="overwriteCheckbox" class="form-check-label">
+                            <input type="checkbox" id="overwriteCheckbox" name="overwrite" value="true" class="form-check-input">
                             Overwrite existing shareholders (if ID matches)
                         </label>
                     </div>
-                    <div class="alert alert-info">
+                    <div class="alert alert-info mb-0">
                         <strong>Required columns:</strong> first_name, last_name, email, phone_number
                     </div>
                 </div>
