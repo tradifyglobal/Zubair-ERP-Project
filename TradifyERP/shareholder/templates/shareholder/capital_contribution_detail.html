@@ -192,14 +192,17 @@
                             <div class="col-md-2">
                                 <div class="text-center">
                                     <h6>Reviewer 1</h6>
+                                    {% if contribution.assigned_reviewer_1 %}
+                                        <small>{{ contribution.assigned_reviewer_1.get_full_name }}</small>
+                                    {% else %}
+                                        <small class="text-muted">Not assigned</small>
+                                    {% endif %}
                                     {% if contribution.reviewed_by %}
-                                        <small>{{ contribution.reviewed_by.get_full_name }}</small>
                                         {% if contribution.reviewed_at %}
                                             <br><small class="text-muted">{{ contribution.reviewed_at|date:"M d, Y H:i" }}</small>
                                         {% endif %}
                                         <br><span class="badge bg-success-subtle text-success">✓ Completed</span>
                                     {% else %}
-                                        <small class="text-muted">Awaiting Review</small>
                                         <br><span class="badge bg-warning-subtle text-warning">Pending</span>
                                     {% endif %}
                                 </div>
@@ -207,18 +210,20 @@
                             <div class="col-md-2">
                                 <div class="text-center">
                                     <h6>Reviewer 2</h6>
+                                    {% if contribution.assigned_reviewer_2 %}
+                                        <small>{{ contribution.assigned_reviewer_2.get_full_name }}</small>
+                                    {% else %}
+                                        <small class="text-muted">Not assigned</small>
+                                    {% endif %}
                                     {% if contribution.reviewed_by_2 %}
-                                        <small>{{ contribution.reviewed_by_2.get_full_name }}</small>
                                         {% if contribution.reviewed_at_2 %}
                                             <br><small class="text-muted">{{ contribution.reviewed_at_2|date:"M d, Y H:i" }}</small>
                                         {% endif %}
                                         <br><span class="badge bg-success-subtle text-success">✓ Completed</span>
                                     {% else %}
                                         {% if contribution.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
-                                            <small class="text-warning">Awaiting Review</small>
                                             <br><span class="badge bg-warning-subtle text-warning">Pending</span>
                                         {% else %}
-                                            <small class="text-muted">Not started</small>
                                             <br><span class="badge bg-secondary-subtle text-secondary">—</span>
                                         {% endif %}
                                     {% endif %}
@@ -227,18 +232,20 @@
                             <div class="col-md-2">
                                 <div class="text-center">
                                     <h6>Approver</h6>
+                                    {% if contribution.assigned_approver %}
+                                        <small>{{ contribution.assigned_approver.get_full_name }}</small>
+                                    {% else %}
+                                        <small class="text-muted">Not assigned</small>
+                                    {% endif %}
                                     {% if contribution.approved_by %}
-                                        <small>{{ contribution.approved_by.get_full_name }}</small>
                                         {% if contribution.approved_at %}
                                             <br><small class="text-muted">{{ contribution.approved_at|date:"M d, Y H:i" }}</small>
                                         {% endif %}
                                         <br><span class="badge bg-success-subtle text-success">✓ Approved</span>
                                     {% else %}
                                         {% if contribution.workflow_status == 'REVIEWED' %}
-                                            <small class="text-warning">Awaiting Approval</small>
                                             <br><span class="badge bg-warning-subtle text-warning">Pending</span>
                                         {% else %}
-                                            <small class="text-muted">Not started</small>
                                             <br><span class="badge bg-secondary-subtle text-secondary">—</span>
                                         {% endif %}
                                     {% endif %}
