@@ -183,9 +183,15 @@
                             <div class="col-md-2">
                                 <div class="text-center">
                                     <h6>Submitted</h6>
-                                    <small>{{ contribution.submitted_by.get_full_name|default:"Not submitted yet" }}</small>
-                                    {% if contribution.submitted_at %}
-                                        <br><small class="text-muted">{{ contribution.submitted_at|date:"M d, Y H:i" }}</small>
+                                    {% if contribution.submitted_by %}
+                                        <small>{{ contribution.submitted_by.get_full_name }}</small>
+                                        {% if contribution.submitted_at %}
+                                            <br><small class="text-muted">{{ contribution.submitted_at|date:"M d, Y H:i" }}</small>
+                                        {% endif %}
+                                        <br><span class="badge bg-success-subtle text-success">✓ Submitted</span>
+                                    {% else %}
+                                        <small class="text-muted">Not submitted yet</small>
+                                        <br><span class="badge bg-secondary-subtle text-secondary">—</span>
                                     {% endif %}
                                 </div>
                             </div>
