@@ -34,6 +34,13 @@ class StakeholderForm(forms.ModelForm):
             self.fields['joined_date'].initial = timezone.now().date()
             # Make the field not required since we have a default
             self.fields['joined_date'].required = False
+        
+        # Make current address fields optional - they'll be validated in clean() based on checkbox
+        current_address_fields = ['address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country']
+        for field_name in current_address_fields:
+            if field_name in self.fields:
+                self.fields[field_name].required = False
+        
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
@@ -143,6 +150,21 @@ class StakeholderForm(forms.ModelForm):
                 )
             ),
         )
+    
+    def clean(self):
+        """Validate that current address is filled when not using same as permanent."""
+        cleaned_data = super().clean()
+        same_as_permanent = cleaned_data.get('same_as_permanent')
+        
+        # If NOT checking "same as permanent", require current address fields
+        if not same_as_permanent:
+            required_fields = ['address_line_1', 'city', 'postal_code', 'country']
+            for field_name in required_fields:
+                value = cleaned_data.get(field_name)
+                if not value or str(value).strip() == '':
+                    self.add_error(field_name, 'This field is required.')
+        
+        return cleaned_data
 
 
 class CapitalContributionForm(forms.ModelForm):
