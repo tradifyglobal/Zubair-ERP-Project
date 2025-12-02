@@ -386,6 +386,19 @@ class CapitalContributionSubmitForm(forms.ModelForm):
             raise forms.ValidationError("First and second reviewers must be different users.")
         
         return cleaned_data
+    
+    def save(self, commit=True):
+        """Save the form and assign reviewers to the contribution."""
+        instance = super().save(commit=False)
+        
+        # Save assigned reviewers
+        instance.assigned_reviewer_1 = self.cleaned_data.get('reviewer')
+        instance.assigned_reviewer_2 = self.cleaned_data.get('reviewer_2')
+        
+        if commit:
+            instance.save()
+        
+        return instance
 
 
 class CapitalContributionReviewForm(forms.ModelForm):
@@ -419,6 +432,18 @@ class CapitalContributionReviewForm(forms.ModelForm):
         from django.contrib.auth.models import User
         # Show all active users as potential approvers
         self.fields['approver'].queryset = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
+    
+    def save(self, commit=True):
+        """Save the form and assign approver to the contribution."""
+        instance = super().save(commit=False)
+        
+        # Save assigned approver
+        instance.assigned_approver = self.cleaned_data.get('approver')
+        
+        if commit:
+            instance.save()
+        
+        return instance
 
 
 class CapitalContributionApprovalForm(forms.ModelForm):

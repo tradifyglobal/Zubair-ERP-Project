@@ -14,22 +14,29 @@ def get_pending_reviews_for_user(user, entity=None):
         entity: Optional entity to filter by
         
     Returns:
-        QuerySet of CapitalContribution objects awaiting review
+        QuerySet of CapitalContribution objects awaiting review by this specific user
     """
     # Check if user has reviewer permission
     if not user.has_perm('accounting.review_capitalcontribution'):
         return CapitalContribution.objects.none()
     
-    # Get contributions awaiting first review (assigned to this user as reviewer)
-    query = Q(
-        workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED'],
-        reviewed_by__isnull=True
-    ) | Q(
-        workflow_status='FIRST_REVIEW_COMPLETED',
-        reviewed_by_2__isnull=True
-    )
+    # Get contributions where user is assigned as first OR second reviewer
+    from django.db.models import Q
     
-    pending = CapitalContribution.objects.filter(query).distinct()
+    pending = CapitalContribution.objects.filter(
+        Q(
+            # First review: assigned to this user and not yet reviewed
+            assigned_reviewer_1=user,
+            workflow_status__in=['SUBMITTED'],
+            reviewed_by__isnull=True
+        ) |
+        Q(
+            # Second review: assigned to this user and not yet reviewed  
+            assigned_reviewer_2=user,
+            workflow_status__in=['FIRST_REVIEW_COMPLETED'],
+            reviewed_by_2__isnull=True
+        )
+    ).distinct()
     
     if entity:
         pending = pending.filter(entity=entity)
@@ -39,22 +46,23 @@ def get_pending_reviews_for_user(user, entity=None):
 
 def get_pending_approvals_for_user(user, entity=None):
     """
-    Get pending capital contributions awaiting approval by the user
+    Get pending capital contributions awaiting approval by this specific user
     
     Args:
         user: The user object
         entity: Optional entity to filter by
         
     Returns:
-        QuerySet of CapitalContribution objects awaiting approval
+        QuerySet of CapitalContribution objects awaiting approval by this user
     """
     # Check if user has approver permission
     if not user.has_perm('accounting.approve_capitalcontribution'):
         return CapitalContribution.objects.none()
     
-    # Get contributions awaiting approval (both reviews completed)
+    # Get contributions awaiting approval where user is assigned as approver
     pending = CapitalContribution.objects.filter(
         workflow_status='REVIEWED',
+        assigned_approver=user,
         approved_by__isnull=True
     )
     

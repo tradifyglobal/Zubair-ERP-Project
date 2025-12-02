@@ -828,6 +828,25 @@ class CapitalContribution(models.Model):
     )
     submitted_at = models.DateTimeField(null=True, blank=True)
     
+    # Assigned Reviewers (Track who is assigned to review)
+    assigned_reviewer_1 = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_review_capital_contributions',
+        help_text="User assigned to perform first review"
+    )
+    
+    assigned_reviewer_2 = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_review_capital_contributions_2',
+        help_text="User assigned to perform second review"
+    )
+    
     reviewed_by = models.ForeignKey(
         'auth.User',
         on_delete=models.SET_NULL,
@@ -861,6 +880,16 @@ class CapitalContribution(models.Model):
     )
     approved_at = models.DateTimeField(null=True, blank=True)
     approval_notes = models.TextField(blank=True, null=True, help_text="Notes from approver")
+    
+    # Assigned Approver (Track who can approve)
+    assigned_approver = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_approval_capital_contributions',
+        help_text="User assigned to perform approval"
+    )
     
     rejection_reason = models.TextField(blank=True, null=True, help_text="Reason for rejection")
     
