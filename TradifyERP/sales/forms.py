@@ -117,6 +117,21 @@ class InvoiceForm(forms.ModelForm):
         self.fields['total_amount'].widget.attrs['readonly'] = True
         self.fields['total_amount'].widget.attrs['title'] = 'Auto-calculated from Subtotal + Tax Amount'
     
+    def clean(self):
+        """Convert tax percentage to actual tax amount before saving."""
+        cleaned_data = super().clean()
+        subtotal = cleaned_data.get('subtotal')
+        tax_percentage = cleaned_data.get('tax_amount')
+        
+        # If both subtotal and tax_percentage are provided, calculate actual tax amount
+        if subtotal and tax_percentage is not None:
+            # tax_percentage is entered by user as percentage (e.g., 18 for 18%)
+            # Convert to actual amount: tax_amount = subtotal * (tax_percentage / 100)
+            tax_amount = subtotal * (tax_percentage / 100)
+            cleaned_data['tax_amount'] = tax_amount
+        
+        return cleaned_data
+    
     @staticmethod
     def generate_next_invoice_number():
         """Generate the next invoice number in format INV-YYYY-XXX"""
