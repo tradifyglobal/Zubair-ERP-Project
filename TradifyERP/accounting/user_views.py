@@ -212,6 +212,20 @@ class UserEditView(AdminRequiredMixin, UpdateView):
         # Add module list for display
         context['modules'] = ModulePermission.MODULE_CHOICES
         
+        # Add organized form fields for easier template access
+        permission_form = context['permission_form']
+        form_fields_by_module = {}
+        for module_code, module_name in ModulePermission.MODULE_CHOICES:
+            form_fields_by_module[module_code] = {
+                'view': permission_form.get(f'{module_code}_can_view'),
+                'add': permission_form.get(f'{module_code}_can_add'),
+                'edit': permission_form.get(f'{module_code}_can_edit'),
+                'delete': permission_form.get(f'{module_code}_can_delete'),
+                'approve': permission_form.get(f'{module_code}_can_approve'),
+                'export': permission_form.get(f'{module_code}_can_export'),
+            }
+        context['form_fields'] = form_fields_by_module
+        
         # Get existing permissions
         context['existing_permissions'] = ModulePermission.objects.filter(
             user=self.object,

@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 
 {% block head_title %}
 <title>{% if object %}Edit{% else %}Create{% endif %} User | TradifyERP</title>
@@ -285,48 +286,12 @@
                                                 <td class="text-center">
                                                     <input type="checkbox" class="form-check-input module-select-all" data-module="{{ module_code }}" title="Select all for this module">
                                                 </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_view" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_add" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_edit" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_delete" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_approve" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_export" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"view" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"add" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"edit" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"delete" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"approve" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"export" }}</td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>
