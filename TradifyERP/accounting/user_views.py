@@ -77,6 +77,16 @@ class UserListView(AdminRequiredMixin, SessionEntityMixin, ListView):
         entity_id = self.request.session.get('selected_entity_id')
         from accounting.models import UserEntity
         
+        # Get current entity object
+        try:
+            current_entity = Entity.objects.get(id=entity_id)
+            context['current_entity'] = current_entity
+        except Entity.DoesNotExist:
+            current_entity = None
+        
+        # Get all entities for dropdown
+        context['all_entities'] = Entity.objects.filter(is_active=True).order_by('name')
+        
         # Get filtered user IDs for current entity
         user_ids = UserEntity.objects.filter(
             entity_id=entity_id
