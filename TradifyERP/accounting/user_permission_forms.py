@@ -230,6 +230,17 @@ class BulkModulePermissionForm(forms.Form):
                 })
             )
             
+            self.fields[f'{module_code}_can_review'] = forms.BooleanField(
+                required=False,
+                initial=existing_perm.can_review if existing_perm else False,
+                label='Review',
+                widget=forms.CheckboxInput(attrs={
+                    'class': 'form-check-input permission-checkbox',
+                    'data-module': module_code,
+                    'data-permission': 'review'
+                })
+            )
+            
             self.fields[f'{module_code}_can_approve'] = forms.BooleanField(
                 required=False,
                 initial=existing_perm.can_approve if existing_perm else False,
@@ -262,11 +273,12 @@ class BulkModulePermissionForm(forms.Form):
             can_add = self.cleaned_data.get(f'{module_code}_can_add', False)
             can_edit = self.cleaned_data.get(f'{module_code}_can_edit', False)
             can_delete = self.cleaned_data.get(f'{module_code}_can_delete', False)
+            can_review = self.cleaned_data.get(f'{module_code}_can_review', False)
             can_approve = self.cleaned_data.get(f'{module_code}_can_approve', False)
             can_export = self.cleaned_data.get(f'{module_code}_can_export', False)
             
             # Only create/update if at least one permission is granted
-            if any([can_view, can_add, can_edit, can_delete, can_approve, can_export]):
+            if any([can_view, can_add, can_edit, can_delete, can_review, can_approve, can_export]):
                 permission, created = ModulePermission.objects.update_or_create(
                     user=user,
                     module=module_code,
@@ -275,6 +287,7 @@ class BulkModulePermissionForm(forms.Form):
                         'can_add': can_add,
                         'can_edit': can_edit,
                         'can_delete': can_delete,
+                        'can_review': can_review,
                         'can_approve': can_approve,
                         'can_export': can_export,
                         'granted_by': granted_by,
