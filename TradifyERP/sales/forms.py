@@ -97,7 +97,7 @@ class InvoiceForm(forms.ModelForm):
             'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'subtotal': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_subtotal', 'placeholder': 'Enter subtotal amount'}),
             'tax_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_tax_percentage', 'placeholder': 'Enter tax % (e.g., 18 for 18% GST)'}),
-            'total_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'readonly': True, 'id': 'id_total_amount'}),
+            'total_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_total_amount'}),
             'amount_paid': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_amount_paid'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -113,8 +113,7 @@ class InvoiceForm(forms.ModelForm):
             self.fields['invoice_number'].widget.attrs['readonly'] = True
             self.fields['invoice_number'].widget.attrs['title'] = 'Auto-generated invoice number'
         
-        # Make total_amount readonly (will be auto-calculated via JavaScript)
-        self.fields['total_amount'].widget.attrs['readonly'] = True
+        # total_amount will be auto-calculated via JavaScript - keep writable for calculation
         self.fields['total_amount'].widget.attrs['title'] = 'Auto-calculated from Subtotal + Tax Amount'
     
     def clean(self):

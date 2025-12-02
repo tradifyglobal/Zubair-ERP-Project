@@ -145,19 +145,34 @@
 
 <script>
     // Auto-calculate Total Amount and Amount Paid
-    document.addEventListener('DOMContentLoaded', function() {
+    function initializeCalculation() {
         const subtotalInput = document.getElementById('id_subtotal');
         const taxInput = document.getElementById('id_tax_percentage');
         const totalInput = document.getElementById('id_total_amount');
         const amountPaidInput = document.getElementById('id_amount_paid');
 
+        // Check if all fields exist
+        if (!subtotalInput || !taxInput || !totalInput || !amountPaidInput) {
+            console.warn('Invoice form fields not found', {
+                subtotal: !!subtotalInput,
+                tax: !!taxInput,
+                total: !!totalInput,
+                amountPaid: !!amountPaidInput
+            });
+            return;
+        }
+
         function calculateTotal() {
             const subtotal = parseFloat(subtotalInput.value) || 0;
             const taxPercentage = parseFloat(taxInput.value) || 0;
             
+            console.log('Calculating: subtotal=' + subtotal + ', taxPercentage=' + taxPercentage);
+            
             // Calculate tax amount from percentage: taxAmount = subtotal * (taxPercentage / 100)
             const taxAmount = subtotal * (taxPercentage / 100);
             const total = subtotal + taxAmount;
+            
+            console.log('Result: taxAmount=' + taxAmount + ', total=' + total);
             
             totalInput.value = total.toFixed(2);
             
@@ -182,20 +197,21 @@
         calculateTotal();
         
         // Calculate whenever subtotal or tax changes
-        if (subtotalInput) {
-            subtotalInput.addEventListener('input', calculateTotal);
-            subtotalInput.addEventListener('change', calculateTotal);
-        }
-        if (taxInput) {
-            taxInput.addEventListener('input', calculateTotal);
-            taxInput.addEventListener('change', calculateTotal);
-        }
+        subtotalInput.addEventListener('input', calculateTotal);
+        subtotalInput.addEventListener('change', calculateTotal);
+        taxInput.addEventListener('input', calculateTotal);
+        taxInput.addEventListener('change', calculateTotal);
         
         // Handle amount_paid input to prevent exceeding total
-        if (amountPaidInput) {
-            amountPaidInput.addEventListener('change', handleAmountPaidInput);
-            amountPaidInput.addEventListener('blur', handleAmountPaidInput);
-        }
-    });
+        amountPaidInput.addEventListener('change', handleAmountPaidInput);
+        amountPaidInput.addEventListener('blur', handleAmountPaidInput);
+    }
+
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeCalculation);
+    } else {
+        initializeCalculation();
+    }
 </script>
 {% endblock %}
