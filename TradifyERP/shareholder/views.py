@@ -617,9 +617,12 @@ class CapitalContributionApproveView(SessionEntityMixin, LoginRequiredMixin, Per
         contribution.approved_by = self.request.user
         contribution.approved_at = timezone.now()
         
-        # If status is set to COMPLETED, create ledger entry
-        if contribution.status == 'COMPLETED':
-            contribution.create_ledger_entry()
+        # Mark status as COMPLETED when approved (so ledger entries are created)
+        if contribution.status == 'PENDING':
+            contribution.status = 'COMPLETED'
+        
+        # Create ledger entry (will be created if status is COMPLETED)
+        contribution.create_ledger_entry()
         
         contribution.save()
         
