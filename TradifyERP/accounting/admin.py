@@ -23,7 +23,7 @@ class ModulePermissionInline(admin.TabularInline):
     model = ModulePermission
     fk_name = 'user'  # Specify which ForeignKey to use for the inline
     extra = 0
-    fields = ('module', 'can_view', 'can_add', 'can_edit', 'can_delete', 'can_approve', 'can_export', 'is_active')
+    fields = ('module', 'can_view', 'can_add', 'can_edit', 'can_delete', 'can_review', 'can_approve', 'can_export', 'is_active')
     readonly_fields = ('module',)
     
     def get_queryset(self, request):
@@ -46,7 +46,7 @@ class ModulePermissionAdmin(admin.ModelAdmin):
             'fields': ('user', 'module')
         }),
         ('Permissions', {
-            'fields': ('can_view', 'can_add', 'can_edit', 'can_delete', 'can_approve', 'can_export'),
+            'fields': ('can_view', 'can_add', 'can_edit', 'can_delete', 'can_review', 'can_approve', 'can_export'),
             'description': 'Check the permissions this user should have for this module'
         }),
         ('Additional Info', {

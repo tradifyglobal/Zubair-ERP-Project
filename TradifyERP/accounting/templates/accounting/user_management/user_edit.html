@@ -265,13 +265,16 @@
                                                 <th class="text-center" style="width: 10.7%;">
                                                     <i class="mdi mdi-pencil"></i> Edit
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9%;">
                                                     <i class="mdi mdi-delete"></i> Delete
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9%;">
+                                                    <i class="mdi mdi-clipboard-check"></i> Review
+                                                </th>
+                                                <th class="text-center" style="width: 9%;">
                                                     <i class="mdi mdi-check-decagram"></i> Approve
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9%;">
                                                     <i class="mdi mdi-file-export"></i> Export
                                                 </th>
                                             </tr>
@@ -290,6 +293,7 @@
                                                 <td class="text-center">{{ form_fields|get_item:module_code|get_item:"add" }}</td>
                                                 <td class="text-center">{{ form_fields|get_item:module_code|get_item:"edit" }}</td>
                                                 <td class="text-center">{{ form_fields|get_item:module_code|get_item:"delete" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"review" }}</td>
                                                 <td class="text-center">{{ form_fields|get_item:module_code|get_item:"approve" }}</td>
                                                 <td class="text-center">{{ form_fields|get_item:module_code|get_item:"export" }}</td>
                                             </tr>
@@ -347,7 +351,7 @@
         checkbox.addEventListener('change', function() {
             const module = this.dataset.module;
             const isChecked = this.checked;
-            document.querySelectorAll(`input[name="${module}_can_view"], input[name="${module}_can_add"], input[name="${module}_can_edit"], input[name="${module}_can_delete"], input[name="${module}_can_approve"], input[name="${module}_can_export"]`).forEach(cb => {
+            document.querySelectorAll(`input[name="${module}_can_view"], input[name="${module}_can_add"], input[name="${module}_can_edit"], input[name="${module}_can_delete"], input[name="${module}_can_review"], input[name="${module}_can_approve"], input[name="${module}_can_export"]`).forEach(cb => {
                 cb.checked = isChecked;
             });
         });

@@ -66,6 +66,11 @@ class ModulePermission(models.Model):
     )
     
     # Additional controls
+    can_review = models.BooleanField(
+        default=False,
+        help_text="Can review transactions in this module"
+    )
+    
     can_approve = models.BooleanField(
         default=False,
         help_text="Can approve transactions in this module"
@@ -143,6 +148,8 @@ class ModulePermission(models.Model):
             perms.append('Edit')
         if self.can_delete:
             perms.append('Delete')
+        if self.can_review:
+            perms.append('Review')
         if self.can_approve:
             perms.append('Approve')
         if self.can_export:

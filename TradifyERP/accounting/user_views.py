@@ -221,6 +221,7 @@ class UserEditView(AdminRequiredMixin, UpdateView):
                 'add': permission_form[f'{module_code}_can_add'] if f'{module_code}_can_add' in permission_form.fields else None,
                 'edit': permission_form[f'{module_code}_can_edit'] if f'{module_code}_can_edit' in permission_form.fields else None,
                 'delete': permission_form[f'{module_code}_can_delete'] if f'{module_code}_can_delete' in permission_form.fields else None,
+                'review': permission_form[f'{module_code}_can_review'] if f'{module_code}_can_review' in permission_form.fields else None,
                 'approve': permission_form[f'{module_code}_can_approve'] if f'{module_code}_can_approve' in permission_form.fields else None,
                 'export': permission_form[f'{module_code}_can_export'] if f'{module_code}_can_export' in permission_form.fields else None,
             }
