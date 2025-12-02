@@ -4,7 +4,7 @@ Forms for tracking and managing shareholder investments
 """
 
 from django import forms
-from accounting.models import ShareholderInvestmentLimit, ShareholderPaymentCommitment
+from accounting.models import ShareholderInvestmentLimit, ShareholderPaymentCommitment, Stakeholder
 
 
 class ShareholderInvestmentLimitForm(forms.ModelForm):
@@ -37,13 +37,24 @@ class ShareholderInvestmentLimitForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Filter stakeholder by entity
+        if 'stakeholder' in self.fields and self.instance:
+            entity_id = getattr(self.instance, 'entity_id', None)
+            if entity_id:
+                self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
+                    entity_id=entity_id
+                ).order_by('first_name', 'last_name')
+
 
 class ShareholderPaymentCommitmentForm(forms.ModelForm):
     """Form for tracking shareholder payment commitments."""
     
     class Meta:
         model = ShareholderPaymentCommitment
-        fields = ['stakeholder', 'committed_amount', 'currency', 'promised_payment_date', 'notes']
+        fields = ['stakeholder', 'committed_amount', 'currency', 'promised_payment_date', 'status', 'actual_payment_date', 'notes']
         widgets = {
             'stakeholder': forms.Select(attrs={
                 'class': 'form-select',
@@ -68,6 +79,15 @@ class ShareholderPaymentCommitmentForm(forms.ModelForm):
                 'required': 'required',
                 'title': 'Date shareholder promised to make payment'
             }),
+            'status': forms.Select(attrs={
+                'class': 'form-select',
+                'title': 'Payment status: Pending/Paid/Overdue/Rescheduled/Cancelled'
+            }),
+            'actual_payment_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'title': 'Actual date payment was received (if paid)'
+            }),
             'notes': forms.Textarea(attrs={
                 'class': 'form-control',
                 'placeholder': 'Additional notes about the commitment',
@@ -75,3 +95,15 @@ class ShareholderPaymentCommitmentForm(forms.ModelForm):
                 'title': 'Any additional notes or details'
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Filter stakeholder by entity
+        if 'stakeholder' in self.fields and self.instance:
+            entity_id = getattr(self.instance, 'entity_id', None)
+            if entity_id:
+                self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
+                    entity_id=entity_id
+                ).order_by('first_name', 'last_name')
+

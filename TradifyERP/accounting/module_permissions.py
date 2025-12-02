@@ -28,6 +28,8 @@ class ModulePermission(models.Model):
         ('cash_management', 'Cash Management'),
         ('shareholder', 'Shareholder Management'),
         ('maintenance', 'Site Maintenance'),
+        ('reviewer', 'Workflow Reviewer'),
+        ('approver', 'Workflow Approver'),
     ]
     
     user = models.ForeignKey(

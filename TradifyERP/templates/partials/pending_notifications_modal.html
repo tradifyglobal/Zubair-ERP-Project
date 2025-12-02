@@ -1,0 +1,228 @@
+<!-- Pending Notifications Modal -->
+<div class="modal fade" id="pendingNotificationsModal" tabindex="-1" aria-labelledby="pendingNotificationsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="pendingNotificationsLabel">
+                    <i class="feather-bell text-warning"></i> Pending Actions Required
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="notification-modal-content">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Dismiss</button>
+                <a href="/shareholder/capital-contributions/" class="btn btn-primary">View All Contributions</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    
+    // Function to update bell icon and header dropdown
+    function updateNotificationBell() {
+        fetch('{% url "shareholder:api-notifications" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Update bell badge
+                const badge = document.getElementById('notification-badge');
+                if (badge) {
+                    if (data.total_pending > 0) {
+                        badge.textContent = data.total_pending;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+                
+                // Update header dropdown notifications
+                updateHeaderNotifications(data);
+            })
+            .catch(error => console.error('Error updating bell notifications:', error));
+    }
+    
+    // Update header notification dropdown
+    function updateHeaderNotifications(data) {
+        // Update review notifications
+        const reviewContainer = document.getElementById('review-notifications');
+        if (reviewContainer && data.review_items && data.review_items.length > 0) {
+            let html = '';
+            data.review_items.forEach(item => {
+                html += `
+                    <a href="${item.url}" class="dropdown-item notify-item">
+                        <div class="notify-thumb bg-light-primary">
+                            <i class="feather-alert-circle"></i>
+                        </div>
+                        <div class="notify-content">
+                            <h6 class="notify-title">${item.stakeholder}</h6>
+                            <p class="notify-text">Amount: ${item.amount}</p>
+                        </div>
+                    </a>
+                `;
+            });
+            reviewContainer.innerHTML = html;
+        }
+        
+        // Update approval notifications
+        const approvalContainer = document.getElementById('approval-notifications');
+        if (approvalContainer && data.approval_items && data.approval_items.length > 0) {
+            let html = '';
+            data.approval_items.forEach(item => {
+                html += `
+                    <a href="${item.url}" class="dropdown-item notify-item">
+                        <div class="notify-thumb bg-light-success">
+                            <i class="feather-check-circle"></i>
+                        </div>
+                        <div class="notify-content">
+                            <h6 class="notify-title">${item.stakeholder}</h6>
+                            <p class="notify-text">Amount: ${item.amount}</p>
+                        </div>
+                    </a>
+                `;
+            });
+            approvalContainer.innerHTML = html;
+        }
+        
+        // Update total count text
+        const totalText = document.getElementById('notification-total');
+        if (totalText) {
+            totalText.textContent = data.total_pending;
+        }
+    }
+    
+    // Show pending notifications modal after page loads
+    function showPendingNotificationsModal() {
+        // Only show on certain pages (after login, dashboard, entity selection)
+        const currentPath = window.location.pathname;
+        
+        // Show modal on: dashboard, accounting pages, shareholder pages
+        const shouldShowModal = currentPath.includes('dashboard') || 
+                              currentPath.includes('shareholder/') ||
+                              currentPath.includes('accounting/');
+        
+        if (!shouldShowModal) return;
+        
+        // Fetch pending notifications
+        fetch('{% url "shareholder:api-notifications" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Update bell and header
+                updateNotificationBell();
+                
+                // Show modal if there are pending items
+                if (data.total_pending > 0) {
+                    displayNotificationsModal(data);
+                }
+            })
+            .catch(error => console.error('Error fetching notifications:', error));
+    }
+    
+    function displayNotificationsModal(data) {
+        const contentDiv = document.getElementById('notification-modal-content');
+        let html = '';
+        
+        // Update bell icon badge
+        const badge = document.getElementById('notification-badge');
+        if (badge && data.total_pending > 0) {
+            badge.textContent = data.total_pending;
+            badge.style.display = 'block';
+        }
+        
+        // Reviews Section
+        if (data.pending_reviews_count > 0) {
+            html += `
+                <div class="mb-4">
+                    <h6 class="text-muted text-uppercase mb-3">
+                        <i class="feather-alert-circle text-warning"></i> 
+                        Awaiting Your Review (${data.pending_reviews_count})
+                    </h6>
+                    <div class="list-group">
+            `;
+            
+            data.review_items.forEach(item => {
+                html += `
+                    <a href="${item.url}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <h6 class="mb-1">${item.stakeholder}</h6>
+                            <span class="badge bg-warning">Review</span>
+                        </div>
+                        <p class="mb-1 text-muted">Amount: <strong>${item.amount}</strong></p>
+                        <small class="text-muted">Click to review this contribution</small>
+                    </a>
+                `;
+            });
+            
+            html += `</div></div>`;
+        }
+        
+        // Approvals Section
+        if (data.pending_approvals_count > 0) {
+            html += `
+                <div class="mb-4">
+                    <h6 class="text-muted text-uppercase mb-3">
+                        <i class="feather-check-circle text-success"></i> 
+                        Awaiting Your Approval (${data.pending_approvals_count})
+                    </h6>
+                    <div class="list-group">
+            `;
+            
+            data.approval_items.forEach(item => {
+                html += `
+                    <a href="${item.url}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <h6 class="mb-1">${item.stakeholder}</h6>
+                            <span class="badge bg-success">Approve</span>
+                        </div>
+                        <p class="mb-1 text-muted">Amount: <strong>${item.amount}</strong></p>
+                        <small class="text-muted">Click to approve this contribution</small>
+                    </a>
+                `;
+            });
+            
+            html += `</div></div>`;
+        }
+        
+        // Show count summary
+        const totalBadge = `<span class="badge bg-danger rounded-pill ms-2">${data.total_pending}</span>`;
+        document.querySelector('#pendingNotificationsLabel').innerHTML = 
+            `<i class="feather-bell text-warning"></i> Pending Actions Required ${totalBadge}`;
+        
+        contentDiv.innerHTML = html;
+        
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('pendingNotificationsModal'));
+        modal.show();
+    }
+    
+    // Show modal when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', showPendingNotificationsModal);
+    } else {
+        // Small delay to ensure all scripts are loaded
+        setTimeout(showPendingNotificationsModal, 1000);
+    }
+})();
+</script>
+
+<style>
+#pendingNotificationsModal .list-group-item {
+    border-left: 4px solid #f9a825;
+    transition: all 0.3s ease;
+}
+
+#pendingNotificationsModal .list-group-item:hover {
+    background-color: #f8f9fa;
+    border-left-color: #ff7675;
+    transform: translateX(5px);
+}
+
+#pendingNotificationsModal .badge {
+    font-size: 0.75rem;
+}
+</style>

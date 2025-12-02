@@ -115,6 +115,9 @@
                                         <div class="dropdown-header">Share Holdings</div>
                                         <a href="{% url 'shareholder:shareholding-list' %}" class="dropdown-item">All Shareholdings</a>
                                         <a href="{% url 'shareholder:shareholding-create' %}" class="dropdown-item">Add Shares</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Investment Tracking</div>
+                                        <a href="{% url 'shareholder:investment_report' %}" class="dropdown-item"><i class="feather-trending-up me-2"></i>Investment Report</a>
                                     </div>
                                 </li>
                                 {% endif %}

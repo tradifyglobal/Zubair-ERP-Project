@@ -18,6 +18,8 @@ from accounting.user_permission_forms import (
     UserEntityAssignmentForm
 )
 from accounting.module_permissions import ModulePermission, UserModuleAccessLog
+from accounting.mixins import SessionEntityMixin
+from accounting.models import Entity
 
 
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -31,15 +33,24 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return redirect('accounting:dashboard')
 
 
-class UserListView(AdminRequiredMixin, ListView):
-    """List all users with their module permissions."""
+class UserListView(AdminRequiredMixin, SessionEntityMixin, ListView):
+    """List users with their module permissions filtered by entity."""
     model = User
     template_name = 'accounting/user_management/user_list.html'
     context_object_name = 'users'
     paginate_by = 20
     
     def get_queryset(self):
-        queryset = User.objects.all().order_by('-date_joined')
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        
+        # Filter users by entity through UserEntity
+        from accounting.models import UserEntity
+        user_ids = UserEntity.objects.filter(
+            entity_id=entity_id
+        ).values_list('user_id', flat=True)
+        
+        queryset = User.objects.filter(id__in=user_ids).order_by('-date_joined')
         
         # Search functionality
         search = self.request.GET.get('search')
@@ -56,6 +67,17 @@ class UserListView(AdminRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        from accounting.models import UserEntity
+        
+        # Get filtered user IDs for current entity
+        user_ids = UserEntity.objects.filter(
+            entity_id=entity_id
+        ).values_list('user_id', flat=True)
+        
+        entity_users = User.objects.filter(id__in=user_ids)
+        
         # Add module permission counts for each user
         for user in context['users']:
             user.permission_count = ModulePermission.objects.filter(
@@ -68,8 +90,9 @@ class UserListView(AdminRequiredMixin, ListView):
                 can_view=True
             ).values_list('module', flat=True)
         
-        context['total_users'] = User.objects.count()
-        context['active_users'] = User.objects.filter(is_active=True).count()
+        # Count users for current entity only
+        context['total_users'] = entity_users.count()
+        context['active_users'] = entity_users.filter(is_active=True).count()
         
         return context
 
@@ -100,6 +123,7 @@ class UserCreateView(AdminRequiredMixin, CreateView):
     @transaction.atomic
     def form_valid(self, form):
         from django.contrib.auth.models import Permission
+        from accounting.models import UserEntity
         
         # Create user
         user = form.save()
@@ -108,6 +132,15 @@ class UserCreateView(AdminRequiredMixin, CreateView):
         if user.is_staff and not user.is_superuser:
             all_permissions = Permission.objects.all()
             user.user_permissions.set(all_permissions)
+        
+        # Assign user to current entity
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            UserEntity.objects.get_or_create(
+                user=user,
+                entity_id=entity_id,
+                defaults={'is_default': True}
+            )
         
         # Get permission form
         permission_form = BulkModulePermissionForm(self.request.POST, user=user)

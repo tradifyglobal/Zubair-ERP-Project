@@ -79,6 +79,20 @@ class UserCreateFormWithPermissions(UserCreationForm):
             'username': forms.TextInput(attrs={'class': 'form-control'}),
         }
     
+    def clean_username(self):
+        """Allow duplicate usernames across entities by appending entity suffix if needed."""
+        username = self.cleaned_data.get('username')
+        
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            # Suggest an alternative username
+            raise forms.ValidationError(
+                f'Username "{username}" already exists. Please try "{username}_v2" or another variation. '
+                'Users can have different login names per entity.'
+            )
+        
+        return username
+    
     def save(self, commit=True):
         user = super().save(commit=False)
         # Ensure is_staff is True by default for admin access

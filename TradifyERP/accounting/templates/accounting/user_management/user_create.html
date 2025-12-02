@@ -252,6 +252,7 @@
                                                         {% endif %}
                                                     {% endfor %}
                                                 </td>
+                                                {% if module_code != "reviewer" and module_code != "approver" %}
                                                 <td class="text-center">
                                                     {% for field in permission_form %}
                                                         {% if field.name == module_code|add:"_can_add" %}
@@ -287,6 +288,11 @@
                                                         {% endif %}
                                                     {% endfor %}
                                                 </td>
+                                                {% else %}
+                                                <td colspan="5" class="text-center text-muted">
+                                                    <small><i>Workflow Role - Check View to enable</i></small>
+                                                </td>
+                                                {% endif %}
                                             </tr>
                                             {% endfor %}
                                         </tbody>

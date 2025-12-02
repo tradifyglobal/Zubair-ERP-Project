@@ -1,0 +1,82 @@
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Reject Capital Contribution{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box">
+                    <h4 class="mb-0">Reject Capital Contribution</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reject Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Reject Contribution for {{ object.stakeholder.full_name }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Contribution Summary -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Contribution Date:</strong> {{ object.contribution_date|date:"M d, Y" }}</p>
+                                        <p><strong>Amount:</strong> {{ object.amount }} {{ object.currency.code }}</p>
+                                        <p><strong>Status:</strong> 
+                                            {% if object.status == 'COMPLETED' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif object.status == 'PENDING' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ object.get_status_display }}</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Payment Mode:</strong> {{ object.get_payment_mode_display }}</p>
+                                        <p><strong>Reference Number:</strong> {{ object.reference_number }}</p>
+                                        <p><strong>Submitted By:</strong> {{ object.submitted_by.get_full_name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rejection Form -->
+                        <form method="post" class="form-horizontal">
+                            {% csrf_token %}
+                            <div class="alert alert-warning" role="alert">
+                                <strong>Warning:</strong> Rejecting this contribution will mark it as rejected and notify the submitter.
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="id_rejection_reason">Reason for Rejection <span class="text-danger">*</span></label>
+                                <textarea name="rejection_reason" id="id_rejection_reason" class="form-control" rows="4" placeholder="Please provide a detailed reason for rejection..." required>{{ form.rejection_reason.value }}</textarea>
+                                {% if form.rejection_reason.errors %}
+                                    <div class="alert alert-danger mt-2">{{ form.rejection_reason.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-danger waves-effect waves-light">
+                                    <i class="feather-x"></i> Reject Contribution
+                                </button>
+                                <a href="{% url 'shareholder:capital-contribution-detail' object.pk %}" class="btn btn-secondary waves-effect waves-light">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
