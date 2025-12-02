@@ -87,7 +87,8 @@ def export_shareholders_excel(stakeholders):
         ws.column_dimensions[column_letter].width = adjusted_width
     
     # Format Phone Number column as text
-    phone_col = get_column_letter(headers.get('Phone Number', 5))
+    # Phone Number is column 5 (E)
+    phone_col = 'E'
     for row_num in range(2, ws.max_row + 1):
         cell = ws[f'{phone_col}{row_num}']
         cell.number_format = '@'  # Text format in Excel
@@ -199,7 +200,7 @@ def import_shareholders_excel(file_content, entity, overwrite=False):
                 first_name = (row[headers['First Name']-1].value or '').strip()
                 last_name = (row[headers['Last Name']-1].value or '').strip()
                 email = (row[headers['Email']-1].value or '').strip()
-                phone_number = str(row[headers.get('Phone Number', 0)-1].value or '').strip() if 'Phone Number' in headers else ''
+                phone_number = str(row[headers.get('Phone Number')-1].value or '') if 'Phone Number' in headers else ''
                 
                 # Validate required fields
                 if not first_name or not last_name or not email:
