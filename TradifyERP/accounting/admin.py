@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 from .models import (
     Entity, Currency, Account, LedgerEntry, TrialBalance, ProfitLossReport,
     BalanceSheet, CashFlowForecast, CashTransaction, BankProfile, BankStatement,
@@ -11,9 +13,77 @@ from .models import (
     CashReceiptLine, CashPaymentLine, BankReceiptLine, BankPaymentLine
 )
 from .models_theme import Theme, UserThemePreference
+from .module_permissions import ModulePermission
 
 
-@admin.register(Entity)
+# ==================== Module Permissions ====================
+
+class ModulePermissionInline(admin.TabularInline):
+    """Inline admin for module permissions - allows editing permissions directly in User admin."""
+    model = ModulePermission
+    fk_name = 'user'  # Specify which ForeignKey to use for the inline
+    extra = 0
+    fields = ('module', 'can_view', 'can_add', 'can_edit', 'can_delete', 'can_approve', 'can_export', 'is_active')
+    readonly_fields = ('module',)
+    
+    def get_queryset(self, request):
+        """Show only active permissions by default."""
+        qs = super().get_queryset(request)
+        return qs.select_related('user')
+
+
+@admin.register(ModulePermission)
+class ModulePermissionAdmin(admin.ModelAdmin):
+    """Admin interface for managing module permissions."""
+    list_display = ('user', 'module', 'permission_summary', 'is_active', 'granted_date')
+    list_filter = ('module', 'is_active', 'granted_date', 'can_view', 'can_add', 'can_edit', 'can_delete')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
+    readonly_fields = ('granted_date', 'created_at', 'updated_at', 'permission_summary')
+    date_hierarchy = 'granted_date'
+    
+    fieldsets = (
+        ('User & Module', {
+            'fields': ('user', 'module')
+        }),
+        ('Permissions', {
+            'fields': ('can_view', 'can_add', 'can_edit', 'can_delete', 'can_approve', 'can_export'),
+            'description': 'Check the permissions this user should have for this module'
+        }),
+        ('Additional Info', {
+            'fields': ('access_level', 'is_active', 'notes'),
+            'classes': ('wide',)
+        }),
+        ('Audit Information', {
+            'fields': ('granted_by', 'granted_date', 'created_at', 'updated_at', 'permission_summary'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        """Set granted_by when creating new permission."""
+        if not change:  # Creating new object
+            obj.granted_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+# Unregister the default User admin and register custom one
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class CustomUserAdmin(BaseUserAdmin):
+    """Extended User admin with module permissions."""
+    inlines = BaseUserAdmin.inlines + (ModulePermissionInline,)
+    
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ('Module Permissions', {
+            'fields': (),
+            'description': 'Manage module permissions using the "Module Permissions" section below'
+        }),
+    )
+
+
+
 class EntityAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'is_active', 'created_at')
     list_filter = ('is_active', 'created_at')
