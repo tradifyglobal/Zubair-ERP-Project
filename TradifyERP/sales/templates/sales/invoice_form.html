@@ -108,6 +108,7 @@
                                 <label for="{{ form.total_amount.id_for_label }}" class="form-label"><strong>Total Amount</strong></label>
                                 {{ form.total_amount }}
                                 <small class="text-muted text-success"><strong>Auto-calculated</strong></small>
+                                <div id="total-calc-status" style="display:none; font-size: 0.85rem; color: #17a2b8; margin-top: 0.25rem;">Calculating...</div>
                                 {% if form.total_amount.errors %}
                                     <div class="invalid-feedback d-block">{{ form.total_amount.errors }}</div>
                                 {% endif %}
@@ -150,6 +151,7 @@
         const taxInput = document.getElementById('id_tax_percentage');
         const totalInput = document.getElementById('id_total_amount');
         const amountPaidInput = document.getElementById('id_amount_paid');
+        const statusDiv = document.getElementById('total-calc-status');
 
         // Check if all fields exist
         if (!subtotalInput || !taxInput || !totalInput || !amountPaidInput) {
@@ -175,6 +177,7 @@
             console.log('Result: taxAmount=' + taxAmount + ', total=' + total);
             
             totalInput.value = total.toFixed(2);
+            if (statusDiv) statusDiv.textContent = 'Total: ' + total.toFixed(2);
             
             // Auto-set amount_paid to total if amount_paid is empty or zero
             const currentPaid = parseFloat(amountPaidInput.value) || 0;
@@ -195,6 +198,7 @@
 
         // Calculate on page load
         calculateTotal();
+        if (statusDiv) statusDiv.style.display = 'block';
         
         // Calculate whenever subtotal or tax changes
         subtotalInput.addEventListener('input', calculateTotal);
