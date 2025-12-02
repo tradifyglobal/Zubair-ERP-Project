@@ -200,11 +200,13 @@
         calculateTotal();
         if (statusDiv) statusDiv.style.display = 'block';
         
-        // Calculate whenever subtotal or tax changes
+        // Calculate whenever subtotal or tax changes (input, change, and blur events)
         subtotalInput.addEventListener('input', calculateTotal);
         subtotalInput.addEventListener('change', calculateTotal);
+        subtotalInput.addEventListener('blur', calculateTotal);
         taxInput.addEventListener('input', calculateTotal);
         taxInput.addEventListener('change', calculateTotal);
+        taxInput.addEventListener('blur', calculateTotal);
         
         // Handle amount_paid input to prevent exceeding total
         amountPaidInput.addEventListener('change', handleAmountPaidInput);
@@ -215,7 +217,8 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeCalculation);
     } else {
-        initializeCalculation();
+        // If page is already loaded, initialize immediately
+        setTimeout(initializeCalculation, 100);
     }
 </script>
 {% endblock %}
