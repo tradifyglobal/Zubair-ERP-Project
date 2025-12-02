@@ -217,12 +217,12 @@ class UserEditView(AdminRequiredMixin, UpdateView):
         form_fields_by_module = {}
         for module_code, module_name in ModulePermission.MODULE_CHOICES:
             form_fields_by_module[module_code] = {
-                'view': permission_form.get(f'{module_code}_can_view'),
-                'add': permission_form.get(f'{module_code}_can_add'),
-                'edit': permission_form.get(f'{module_code}_can_edit'),
-                'delete': permission_form.get(f'{module_code}_can_delete'),
-                'approve': permission_form.get(f'{module_code}_can_approve'),
-                'export': permission_form.get(f'{module_code}_can_export'),
+                'view': permission_form[f'{module_code}_can_view'] if f'{module_code}_can_view' in permission_form.fields else None,
+                'add': permission_form[f'{module_code}_can_add'] if f'{module_code}_can_add' in permission_form.fields else None,
+                'edit': permission_form[f'{module_code}_can_edit'] if f'{module_code}_can_edit' in permission_form.fields else None,
+                'delete': permission_form[f'{module_code}_can_delete'] if f'{module_code}_can_delete' in permission_form.fields else None,
+                'approve': permission_form[f'{module_code}_can_approve'] if f'{module_code}_can_approve' in permission_form.fields else None,
+                'export': permission_form[f'{module_code}_can_export'] if f'{module_code}_can_export' in permission_form.fields else None,
             }
         context['form_fields'] = form_fields_by_module
         
