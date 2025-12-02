@@ -32,7 +32,7 @@ def get_pending_reviews_for_user(user, entity=None):
     pending = CapitalContribution.objects.filter(query).distinct()
     
     if entity:
-        pending = pending.filter(stakeholder__entity=entity)
+        pending = pending.filter(entity=entity)
     
     return pending
 
@@ -59,7 +59,7 @@ def get_pending_approvals_for_user(user, entity=None):
     )
     
     if entity:
-        pending = pending.filter(stakeholder__entity=entity)
+        pending = pending.filter(entity=entity)
     
     return pending
 
