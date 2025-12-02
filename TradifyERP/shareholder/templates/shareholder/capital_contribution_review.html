@@ -75,6 +75,8 @@
                                 {% endif %}
                             </div>
 
+                            <!-- Approver selection only for second reviewer -->
+                            {% if reviewer_type == 'Second Reviewer' %}
                             <div class="form-group mb-3">
                                 <label for="id_approver">Assign Approver <span class="text-danger">*</span></label>
                                 <select name="approver" id="id_approver" class="form-select" required>
@@ -96,11 +98,18 @@
                                     <div class="alert alert-danger mt-2">{{ form.approval_notes.errors }}</div>
                                 {% endif %}
                             </div>
+                            {% endif %}
 
                             <div class="form-group">
-                                <button type="submit" class="btn btn-warning waves-effect waves-light">
-                                    <i class="feather-check-circle"></i> Assign for Approval
-                                </button>
+                                {% if reviewer_type == 'First Reviewer' %}
+                                    <button type="submit" class="btn btn-success waves-effect waves-light">
+                                        <i class="feather-check-circle"></i> Review Completed
+                                    </button>
+                                {% elif reviewer_type == 'Second Reviewer' %}
+                                    <button type="submit" class="btn btn-warning waves-effect waves-light">
+                                        <i class="feather-check-circle"></i> Review Completed & Assign for Approval
+                                    </button>
+                                {% endif %}
                                 <a href="{% url 'shareholder:capital-contribution-detail' object.pk %}" class="btn btn-secondary waves-effect waves-light">
                                     Cancel
                                 </a>
