@@ -1517,6 +1517,111 @@
                 });
             })(jQuery);
         </script>
+        
+        <!-- Notification System -->
+        <script>
+            (function() {
+                // Initialize notification system
+                function initializeNotifications() {
+                    console.log('[Notifications] Initializing notification system');
+                    
+                    // Fetch notifications on page load
+                    fetchNotifications();
+                    
+                    // Refresh notifications every 30 seconds
+                    setInterval(fetchNotifications, 30000);
+                }
+                
+                function fetchNotifications() {
+                    // Only fetch if user is authenticated
+                    if (!document.body.querySelector('[data-authenticated="true"]') && !document.querySelector('.page-content')) {
+                        return; // User not authenticated
+                    }
+                    
+                    fetch('{% url "shareholder:api-notifications" %}')
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('[Notifications] Fetched:', data);
+                            updateNotificationUI(data);
+                        })
+                        .catch(error => console.error('[Notifications] Error:', error));
+                }
+                
+                function updateNotificationUI(data) {
+                    // Update badge
+                    const badge = document.getElementById('notification-badge');
+                    const totalCount = document.getElementById('notification-total');
+                    const notificationCount = document.getElementById('notification-unread-count');
+                    
+                    if (data.total_pending > 0) {
+                        badge.textContent = data.total_pending;
+                        badge.style.display = 'block';
+                        totalCount.textContent = data.total_pending;
+                        
+                        if (notificationCount) {
+                            notificationCount.innerHTML = `<span id="notification-total">${data.total_pending}</span> pending`;
+                        }
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                    
+                    // Update review notifications
+                    const reviewContainer = document.getElementById('review-notifications');
+                    if (reviewContainer) {
+                        if (data.review_items.length > 0) {
+                            reviewContainer.innerHTML = data.review_items.map(item => `
+                                <a href="${item.url}" class="text-reset notification-item">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0 avatar-sm me-3">
+                                            <span class="avatar-title bg-warning rounded-circle font-size-16">
+                                                <i class="bx bx-check-double"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">${item.stakeholder}</h6>
+                                            <div class="font-size-13 text-muted">
+                                                <p class="mb-0"><strong>${item.amount}</strong> - Review required</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            `).join('');
+                        }
+                    }
+                    
+                    // Update approval notifications
+                    const approvalContainer = document.getElementById('approval-notifications');
+                    if (approvalContainer) {
+                        if (data.approval_items.length > 0) {
+                            approvalContainer.innerHTML = data.approval_items.map(item => `
+                                <a href="${item.url}" class="text-reset notification-item">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0 avatar-sm me-3">
+                                            <span class="avatar-title bg-success rounded-circle font-size-16">
+                                                <i class="bx bx-badge-check"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">${item.stakeholder}</h6>
+                                            <div class="font-size-13 text-muted">
+                                                <p class="mb-0"><strong>${item.amount}</strong> - Approval required</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            `).join('');
+                        }
+                    }
+                }
+                
+                // Initialize when DOM is ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initializeNotifications);
+                } else {
+                    initializeNotifications();
+                }
+            })();
+        </script>
         {% endblock %}
         
         

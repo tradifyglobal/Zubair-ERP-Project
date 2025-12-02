@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.urls import reverse_lazy
 from django.db.models import Sum, Count, Q
 from django.contrib import messages
+from django.http import JsonResponse
 from accounting.models import Stakeholder, CapitalContribution, Shareholding, Entity
 from accounting.stakeholder_forms import StakeholderForm, CapitalContributionForm, ShareholdingForm
 from accounting.mixins import SessionEntityMixin
@@ -13,6 +14,7 @@ from shareholder.import_export import (
     export_capital_contributions_csv, export_capital_contributions_excel,
     import_capital_contributions_csv, import_capital_contributions_excel
 )
+from shareholder.notifications import get_all_pending_for_user
 
 
 # ==================== Shareholder Dashboard ====================
@@ -983,3 +985,57 @@ class CapitalContributionImportView(SessionEntityMixin, LoginRequiredMixin, Perm
         return redirect('shareholder:capital-contribution-list')
 
 
+# ==================== API Endpoints ====================
+
+class NotificationAPIView(LoginRequiredMixin, View):
+    """
+    API endpoint for fetching pending notifications
+    """
+    def get(self, request):
+        """
+        Get pending reviews and approvals for the current user
+        Returns JSON with pending counts and details
+        """
+        entity = None
+        if 'selected_entity_id' in request.session:
+            try:
+                entity = Entity.objects.get(id=request.session['selected_entity_id'])
+            except Entity.DoesNotExist:
+                pass
+        
+        pending = get_all_pending_for_user(request.user, entity)
+        
+        # Get details of pending items
+        reviews = pending['pending_reviews'][:5]  # Get first 5
+        approvals = pending['pending_approvals'][:5]  # Get first 5
+        
+        review_items = []
+        for cc in reviews:
+            review_items.append({
+                'id': cc.id,
+                'stakeholder': cc.stakeholder.full_name,
+                'amount': str(cc.amount),
+                'status': cc.workflow_status,
+                'type': 'review',
+                'url': f'/shareholder/capital-contributions/{cc.id}/review/'
+            })
+        
+        approval_items = []
+        for cc in approvals:
+            approval_items.append({
+                'id': cc.id,
+                'stakeholder': cc.stakeholder.full_name,
+                'amount': str(cc.amount),
+                'status': cc.workflow_status,
+                'type': 'approval',
+                'url': f'/shareholder/capital-contributions/{cc.id}/approve/'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'pending_reviews_count': pending['pending_reviews_count'],
+            'pending_approvals_count': pending['pending_approvals_count'],
+            'total_pending': pending['total_pending'],
+            'review_items': review_items,
+            'approval_items': approval_items,
+        })

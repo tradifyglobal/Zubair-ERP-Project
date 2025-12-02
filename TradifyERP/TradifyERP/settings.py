@@ -134,6 +134,7 @@ TEMPLATES = [
                 'accounting.context_processors.user_module_permissions',  # Module permissions
                 'accounting.context_processors.session_entity_context',  # Session entity info
                 'accounting.context_processors.theme_context',  # Theme settings
+                'shareholder.context_processors.pending_notifications',  # Pending review/approval notifications
             ],
         },
     },

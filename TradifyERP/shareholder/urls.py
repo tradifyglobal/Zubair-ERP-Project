@@ -14,6 +14,7 @@ urlpatterns = [
     path('shareholders/create/', views.ShareholderCreateView.as_view(), name='stakeholder-create'),
     path('shareholders/<int:pk>/edit/', views.ShareholderUpdateView.as_view(), name='stakeholder-edit'),
     path('shareholders/<int:pk>/delete/', views.ShareholderDeleteView.as_view(), name='stakeholder-delete'),
+    path('shareholders/bulk-delete/', views.ShareholderBulkDeleteView.as_view(), name='stakeholder-bulk-delete'),
     path('shareholders/export/', views.ShareholderExportView.as_view(), name='stakeholder-export'),
     path('shareholders/import/', views.ShareholderImportView.as_view(), name='stakeholder-import'),
 
@@ -23,6 +24,12 @@ urlpatterns = [
     path('capital-contributions/create/', views.CapitalContributionCreateView.as_view(), name='capital-contribution-create'),
     path('capital-contributions/create/<int:stakeholder_id>/', views.CapitalContributionCreateView.as_view(), name='capital-contribution-create-for-stakeholder'),
     path('capital-contributions/<int:pk>/edit/', views.CapitalContributionUpdateView.as_view(), name='capital-contribution-edit'),
+    path('capital-contributions/<int:pk>/submit/', views.CapitalContributionSubmitView.as_view(), name='capital-contribution-submit'),
+    path('capital-contributions/<int:pk>/review/', views.CapitalContributionReviewView.as_view(), name='capital-contribution-review'),
+    path('capital-contributions/<int:pk>/approve/', views.CapitalContributionApproveView.as_view(), name='capital-contribution-approve'),
+    path('capital-contributions/<int:pk>/reject/', views.CapitalContributionRejectView.as_view(), name='capital-contribution-reject'),
+    path('capital-contributions/export/', views.CapitalContributionExportView.as_view(), name='capital-contribution-export'),
+    path('capital-contributions/import/', views.CapitalContributionImportView.as_view(), name='capital-contribution-import'),
 
     # Shareholding URLs
     path('shareholdings/', views.ShareholdingListView.as_view(), name='shareholding-list'),
@@ -37,4 +44,7 @@ urlpatterns = [
     path('investment-limits/<int:pk>/edit/', views.ShareholderInvestmentLimitUpdateView.as_view(), name='investment_limit_edit'),
     path('payment-commitments/create/', views.ShareholderPaymentCommitmentCreateView.as_view(), name='payment_commitment_create'),
     path('payment-commitments/<int:pk>/edit/', views.ShareholderPaymentCommitmentUpdateView.as_view(), name='payment_commitment_edit'),
+    
+    # API Endpoints
+    path('api/notifications/', views.NotificationAPIView.as_view(), name='api-notifications'),
 ]
