@@ -421,6 +421,9 @@ class AccountDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Add entity to context for currency display
+        context['entity'] = self.object.entity
+        
         # Get all ledger entries for this account, ordered by date
         entries = self.object.ledger_entries.order_by('entry_date', 'created_at')
         
