@@ -465,19 +465,19 @@ class CapitalContributionSubmitView(SessionEntityMixin, LoginRequiredMixin, Perm
         from django.contrib.auth.models import User
         if reviewer_id:
             try:
-                contribution.reviewed_by = User.objects.get(id=reviewer_id)
+                contribution.assigned_reviewer_1 = User.objects.get(id=reviewer_id)
             except User.DoesNotExist:
                 pass
         
         if reviewer_id_2:
             try:
-                contribution.reviewed_by_2 = User.objects.get(id=reviewer_id_2)
+                contribution.assigned_reviewer_2 = User.objects.get(id=reviewer_id_2)
             except User.DoesNotExist:
                 pass
         
         contribution.save()
-        reviewer1_name = contribution.reviewed_by.get_full_name() if contribution.reviewed_by else "Unknown"
-        reviewer2_name = contribution.reviewed_by_2.get_full_name() if contribution.reviewed_by_2 else "Unknown"
+        reviewer1_name = contribution.assigned_reviewer_1.get_full_name() if contribution.assigned_reviewer_1 else "Unknown"
+        reviewer2_name = contribution.assigned_reviewer_2.get_full_name() if contribution.assigned_reviewer_2 else "Unknown"
         messages.success(self.request, f"Contribution submitted for review to {reviewer1_name} and {reviewer2_name}.")
         return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
 
