@@ -9,6 +9,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db import transaction, models
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control
 
 from accounting.user_permission_forms import (
     UserCreateFormWithPermissions,
@@ -39,6 +41,10 @@ class UserListView(AdminRequiredMixin, SessionEntityMixin, ListView):
     template_name = 'accounting/user_management/user_list.html'
     context_object_name = 'users'
     paginate_by = 20
+    
+    @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True, max_age=0))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
     
     def get_queryset(self):
         # Get entity from session
@@ -170,6 +176,10 @@ class UserEditView(AdminRequiredMixin, UpdateView):
     success_url = reverse_lazy('accounting:user_list')
     context_object_name = 'edited_user'
     
+    @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True, max_age=0))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
@@ -269,6 +279,10 @@ class UserDetailView(AdminRequiredMixin, DetailView):
     model = User
     template_name = 'accounting/user_management/user_detail.html'
     context_object_name = 'viewed_user'
+    
+    @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True, max_age=0))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
