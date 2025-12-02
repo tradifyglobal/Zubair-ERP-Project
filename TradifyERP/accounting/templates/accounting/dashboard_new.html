@@ -53,6 +53,57 @@
                 </div>
             </div>
 
+            <!-- Pending Review Notifications -->
+            {% if total_pending_reviews > 0 %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="mdi mdi-bell-outline me-2" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>📋 Pending Review Tasks</strong>
+                                <p class="mb-0">You have <strong>{{ total_pending_reviews }}</strong> contribution(s) awaiting your review.</p>
+                                {% if pending_reviews_1 %}
+                                <div class="mt-2">
+                                    <strong>First Review:</strong>
+                                    <ul class="mb-0 ps-3">
+                                        {% for review in pending_reviews_1|slice:":3" %}
+                                        <li>
+                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none">
+                                                {{ review.entity.code }} - {{ review.stakeholder.get_full_name }} ({{ review.contribution_date|date:"M d, Y" }})
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                        {% if pending_reviews_1.count > 3 %}<li><strong>+{{ pending_reviews_1.count|add:"-3" }} more...</strong></li>{% endif %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                                {% if pending_reviews_2 %}
+                                <div class="mt-2">
+                                    <strong>Second Review:</strong>
+                                    <ul class="mb-0 ps-3">
+                                        {% for review in pending_reviews_2|slice:":3" %}
+                                        <li>
+                                            <a href="{% url 'shareholder:contribution_review' review.id %}" class="text-decoration-none">
+                                                {{ review.entity.code }} - {{ review.stakeholder.get_full_name }} ({{ review.contribution_date|date:"M d, Y" }})
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                        {% if pending_reviews_2.count > 3 %}<li><strong>+{{ pending_reviews_2.count|add:"-3" }} more...</strong></li>{% endif %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'shareholder:contribution_list' %}" class="btn btn-sm btn-info ms-3">
+                                <i class="mdi mdi-arrow-right me-1"></i>View All
+                            </a>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Charts Row -->
             <div class="row mb-4">
                 <div class="col-lg-6">

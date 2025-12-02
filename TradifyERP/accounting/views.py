@@ -113,6 +113,24 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
             context['total_contributions'] = CapitalContribution.objects.filter(entity=entity).count()
             context['total_shareholdings'] = Shareholding.objects.filter(entity=entity).count()
             
+            # Pending review tasks for current user in this entity
+            context['entity_pending_reviews_1'] = CapitalContribution.objects.filter(
+                entity=entity,
+                assigned_reviewer_1=self.request.user,
+                workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
+            ).select_related('stakeholder', 'submitted_by').order_by('-submitted_at')
+            
+            context['entity_pending_reviews_2'] = CapitalContribution.objects.filter(
+                entity=entity,
+                assigned_reviewer_2=self.request.user,
+                workflow_status='FIRST_REVIEW_COMPLETED'
+            ).select_related('stakeholder', 'submitted_by').order_by('-submitted_at')
+            
+            context['entity_pending_reviews_count'] = (
+                context['entity_pending_reviews_1'].count() + 
+                context['entity_pending_reviews_2'].count()
+            )
+            
             # HR module statistics
             try:
                 from hr.models import Employee, Payroll, LeaveRequest
@@ -297,6 +315,23 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
             context['chart_vendors'] = []
             context['country_sales'] = []
             context['state_sales'] = []
+        
+        # Add pending review tasks for the current user across all entities
+        from accounting.models import CapitalContribution
+        pending_reviews_1 = CapitalContribution.objects.filter(
+            assigned_reviewer_1=self.request.user,
+            workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
+        ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+        
+        pending_reviews_2 = CapitalContribution.objects.filter(
+            assigned_reviewer_2=self.request.user,
+            workflow_status='FIRST_REVIEW_COMPLETED'
+        ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+        
+        # Combine and count pending reviews
+        context['pending_reviews_1'] = pending_reviews_1
+        context['pending_reviews_2'] = pending_reviews_2
+        context['total_pending_reviews'] = pending_reviews_1.count() + pending_reviews_2.count()
         
         return context
 
