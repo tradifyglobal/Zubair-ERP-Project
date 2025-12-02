@@ -94,8 +94,9 @@
                                 {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.tax_amount.id_for_label }}" class="form-label">Tax Amount</label>
+                                <label for="{{ form.tax_amount.id_for_label }}" class="form-label">Tax % (e.g., 18 for GST)</label>
                                 {{ form.tax_amount }}
+                                <small class="text-muted">Enter percentage (0-100)</small>
                                 {% if form.tax_amount.errors %}
                                     <div class="invalid-feedback d-block">{{ form.tax_amount.errors }}</div>
                                 {% endif %}
@@ -146,15 +147,18 @@
     // Auto-calculate Total Amount and Amount Paid
     document.addEventListener('DOMContentLoaded', function() {
         const subtotalInput = document.getElementById('id_subtotal');
-        const taxInput = document.getElementById('id_tax_amount');
+        const taxInput = document.getElementById('id_tax_percentage');
         const totalInput = document.getElementById('id_total_amount');
         const amountPaidInput = document.getElementById('id_amount_paid');
 
         function calculateTotal() {
             const subtotal = parseFloat(subtotalInput.value) || 0;
-            const tax = parseFloat(taxInput.value) || 0;
+            const taxPercentage = parseFloat(taxInput.value) || 0;
             
-            const total = subtotal + tax;
+            // Calculate tax amount from percentage: taxAmount = subtotal * (taxPercentage / 100)
+            const taxAmount = subtotal * (taxPercentage / 100);
+            const total = subtotal + taxAmount;
+            
             totalInput.value = total.toFixed(2);
             
             // Auto-set amount_paid to total if amount_paid is empty or zero
