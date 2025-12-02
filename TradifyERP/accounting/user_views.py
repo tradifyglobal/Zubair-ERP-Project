@@ -203,47 +203,62 @@ class UserEditView(AdminRequiredMixin, UpdateView):
     @transaction.atomic
     def form_valid(self, form):
         from django.contrib.auth.models import Permission
+        import logging
+        logger = logging.getLogger('django')
         
-        # Update user
-        user = form.save()
-        
-        # Grant all Django admin permissions if user is staff but not superuser
-        if user.is_staff and not user.is_superuser:
-            all_permissions = Permission.objects.all()
-            user.user_permissions.set(all_permissions)
-        
-        # Get permission form
-        permission_form = BulkModulePermissionForm(self.request.POST, user=user)
-        
-        if permission_form.is_valid():
-            # Save permissions
-            permission_form.save_permissions(user, granted_by=self.request.user)
+        try:
+            # Update user
+            user = form.save()
+            logger.info(f"UserEditView: Saved user {user.username}")
             
-            messages.success(
+            # Grant all Django admin permissions if user is staff but not superuser
+            if user.is_staff and not user.is_superuser:
+                all_permissions = Permission.objects.all()
+                user.user_permissions.set(all_permissions)
+            
+            # Get permission form
+            permission_form = BulkModulePermissionForm(self.request.POST, user=user)
+            
+            if permission_form.is_valid():
+                logger.info(f"Permission form valid for {user.username}")
+                # Save permissions
+                permission_form.save_permissions(user, granted_by=self.request.user)
+                logger.info(f"Permissions saved for {user.username}")
+                
+                messages.success(
+                    self.request,
+                    f'User "{user.username}" updated successfully with module permissions and admin access.'
+                )
+            else:
+                logger.error(f"Permission form invalid: {permission_form.errors}")
+                messages.warning(
+                    self.request,
+                    f'User "{user.username}" updated but there were issues saving permissions: {permission_form.errors}'
+                )
+            
+            # Get entity assignment form
+            entity_form = UserEntityAssignmentForm(self.request.POST, user=user)
+            if entity_form.is_valid():
+                entity_form.save(user=user, granted_by=self.request.user)
+                messages.success(
+                    self.request,
+                    f'Entity assignments updated for "{user.username}".'
+                )
+            else:
+                logger.error(f"Entity form errors: {entity_form.errors}")
+                messages.warning(
+                    self.request,
+                    f'Entity assignments had validation errors: {entity_form.errors}'
+                )
+            
+            return redirect(self.success_url)
+        except Exception as e:
+            logger.exception(f"Error in UserEditView.form_valid: {str(e)}")
+            messages.error(
                 self.request,
-                f'User "{user.username}" updated successfully with module permissions and admin access.'
+                f'An error occurred while updating user: {str(e)}'
             )
-        else:
-            messages.warning(
-                self.request,
-                f'User "{user.username}" updated but there were issues saving permissions.'
-            )
-        
-        # Get entity assignment form
-        entity_form = UserEntityAssignmentForm(self.request.POST, user=user)
-        if entity_form.is_valid():
-            entity_form.save(user=user, granted_by=self.request.user)
-            messages.success(
-                self.request,
-                f'Entity assignments updated for "{user.username}".'
-            )
-        else:
-            messages.warning(
-                self.request,
-                f'Entity assignments had validation errors: {entity_form.errors}'
-            )
-        
-        return redirect(self.success_url)
+            return redirect(self.success_url)
 
 
 class UserDetailView(AdminRequiredMixin, DetailView):
