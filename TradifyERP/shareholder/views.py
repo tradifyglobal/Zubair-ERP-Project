@@ -110,7 +110,11 @@ class ShareholderListView(SessionEntityMixin, LoginRequiredMixin, PermissionRequ
         entity = None
         if entity_id:
             entity = Entity.objects.filter(id=entity_id).first()
-            entity_contributions = CapitalContribution.objects.filter(entity_id=entity_id)
+            # Filter for APPROVED contributions only (workflow_status = APPROVED)
+            entity_contributions = CapitalContribution.objects.filter(
+                entity_id=entity_id,
+                workflow_status='APPROVED'
+            )
             entity_shareholdings = Shareholding.objects.filter(entity_id=entity_id)
         else:
             entity_contributions = CapitalContribution.objects.none()
@@ -193,11 +197,13 @@ class InvestmentHistoryView(SessionEntityMixin, LoginRequiredMixin, PermissionRe
         
         context['contributions'] = contributions
         
-        # Calculate statistics
-        context['total_invested'] = sum(float(cc.amount_company_currency or 0) for cc in contributions)
+        # Calculate statistics - only count APPROVED contributions
+        approved_contributions = contributions.filter(workflow_status='APPROVED')
+        context['total_invested'] = sum(float(cc.amount_company_currency or 0) for cc in approved_contributions)
         context['total_contributions'] = contributions.count()
         context['pending_contributions'] = contributions.filter(status='PENDING').count()
         context['completed_contributions'] = contributions.filter(status='COMPLETED').count()
+        context['approved_contributions'] = approved_contributions.count()
         
         # By entity
         by_entity = {}
@@ -621,9 +627,7 @@ class CapitalContributionApproveView(SessionEntityMixin, LoginRequiredMixin, Per
         if contribution.status == 'PENDING':
             contribution.status = 'COMPLETED'
         
-        # Create ledger entry (will be created if status is COMPLETED)
-        contribution.create_ledger_entry()
-        
+        # Save first - this will trigger ledger entry creation in save() method
         contribution.save()
         
         messages.success(self.request, "Contribution approved and ledger entry created.")

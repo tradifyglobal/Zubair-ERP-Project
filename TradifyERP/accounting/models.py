@@ -736,14 +736,14 @@ class Stakeholder(models.Model):
         """Calculate total capital invested by this stakeholder.
         
         Includes:
-        - Completed capital contributions (amount_company_currency)
-        - Paid shareholder payment commitments (committed_amount)
+        - Approved capital contributions (workflow_status=APPROVED)
+        - Paid shareholder payment commitments (status=PAID)
         """
         total = Decimal('0.00')
         
-        # Add completed capital contributions
-        completed_contributions = self.capital_contributions.filter(status='COMPLETED')
-        for cc in completed_contributions:
+        # Add approved capital contributions (workflow_status = APPROVED)
+        approved_contributions = self.capital_contributions.filter(workflow_status='APPROVED')
+        for cc in approved_contributions:
             total += Decimal(str(cc.amount_company_currency or 0))
         
         # Add paid payment commitments
