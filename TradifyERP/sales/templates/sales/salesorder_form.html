@@ -93,6 +93,13 @@
                                     <div class="invalid-feedback d-block">{{ form.status.errors }}</div>
                                 {% endif %}
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.payment_status.id_for_label }}" class="form-label">Payment Status</label>
+                                {{ form.payment_status }}
+                                {% if form.payment_status.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.payment_status.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <!-- Amount Section -->

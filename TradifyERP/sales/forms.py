@@ -46,7 +46,7 @@ class SalesOrderForm(forms.ModelForm):
             'so_number', 'customer', 'order_date', 'required_date',
             'shipping_method', 'po_reference',
             'subtotal', 'tax_amount', 'shipping_cost', 'total_amount',
-            'status', 'notes'
+            'status', 'payment_status', 'notes'
         ]
         widgets = {
             'so_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., SO-001'}),
@@ -60,6 +60,7 @@ class SalesOrderForm(forms.ModelForm):
             'shipping_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_shipping_cost'}),
             'total_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'readonly': True, 'id': 'id_total_amount'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'payment_status': forms.Select(attrs={'class': 'form-select'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
     
