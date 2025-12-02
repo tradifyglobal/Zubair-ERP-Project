@@ -179,8 +179,8 @@
                                             <th>Account #</th>
                                             <th>Account Name</th>
                                             <th>Type</th>
-                                            <th>Currency</th>
-                                            <th>Opening Balance</th>
+                                            <th>Currency ({{ entity.company_currency.code }})</th>
+                                            <th>Current Balance</th>
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>
@@ -205,7 +205,7 @@
                                                     <span class="badge bg-danger-subtle text-danger">{{ item.account.get_account_type_display }}</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ item.account.currency.code }}</td>
+                                            <td>{{ entity.company_currency.code }}</td>
                                             <td>
                                                 <strong>
                                                     {% if item.current_balance >= 0 %}
