@@ -6,34 +6,15 @@
 {% block content %}
 <style>
     /* Ensure modal appears above navbar (navbar z-index: 1050) */
-    /* Using extremely high z-index and transform to break stacking context */
     #importModal {
-        z-index: 99999 !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transform: translateZ(99999px) !important;
+        z-index: 1060 !important;
     }
-    #importModal.show {
-        z-index: 99999 !important;
+    #importModal.modal.show {
+        z-index: 1060 !important;
     }
-    #importModal .modal-backdrop,
-    .modal-backdrop.show {
-        z-index: 99998 !important;
-    }
-    #importModal .modal-dialog {
-        position: relative !important;
-        z-index: 100000 !important;
-        transform: translateZ(100000px) !important;
-    }
-    #importModal .modal-content {
-        position: relative;
-        z-index: 100000 !important;
+    /* Backdrop must be lower than modal but higher than content */
+    .modal-backdrop {
+        z-index: 1059 !important;
     }
 </style>
 <div class="main-content">
