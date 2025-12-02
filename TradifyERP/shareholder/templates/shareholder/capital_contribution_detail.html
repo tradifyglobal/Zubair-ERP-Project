@@ -20,7 +20,13 @@
                             <a href="{% url 'shareholder:capital-contribution-review' contribution.pk %}" class="btn btn-warning waves-effect waves-light">
                                 <i class="feather-check-circle"></i> Review
                             </a>
+                        {% elif contribution.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
+                            <!-- Second reviewer review button -->
+                            <a href="{% url 'shareholder:capital-contribution-review' contribution.pk %}" class="btn btn-warning waves-effect waves-light">
+                                <i class="feather-check-circle"></i> Review (2nd)
+                            </a>
                         {% elif contribution.workflow_status == 'REVIEWED' %}
+                            <!-- After both reviews, show approve/reject -->
                             <a href="{% url 'shareholder:capital-contribution-approve' contribution.pk %}" class="btn btn-success waves-effect waves-light">
                                 <i class="feather-check"></i> Approve
                             </a>
@@ -46,15 +52,17 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="text-center">
                                     <h6>Workflow Status</h6>
                                     {% if contribution.workflow_status == 'DRAFT' %}
                                         <span class="badge bg-secondary">Draft</span>
                                     {% elif contribution.workflow_status == 'SUBMITTED' %}
                                         <span class="badge bg-info">Submitted</span>
+                                    {% elif contribution.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
+                                        <span class="badge bg-warning">First Review Done</span>
                                     {% elif contribution.workflow_status == 'REVIEWED' %}
-                                        <span class="badge bg-warning">Under Review</span>
+                                        <span class="badge bg-warning">Both Reviews Done</span>
                                     {% elif contribution.workflow_status == 'APPROVED' %}
                                         <span class="badge bg-success">Approved</span>
                                     {% elif contribution.workflow_status == 'REJECTED' %}
@@ -62,7 +70,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="text-center">
                                     <h6>Submitted By</h6>
                                     <small>{{ contribution.submitted_by.get_full_name|default:"Not submitted yet" }}</small>
@@ -71,16 +79,25 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="text-center">
-                                    <h6>Reviewed By</h6>
-                                    <small>{{ contribution.reviewed_by.get_full_name|default:"Not reviewed yet" }}</small>
+                                    <h6>Reviewed By (1st)</h6>
+                                    <small>{{ contribution.reviewed_by.get_full_name|default:"Pending" }}</small>
                                     {% if contribution.reviewed_at %}
                                         <br><small class="text-muted">{{ contribution.reviewed_at|date:"M d, Y H:i" }}</small>
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <h6>Reviewed By (2nd)</h6>
+                                    <small>{{ contribution.reviewed_by_2.get_full_name|default:"Pending" }}</small>
+                                    {% if contribution.reviewed_at_2 %}
+                                        <br><small class="text-muted">{{ contribution.reviewed_at_2|date:"M d, Y H:i" }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-2">
                                 <div class="text-center">
                                     <h6>Approved By</h6>
                                     <small>{{ contribution.approved_by.get_full_name|default:"Not approved yet" }}</small>
