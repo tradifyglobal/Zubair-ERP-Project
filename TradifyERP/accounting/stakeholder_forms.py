@@ -111,7 +111,7 @@ class StakeholderForm(forms.ModelForm):
             Fieldset(
                 'Current Address',
                 Row(
-                    Column(HTML('<div class="mb-3"><label class="form-check"><input type="checkbox" name="same_as_permanent" class="form-check-input" id="id_same_as_permanent"> Same as Permanent Address</label></div>'), css_class='col-md-12'),
+                    Column('same_as_permanent', css_class='col-md-12'),
                 ),
                 Row(
                     Column('address_line_1', css_class='col-md-12'),
