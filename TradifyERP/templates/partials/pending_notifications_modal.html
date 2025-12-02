@@ -108,6 +108,12 @@
         
         if (!shouldShowModal) return;
         
+        // Check if we've already shown the modal in this session
+        const modalShownInSession = sessionStorage.getItem('pendingNotificationsModalShown');
+        if (modalShownInSession === 'true') {
+            return; // Modal already shown in this session
+        }
+        
         // Fetch pending notifications
         fetch('{% url "shareholder:api-notifications" %}')
             .then(response => response.json())
@@ -118,6 +124,8 @@
                 // Show modal if there are pending items
                 if (data.total_pending > 0) {
                     displayNotificationsModal(data);
+                    // Mark that we've shown the modal in this session
+                    sessionStorage.setItem('pendingNotificationsModalShown', 'true');
                 }
             })
             .catch(error => console.error('Error fetching notifications:', error));
@@ -198,6 +206,18 @@
         // Show the modal
         const modal = new bootstrap.Modal(document.getElementById('pendingNotificationsModal'));
         modal.show();
+        
+        // Mark as shown when displayed
+        sessionStorage.setItem('pendingNotificationsModalShown', 'true');
+    }
+    
+    // Reset the flag when the modal is closed/dismissed
+    const modalElement = document.getElementById('pendingNotificationsModal');
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            // Keep the flag set so it doesn't show again in this session
+            sessionStorage.setItem('pendingNotificationsModalShown', 'true');
+        });
     }
     
     // Show modal when DOM is ready
