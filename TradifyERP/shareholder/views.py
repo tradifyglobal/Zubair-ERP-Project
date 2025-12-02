@@ -315,6 +315,28 @@ class CapitalContributionListView(SessionEntityMixin, LoginRequiredMixin, Permis
     paginate_by = 20
     permission_required = 'accounting.view_capitalcontribution'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Check for filter parameter
+        filter_type = self.request.GET.get('filter', None)
+        
+        if filter_type == 'pending_review':
+            # Show only contributions assigned to current user for review
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(assigned_reviewer_1=self.request.user, workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']) |
+                Q(assigned_reviewer_2=self.request.user, workflow_status='FIRST_REVIEW_COMPLETED')
+            )
+        elif filter_type == 'pending_approval':
+            # Show only contributions assigned to current user for approval
+            queryset = queryset.filter(
+                assigned_approver=self.request.user,
+                workflow_status='REVIEWED'
+            )
+        
+        return queryset.order_by('-submitted_at')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Use filtered queryset from mixin instead of CapitalContribution.objects.all()
@@ -328,6 +350,9 @@ class CapitalContributionListView(SessionEntityMixin, LoginRequiredMixin, Permis
         if entity_id:
             entity = Entity.objects.filter(id=entity_id).first()
             context['entity'] = entity
+        
+        # Add filter type to context for template display
+        context['filter_type'] = self.request.GET.get('filter', None)
         
         return context
 
