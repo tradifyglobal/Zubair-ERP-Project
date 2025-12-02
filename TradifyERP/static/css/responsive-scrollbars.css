@@ -11,17 +11,20 @@
 html {
     /* Enable scrollbars by default */
     scroll-behavior: smooth;
-    scrollbar-width: thin;
-    scrollbar-color: #888 #f1f1f1;
+    scrollbar-width: thin !important;
+    scrollbar-color: #888 #f1f1f1 !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
 }
 
 body {
     /* Ensure body allows scrolling */
-    overflow-x: auto;
-    overflow-y: auto;
-    -ms-overflow-style: scrollbar;
-    scrollbar-width: thin;
-    scrollbar-color: #888 #f1f1f1;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -ms-overflow-style: scrollbar !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #888 #f1f1f1 !important;
+    min-height: 100vh;
 }
 
 /* Custom scrollbar for webkit browsers (Chrome, Safari, Edge) */
@@ -52,29 +55,31 @@ body {
 .main-content,
 .page-content,
 .container-fluid {
-    overflow-x: auto;
-    overflow-y: visible;
-    -ms-overflow-style: scrollbar;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -ms-overflow-style: scrollbar !important;
 }
 
 /* Ensure cards and content areas scroll */
 .card {
-    overflow-x: auto;
-    overflow-y: visible;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
 }
 
 .card-body {
-    overflow-x: auto;
-    overflow-y: visible;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
 }
 
 /* Table scrolling - essential for small screens */
 .table-responsive {
-    overflow-x: auto;
-    overflow-y: visible;
-    -ms-overflow-style: scrollbar;
-    scrollbar-width: thin;
-    scrollbar-color: #888 #f1f1f1;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -ms-overflow-style: scrollbar !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #888 #f1f1f1 !important;
+    display: block !important;
+    width: 100% !important;
 }
 
 .table-responsive::-webkit-scrollbar {
@@ -191,8 +196,6 @@ textarea::-webkit-scrollbar-thumb {
 
 select {
     overflow-x: auto;
-}
-
 /* ============================================
    RESPONSIVE SCROLLBAR - MOBILE (< 768px)
    ============================================ */
@@ -200,39 +203,41 @@ select {
 @media (max-width: 767.98px) {
     /* Always show scrollbars on mobile */
     html, body {
-        overflow-x: auto;
-        overflow-y: auto;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
     }
 
     /* Larger scrollbar for easier touch */
     ::-webkit-scrollbar {
-        width: 14px;
-        height: 14px;
+        width: 14px !important;
+        height: 14px !important;
     }
 
     ::-webkit-scrollbar-thumb {
-        background: #666;
-        border: 3px solid #f1f1f1;
+        background: #666 !important;
+        border: 3px solid #f1f1f1 !important;
     }
 
     .table-responsive::-webkit-scrollbar {
-        height: 12px;
+        height: 12px !important;
     }
 
     /* Ensure page content scrolls on mobile */
     .page-content {
-        overflow-x: auto;
-        overflow-y: visible;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
     }
 
     /* Mobile table scrolling */
     .table {
-        min-width: 100%;
+        min-width: 100% !important;
     }
 
     /* Ensure forms are scrollable */
     form {
-        overflow-x: auto;
+        overflow-x: auto !important;
+    }
+}       overflow-x: auto;
     }
 }
 
@@ -323,6 +328,44 @@ body {
 .horizontal-scroll-container::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 5px;
+}
+
+/* ============================================
+   HIGH ZOOM LEVEL SUPPORT (110%+)
+   ============================================ */
+
+html[data-scrollbars-enhanced="true"],
+body[data-zoom-level="high"] {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    scrollbar-width: auto !important;
+}
+
+html[data-scrollbars-enhanced="true"] ::-webkit-scrollbar,
+body[data-zoom-level="high"] ::-webkit-scrollbar {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+html[data-scrollbars-enhanced="true"] ::-webkit-scrollbar-thumb,
+body[data-zoom-level="high"] ::-webkit-scrollbar-thumb {
+    background: #666 !important;
+    border-radius: 8px !important;
+    min-height: 50px !important;
+}
+
+html[data-scrollbars-enhanced="true"] .main-content,
+html[data-scrollbars-enhanced="true"] .page-content,
+body[data-zoom-level="high"] .main-content,
+body[data-zoom-level="high"] .page-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+html[data-scrollbars-enhanced="true"] .table-responsive,
+body[data-zoom-level="high"] .table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
 }
 
 /* ============================================

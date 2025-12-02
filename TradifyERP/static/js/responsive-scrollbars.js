@@ -109,8 +109,25 @@
             tableResponsives.forEach(table => {
                 if (table.scrollWidth > table.clientWidth) {
                     table.style.overflowX = 'auto';
+                    table.style.display = 'block';
+                    table.style.width = '100%';
+                } else {
+                    // Still allow horizontal scroll even if content fits
+                    table.style.overflowX = 'auto';
                 }
             });
+
+            // Force body and html to allow horizontal scroll
+            if (this.state.hasHorizontalOverflow) {
+                document.documentElement.style.overflowX = 'auto';
+                document.body.style.overflowX = 'auto';
+                if (mainContent) {
+                    mainContent.style.overflowX = 'auto';
+                }
+                if (pageContent) {
+                    pageContent.style.overflowX = 'auto';
+                }
+            }
         },
 
         /**
@@ -147,10 +164,41 @@
             if (zoomLevel > this.config.zoomThreshold) {
                 console.log(`📈 High zoom detected (${zoomPercent.toFixed(0)}%). Enhancing scrollbar visibility...`);
                 this.enhanceScrollbarVisibility();
+                // Force horizontal scrollbar to show
+                this.forceHorizontalScrollbars();
             } else {
                 console.log(`📉 Normal zoom (${zoomPercent.toFixed(0)}%). Using default scrollbars.`);
                 this.restoreDefaultScrollbars();
             }
+        },
+
+        /**
+         * Force horizontal scrollbars to always be visible
+         */
+        forceHorizontalScrollbars: function() {
+            // Check all content areas and force overflow
+            const mainContent = document.querySelector('.main-content') || document.body;
+            const pageContent = document.querySelector('.page-content');
+            const tableResponsives = document.querySelectorAll('.table-responsive');
+
+            // Force body horizontal scroll
+            document.documentElement.style.overflowX = 'auto';
+            document.body.style.overflowX = 'auto';
+
+            // Force container scrolls
+            if (mainContent) {
+                mainContent.style.overflowX = 'auto';
+            }
+            if (pageContent) {
+                pageContent.style.overflowX = 'auto';
+            }
+
+            // Force table scrolls
+            tableResponsives.forEach(table => {
+                table.style.overflowX = 'auto';
+                table.style.display = 'block';
+                table.style.width = '100%';
+            });
         },
 
         /**
@@ -160,6 +208,26 @@
             // Add class to body for CSS to apply enhanced scrollbar styles
             document.documentElement.setAttribute('data-scrollbars-enhanced', 'true');
             document.body.setAttribute('data-zoom-level', 'high');
+
+            // Add inline styles to ensure scrollbars don't hide
+            const style = document.createElement('style');
+            style.id = 'zoom-scrollbar-enforcement';
+            
+            if (!document.getElementById('zoom-scrollbar-enforcement')) {
+                style.innerHTML = `
+                    html[data-scrollbars-enhanced="true"] { overflow-x: auto !important; overflow-y: auto !important; }
+                    body[data-zoom-level="high"] { overflow-x: auto !important; overflow-y: auto !important; }
+                    html[data-scrollbars-enhanced="true"] .main-content,
+                    html[data-scrollbars-enhanced="true"] .page-content { overflow-x: auto !important; }
+                    body[data-zoom-level="high"] .main-content,
+                    body[data-zoom-level="high"] .page-content { overflow-x: auto !important; }
+                    html[data-scrollbars-enhanced="true"] .table-responsive,
+                    body[data-zoom-level="high"] .table-responsive { overflow-x: auto !important; overflow-y: visible !important; }
+                    ::-webkit-scrollbar { width: 16px !important; height: 16px !important; }
+                    ::-webkit-scrollbar-thumb { min-height: 50px !important; }
+                `;
+                document.head.appendChild(style);
+            }
         },
 
         /**
