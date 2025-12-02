@@ -2,14 +2,16 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.urls import reverse_lazy
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.contrib import messages
 from accounting.models import Stakeholder, CapitalContribution, Shareholding, Entity
 from accounting.stakeholder_forms import StakeholderForm, CapitalContributionForm, ShareholdingForm
 from accounting.mixins import SessionEntityMixin
 from shareholder.import_export import (
     export_shareholders_csv, export_shareholders_excel,
-    import_shareholders_csv, import_shareholders_excel
+    import_shareholders_csv, import_shareholders_excel,
+    export_capital_contributions_csv, export_capital_contributions_excel,
+    import_capital_contributions_csv, import_capital_contributions_excel
 )
 
 
@@ -27,13 +29,18 @@ class ShareholderDashboardView(SessionEntityMixin, LoginRequiredMixin, Permissio
             # Filter by entity
             entity = Entity.objects.filter(id=entity_id).first()
             stakeholders = Stakeholder.objects.filter(entity_id=entity_id)
-            contributions = CapitalContribution.objects.filter(entity_id=entity_id)
+            # Only include APPROVED contributions in dashboard calculations
+            contributions = CapitalContribution.objects.filter(
+                entity_id=entity_id,
+                workflow_status='APPROVED'
+            )
             shareholdings = Shareholding.objects.filter(entity_id=entity_id)
         else:
             # If no entity selected, show all (shouldn't happen with SessionEntityMixin)
             entity = None
             stakeholders = Stakeholder.objects.all()
-            contributions = CapitalContribution.objects.all()
+            # Only include APPROVED contributions in dashboard calculations
+            contributions = CapitalContribution.objects.filter(workflow_status='APPROVED')
             shareholdings = Shareholding.objects.all()
         
         context['entity'] = entity
@@ -43,14 +50,15 @@ class ShareholderDashboardView(SessionEntityMixin, LoginRequiredMixin, Permissio
         context['total_contributions'] = contributions.count()
         context['total_shareholdings'] = shareholdings.count()
         
-        # Calculate totals
+        # Calculate totals - only from APPROVED contributions
         total_capital = sum(float(cc.amount_company_currency or 0) for cc in contributions)
         context['total_capital_invested'] = total_capital
         context['total_shares'] = shareholdings.aggregate(total=Sum('number_of_shares'))['total'] or 0
         
-        # Top shareholders by contribution
+        # Top shareholders by contribution - only APPROVED contributions
         context['top_contributors'] = stakeholders.annotate(
-            total_contributed=Sum('capital_contributions__amount_company_currency')
+            total_contributed=Sum('capital_contributions__amount_company_currency', 
+                                filter=Q(capital_contributions__workflow_status='APPROVED'))
         ).filter(total_contributed__isnull=False).order_by('-total_contributed')[:5]
         
         # Share type distribution
@@ -59,11 +67,20 @@ class ShareholderDashboardView(SessionEntityMixin, LoginRequiredMixin, Permissio
             total_shares=Sum('number_of_shares')
         ).order_by('-total_shares')
         
-        # Recent contributions
+        # Recent contributions - only APPROVED
         context['recent_contributions'] = contributions.select_related('stakeholder').order_by('-contribution_date')[:5]
         
-        # Pending contributions
-        context['pending_contributions'] = contributions.filter(status='PENDING').count()
+        # Pending contributions - those in SUBMITTED or REVIEWED status (awaiting approval)
+        if entity_id:
+            pending_contributions = CapitalContribution.objects.filter(
+                entity_id=entity_id,
+                workflow_status__in=['SUBMITTED', 'REVIEWED']
+            )
+        else:
+            pending_contributions = CapitalContribution.objects.filter(
+                workflow_status__in=['SUBMITTED', 'REVIEWED']
+            )
+        context['pending_contributions'] = pending_contributions.count()
         
         # Recent shareholdings
         context['recent_shareholdings'] = shareholdings.select_related('stakeholder').order_by('-acquisition_date')[:5]
@@ -254,6 +271,39 @@ class ShareholderDeleteView(SessionEntityMixin, LoginRequiredMixin, PermissionRe
         return super().get_queryset()
 
 
+class ShareholderBulkDeleteView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Handle bulk deletion of shareholders"""
+    permission_required = 'accounting.delete_stakeholder'
+    
+    def post(self, request, *args, **kwargs):
+        stakeholder_ids = request.POST.getlist('stakeholder_ids')
+        
+        if not stakeholder_ids:
+            messages.warning(request, 'Please select at least one shareholder to delete.')
+            return redirect('shareholder:stakeholder-list')
+        
+        # Filter by session entity and the provided IDs
+        entity_id = request.session.get('selected_entity_id')
+        stakeholders = Stakeholder.objects.filter(
+            id__in=stakeholder_ids,
+            entity_id=entity_id
+        )
+        
+        count = stakeholders.count()
+        if count == 0:
+            messages.error(request, 'No valid shareholders found to delete.')
+            return redirect('shareholder:stakeholder-list')
+        
+        # Delete the stakeholders
+        stakeholders.delete()
+        
+        messages.success(
+            request,
+            f'Successfully deleted {count} shareholder{"s" if count > 1 else ""}.'
+        )
+        return redirect('shareholder:stakeholder-list')
+
+
 # ==================== Capital Contribution Views ====================
 
 class CapitalContributionListView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, ListView):
@@ -313,18 +363,26 @@ class CapitalContributionCreateView(SessionEntityMixin, LoginRequiredMixin, Perm
                 pass
         return initial
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Ensure entity_id is set on instance before form initialization
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            if not kwargs.get('instance'):
+                kwargs['instance'] = CapitalContribution()
+            # Set entity_id directly (before accessing the entity property)
+            kwargs['instance'].entity_id = entity_id
+        return kwargs
+
     def form_valid(self, form):
         entity_id = self.request.session.get('selected_entity_id')
         if entity_id:
-            from accounting.models import Entity
             from django.utils import timezone
-            try:
-                form.instance.entity = Entity.objects.get(id=entity_id)
-                # Set default contribution_date if not provided
-                if not form.instance.contribution_date:
-                    form.instance.contribution_date = timezone.now().date()
-            except:
-                pass
+            # Set entity_id directly (not via the property accessor)
+            form.instance.entity_id = entity_id
+            # Set default contribution_date if not provided
+            if not form.instance.contribution_date:
+                form.instance.contribution_date = timezone.now().date()
         return super().form_valid(form)
 
 
@@ -338,6 +396,190 @@ class CapitalContributionUpdateView(SessionEntityMixin, LoginRequiredMixin, Perm
     def get_queryset(self):
         # Filter by session entity using mixin
         return super().get_queryset()
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Ensure entity_id is set on instance for form field filtering
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id and kwargs.get('instance'):
+            kwargs['instance'].entity_id = entity_id
+        return kwargs
+
+
+# ==================== Capital Contribution Workflow Views ====================
+
+class CapitalContributionSubmitView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Submit a draft capital contribution for review and assign reviewer."""
+    model = CapitalContribution
+    permission_required = 'accounting.change_capitalcontribution'
+    form_class = None  # Will be set dynamically
+    template_name = 'shareholder/capital_contribution_submit.html'
+    
+    def get_form_class(self):
+        from accounting.stakeholder_forms import CapitalContributionSubmitForm
+        return CapitalContributionSubmitForm
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter reviewers by entity
+        from accounting.models import UserEntity
+        entity_id = self.request.session.get('selected_entity_id')
+        user_ids = UserEntity.objects.filter(
+            entity_id=entity_id
+        ).values_list('user_id', flat=True)
+        
+        from django.contrib.auth.models import User
+        form.fields['reviewer'].queryset = User.objects.filter(
+            id__in=user_ids,
+            is_active=True
+        ).order_by('first_name', 'last_name')
+        return form
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.object.workflow_status != 'DRAFT':
+            context['error'] = "Only draft contributions can be submitted."
+        return context
+    
+    def form_valid(self, form):
+        from django.utils import timezone
+        contribution = form.instance
+        
+        if contribution.workflow_status != 'DRAFT':
+            messages.error(self.request, "Only draft contributions can be submitted.")
+            return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
+        
+        contribution.workflow_status = 'SUBMITTED'
+        contribution.submitted_by = self.request.user
+        contribution.submitted_at = timezone.now()
+        
+        # Get selected reviewer from form data
+        reviewer_id = self.request.POST.get('reviewer')
+        if reviewer_id:
+            from django.contrib.auth.models import User
+            try:
+                contribution.reviewed_by = User.objects.get(id=reviewer_id)
+            except User.DoesNotExist:
+                pass
+        
+        contribution.save()
+        messages.success(self.request, f"Contribution submitted for review to {contribution.reviewed_by.get_full_name()}.")
+        return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
+
+
+class CapitalContributionReviewView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Review a submitted capital contribution and assign approver."""
+    model = CapitalContribution
+    permission_required = 'accounting.change_capitalcontribution'
+    form_class = None  # Will be set dynamically
+    template_name = 'shareholder/capital_contribution_review.html'
+    
+    def get_form_class(self):
+        from accounting.stakeholder_forms import CapitalContributionReviewForm
+        return CapitalContributionReviewForm
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter approvers by entity
+        from accounting.models import UserEntity
+        entity_id = self.request.session.get('selected_entity_id')
+        user_ids = UserEntity.objects.filter(
+            entity_id=entity_id
+        ).values_list('user_id', flat=True)
+        
+        from django.contrib.auth.models import User
+        form.fields['approver'].queryset = User.objects.filter(
+            id__in=user_ids,
+            is_active=True
+        ).order_by('first_name', 'last_name')
+        return form
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.object.workflow_status != 'SUBMITTED':
+            context['error'] = "This contribution is not in submitted status."
+        return context
+    
+    def form_valid(self, form):
+        from django.utils import timezone
+        contribution = form.instance
+        
+        if contribution.workflow_status != 'SUBMITTED':
+            messages.error(self.request, "This contribution is not in submitted status.")
+            return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
+        
+        contribution.workflow_status = 'REVIEWED'
+        contribution.reviewed_by = self.request.user
+        contribution.reviewed_at = timezone.now()
+        
+        # Get selected approver from form data
+        approver_id = self.request.POST.get('approver')
+        if approver_id:
+            from django.contrib.auth.models import User
+            try:
+                contribution.approved_by = User.objects.get(id=approver_id)
+            except User.DoesNotExist:
+                pass
+        
+        contribution.save()
+        messages.success(self.request, f"Contribution reviewed and assigned to {contribution.approved_by.get_full_name()} for approval.")
+        return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
+
+
+class CapitalContributionApproveView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Approve a reviewed capital contribution."""
+    model = CapitalContribution
+    permission_required = 'accounting.change_capitalcontribution'
+    form_class = None  # Will be set dynamically
+    template_name = 'shareholder/capital_contribution_approve.html'
+    
+    def get_form_class(self):
+        from accounting.stakeholder_forms import CapitalContributionApprovalForm
+        return CapitalContributionApprovalForm
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.object.workflow_status != 'REVIEWED':
+            context['error'] = "This contribution is not in reviewed status."
+        return context
+    
+    def form_valid(self, form):
+        from django.utils import timezone
+        contribution = form.instance
+        
+        if contribution.workflow_status != 'REVIEWED':
+            messages.error(self.request, "This contribution is not in reviewed status.")
+            return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
+        
+        contribution.workflow_status = 'APPROVED'
+        contribution.approved_by = self.request.user
+        contribution.approved_at = timezone.now()
+        
+        # If status is set to COMPLETED, create ledger entry
+        if contribution.status == 'COMPLETED':
+            contribution.create_ledger_entry()
+        
+        contribution.save()
+        
+        messages.success(self.request, "Contribution approved and ledger entry created.")
+        return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
+
+
+class CapitalContributionRejectView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Reject a capital contribution during review or approval."""
+    model = CapitalContribution
+    permission_required = 'accounting.change_capitalcontribution'
+    fields = ['rejection_reason']
+    template_name = 'shareholder/capital_contribution_reject.html'
+    
+    def form_valid(self, form):
+        contribution = form.instance
+        contribution.workflow_status = 'REJECTED'
+        contribution.save()
+        
+        messages.success(self.request, "Contribution has been rejected.")
+        return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
+
 
 
 # ==================== Shareholding Views ====================
@@ -507,13 +749,11 @@ class ShareholderInvestmentLimitCreateView(SessionEntityMixin, LoginRequiredMixi
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         entity_id = self.request.session.get('selected_entity_id')
-        # Filter stakeholders for this entity in the form
-        if 'data' not in kwargs:
-            entity = Entity.objects.filter(id=entity_id).first()
-            if entity:
-                initial = kwargs.get('initial', {})
-                initial['entity'] = entity
-                kwargs['initial'] = initial
+        if entity_id:
+            # Set entity_id on instance before form initialization
+            if not kwargs.get('instance'):
+                kwargs['instance'] = ShareholderInvestmentLimit()
+            kwargs['instance'].entity_id = entity_id
         return kwargs
 
     def form_valid(self, form):
@@ -543,6 +783,16 @@ class ShareholderPaymentCommitmentCreateView(SessionEntityMixin, LoginRequiredMi
     template_name = 'shareholder/payment_commitment_form.html'
     permission_required = 'accounting.add_shareholderpaymentcommitment'
     success_url = reverse_lazy('shareholder:investment_report')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            # Set entity_id on instance before form initialization
+            if not kwargs.get('instance'):
+                kwargs['instance'] = ShareholderPaymentCommitment()
+            kwargs['instance'].entity_id = entity_id
+        return kwargs
 
     def form_valid(self, form):
         entity_id = self.request.session.get('selected_entity_id')
@@ -635,5 +885,66 @@ class ShareholderImportView(SessionEntityMixin, LoginRequiredMixin, PermissionRe
             messages.error(request, f'Error importing file: {str(e)}')
         
         return redirect('shareholder:stakeholder-list')
+
+
+# ==================== Capital Contribution Export/Import ====================
+
+class CapitalContributionExportView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'accounting.view_capitalcontribution'
+    
+    def get(self, request):
+        entity_id = request.session.get('selected_entity_id')
+        contributions = CapitalContribution.objects.filter(entity_id=entity_id).select_related('stakeholder', 'currency').order_by('-contribution_date')
+        
+        format_type = request.GET.get('format', 'csv')
+        
+        if format_type == 'excel':
+            return export_capital_contributions_excel(contributions)
+        else:
+            return export_capital_contributions_csv(contributions)
+
+
+class CapitalContributionImportView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'accounting.add_capitalcontribution'
+    
+    def post(self, request):
+        entity_id = request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id).first()
+        
+        if not entity:
+            messages.error(request, 'Entity not found')
+            return redirect('shareholder:capital-contribution-list')
+        
+        file = request.FILES.get('file')
+        if not file:
+            messages.error(request, 'No file provided')
+            return redirect('shareholder:capital-contribution-list')
+        
+        overwrite = request.POST.get('overwrite') == 'true'
+        imported_count = 0
+        errors = []
+        
+        try:
+            if file.name.endswith('.csv'):
+                imported_count, errors = import_capital_contributions_csv(file, entity, overwrite)
+            elif file.name.endswith(('.xlsx', '.xls')):
+                imported_count, errors = import_capital_contributions_excel(file, entity, overwrite)
+            else:
+                messages.error(request, 'Unsupported file format. Please use CSV or Excel (.xlsx, .xls)')
+                return redirect('shareholder:capital-contribution-list')
+            
+            if imported_count > 0:
+                messages.success(request, f'Successfully imported {imported_count} capital contribution(s)')
+            
+            if errors:
+                for error in errors[:10]:  # Show first 10 errors
+                    messages.warning(request, error)
+                if len(errors) > 10:
+                    messages.warning(request, f'... and {len(errors) - 10} more errors')
+        
+        except Exception as e:
+            messages.error(request, f'Error importing file: {str(e)}')
+        
+        return redirect('shareholder:capital-contribution-list')
 
 
