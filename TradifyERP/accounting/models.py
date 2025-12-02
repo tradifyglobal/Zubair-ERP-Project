@@ -709,7 +709,7 @@ class Stakeholder(models.Model):
     # Identity Documents
     passport_number = models.CharField(max_length=50, blank=True, null=True)
     aadhar_number = models.CharField(max_length=50, blank=True, null=True)
-    pan_sin_number = models.CharField(max_length=50, blank=True, null=True)
+    pan_sin_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="PAN / SIN Number")
     
     # Tax & Identification
     tax_identification_number = models.CharField(max_length=50, blank=True, null=True)  # SSN, EIN, VAT ID, etc.
