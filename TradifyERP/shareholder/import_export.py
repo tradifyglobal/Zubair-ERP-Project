@@ -24,7 +24,7 @@ def export_shareholders_csv(stakeholders):
             stakeholder.first_name or '',
             stakeholder.last_name or '',
             stakeholder.email or '',
-            stakeholder.phone_number or '',
+            str(stakeholder.phone_number or ''),  # Convert to text
             stakeholder.address_line_1 or '',
             stakeholder.city or '',
             stakeholder.state_province or '',
@@ -65,7 +65,7 @@ def export_shareholders_excel(stakeholders):
             stakeholder.first_name or '',
             stakeholder.last_name or '',
             stakeholder.email or '',
-            stakeholder.phone_number or '',
+            str(stakeholder.phone_number or ''),  # Convert to text
             stakeholder.address_line_1 or '',
             stakeholder.city or '',
             stakeholder.state_province or '',
@@ -85,6 +85,12 @@ def export_shareholders_excel(stakeholders):
                 pass
         adjusted_width = min(max_length + 2, 50)
         ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # Format Phone Number column as text
+    phone_col = get_column_letter(headers.get('Phone Number', 5))
+    for row_num in range(2, ws.max_row + 1):
+        cell = ws[f'{phone_col}{row_num}']
+        cell.number_format = '@'  # Text format in Excel
     
     # Create HTTP response
     response = HttpResponse(
@@ -110,7 +116,7 @@ def import_shareholders_csv(file_content, entity, overwrite=False):
                 first_name = row.get('First Name', '').strip()
                 last_name = row.get('Last Name', '').strip()
                 email = row.get('Email', '').strip()
-                phone_number = row.get('Phone Number', '').strip()
+                phone_number = str(row.get('Phone Number', '').strip())  # Convert to text
                 
                 # Validate required fields
                 if not first_name or not last_name or not email:
@@ -193,7 +199,7 @@ def import_shareholders_excel(file_content, entity, overwrite=False):
                 first_name = (row[headers['First Name']-1].value or '').strip()
                 last_name = (row[headers['Last Name']-1].value or '').strip()
                 email = (row[headers['Email']-1].value or '').strip()
-                phone_number = (row[headers.get('Phone Number', 0)-1].value or '').strip() if 'Phone Number' in headers else ''
+                phone_number = str(row[headers.get('Phone Number', 0)-1].value or '').strip() if 'Phone Number' in headers else ''
                 
                 # Validate required fields
                 if not first_name or not last_name or not email:
