@@ -245,11 +245,14 @@ class UserEditView(AdminRequiredMixin, UpdateView):
                     f'Entity assignments updated for "{user.username}".'
                 )
             else:
-                logger.error(f"Entity form errors: {entity_form.errors}")
-                messages.warning(
-                    self.request,
-                    f'Entity assignments had validation errors: {entity_form.errors}'
-                )
+                # Log entity form errors but don't prevent saving
+                logger.warning(f"Entity form had validation errors (non-blocking): {entity_form.errors}")
+                # Show warning to user about entity assignments, but permissions should still save
+                if entity_form.errors.get('entities'):
+                    messages.info(
+                        self.request,
+                        f'Note: Entity assignments were not changed. Please select at least one entity to update assignments.'
+                    )
             
             return redirect(self.success_url)
         except Exception as e:

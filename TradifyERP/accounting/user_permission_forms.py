@@ -392,7 +392,8 @@ class UserEntityAssignmentForm(forms.Form):
             'class': 'form-check-input entity-checkbox',
         }),
         label="Assigned Entities",
-        help_text="Select which entities this user can access"
+        help_text="Select which entities this user can access",
+        required=False  # Make optional so permission saves even if no entity selected
     )
     
     default_entity = forms.ModelChoiceField(
@@ -430,6 +431,20 @@ class UserEntityAssignmentForm(forms.Form):
             can_switch = user.entity_assignments.filter(can_switch=True).exists()
             self.fields['can_switch_entities'].initial = can_switch
     
+    def clean(self):
+        """Validate that if default_entity is set, it must be in selected entities."""
+        cleaned_data = super().clean()
+        selected_entities = cleaned_data.get('entities', [])
+        default_entity = cleaned_data.get('default_entity')
+        
+        # If default_entity is set but not in selected_entities, add it
+        if default_entity and selected_entities and default_entity not in selected_entities:
+            # Add the default entity to selected entities
+            selected_entities = list(selected_entities) + [default_entity]
+            cleaned_data['entities'] = selected_entities
+        
+        return cleaned_data
+    
     def save(self, user=None, granted_by=None):
         """Save entity assignments for user."""
         target_user = user or self.user
@@ -440,16 +455,18 @@ class UserEntityAssignmentForm(forms.Form):
         default_entity = self.cleaned_data.get('default_entity')
         can_switch = self.cleaned_data.get('can_switch_entities', True)
         
-        # Remove all existing assignments
-        UserEntity.objects.filter(user=target_user).delete()
-        
-        # Create new assignments
-        for entity in selected_entities:
-            is_default = (entity == default_entity) if default_entity else False
-            UserEntity.objects.create(
-                user=target_user,
-                entity=entity,
-                is_default=is_default,
-                can_switch=can_switch,
-                assigned_by=granted_by
-            )
+        # Only update if entities are actually selected
+        if selected_entities:
+            # Remove all existing assignments
+            UserEntity.objects.filter(user=target_user).delete()
+            
+            # Create new assignments
+            for entity in selected_entities:
+                is_default = (entity == default_entity) if default_entity else False
+                UserEntity.objects.create(
+                    user=target_user,
+                    entity=entity,
+                    is_default=is_default,
+                    can_switch=can_switch,
+                    assigned_by=granted_by
+                )
