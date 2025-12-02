@@ -263,7 +263,7 @@ def main_dashboard(request):
     # Pending reviews (where user is reviewer)
     pending_reviews = CapitalContribution.objects.filter(
         Q(assigned_reviewer_1=request.user, workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']) |
-        Q(assigned_reviewer_2=request.user, workflow_status='FIRST_REVIEW_COMPLETED')
+        Q(assigned_reviewer_2=request.user, workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED'])
     ).select_related('entity', 'stakeholder').order_by('-submitted_at')[:5]
     
     # Pending approvals (where user is approver)

@@ -326,7 +326,7 @@ class CapitalContributionListView(SessionEntityMixin, LoginRequiredMixin, Permis
             from django.db.models import Q
             queryset = queryset.filter(
                 Q(assigned_reviewer_1=self.request.user, workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']) |
-                Q(assigned_reviewer_2=self.request.user, workflow_status='FIRST_REVIEW_COMPLETED')
+                Q(assigned_reviewer_2=self.request.user, workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED'])
             )
         elif filter_type == 'pending_approval':
             # Show only contributions assigned to current user for approval
