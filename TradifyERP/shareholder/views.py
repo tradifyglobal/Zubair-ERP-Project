@@ -429,10 +429,13 @@ class CapitalContributionSubmitView(SessionEntityMixin, LoginRequiredMixin, Perm
         ).values_list('user_id', flat=True)
         
         from django.contrib.auth.models import User
-        form.fields['reviewer'].queryset = User.objects.filter(
+        active_entity_users = User.objects.filter(
             id__in=user_ids,
             is_active=True
         ).order_by('first_name', 'last_name')
+        
+        form.fields['reviewer'].queryset = active_entity_users
+        form.fields['reviewer_2'].queryset = active_entity_users
         return form
     
     def get_context_data(self, **kwargs):
@@ -453,22 +456,32 @@ class CapitalContributionSubmitView(SessionEntityMixin, LoginRequiredMixin, Perm
         contribution.submitted_by = self.request.user
         contribution.submitted_at = timezone.now()
         
-        # Get selected reviewer from form data
+        # Get selected reviewers from form data
         reviewer_id = self.request.POST.get('reviewer')
+        reviewer_id_2 = self.request.POST.get('reviewer_2')
+        
+        from django.contrib.auth.models import User
         if reviewer_id:
-            from django.contrib.auth.models import User
             try:
                 contribution.reviewed_by = User.objects.get(id=reviewer_id)
             except User.DoesNotExist:
                 pass
         
+        if reviewer_id_2:
+            try:
+                contribution.reviewed_by_2 = User.objects.get(id=reviewer_id_2)
+            except User.DoesNotExist:
+                pass
+        
         contribution.save()
-        messages.success(self.request, f"Contribution submitted for review to {contribution.reviewed_by.get_full_name()}.")
+        reviewer1_name = contribution.reviewed_by.get_full_name() if contribution.reviewed_by else "Unknown"
+        reviewer2_name = contribution.reviewed_by_2.get_full_name() if contribution.reviewed_by_2 else "Unknown"
+        messages.success(self.request, f"Contribution submitted for review to {reviewer1_name} and {reviewer2_name}.")
         return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
 
 
 class CapitalContributionReviewView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    """Review a submitted capital contribution and assign approver."""
+    """Handle review by both first and second reviewers. After both complete, move to approval stage."""
     model = CapitalContribution
     permission_required = 'accounting.change_capitalcontribution'
     form_class = None  # Will be set dynamically
@@ -496,33 +509,55 @@ class CapitalContributionReviewView(SessionEntityMixin, LoginRequiredMixin, Perm
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.object.workflow_status != 'SUBMITTED':
-            context['error'] = "This contribution is not in submitted status."
+        contribution = self.object
+        
+        # Determine which reviewer this is
+        if contribution.workflow_status not in ['SUBMITTED', 'FIRST_REVIEW_COMPLETED']:
+            context['error'] = "This contribution is not in a reviewable status."
+        else:
+            if contribution.workflow_status == 'SUBMITTED':
+                context['reviewer_type'] = 'First Reviewer'
+            elif contribution.workflow_status == 'FIRST_REVIEW_COMPLETED':
+                context['reviewer_type'] = 'Second Reviewer'
+        
         return context
     
     def form_valid(self, form):
         from django.utils import timezone
         contribution = form.instance
         
-        if contribution.workflow_status != 'SUBMITTED':
-            messages.error(self.request, "This contribution is not in submitted status.")
-            return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
+        if contribution.workflow_status == 'SUBMITTED':
+            # First reviewer completing review
+            if not contribution.reviewed_by:
+                contribution.reviewed_by = self.request.user
+                contribution.reviewed_at = timezone.now()
+                contribution.workflow_status = 'FIRST_REVIEW_COMPLETED'
+                contribution.save()
+                messages.success(self.request, "First review completed. Waiting for second reviewer.")
+                return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
         
-        contribution.workflow_status = 'REVIEWED'
-        contribution.reviewed_by = self.request.user
-        contribution.reviewed_at = timezone.now()
+        elif contribution.workflow_status == 'FIRST_REVIEW_COMPLETED':
+            # Second reviewer completing review
+            if not contribution.reviewed_by_2:
+                contribution.reviewed_by_2 = self.request.user
+                contribution.reviewed_at_2 = timezone.now()
+                contribution.workflow_status = 'REVIEWED'
+                
+                # Get selected approver from form data
+                approver_id = self.request.POST.get('approver')
+                if approver_id:
+                    from django.contrib.auth.models import User
+                    try:
+                        contribution.approved_by = User.objects.get(id=approver_id)
+                    except User.DoesNotExist:
+                        pass
+                
+                contribution.save()
+                approver_name = contribution.approved_by.get_full_name() if contribution.approved_by else "Unknown"
+                messages.success(self.request, f"Both reviews completed! Contribution assigned to {approver_name} for approval.")
+                return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
         
-        # Get selected approver from form data
-        approver_id = self.request.POST.get('approver')
-        if approver_id:
-            from django.contrib.auth.models import User
-            try:
-                contribution.approved_by = User.objects.get(id=approver_id)
-            except User.DoesNotExist:
-                pass
-        
-        contribution.save()
-        messages.success(self.request, f"Contribution reviewed and assigned to {contribution.approved_by.get_full_name()} for approval.")
+        messages.error(self.request, "Unable to process review at this time.")
         return redirect('shareholder:capital-contribution-detail', pk=contribution.pk)
 
 

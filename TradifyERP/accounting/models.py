@@ -685,9 +685,9 @@ class Stakeholder(models.Model):
     
     # Contact Information
     email = models.EmailField()
-    phone_number = models.CharField(max_length=20)
-    secondary_phone = models.CharField(max_length=20, blank=True, null=True)
-    fax = models.CharField(max_length=20, blank=True, null=True)
+    phone_number = models.CharField(max_length=50)
+    secondary_phone = models.CharField(max_length=50, blank=True, null=True)
+    fax = models.CharField(max_length=50, blank=True, null=True)
     
     # Address Information
     address_line_1 = models.CharField(max_length=255)
@@ -794,11 +794,79 @@ class CapitalContribution(models.Model):
         ('RETURNED', 'Returned'),
     ]
     
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('SUBMITTED', 'Submitted'),
+        ('FIRST_REVIEW_COMPLETED', 'First Review Completed'),
+        ('REVIEWED', 'Both Reviews Completed'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
     # Core Fields
     entity = models.ForeignKey('accounting.Entity', on_delete=models.CASCADE, related_name='capital_contributions')
     stakeholder = models.ForeignKey(Stakeholder, on_delete=models.CASCADE, related_name='capital_contributions')
     contribution_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    
+    # Workflow Status
+    workflow_status = models.CharField(
+        max_length=30, 
+        choices=WORKFLOW_STATUS_CHOICES, 
+        default='DRAFT',
+        help_text="Workflow approval status"
+    )
+    
+    # Workflow Users
+    submitted_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='submitted_capital_contributions',
+        help_text="User who submitted the contribution"
+    )
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    
+    reviewed_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_capital_contributions',
+        help_text="First reviewer of the contribution"
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(blank=True, null=True, help_text="Notes from first reviewer")
+    
+    # Second Reviewer
+    reviewed_by_2 = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_capital_contributions_2',
+        help_text="Second reviewer of the contribution"
+    )
+    reviewed_at_2 = models.DateTimeField(null=True, blank=True, help_text="When second reviewer completed review")
+    review_notes_2 = models.TextField(blank=True, null=True, help_text="Notes from second reviewer")
+    
+    approved_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_capital_contributions',
+        help_text="User who approved the contribution"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approval_notes = models.TextField(blank=True, null=True, help_text="Notes from approver")
+    
+    rejection_reason = models.TextField(blank=True, null=True, help_text="Reason for rejection")
+    
+    # Amount Details
+    amount = models.DecimalField(max_digits=18, decimal_places=2, help_text="Amount in original currency")
+    currency = models.ForeignKey('accounting.Currency', on_delete=models.PROTECT, related_name='capital_contributions')
     
     # Amount Details
     amount = models.DecimalField(max_digits=18, decimal_places=2, help_text="Amount in original currency")
@@ -833,7 +901,14 @@ class CapitalContribution(models.Model):
     # Payment Details
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODES)
     reference_number = models.CharField(max_length=100, blank=True, null=True)
-    payment_bank_account = models.CharField(max_length=255, blank=True, null=True)
+    payment_bank_account = models.ForeignKey(
+        'accounting.BankProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='capital_contributions',
+        help_text="Bank profile for receiving this contribution"
+    )
     payment_method_details = models.TextField(blank=True, null=True)  # Cheque number, wire tracking, etc.
     
     # Bank/Account Details
@@ -981,6 +1056,12 @@ class CapitalContribution(models.Model):
         except Exception as e:
             # Log error but don't fail the contribution
             pass
+    
+    def create_ledger_entry(self):
+        """Public method to create ledger entry when approval is completed."""
+        if not self.ledger_entry and self.status == 'COMPLETED':
+            self._create_ledger_entry()
+
 
 
 class Shareholding(models.Model):

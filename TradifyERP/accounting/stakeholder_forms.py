@@ -1,5 +1,5 @@
 from django import forms
-from accounting.models import Stakeholder, CapitalContribution, Shareholding
+from accounting.models import Stakeholder, CapitalContribution, Shareholding, BankProfile
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Field, Fieldset, HTML
 
@@ -149,6 +149,25 @@ class CapitalContributionForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Filter stakeholder and bank profiles by entity
+        if self.instance:
+            # Check if instance has entity_id (might be set but not loaded yet)
+            entity_id = getattr(self.instance, 'entity_id', None) or (self.instance.entity_id if hasattr(self.instance, 'entity_id') else None)
+            if entity_id:
+                # Filter stakeholders to only show those from the current entity
+                if 'stakeholder' in self.fields:
+                    self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
+                        entity_id=entity_id
+                    ).order_by('first_name', 'last_name')
+                
+                # Filter bank profiles to only show those from the current entity
+                if 'payment_bank_account' in self.fields:
+                    self.fields['payment_bank_account'].queryset = BankProfile.objects.filter(
+                        entity_id=entity_id,
+                        is_active=True
+                    ).order_by('bank_name')
+        
         # Set default contribution_date if not editing an existing instance
         if not self.instance.pk and 'contribution_date' in self.fields:
             from django.utils import timezone
@@ -319,3 +338,100 @@ class ShareholdingForm(forms.ModelForm):
                 )
             ),
         )
+
+
+class CapitalContributionSubmitForm(forms.ModelForm):
+    """Form for submitting a contribution and assigning two reviewers."""
+    reviewer = forms.ModelChoiceField(
+        queryset=None,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Assign First Reviewer',
+        help_text='Select the first user who will review this contribution'
+    )
+    
+    reviewer_2 = forms.ModelChoiceField(
+        queryset=None,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Assign Second Reviewer',
+        help_text='Select the second user who will review this contribution'
+    )
+    
+    class Meta:
+        model = CapitalContribution
+        fields = ['review_notes']
+        widgets = {
+            'review_notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Optional notes for the reviewers'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.contrib.auth.models import User
+        # Show all active users as potential reviewers
+        active_users = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
+        self.fields['reviewer'].queryset = active_users
+        self.fields['reviewer_2'].queryset = active_users
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        reviewer = cleaned_data.get('reviewer')
+        reviewer_2 = cleaned_data.get('reviewer_2')
+        
+        if reviewer and reviewer_2 and reviewer == reviewer_2:
+            raise forms.ValidationError("First and second reviewers must be different users.")
+        
+        return cleaned_data
+
+
+class CapitalContributionReviewForm(forms.ModelForm):
+    """Form for completing review and moving to approval when both reviewers have reviewed."""
+    approver = forms.ModelChoiceField(
+        queryset=None,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Assign Approver',
+        help_text='Select the user who will approve this contribution'
+    )
+    
+    class Meta:
+        model = CapitalContribution
+        fields = ['review_notes_2', 'approval_notes']
+        widgets = {
+            'review_notes_2': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Your review notes as second reviewer'
+            }),
+            'approval_notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Optional notes for the approver'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.contrib.auth.models import User
+        # Show all active users as potential approvers
+        self.fields['approver'].queryset = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
+
+
+class CapitalContributionApprovalForm(forms.ModelForm):
+    """Form for approving a contribution."""
+    
+    class Meta:
+        model = CapitalContribution
+        fields = ['status', 'approval_notes']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'approval_notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Your approval notes'
+            }),
+        }
