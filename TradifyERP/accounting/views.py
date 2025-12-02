@@ -17,6 +17,7 @@ from .models import (
 from .mixins import SessionEntityMixin
 from .forms import DoubleEntryJournalForm, SimpleLedgerEntryForm, QuickAddCustomerForm, QuickAddVendorForm, QuickAddVendorPaymentForm, QuickAddVendorInvoiceForm, QuickAddBankProfileForm, FixedAssetForm
 from .permission_utils import get_user_accessible_entities
+from .trial_balance import calculate_trial_balance, get_trial_balance_details
 
 
 def get_session_entity(request):
@@ -366,7 +367,35 @@ class GLDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
             context['latest_trial_balance'] = entity.trial_balances.order_by('-as_of_date').first()
             context['latest_pl_report'] = entity.pl_reports.order_by('-period_end').first()
             context['latest_balance_sheet'] = entity.balance_sheets.order_by('-as_of_date').first()
-            context['accounts'] = entity.accounts.all()
+            
+            # Calculate current balances for all accounts from GL entries
+            accounts = entity.accounts.all()
+            accounts_with_balances = []
+            
+            for account in accounts:
+                debits = account.ledger_entries.filter(entry_type='DEBIT').aggregate(
+                    total=models.Sum('amount')
+                )['total'] or Decimal('0.00')
+                credits = account.ledger_entries.filter(entry_type='CREDIT').aggregate(
+                    total=models.Sum('amount')
+                )['total'] or Decimal('0.00')
+                
+                # Determine if debit-based or credit-based account
+                is_debit_based = account.account_type in ['ASSET', 'EXPENSE']
+                
+                if is_debit_based:
+                    current_balance = debits - credits
+                else:
+                    current_balance = credits - debits
+                
+                accounts_with_balances.append({
+                    'account': account,
+                    'current_balance': current_balance,
+                    'debits': debits,
+                    'credits': credits
+                })
+            
+            context['accounts'] = accounts_with_balances
         
         return context
 
@@ -610,6 +639,27 @@ class TrialBalanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.order_by('-as_of_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity = self.request.entity
+        
+        # Generate trial balance for today
+        if entity:
+            from datetime import date
+            today = date.today()
+            
+            # Calculate trial balance from GL entries
+            tb_data = calculate_trial_balance(entity, today)
+            
+            if tb_data:
+                context['trial_balance'] = tb_data.get('trial_balance')
+                context['account_balances'] = tb_data.get('account_balances', [])
+                context['total_debits'] = tb_data.get('total_debits', 0)
+                context['total_credits'] = tb_data.get('total_credits', 0)
+                context['is_balanced'] = tb_data.get('is_balanced', False)
+        
+        return context
 
 
 class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):

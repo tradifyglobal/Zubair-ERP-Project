@@ -186,36 +186,44 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for account in accounts|slice:":10" %}
+                                        {% for item in accounts|slice:":10" %}
                                         <tr>
                                             <td>
-                                                <strong>{{ account.account_number }}</strong>
+                                                <strong>{{ item.account.account_number }}</strong>
                                             </td>
-                                            <td>{{ account.name }}</td>
+                                            <td>{{ item.account.name }}</td>
                                             <td>
-                                                {% if account.account_type == 'ASSET' %}
-                                                    <span class="badge bg-primary-subtle text-primary">{{ account.get_account_type_display }}</span>
-                                                {% elif account.account_type == 'LIABILITY' %}
-                                                    <span class="badge bg-warning-subtle text-warning">{{ account.get_account_type_display }}</span>
-                                                {% elif account.account_type == 'EQUITY' %}
-                                                    <span class="badge bg-info-subtle text-info">{{ account.get_account_type_display }}</span>
-                                                {% elif account.account_type == 'INCOME' %}
-                                                    <span class="badge bg-success-subtle text-success">{{ account.get_account_type_display }}</span>
+                                                {% if item.account.account_type == 'ASSET' %}
+                                                    <span class="badge bg-primary-subtle text-primary">{{ item.account.get_account_type_display }}</span>
+                                                {% elif item.account.account_type == 'LIABILITY' %}
+                                                    <span class="badge bg-warning-subtle text-warning">{{ item.account.get_account_type_display }}</span>
+                                                {% elif item.account.account_type == 'EQUITY' %}
+                                                    <span class="badge bg-info-subtle text-info">{{ item.account.get_account_type_display }}</span>
+                                                {% elif item.account.account_type == 'INCOME' %}
+                                                    <span class="badge bg-success-subtle text-success">{{ item.account.get_account_type_display }}</span>
                                                 {% else %}
-                                                    <span class="badge bg-danger-subtle text-danger">{{ account.get_account_type_display }}</span>
+                                                    <span class="badge bg-danger-subtle text-danger">{{ item.account.get_account_type_display }}</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ account.currency.code }}</td>
-                                            <td><strong>{{ account.opening_balance }}</strong></td>
+                                            <td>{{ item.account.currency.code }}</td>
                                             <td>
-                                                {% if account.is_active %}
+                                                <strong>
+                                                    {% if item.current_balance >= 0 %}
+                                                        <span class="text-dark">{{ item.current_balance|floatformat:2 }}</span>
+                                                    {% else %}
+                                                        <span class="text-danger">({{ item.current_balance|floatformat:2 }})</span>
+                                                    {% endif %}
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                {% if item.account.is_active %}
                                                     <span class="badge bg-success-subtle text-success">Active</span>
                                                 {% else %}
                                                     <span class="badge bg-danger-subtle text-danger">Inactive</span>
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{% url 'accounting:account_detail' account.id %}" class="btn btn-sm btn-info">
+                                                <a href="{% url 'accounting:account_detail' item.account.id %}" class="btn btn-sm btn-info">
                                                     <i class="mdi mdi-eye"></i> View
                                                 </a>
                                             </td>
