@@ -115,19 +115,29 @@ class InvoiceForm(forms.ModelForm):
         
         # total_amount will be auto-calculated via JavaScript - keep writable for calculation
         self.fields['total_amount'].widget.attrs['title'] = 'Auto-calculated from Subtotal + Tax Amount'
+        # Make total_amount not required since it will be calculated by JavaScript
+        self.fields['total_amount'].required = False
     
     def clean(self):
         """Convert tax percentage to actual tax amount before saving."""
         cleaned_data = super().clean()
         subtotal = cleaned_data.get('subtotal')
         tax_percentage = cleaned_data.get('tax_amount')
+        total_amount = cleaned_data.get('total_amount')
         
-        # If both subtotal and tax_percentage are provided, calculate actual tax amount
-        if subtotal and tax_percentage is not None:
-            # tax_percentage is entered by user as percentage (e.g., 18 for 18%)
-            # Convert to actual amount: tax_amount = subtotal * (tax_percentage / 100)
-            tax_amount = subtotal * (tax_percentage / 100)
-            cleaned_data['tax_amount'] = tax_amount
+        # If subtotal is provided, ensure tax_amount and total_amount are set
+        if subtotal:
+            # Convert tax_percentage to actual amount
+            if tax_percentage is not None:
+                tax_amount = subtotal * (tax_percentage / 100)
+                cleaned_data['tax_amount'] = tax_amount
+            else:
+                tax_amount = 0
+                cleaned_data['tax_amount'] = 0
+            
+            # Calculate total_amount if not provided
+            if not total_amount:
+                cleaned_data['total_amount'] = subtotal + tax_amount
         
         return cleaned_data
     
