@@ -11,7 +11,7 @@ class StakeholderForm(forms.ModelForm):
         model = Stakeholder
         fields = [
             'entity', 'stakeholder_type', 'status', 
-            'first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender',
+            'first_name', 'last_name', 'middle_name', 'father_name', 'date_of_birth', 'gender',
             'company_name', 'registration_number', 'company_type',
             'email', 'phone_number', 'secondary_phone', 'fax',
             'passport_number', 'aadhar_number', 'pan_sin_number',
@@ -61,6 +61,9 @@ class StakeholderForm(forms.ModelForm):
                     Column('first_name', css_class='col-md-4'),
                     Column('middle_name', css_class='col-md-4'),
                     Column('last_name', css_class='col-md-4'),
+                ),
+                Row(
+                    Column('father_name', css_class='col-md-12'),
                 ),
                 Row(
                     Column('date_of_birth', css_class='col-md-6'),
