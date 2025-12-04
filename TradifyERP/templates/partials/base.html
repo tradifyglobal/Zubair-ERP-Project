@@ -191,7 +191,6 @@
         /* Main content should not have additional top margin since layout-wrapper has padding */
         .main-content {
             margin-top: 0 !important;
-            margin-left: 0 !important;
             margin-right: 0 !important;
             padding-top: 0 !important;
             position: relative !important;
@@ -200,20 +199,16 @@
             box-sizing: border-box !important;
         }
         
-        /* In vertical layout, add margin-left to main content to prevent sidebar overlap */
-        body:not([data-layout="horizontal"]) .main-content {
+        /* In vertical layout (fluid AND boxed), always add left margin */
+        body[data-layout="vertical"] .main-content,
+        body[data-layout="vertical"] .content {
             margin-left: 250px !important;
-            transition: margin-left 0.3s ease !important;
-        }
-        
-        /* When sidebar is hidden/collapsed in vertical layout, remove margin */
-        body:not([data-layout="horizontal"]) .vertical-menu.hide ~ .main-content {
-            margin-left: 0 !important;
         }
         
         /* Mobile: sidebar should overlay content */
         @media (max-width: 992px) {
-            body:not([data-layout="horizontal"]) .main-content {
+            body[data-layout="vertical"] .main-content,
+            body[data-layout="vertical"] .content {
                 margin-left: 0 !important;
             }
         }
