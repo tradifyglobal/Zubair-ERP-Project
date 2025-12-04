@@ -611,6 +611,10 @@
             display: none !important;
         }
         
+        .navbar-brand-box .logo-light {
+            display: block !important;
+        }
+        
         body[data-bs-theme="dark"] .navbar-brand-box .logo-dark {
             display: block !important;
         }
@@ -620,14 +624,14 @@
         }
         
         body[data-bs-theme="light"] .navbar-brand-box .logo-light {
-            display: none !important;
-        }
-        
-        body[data-bs-theme="light"] .navbar-brand-box .logo-dark {
             display: block !important;
         }
         
-        /* Vertical layout - ensure logo is visible and navbar-brand-box is proper size */
+        body[data-bs-theme="light"] .navbar-brand-box .logo-dark {
+            display: none !important;
+        }
+        
+        /* Vertical layout - ensure only one logo is visible and navbar-brand-box is proper size */
         body:not([data-layout="horizontal"]) .navbar-brand-box {
             max-height: 70px !important;
             min-height: 70px !important;
