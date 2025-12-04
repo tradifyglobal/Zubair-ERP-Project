@@ -162,7 +162,9 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
             overflow: hidden !important;
             display: flex !important;
-            width: auto !important;
+            width: 100vw !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         /* Push content below fixed navbar */
@@ -664,14 +666,18 @@
             padding-left: 0 !important;
             padding-right: 0 !important;
             box-sizing: border-box !important;
+            display: flex !important;
+            overflow: visible !important;
         }
         
         #page-topbar .navbar-header .d-flex {
             width: 100% !important;
+            flex: 1 !important;
+            overflow: visible !important;
         }
         
         #page-topbar .navbar-header .d-flex:last-child {
-            padding-right: 1.5rem;
+            padding-right: 1.5rem !important;
         }
         
         /* Hide/Show logos based on theme to prevent duplication - STRICT RULES */
