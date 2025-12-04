@@ -606,29 +606,49 @@
             padding-right: 1.5rem;
         }
         
-        /* Hide/Show logos based on theme to prevent duplication */
+        /* Hide/Show logos based on theme to prevent duplication - STRICT RULES */
         .navbar-brand-box .logo-dark {
             display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         .navbar-brand-box .logo-light {
             display: block !important;
+            visibility: visible !important;
         }
         
         body[data-bs-theme="dark"] .navbar-brand-box .logo-dark {
             display: block !important;
+            visibility: visible !important;
+            width: auto !important;
+            height: auto !important;
         }
         
         body[data-bs-theme="dark"] .navbar-brand-box .logo-light {
             display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         body[data-bs-theme="light"] .navbar-brand-box .logo-light {
             display: block !important;
+            visibility: visible !important;
         }
         
         body[data-bs-theme="light"] .navbar-brand-box .logo-dark {
             display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         /* Vertical layout - ensure only one logo is visible and navbar-brand-box is proper size */
