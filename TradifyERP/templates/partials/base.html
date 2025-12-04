@@ -761,6 +761,8 @@
             width: 20px !important;
             height: 20px !important;
             stroke-width: 2 !important;
+            font-size: 20px !important;
+            line-height: 20px !important;
         }
         
         .layout-mode-dark {
@@ -1291,40 +1293,23 @@
             (function() {
                 console.log('[Icon Fix] Starting icon initialization');
                 
-                // Function to initialize and render feather icons
-                function initializeFeatherIcons() {
-                    if (typeof feather !== 'undefined') {
-                        try {
-                            // First, clean up any invalid data-feather attributes
-                            document.querySelectorAll('[data-feather]').forEach(function(el) {
-                                var iconName = el.getAttribute('data-feather');
-                                if (!iconName || iconName.trim() === '') {
-                                    el.removeAttribute('data-feather');
-                                }
-                            });
-                            
-                            // Replace all feather icons
-                            feather.replace();
-                            console.log('[Icon Fix] Feather icons replaced');
-                            
-                            // Fix icon colors and styling
-                            fixIconStyling();
-                            
-                            // Ensure Bootstrap dropdowns work
-                            ensureDropdownsWork();
-                            
-                        } catch (e) {
-                            console.error('[Icon Fix] Error during initialization:', e);
-                        }
-                    }
-                }
+                // Skip feather replacement for header icons - keep them as <i> tags
+                // This avoids event handler conflicts with dropdowns
                 
-                // Function to apply styling to all icons
                 function fixIconStyling() {
                     var isDark = document.body.getAttribute('data-bs-theme') === 'dark';
-                    var strokeColor = isDark ? '#ffffff' : '#545a6d';  // Use header-item color
+                    var strokeColor = isDark ? '#ffffff' : '#545a6d';
                     
-                    // Fix all header item SVGs
+                    // Style all header item icons (both SVG and i tags)
+                    document.querySelectorAll('.header-item i[data-feather]').forEach(function(icon) {
+                        icon.style.display = 'inline-block';
+                        icon.style.opacity = '1';
+                        icon.style.visibility = 'visible';
+                        icon.style.color = strokeColor;
+                        icon.style.width = '20px';
+                        icon.style.height = '20px';
+                    });
+                    
                     document.querySelectorAll('.header-item svg').forEach(function(svg) {
                         svg.setAttribute('stroke', strokeColor);
                         svg.setAttribute('fill', 'none');
@@ -1336,54 +1321,19 @@
                         svg.style.visibility = 'visible';
                     });
                     
-                    console.log('[Icon Fix] Icon styling applied, color:', strokeColor);
+                    console.log('[Icon Fix] Icon styling applied');
                 }
                 
-                // Function to ensure dropdowns work
-                function ensureDropdownsWork() {
-                    // Delay to ensure Bootstrap is fully loaded
-                    if (typeof bootstrap === 'undefined') {
-                        console.warn('[Icon Fix] Bootstrap not ready, retrying...');
-                        setTimeout(ensureDropdownsWork, 100);
-                        return;
-                    }
-                    
-                    // Find all dropdown toggle buttons
-                    document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function(btn) {
-                        // Remove old listeners
-                        btn.onclick = null;
-                        
-                        // Create new Bootstrap dropdown instance
-                        try {
-                            var instance = new bootstrap.Dropdown(btn, {
-                                autoClose: true
-                            });
-                            console.log('[Icon Fix] Dropdown instance created for:', btn.className);
-                        } catch (e) {
-                            console.error('[Icon Fix] Error creating dropdown:', e);
-                        }
-                    });
-                }
-                
-                // Initialize when Bootstrap is loaded
-                function waitForBootstrap() {
-                    if (typeof bootstrap !== 'undefined' && typeof bootstrap.Dropdown !== 'undefined') {
-                        console.log('[Icon Fix] Bootstrap ready, initializing...');
-                        setTimeout(initializeFeatherIcons, 200);
-                    } else {
-                        console.log('[Icon Fix] Waiting for Bootstrap...');
-                        setTimeout(waitForBootstrap, 100);
-                    }
-                }
-                
-                // Start waiting for Bootstrap
+                // Initialize icon styling when DOM is ready
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', waitForBootstrap);
+                    document.addEventListener('DOMContentLoaded', function() {
+                        setTimeout(fixIconStyling, 100);
+                    });
                 } else {
-                    waitForBootstrap();
+                    setTimeout(fixIconStyling, 100);
                 }
                 
-                // Watch for theme changes and update icon colors
+                // Watch for theme changes
                 var observer = new MutationObserver(function(mutations) {
                     mutations.forEach(function(mutation) {
                         if (mutation.attributeName === 'data-bs-theme') {
