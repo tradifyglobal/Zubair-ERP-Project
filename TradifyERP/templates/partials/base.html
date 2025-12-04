@@ -1293,23 +1293,38 @@
             (function() {
                 console.log('[Icon Fix] Starting icon initialization');
                 
-                // Skip feather replacement for header icons - keep them as <i> tags
-                // This avoids event handler conflicts with dropdowns
+                // Wait for page to be fully loaded AFTER app.js runs
+                function initIconsAfterApp() {
+                    // Only replace feather icons in the header
+                    if (typeof feather !== 'undefined') {
+                        try {
+                            // Find and replace only header icons
+                            var headerIcons = document.querySelectorAll('#page-topbar [data-feather]');
+                            console.log('[Icon Fix] Found ' + headerIcons.length + ' header icons to replace');
+                            
+                            // Replace them
+                            feather.replace({
+                                width: 20,
+                                height: 20,
+                                'stroke-width': 2
+                            });
+                            
+                            console.log('[Icon Fix] Feather icons replaced');
+                            
+                            // Apply styling
+                            fixIconStyling();
+                            
+                        } catch (e) {
+                            console.error('[Icon Fix] Error:', e);
+                        }
+                    }
+                }
                 
                 function fixIconStyling() {
                     var isDark = document.body.getAttribute('data-bs-theme') === 'dark';
                     var strokeColor = isDark ? '#ffffff' : '#545a6d';
                     
-                    // Style all header item icons (both SVG and i tags)
-                    document.querySelectorAll('.header-item i[data-feather]').forEach(function(icon) {
-                        icon.style.display = 'inline-block';
-                        icon.style.opacity = '1';
-                        icon.style.visibility = 'visible';
-                        icon.style.color = strokeColor;
-                        icon.style.width = '20px';
-                        icon.style.height = '20px';
-                    });
-                    
+                    // Style all header item SVGs (after replacement)
                     document.querySelectorAll('.header-item svg').forEach(function(svg) {
                         svg.setAttribute('stroke', strokeColor);
                         svg.setAttribute('fill', 'none');
@@ -1324,13 +1339,13 @@
                     console.log('[Icon Fix] Icon styling applied');
                 }
                 
-                // Initialize icon styling when DOM is ready
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        setTimeout(fixIconStyling, 100);
-                    });
+                // Initialize AFTER all scripts are loaded
+                if (document.readyState === 'complete') {
+                    setTimeout(initIconsAfterApp, 500);
                 } else {
-                    setTimeout(fixIconStyling, 100);
+                    window.addEventListener('load', function() {
+                        setTimeout(initIconsAfterApp, 500);
+                    });
                 }
                 
                 // Watch for theme changes
