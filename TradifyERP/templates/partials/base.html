@@ -752,6 +752,33 @@
             padding: 0 !important;
         }
         
+        /* Ensure header icons are always visible */
+        .header-item i[data-feather],
+        .header-item svg {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 20px !important;
+            height: 20px !important;
+            stroke-width: 2 !important;
+        }
+        
+        .layout-mode-dark {
+            display: none !important;
+        }
+        
+        .layout-mode-light {
+            display: inline-block !important;
+        }
+        
+        body[data-bs-theme="dark"] .layout-mode-dark {
+            display: inline-block !important;
+        }
+        
+        body[data-bs-theme="dark"] .layout-mode-light {
+            display: none !important;
+        }
+        
         /* Vertical layout - ensure only one logo is visible and navbar-brand-box is proper size */
         body:not([data-layout="horizontal"]) .navbar-brand-box {
             max-height: 70px !important;
