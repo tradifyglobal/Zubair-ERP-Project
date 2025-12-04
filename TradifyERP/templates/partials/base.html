@@ -51,21 +51,37 @@
 
     <!-- <body data-layout="horizontal"> -->
     <style>
-        /* Boxed layout - extend width for better use of space */
+        /* Boxed layout - full width from sidebar to right edge */
         body[data-layout-size="boxed"] {
             background-position: 0 0;
         }
 
         body[data-layout-size="boxed"] #layout-wrapper {
-            max-width: 1400px !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            width: 95% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            width: 100% !important;
+        }
+
+        body[data-layout-size="boxed"] .main-content {
+            width: 100% !important;
+            margin-left: 250px !important;
         }
 
         body[data-layout-size="boxed"] .container-fluid {
             max-width: 100% !important;
             width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        body[data-layout-size="boxed"] .page-content {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
         }
 
         /* Full width header alignment for horizontal layout */
