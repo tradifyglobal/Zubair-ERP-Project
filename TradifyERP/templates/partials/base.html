@@ -100,6 +100,19 @@
             margin-left: 0 !important;
             left: 0 !important;
             right: 0 !important;
+            pointer-events: auto !important;
+            z-index: 1050 !important;
+        }
+        
+        /* Ensure topbar children are clickable */
+        body:not([data-layout="horizontal"]) #page-topbar * {
+            pointer-events: auto !important;
+        }
+        
+        /* Ensure dropdowns work in vertical layout */
+        body:not([data-layout="horizontal"]) .dropdown-menu {
+            pointer-events: auto !important;
+            z-index: 1051 !important;
         }
 
         /* MASTER RULE: Main content ALWAYS has 250px left margin in all vertical layouts (fluid + boxed) */
