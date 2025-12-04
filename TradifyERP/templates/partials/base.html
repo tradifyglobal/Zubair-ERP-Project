@@ -1018,13 +1018,10 @@
                 direction: savedDirection
             });
             
-            // Force horizontal layout
-            localStorage.setItem('minia-layout', 'horizontal');
-            
             // 2. Set the body data-layout attribute BEFORE app.js reads it
-            // Force horizontal layout only
-            document.body.setAttribute('data-layout', 'horizontal');
-            console.log('[Layout Init] Forced horizontal layout');
+            // Respect user's saved layout preference (vertical or horizontal)
+            document.body.setAttribute('data-layout', savedLayout);
+            console.log('[Layout Init] Applied layout:', savedLayout);
             
             // 3. Set the body data-bs-theme attribute for dark/light mode
             if (savedTheme === 'dark') {
@@ -1076,39 +1073,8 @@
                 console.log('[Layout Init] Applied LTR direction');
             }
             
-            // 5. Override all redirect methods to block layout redirects
-            const blockLayoutRedirects = (targetUrl) => {
-                if (targetUrl && (targetUrl.includes('/apps/horizontal') || targetUrl === '/')) {
-                    console.log('[Layout Block] Redirect blocked:', targetUrl);
-                    return false; // Block redirect
-                }
-                return true; // Allow other redirects
-            };
-            
-            // Override href setter
-            Object.defineProperty(Location.prototype, 'href', {
-                set: function(url) {
-                    if (!blockLayoutRedirects(url)) return;
-                    window.history.pushState({}, '', url);
-                },
-                get: function() {
-                    return window.location.toString();
-                }
-            });
-            
-            // Override replace method
-            const originalReplace = window.location.replace;
-            window.location.replace = function(url) {
-                if (!blockLayoutRedirects(url)) return;
-                originalReplace.call(window.location, url);
-            };
-            
-            // Override assign method
-            const originalAssign = window.location.assign;
-            window.location.assign = function(url) {
-                if (!blockLayoutRedirects(url)) return;
-                originalAssign.call(window.location, url);
-            };
+            // Layout preference will be respected - no forced redirects
+            console.log('[Layout Init] Layout initialization complete');
         })();
     </script>
     <div id="layout-wrapper">
