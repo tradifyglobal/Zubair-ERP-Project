@@ -866,6 +866,48 @@
             background-color: #fff !important;
         }
 
+        /* Topbar dark theme - entire navbar becomes dark */
+        body[data-topbar="dark"] #page-topbar {
+            background-color: #1f2937 !important;
+            background-image: none !important;
+        }
+
+        body[data-topbar="dark"] #page-topbar .navbar-header {
+            background-color: #1f2937 !important;
+        }
+
+        body[data-topbar="dark"] .navbar-brand-box {
+            background-color: #1f2937 !important;
+        }
+
+        /* Topbar dark theme - text and icons */
+        body[data-topbar="dark"] #page-topbar .navbar-nav .nav-link,
+        body[data-topbar="dark"] #page-topbar .header-item,
+        body[data-topbar="dark"] #page-topbar .navbar-brand-box .logo-txt {
+            color: #e5e7eb !important;
+        }
+
+        body[data-topbar="dark"] #page-topbar .navbar-nav .nav-link:hover,
+        body[data-topbar="dark"] #page-topbar .header-item:hover {
+            color: #fff !important;
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Topbar dark theme - dropdown menus */
+        body[data-topbar="dark"] #page-topbar .dropdown-menu {
+            background-color: #111827 !important;
+            border-color: #374151 !important;
+        }
+
+        body[data-topbar="dark"] #page-topbar .dropdown-item {
+            color: #e5e7eb !important;
+        }
+
+        body[data-topbar="dark"] #page-topbar .dropdown-item:hover {
+            background-color: #374151 !important;
+            color: #fff !important;
+        }
+
         /* Ensure page content starts below fixed navbar */
         body {
             padding-top: 0 !important;
