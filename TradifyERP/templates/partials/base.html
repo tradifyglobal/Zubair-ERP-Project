@@ -100,19 +100,7 @@
             margin-left: 0 !important;
             left: 0 !important;
             right: 0 !important;
-            pointer-events: auto !important;
             z-index: 1050 !important;
-        }
-        
-        /* Ensure topbar children are clickable */
-        body:not([data-layout="horizontal"]) #page-topbar * {
-            pointer-events: auto !important;
-        }
-        
-        /* Ensure dropdowns work in vertical layout */
-        body:not([data-layout="horizontal"]) .dropdown-menu {
-            pointer-events: auto !important;
-            z-index: 1051 !important;
         }
 
         /* MASTER RULE: Main content ALWAYS has 250px left margin in all vertical layouts (fluid + boxed) */
@@ -1301,79 +1289,20 @@
         <script src="{% static 'libs/feather-icons/dist/feather.min.js' %}"></script>
         <script src="{% static 'libs/pace-js/pace.min.js' %}"></script>
 
-        <!-- Fix Feather icon visibility and functionality -->
+        <!-- Feather icons initialization -->
         <script>
+            // Simple initialization - just ensure feather icons are replaced globally
             (function() {
-                console.log('[Icon Fix] Starting icon initialization');
-                
-                // Wait for page to be fully loaded AFTER app.js runs
-                function initIconsAfterApp() {
-                    // Only replace feather icons in the header
+                // Wait for page load, then replace feather icons
+                window.addEventListener('load', function() {
                     if (typeof feather !== 'undefined') {
                         try {
-                            // Find and replace only header icons
-                            var headerIcons = document.querySelectorAll('#page-topbar [data-feather]');
-                            console.log('[Icon Fix] Found ' + headerIcons.length + ' header icons to replace');
-                            
-                            // Replace them
-                            feather.replace({
-                                width: 20,
-                                height: 20,
-                                'stroke-width': 2
-                            });
-                            
-                            console.log('[Icon Fix] Feather icons replaced');
-                            
-                            // Apply styling
-                            fixIconStyling();
-                            
+                            feather.replace();
+                            console.log('[Icon Init] Feather icons replaced');
                         } catch (e) {
-                            console.error('[Icon Fix] Error:', e);
+                            console.error('[Icon Init] Error:', e);
                         }
                     }
-                }
-                
-                function fixIconStyling() {
-                    var isDark = document.body.getAttribute('data-bs-theme') === 'dark';
-                    var strokeColor = isDark ? '#ffffff' : '#545a6d';
-                    
-                    // Style all header item SVGs (after replacement)
-                    document.querySelectorAll('.header-item svg').forEach(function(svg) {
-                        svg.setAttribute('stroke', strokeColor);
-                        svg.setAttribute('fill', 'none');
-                        svg.setAttribute('stroke-width', '2');
-                        svg.style.width = '20px';
-                        svg.style.height = '20px';
-                        svg.style.display = 'inline-block';
-                        svg.style.opacity = '1';
-                        svg.style.visibility = 'visible';
-                    });
-                    
-                    console.log('[Icon Fix] Icon styling applied');
-                }
-                
-                // Initialize AFTER all scripts are loaded
-                if (document.readyState === 'complete') {
-                    setTimeout(initIconsAfterApp, 500);
-                } else {
-                    window.addEventListener('load', function() {
-                        setTimeout(initIconsAfterApp, 500);
-                    });
-                }
-                
-                // Watch for theme changes
-                var observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.attributeName === 'data-bs-theme') {
-                            console.log('[Icon Fix] Theme changed, updating icon colors');
-                            fixIconStyling();
-                        }
-                    });
-                });
-                
-                observer.observe(document.body, {
-                    attributes: true,
-                    attributeFilter: ['data-bs-theme']
                 });
             })();
         </script>
