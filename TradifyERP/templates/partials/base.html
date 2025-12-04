@@ -165,6 +165,7 @@
             width: 100vw !important;
             margin: 0 !important;
             padding: 0 !important;
+            margin-left: calc(50% - 50vw) !important;
         }
 
         /* Push content below fixed navbar */
@@ -668,16 +669,29 @@
             box-sizing: border-box !important;
             display: flex !important;
             overflow: visible !important;
+            max-width: none !important;
         }
         
         #page-topbar .navbar-header .d-flex {
             width: 100% !important;
             flex: 1 !important;
             overflow: visible !important;
+            max-width: none !important;
+        }
+        
+        #page-topbar .navbar-header .d-flex:first-child {
+            flex: 0 1 auto !important;
         }
         
         #page-topbar .navbar-header .d-flex:last-child {
             padding-right: 1.5rem !important;
+            flex: 1 !important;
+            justify-content: flex-end !important;
+        }
+        
+        #page-topbar .app-search {
+            margin-right: 0 !important;
+            margin-left: auto !important;
         }
         
         /* Hide/Show logos based on theme to prevent duplication - STRICT RULES */
