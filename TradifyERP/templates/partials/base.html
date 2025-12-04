@@ -1286,84 +1286,79 @@
         <script src="{% static 'libs/feather-icons/dist/feather.min.js' %}"></script>
         <script src="{% static 'libs/pace-js/pace.min.js' %}"></script>
 
-        <!-- Fix Feather icon visibility IMMEDIATELY after library loads -->
+        <!-- Fix Feather icon visibility and functionality -->
         <script>
             (function() {
-                console.log('[Icon Fix] Starting icon visibility fix');
+                console.log('[Icon Fix] Starting icon initialization');
                 
-                // First, manually call feather.replace() to ensure icons are rendered
-                if (typeof feather !== 'undefined') {
-                    try {
-                        // Remove any invalid data-feather attributes that might cause errors
-                        document.querySelectorAll('[data-feather]').forEach(function(el) {
-                            var iconName = el.getAttribute('data-feather');
-                            if (!iconName || iconName.trim() === '') {
-                                console.warn('[Icon Fix] Removing empty data-feather attribute from:', el);
-                                el.removeAttribute('data-feather');
-                            }
-                        });
-                        
-                        feather.replace();
-                        console.log('[Icon Fix] Called feather.replace()');
-                    } catch (e) {
-                        console.error('[Icon Fix] Error calling feather.replace():', e);
+                // Function to initialize and render feather icons
+                function initializeFeatherIcons() {
+                    if (typeof feather !== 'undefined') {
+                        try {
+                            // First, clean up any invalid data-feather attributes
+                            document.querySelectorAll('[data-feather]').forEach(function(el) {
+                                var iconName = el.getAttribute('data-feather');
+                                if (!iconName || iconName.trim() === '') {
+                                    el.removeAttribute('data-feather');
+                                }
+                            });
+                            
+                            // Replace all feather icons
+                            feather.replace();
+                            console.log('[Icon Fix] Feather icons replaced');
+                            
+                            // Fix icon colors and styling
+                            fixIconStyling();
+                            
+                        } catch (e) {
+                            console.error('[Icon Fix] Error during initialization:', e);
+                        }
                     }
                 }
                 
-                // Function to fix icon colors based on theme
-                function fixIconColors() {
-                    var fixed = 0;
+                // Function to apply styling to all icons
+                function fixIconStyling() {
                     var isDark = document.body.getAttribute('data-bs-theme') === 'dark';
-                    var strokeColor = isDark ? '#ffffff' : '#000000';  // Changed to black for light mode
+                    var strokeColor = isDark ? '#ffffff' : '#545a6d';  // Use header-item color
                     
-                    console.log('[Icon Fix] Theme:', isDark ? 'dark' : 'light', 'Using color:', strokeColor);
-                    
-                    document.querySelectorAll('.header-item svg, .header-item i[data-feather]').forEach(function(el) {
-                        if (el.tagName === 'svg') {
-                            el.setAttribute('stroke', strokeColor);
-                            el.setAttribute('fill', 'none');
-                            el.setAttribute('style', 'stroke: ' + strokeColor + ' !important; fill: none !important; opacity: 1 !important; visibility: visible !important; display: inline-block !important; width: 20px !important; height: 20px !important;');
-                            fixed++;
-                        }
+                    // Fix all header item SVGs
+                    document.querySelectorAll('.header-item svg').forEach(function(svg) {
+                        svg.setAttribute('stroke', strokeColor);
+                        svg.setAttribute('fill', 'none');
+                        svg.setAttribute('stroke-width', '2');
+                        svg.style.width = '20px';
+                        svg.style.height = '20px';
+                        svg.style.display = 'inline-block';
+                        svg.style.opacity = '1';
+                        svg.style.visibility = 'visible';
                     });
-                    console.log('[Icon Fix] Fixed ' + fixed + ' icons');
-                    return fixed;
+                    
+                    console.log('[Icon Fix] Icon styling applied, color:', strokeColor);
                 }
                 
-                // Fix icons immediately when DOM is ready
+                // Initialize when DOM is ready
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function() {
-                        setTimeout(fixIconColors, 100);
-                        setTimeout(fixIconColors, 500);
-                        setTimeout(fixIconColors, 1000);
-                        setTimeout(fixIconColors, 2000);
+                        setTimeout(initializeFeatherIcons, 100);
+                        setTimeout(fixIconStyling, 300);
+                        setTimeout(fixIconStyling, 800);
                     });
                 } else {
-                    setTimeout(fixIconColors, 100);
-                    setTimeout(fixIconColors, 500);
-                    setTimeout(fixIconColors, 1000);
-                    setTimeout(fixIconColors, 2000);
+                    setTimeout(initializeFeatherIcons, 100);
+                    setTimeout(fixIconStyling, 300);
                 }
                 
-                // Watch for new SVGs being added and theme changes
+                // Watch for theme changes and update icon colors
                 var observer = new MutationObserver(function(mutations) {
-                    var shouldFix = false;
                     mutations.forEach(function(mutation) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'data-bs-theme') {
-                            shouldFix = true;
-                        }
-                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                            shouldFix = true;
+                        if (mutation.attributeName === 'data-bs-theme') {
+                            console.log('[Icon Fix] Theme changed, updating icon colors');
+                            fixIconStyling();
                         }
                     });
-                    if (shouldFix) {
-                        setTimeout(fixIconColors, 50);
-                    }
                 });
                 
                 observer.observe(document.body, {
-                    childList: true,
-                    subtree: true,
                     attributes: true,
                     attributeFilter: ['data-bs-theme']
                 });
