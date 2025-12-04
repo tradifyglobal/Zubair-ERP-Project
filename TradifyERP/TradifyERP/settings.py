@@ -196,6 +196,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
+    # Include local static assets
+    BASE_DIR / 'static',
     # Include Starterkit static assets so the Tradify Global theme is served
     str(ADMIN_PATH / 'static'),
 ]
