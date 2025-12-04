@@ -150,7 +150,7 @@
             box-sizing: border-box !important;
         }
 
-        /* Navbar must be fixed and sticky */
+        /* Navbar must be fixed and sticky - extends to full viewport */
         #page-topbar {
             position: fixed !important;
             top: 0 !important;
@@ -158,6 +158,7 @@
             right: 0 !important;
             z-index: 1050 !important;
             width: 100vw !important;
+            margin-left: calc(-100vw / 2 + 50%) !important;
             height: 70px !important;
             box-sizing: border-box !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
@@ -166,7 +167,7 @@
 
         /* Push content below fixed navbar */
         .vertical-layout-header {
-            position: fixed !important;
+            position: relative !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;
@@ -648,11 +649,12 @@
         #page-topbar {
             padding-left: 0 !important;
             padding-right: 0 !important;
-            width: 100% !important;
+            width: 100vw !important;
             left: 0 !important;
             right: 0 !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
+            position: fixed !important;
         }
         
         #page-topbar .navbar-header {
