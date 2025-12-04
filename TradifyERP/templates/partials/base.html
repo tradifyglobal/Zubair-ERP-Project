@@ -51,24 +51,23 @@
 
     <!-- <body data-layout="horizontal"> -->
     <style>
-        /* Boxed layout - full width from sidebar to right edge */
-        body[data-layout-size="boxed"] {
+        /* Boxed layout - full width from sidebar to right edge (horizontal layout only) */
+        body[data-layout="horizontal"][data-layout-size="boxed"] {
             background-position: 0 0;
         }
 
-        body[data-layout-size="boxed"] #layout-wrapper {
+        body[data-layout="horizontal"][data-layout-size="boxed"] #layout-wrapper {
             max-width: 100% !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
             width: 100% !important;
         }
 
-        body[data-layout-size="boxed"] .main-content {
+        body[data-layout="horizontal"][data-layout-size="boxed"] .main-content {
             width: 100% !important;
-            margin-left: 250px !important;
         }
 
-        body[data-layout-size="boxed"] .container-fluid {
+        body[data-layout="horizontal"][data-layout-size="boxed"] .container-fluid {
             max-width: 100% !important;
             width: 100% !important;
             margin-left: 0 !important;
@@ -77,11 +76,22 @@
             padding-right: 0 !important;
         }
 
-        body[data-layout-size="boxed"] .page-content {
+        body[data-layout="horizontal"][data-layout-size="boxed"] .page-content {
             margin-left: 0 !important;
             margin-right: 0 !important;
             padding-left: 1.5rem !important;
             padding-right: 1.5rem !important;
+        }
+
+        /* Boxed layout for vertical - maintain sidebar spacing */
+        body:not([data-layout="horizontal"])[data-layout-size="boxed"] #layout-wrapper {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        body:not([data-layout="horizontal"])[data-layout-size="boxed"] .main-content {
+            width: calc(100% - 250px) !important;
+            margin-left: 250px !important;
         }
 
         /* Full width header alignment for horizontal layout */
