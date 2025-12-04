@@ -606,6 +606,27 @@
             padding-right: 1.5rem;
         }
         
+        /* Hide/Show logos based on theme to prevent duplication */
+        .navbar-brand-box .logo-dark {
+            display: none !important;
+        }
+        
+        body[data-bs-theme="dark"] .navbar-brand-box .logo-dark {
+            display: block !important;
+        }
+        
+        body[data-bs-theme="dark"] .navbar-brand-box .logo-light {
+            display: none !important;
+        }
+        
+        body[data-bs-theme="light"] .navbar-brand-box .logo-light {
+            display: none !important;
+        }
+        
+        body[data-bs-theme="light"] .navbar-brand-box .logo-dark {
+            display: block !important;
+        }
+        
         .navbar-brand-box .logo-lg img {
             max-height: 24px;
             max-width: 100%;
