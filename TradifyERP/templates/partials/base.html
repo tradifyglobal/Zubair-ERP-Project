@@ -140,6 +140,25 @@
             width: 100% !important;
             box-sizing: border-box !important;
         }
+        
+        /* In vertical layout, add margin-left to main content to prevent sidebar overlap */
+        body:not([data-layout="horizontal"]) .main-content {
+            margin-left: 0 !important;
+            transition: margin-left 0.3s ease !important;
+        }
+        
+        /* When sidebar is visible in vertical layout, push content to the right */
+        body:not([data-layout="horizontal"]) .vertical-menu.show ~ .main-content,
+        body:not([data-layout="horizontal"]).sidebar-enable .main-content {
+            margin-left: 250px !important;
+        }
+        
+        /* Mobile: sidebar should overlay content */
+        @media (max-width: 992px) {
+            body:not([data-layout="horizontal"]).sidebar-enable .main-content {
+                margin-left: 0 !important;
+            }
+        }
 
         /* Page content positioning */
         .page-content {
@@ -317,29 +336,38 @@
         /* Constrain navbar-brand-box and logo */
         .navbar-brand-box {
             max-height: 70px;
-            overflow: hidden;
-            padding-left: 2.5rem !important;
-            padding-right: 0 !important;
+            min-width: 250px;
+            width: 250px;
+            overflow: visible !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1rem !important;
             display: flex !important;
             align-items: center !important;
+            background: inherit !important;
         }
         
         .navbar-brand-box .logo {
             margin-left: 0 !important;
             padding-left: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
         }
         
         /* Fix logo size ONLY in vertical layout */
         body:not([data-layout="horizontal"]) .navbar-brand-box .logo img {
             max-height: 24px !important;
-            max-width: 100% !important;
+            width: auto !important;
             object-fit: contain !important;
+            display: inline-block !important;
         }
         
         body:not([data-layout="horizontal"]) .navbar-brand-box .logo-txt {
-            font-size: 18px !important;
+            font-size: 16px !important;
             line-height: 24px !important;
             vertical-align: middle !important;
+            margin-left: 8px !important;
+            font-weight: 600 !important;
         }
         
         /* Horizontal layout specific - FORCE DISPLAY */
