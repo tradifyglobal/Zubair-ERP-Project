@@ -202,19 +202,18 @@
         
         /* In vertical layout, add margin-left to main content to prevent sidebar overlap */
         body:not([data-layout="horizontal"]) .main-content {
-            margin-left: 0 !important;
+            margin-left: 250px !important;
             transition: margin-left 0.3s ease !important;
         }
         
-        /* When sidebar is visible in vertical layout, push content to the right */
-        body:not([data-layout="horizontal"]) .vertical-menu.show ~ .main-content,
-        body:not([data-layout="horizontal"]).sidebar-enable .main-content {
-            margin-left: 250px !important;
+        /* When sidebar is hidden/collapsed in vertical layout, remove margin */
+        body:not([data-layout="horizontal"]) .vertical-menu.hide ~ .main-content {
+            margin-left: 0 !important;
         }
         
         /* Mobile: sidebar should overlay content */
         @media (max-width: 992px) {
-            body:not([data-layout="horizontal"]).sidebar-enable .main-content {
+            body:not([data-layout="horizontal"]) .main-content {
                 margin-left: 0 !important;
             }
         }
