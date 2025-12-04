@@ -102,6 +102,18 @@
             right: 0 !important;
         }
 
+        /* MASTER RULE: Main content ALWAYS has 250px left margin in all vertical layouts (fluid + boxed) */
+        body:not([data-layout="horizontal"]) .main-content {
+            margin-left: 250px !important;
+            width: calc(100% - 250px) !important;
+        }
+
+        /* MASTER RULE: Content inside main-content should NOT have left margin (sidebar is outside main-content) */
+        body:not([data-layout="horizontal"]) .main-content > .content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+
         /* Full width header alignment for horizontal layout */
         body[data-layout="horizontal"] .navbar-header {
             max-width: 100% !important;
@@ -174,6 +186,7 @@
             margin: 0 !important;
             padding: 0 !important;
             margin-left: calc(50% - 50vw) !important;
+            padding-right: 20px !important;
         }
 
         /* Push content below fixed navbar */
@@ -667,7 +680,7 @@
             margin-left: 0 !important;
             margin-right: 0 !important;
             padding-left: 0 !important;
-            padding-right: 0 !important;
+            padding-right: 15px !important;
             box-sizing: border-box !important;
             display: flex !important;
             overflow: visible !important;
@@ -686,13 +699,14 @@
         }
         
         #page-topbar .navbar-header .d-flex:last-child {
-            padding-right: 1.5rem !important;
+            padding-right: 0 !important;
             flex: 1 !important;
             justify-content: flex-end !important;
+            margin-right: 0 !important;
         }
         
         #page-topbar .app-search {
-            margin-right: 0 !important;
+            margin-right: 15px !important;
             margin-left: auto !important;
         }
         
@@ -788,13 +802,6 @@
         }
         
         /* Vertical layout main content - proper spacing with sidebar */
-        body:not([data-layout="horizontal"]) .main-content {
-            margin-left: 250px !important;
-            margin-top: 70px !important;
-            width: calc(100% - 250px) !important;
-            min-height: calc(100vh - 70px) !important;
-        }
-        
         /* Fix page title overflow */
         .page-title-box {
             margin-top: 0 !important;
@@ -860,7 +867,7 @@
         
         body:not([data-layout="horizontal"]) .main-content {
             order: 2;
-            margin-left: 0 !important;
+            margin-left: 250px !important;
         }
         
         .main-content .content {
@@ -1048,15 +1055,6 @@
             padding-top: 1.5rem !important;
             margin-top: 70px !important;
         }        /* Main content wrapper */
-        body:not([data-layout="horizontal"]) .main-content {
-            display: block !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            margin-top: 0 !important;
-            width: 100% !important;
-            height: calc(100vh - 70px) !important;
-        }
-        
         body[data-layout="horizontal"] .main-content {
             flex: 1 !important;
             overflow-y: auto !important;
