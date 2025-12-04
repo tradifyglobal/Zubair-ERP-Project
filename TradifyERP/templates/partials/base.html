@@ -1310,8 +1310,8 @@
                             // Fix icon colors and styling
                             fixIconStyling();
                             
-                            // Reinitialize Bootstrap dropdowns for header items
-                            reinitializeBootstrapDropdowns();
+                            // Ensure Bootstrap dropdowns work
+                            ensureDropdownsWork();
                             
                         } catch (e) {
                             console.error('[Icon Fix] Error during initialization:', e);
@@ -1339,34 +1339,48 @@
                     console.log('[Icon Fix] Icon styling applied, color:', strokeColor);
                 }
                 
-                // Function to reinitialize Bootstrap dropdowns
-                function reinitializeBootstrapDropdowns() {
-                    // Find all dropdown buttons and dispose/recreate them
-                    document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function(btn) {
-                        // Get existing instance
-                        var dropdownInstance = bootstrap.Dropdown.getInstance(btn);
-                        
-                        // If instance exists, dispose it
-                        if (dropdownInstance) {
-                            dropdownInstance.dispose();
-                        }
-                        
-                        // Create new instance
-                        new bootstrap.Dropdown(btn);
-                    });
+                // Function to ensure dropdowns work
+                function ensureDropdownsWork() {
+                    // Delay to ensure Bootstrap is fully loaded
+                    if (typeof bootstrap === 'undefined') {
+                        console.warn('[Icon Fix] Bootstrap not ready, retrying...');
+                        setTimeout(ensureDropdownsWork, 100);
+                        return;
+                    }
                     
-                    console.log('[Icon Fix] Bootstrap dropdowns reinitialized');
+                    // Find all dropdown toggle buttons
+                    document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function(btn) {
+                        // Remove old listeners
+                        btn.onclick = null;
+                        
+                        // Create new Bootstrap dropdown instance
+                        try {
+                            var instance = new bootstrap.Dropdown(btn, {
+                                autoClose: true
+                            });
+                            console.log('[Icon Fix] Dropdown instance created for:', btn.className);
+                        } catch (e) {
+                            console.error('[Icon Fix] Error creating dropdown:', e);
+                        }
+                    });
                 }
                 
-                // Initialize when DOM is ready
+                // Initialize when Bootstrap is loaded
+                function waitForBootstrap() {
+                    if (typeof bootstrap !== 'undefined' && typeof bootstrap.Dropdown !== 'undefined') {
+                        console.log('[Icon Fix] Bootstrap ready, initializing...');
+                        setTimeout(initializeFeatherIcons, 200);
+                    } else {
+                        console.log('[Icon Fix] Waiting for Bootstrap...');
+                        setTimeout(waitForBootstrap, 100);
+                    }
+                }
+                
+                // Start waiting for Bootstrap
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        setTimeout(initializeFeatherIcons, 100);
-                        setTimeout(fixIconStyling, 300);
-                    });
+                    document.addEventListener('DOMContentLoaded', waitForBootstrap);
                 } else {
-                    setTimeout(initializeFeatherIcons, 100);
-                    setTimeout(fixIconStyling, 300);
+                    waitForBootstrap();
                 }
                 
                 // Watch for theme changes and update icon colors
