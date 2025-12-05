@@ -5930,10 +5930,10 @@ svgo@^0.7.0:
     sax "~1.2.1"
     whet.extend "~0.9.9"
 
-sweetalert2@^11.8.0:
-  version "11.10.1"
-  resolved "https://registry.yarnpkg.com/sweetalert2/-/sweetalert2-11.10.1.tgz#783e18c90bcde72039e26e4b943573e83cf55afe"
-  integrity sha512-qu145oBuFfjYr5yZW9OSdG6YmRxDf8CnkgT/sXMfrXGe+asFy2imC2vlaLQ/L/naZ/JZna1MPAY56G4qYM0VUQ==
+sweetalert2@^11.22.4:
+  version "11.22.4"
+  resolved "https://registry.yarnpkg.com/sweetalert2/-/sweetalert2-11.22.4.tgz#772e6448cef4e753c6c429e96d233b7e701210ed"
+  integrity sha512-JwcRODfozxiKmspFp+xctZ2izAmLAKbRPcoLMEW7LdugN/YmNrX1LT7hdBW87qsgupEO1ukBBuB17KzKFKW0tg==
 
 swiper@^11.0.3:
   version "11.0.5"
