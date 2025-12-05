@@ -1,11 +1,14 @@
 from django.shortcuts import render
-from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum, Q, F
 from django.utils import timezone
+from django.urls import reverse_lazy
+from django.contrib import messages
 from datetime import timedelta
 
 from .models import Project, Task, TimeEntry, ResourceAllocation, ProjectKPI
+from .forms import ProjectForm, TaskForm, TimeEntryForm
 
 
 class ProjectDashboardView(LoginRequiredMixin, TemplateView):
@@ -106,3 +109,76 @@ class TimeEntryListView(LoginRequiredMixin, ListView):
     
     def get_queryset(self):
         return TimeEntry.objects.select_related('project', 'employee', 'task').order_by('-entry_date')
+
+
+class ProjectCreateView(LoginRequiredMixin, CreateView):
+    """Create a new project."""
+    model = Project
+    form_class = ProjectForm
+    template_name = 'projects/project_form.html'
+    success_url = reverse_lazy('projects:project_list')
+    
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        messages.success(self.request, 'Project created successfully.')
+        return super().form_valid(form)
+
+
+class ProjectUpdateView(LoginRequiredMixin, UpdateView):
+    """Update an existing project."""
+    model = Project
+    form_class = ProjectForm
+    template_name = 'projects/project_form.html'
+    success_url = reverse_lazy('projects:project_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Project updated successfully.')
+        return super().form_valid(form)
+
+
+class TaskCreateView(LoginRequiredMixin, CreateView):
+    """Create a new task."""
+    model = Task
+    form_class = TaskForm
+    template_name = 'projects/task_form.html'
+    success_url = reverse_lazy('projects:task_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Task created successfully.')
+        return super().form_valid(form)
+
+
+class TaskUpdateView(LoginRequiredMixin, UpdateView):
+    """Update an existing task."""
+    model = Task
+    form_class = TaskForm
+    template_name = 'projects/task_form.html'
+    success_url = reverse_lazy('projects:task_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Task updated successfully.')
+        return super().form_valid(form)
+
+
+class TimeEntryCreateView(LoginRequiredMixin, CreateView):
+    """Create a new time entry."""
+    model = TimeEntry
+    form_class = TimeEntryForm
+    template_name = 'projects/timeentry_form.html'
+    success_url = reverse_lazy('projects:timeentry_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Time entry created successfully.')
+        return super().form_valid(form)
+
+
+class TimeEntryUpdateView(LoginRequiredMixin, UpdateView):
+    """Update an existing time entry."""
+    model = TimeEntry
+    form_class = TimeEntryForm
+    template_name = 'projects/timeentry_form.html'
+    success_url = reverse_lazy('projects:timeentry_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Time entry updated successfully.')
+        return super().form_valid(form)

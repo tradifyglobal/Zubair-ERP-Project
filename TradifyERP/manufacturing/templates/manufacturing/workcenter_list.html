@@ -47,15 +47,15 @@
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
                                     <thead class="table-light">
-                                        <tr><th>Code</th><th>Name</th><th>Location</th><th>Capacity</th><th>Created</th><th>Actions</th></tr>
+                                        <tr><th>Code</th><th>Name</th><th>Std Hours/Day</th><th>Labor Cost/Hr</th><th>Created</th><th>Actions</th></tr>
                                     </thead>
                                     <tbody>
                                         {% for item in object_list %}
                                         <tr>
                                             <td><strong>{{ item.code }}</strong></td>
                                             <td>{{ item.name }}</td>
-                                            <td>{{ item.location|default:"—" }}</td>
-                                            <td>{{ item.capacity_per_hour|default:"—" }}</td>
+                                            <td>{{ item.standard_hours_per_day }}</td>
+                                            <td>{{ item.labor_cost_per_hour }}</td>
                                             <td>{{ item.created_at|date:"d M Y" }}</td>
                                             <td>
                                                 <div class="btn-group btn-group-sm">

@@ -13,8 +13,8 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="page-title mb-0">Cash Positions</h4>
-                        <a href="#" class="btn btn-primary btn-sm">Add Position</a>
+                        <h4 class="page-title mb-0">Cash Position</h4>
+                        <a href="{% url 'cash_management:position_create' %}" class="btn btn-primary btn-sm">Add Position</a>
                     </div>
                 </div>
             </div>
@@ -44,7 +44,7 @@
                                             <td>{{ position.closing_balance|floatformat:2 }}</td>
                                             <td>{{ position.currency.code }}</td>
                                             <td>
-                                                <a href="#" class="btn btn-sm btn-info">View</a>
+                                                <a href="{% url 'cash_management:position_detail' position.pk %}" class="btn btn-sm btn-info">View</a>
                                             </td>
                                         </tr>
                                         {% empty %}

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from accounting.mixins import SessionEntityMixin
 from django.urls import reverse_lazy
 from django.db.models import Q, Sum, F
 from django.utils import timezone
@@ -13,7 +14,7 @@ from .forms import (
 )
 
 
-class APDashboardView(LoginRequiredMixin, TemplateView):
+class APDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """AP Module Dashboard - overview of bills, payments, and aging."""
     template_name = 'ap/dashboard.html'
     login_url = 'login'
@@ -51,7 +52,7 @@ class APDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class VendorBillListView(LoginRequiredMixin, ListView):
+class VendorBillListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all vendor bills with filtering and search."""
     model = VendorBill
     template_name = 'ap/vendorbill_list.html'
@@ -88,7 +89,7 @@ class VendorBillListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class VendorBillDetailView(LoginRequiredMixin, DetailView):
+class VendorBillDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display detailed view of a vendor bill with line items."""
     model = VendorBill
     template_name = 'ap/vendorbill_detail.html'
@@ -103,7 +104,7 @@ class VendorBillDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class VendorBillCreateView(LoginRequiredMixin, CreateView):
+class VendorBillCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new vendor bill."""
     model = VendorBill
     form_class = VendorBillForm
@@ -116,7 +117,7 @@ class VendorBillCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class VendorBillUpdateView(LoginRequiredMixin, UpdateView):
+class VendorBillUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing vendor bill."""
     model = VendorBill
     form_class = VendorBillForm
@@ -125,7 +126,7 @@ class VendorBillUpdateView(LoginRequiredMixin, UpdateView):
     login_url = 'login'
 
 
-class VendorBillApproveView(LoginRequiredMixin, UpdateView):
+class VendorBillApproveView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Approve a vendor bill."""
     model = VendorBill
     fields = []
@@ -139,7 +140,7 @@ class VendorBillApproveView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class VendorBillPostView(LoginRequiredMixin, UpdateView):
+class VendorBillPostView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Post a vendor bill to GL (creates GL entries)."""
     model = VendorBill
     fields = []
@@ -161,7 +162,7 @@ class VendorBillPostView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class VendorPaymentListView(LoginRequiredMixin, ListView):
+class VendorPaymentListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all vendor payments with filtering and search."""
     model = VendorPayment
     template_name = 'ap/vendorpayment_list.html'
@@ -193,7 +194,7 @@ class VendorPaymentListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class VendorPaymentDetailView(LoginRequiredMixin, DetailView):
+class VendorPaymentDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display detailed view of a vendor payment."""
     model = VendorPayment
     template_name = 'ap/vendorpayment_detail.html'
@@ -207,7 +208,7 @@ class VendorPaymentDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class VendorPaymentCreateView(LoginRequiredMixin, CreateView):
+class VendorPaymentCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new vendor payment."""
     model = VendorPayment
     form_class = VendorPaymentForm
@@ -220,7 +221,7 @@ class VendorPaymentCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class VendorPaymentUpdateView(LoginRequiredMixin, UpdateView):
+class VendorPaymentUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing vendor payment."""
     model = VendorPayment
     form_class = VendorPaymentForm
@@ -229,7 +230,7 @@ class VendorPaymentUpdateView(LoginRequiredMixin, UpdateView):
     login_url = 'login'
 
 
-class APAgingReportView(LoginRequiredMixin, TemplateView):
+class APAgingReportView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """Generate AP Aging Report - summary of unpaid bills by age."""
     template_name = 'ap/aging_report.html'
     login_url = 'login'

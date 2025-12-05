@@ -116,7 +116,7 @@
                         <div class="card-header align-items-center d-flex">
                             <h4 class="card-title mb-0 flex-grow-1">Vendor Payments</h4>
                             <div class="flex-shrink-0">
-                                <a href="{% url 'admin:accounting_vendorpayment_add' %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'accounting:vendor_payment_create' %}" class="btn btn-sm btn-primary">
                                     <i class="mdi mdi-plus"></i> New Payment
                                 </a>
                             </div>
@@ -209,7 +209,7 @@
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                     <li>
-                                                        <a class="dropdown-item" href="{% url 'admin:accounting_vendorpayment_change' payment.id %}">
+                                                        <a class="dropdown-item" href="{% url 'accounting:vendor_payment_edit' payment.id %}">
                                                             <i class="mdi mdi-pencil"></i> Edit
                                                         </a>
                                                     </li>
@@ -229,7 +229,7 @@
                             {% else %}
                             <div class="alert alert-info m-4" role="alert">
                                 <i class="mdi mdi-information"></i> No vendor payments found. 
-                                <a href="{% url 'admin:accounting_vendorpayment_add' %}" class="alert-link">Create a new payment</a>
+                                <a href="{% url 'accounting:vendor_payment_create' %}" class="alert-link">Create a new payment</a>
                             </div>
                             {% endif %}
                         </div>

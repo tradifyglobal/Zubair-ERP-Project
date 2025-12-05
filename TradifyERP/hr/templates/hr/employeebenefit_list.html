@@ -1,0 +1,51 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Employee Benefits - HR Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8"><h1 class="h3">Employee Benefits</h1></div>
+        <div class="col-md-4 text-end"><a href="{% url 'hr:employeebenefit-create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Assign Benefit</a></div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6"><input type="text" name="search" class="form-control" placeholder="Search by employee name..." value="{{ request.GET.search }}"></div>
+                <div class="col-md-2"><button type="submit" class="btn btn-secondary w-100"><i class="fas fa-search"></i> Filter</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr>
+                    <th>Employee</th>
+                    <th>Benefit</th>
+                    <th>Enrollment Date</th>
+                    <th>Termination Date</th>
+                    <th>Employee Contribution</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr></thead>
+                <tbody>
+                    {% for eb in employee_benefits %}
+                    <tr>
+                        <td>{{ eb.employee.first_name }} {{ eb.employee.last_name }}</td>
+                        <td>{{ eb.benefit.name }}</td>
+                        <td>{{ eb.enrollment_date|date:"M d, Y" }}</td>
+                        <td>{{ eb.termination_date|date:"M d, Y"|default:"--" }}</td>
+                        <td>{{ eb.employee_contribution|default:"--" }}</td>
+                        <td><span class="badge {% if eb.is_active %}bg-success{% else %}bg-danger{% endif %}">{% if eb.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                        <td><a href="{% url 'hr:employeebenefit-update' eb.pk %}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+                    </tr>
+                    {% empty %}<tr><td colspan="7" class="text-center text-muted py-4">No employee benefits</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

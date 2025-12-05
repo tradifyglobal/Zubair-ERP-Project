@@ -935,6 +935,18 @@ class DistributorOrder(models.Model):
         ('CANCELLED', 'Cancelled'),
     ]
     
+    PAYMENT_TERM_CHOICES = [
+        ('NET_30', 'Net 30'),
+        ('NET_60', 'Net 60'),
+        ('NET_90', 'Net 90'),
+        ('COD', 'Cash On Delivery'),
+        ('PREPAID', 'Prepaid'),
+        ('2_10_NET_30', '2/10 Net 30'),
+        ('3_10_NET_30', '3/10 Net 30'),
+        ('1_15_NET_45', '1/15 Net 45'),
+        ('CUSTOM', 'Custom Terms'),
+    ]
+    
     entity = models.ForeignKey(
         'accounting.Entity',
         on_delete=models.CASCADE,
@@ -965,7 +977,7 @@ class DistributorOrder(models.Model):
     total_amount = models.DecimalField(max_digits=18, decimal_places=2)
     
     # Terms
-    payment_terms = models.CharField(max_length=50, blank=True)
+    payment_terms = models.CharField(max_length=50, choices=PAYMENT_TERM_CHOICES, default='NET_30', blank=True)
     
     # Tracking
     is_posted = models.BooleanField(default=False)
@@ -1214,6 +1226,14 @@ class WarrantyRegistration(models.Model):
         ('PREMIUM', 'Premium'),
     ]
     
+    # Entity (required for multi-tenant data segregation)
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='warranty_registrations',
+        default=1
+    )
+    
     # Warranty Details
     warranty_number = models.CharField(max_length=50, unique=True, db_index=True)
     warranty_type = models.CharField(max_length=20, choices=WARRANTY_TYPE, default='STANDARD')
@@ -1267,6 +1287,13 @@ class WarrantyRegistration(models.Model):
 
 class DistributorPerformance(models.Model):
     """Track distributor performance metrics."""
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='distributor_performance_metrics',
+        default=1
+    )
     
     distributor = models.ForeignKey(
         Distributor,
@@ -1457,3 +1484,363 @@ class DistributorPerformance(models.Model):
     def __str__(self):
         return f"{self.distributor.distributor_name} - {self.performance_month}/{self.performance_year}"
 
+
+# ===== ADDITIONAL MANUFACTURING MASTERS =====
+
+class Workstation(models.Model):
+    """Physical workstations/machines on the plant floor."""
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='workstations'
+    )
+    
+    workstation_code = models.CharField(max_length=50, unique=True, db_index=True)
+    workstation_name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    
+    # Machine/Equipment Details
+    workstation_type = models.CharField(max_length=50)  # e.g., CNC, Assembly, Testing, etc.
+    capacity_per_hour = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        help_text="Units per hour"
+    )
+    
+    # Location & Status
+    plant_floor_section = models.CharField(max_length=100, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('ACTIVE', 'Active'),
+            ('MAINTENANCE', 'Under Maintenance'),
+            ('INACTIVE', 'Inactive'),
+        ],
+        default='ACTIVE'
+    )
+    
+    # Costing
+    hourly_rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_workstation'
+        ordering = ['workstation_code']
+        unique_together = ('entity', 'workstation_code')
+    
+    def __str__(self):
+        return f"{self.workstation_name} ({self.workstation_code})"
+
+
+class Operation(models.Model):
+    """Manufacturing operations performed at workstations."""
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='operations'
+    )
+    
+    operation_code = models.CharField(max_length=50, unique=True, db_index=True)
+    operation_name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    
+    # Requirements
+    workstation = models.ForeignKey(
+        Workstation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='operations'
+    )
+    
+    # Timing & Cost
+    standard_time_minutes = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)]
+    )
+    
+    cost_per_unit = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_operation'
+        ordering = ['operation_code']
+        unique_together = ('entity', 'operation_code')
+    
+    def __str__(self):
+        return f"{self.operation_name} ({self.operation_code})"
+
+
+class StockEntry(models.Model):
+    """Stock/Inventory transactions for raw materials and finished goods."""
+    
+    ENTRY_TYPE_CHOICES = [
+        ('INWARD', 'Inward/Receipt'),
+        ('OUTWARD', 'Outward/Issue'),
+        ('TRANSFER', 'Transfer'),
+        ('PRODUCTION', 'Production Output'),
+        ('SCRAP', 'Scrap'),
+        ('ADJUSTMENT', 'Adjustment'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='stock_entries'
+    )
+    
+    entry_id = models.CharField(max_length=50, unique=True, db_index=True)
+    entry_type = models.CharField(max_length=20, choices=ENTRY_TYPE_CHOICES)
+    entry_date = models.DateTimeField(default=timezone.now)
+    
+    # Source & Destination
+    source_warehouse = models.CharField(max_length=100, blank=True)
+    destination_warehouse = models.CharField(max_length=100, blank=True)
+    
+    # Item & Quantity
+    item = models.ForeignKey(
+        RawMaterial,
+        on_delete=models.PROTECT,
+        related_name='stock_entries'
+    )
+    quantity = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)]
+    )
+    
+    unit_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    
+    # Reference
+    reference_type = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="e.g., PurchaseOrder, ProductionOrder, Transfer"
+    )
+    reference_id = models.IntegerField(null=True, blank=True)
+    
+    # Details
+    remarks = models.TextField(blank=True)
+    
+    # Audit
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='stock_entries_created'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_stock_entry'
+        ordering = ['-entry_date']
+        indexes = [
+            models.Index(fields=['entry_date', 'entry_type']),
+            models.Index(fields=['item', 'entry_date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.entry_id} - {self.get_entry_type_display()} - {self.quantity} {self.item.unit_of_measure}"
+
+
+class JobCard(models.Model):
+    """Job card for production floor - tracks work progress."""
+    
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('RELEASED', 'Released'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='job_cards'
+    )
+    
+    job_card_id = models.CharField(max_length=50, unique=True, db_index=True)
+    
+    # Link to Production Order
+    production_order = models.ForeignKey(
+        ProductionOrder,
+        on_delete=models.CASCADE,
+        related_name='job_cards'
+    )
+    
+    # Operation Details
+    operation = models.ForeignKey(
+        Operation,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='job_cards'
+    )
+    
+    # Execution
+    workstation = models.ForeignKey(
+        Workstation,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='job_cards'
+    )
+    
+    assigned_to = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_job_cards'
+    )
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    
+    # Timing
+    scheduled_start_date = models.DateTimeField()
+    scheduled_end_date = models.DateTimeField()
+    actual_start_date = models.DateTimeField(null=True, blank=True)
+    actual_end_date = models.DateTimeField(null=True, blank=True)
+    
+    # Quantities
+    quantity_to_produce = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)]
+    )
+    quantity_produced = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    quantity_rejected = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    
+    # Notes
+    instructions = models.TextField(blank=True)
+    remarks = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'manufacturing_job_card'
+        ordering = ['-scheduled_start_date']
+        indexes = [
+            models.Index(fields=['production_order', 'status']),
+            models.Index(fields=['workstation', 'status']),
+        ]
+    
+    def __str__(self):
+        return f"{self.job_card_id} - {self.operation}"
+    
+    def get_progress_percentage(self):
+        """Calculate production progress percentage."""
+        if self.quantity_to_produce == 0:
+            return 0
+        return int((self.quantity_produced / self.quantity_to_produce) * 100)
+
+
+class DowntimeEntry(models.Model):
+    """Track production downtime on plant floor."""
+    
+    DOWNTIME_REASON_CHOICES = [
+        ('MACHINE_BREAKDOWN', 'Machine Breakdown'),
+        ('MATERIAL_SHORTAGE', 'Material Shortage'),
+        ('WORKER_ABSENCE', 'Worker Absence'),
+        ('POWER_FAILURE', 'Power Failure'),
+        ('QUALITY_ISSUE', 'Quality Issue'),
+        ('SETUP_TIME', 'Setup Time'),
+        ('MAINTENANCE', 'Maintenance'),
+        ('OTHER', 'Other'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='downtime_entries'
+    )
+    
+    downtime_id = models.CharField(max_length=50, unique=True, db_index=True)
+    
+    job_card = models.ForeignKey(
+        JobCard,
+        on_delete=models.CASCADE,
+        related_name='downtime_entries'
+    )
+    
+    workstation = models.ForeignKey(
+        Workstation,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='downtime_entries'
+    )
+    
+    downtime_reason = models.CharField(max_length=30, choices=DOWNTIME_REASON_CHOICES)
+    
+    # Timing
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    
+    # Duration (auto-calculated)
+    duration_minutes = models.IntegerField(help_text="Duration in minutes")
+    
+    # Details
+    description = models.TextField()
+    corrective_action = models.TextField(blank=True)
+    
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='downtime_entries_created'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'manufacturing_downtime_entry'
+        ordering = ['-start_time']
+        indexes = [
+            models.Index(fields=['workstation', 'start_time']),
+            models.Index(fields=['job_card', 'start_time']),
+        ]
+    
+    def save(self, *args, **kwargs):
+        """Calculate duration before saving."""
+        if self.start_time and self.end_time:
+            delta = self.end_time - self.start_time
+            self.duration_minutes = int(delta.total_seconds() / 60)
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.downtime_id} - {self.get_downtime_reason_display()}"

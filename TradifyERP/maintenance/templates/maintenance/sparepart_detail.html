@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ spare_part.part_name }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">{{ spare_part.part_name }}</h5></div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted"><small>Part Code</small></label>
+                            <p><strong>{{ spare_part.part_code }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted"><small>Unit Cost</small></label>
+                            <p><strong>${{ spare_part.unit_cost }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted"><small>Current Stock</small></label>
+                            <p><strong>{{ spare_part.current_stock }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted"><small>Reorder Level</small></label>
+                            <p><strong>{{ spare_part.reorder_level }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted"><small>Supplier</small></label>
+                        <p>{{ spare_part.supplier|default:"N/A" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted"><small>Status</small></label>
+                        <p><span class="badge bg-{% if spare_part.is_active %}success{% else %}danger{% endif %}">{{ spare_part.is_active|yesno:"Active,Inactive" }}</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'maintenance:sparepart-update' spare_part.pk %}" class="btn btn-warning w-100 mb-2"><i data-feather="edit"></i> Edit</a>
+                    <a href="{% url 'maintenance:sparepart-list' %}" class="btn btn-secondary w-100"><i data-feather="arrow-left"></i> Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

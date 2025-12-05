@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Audit Details{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">Audit Report</h5></div>
+                <div class="card-body">
+                    <p><strong>Date:</strong> {{ audit.audit_date|date:"Y-m-d" }}</p>
+                    <p><strong>Result:</strong> <span class="badge bg-{% if audit.audit_result == 'Pass' %}success{% elif audit.audit_result == 'Fail' %}danger{% else %}warning{% endif %}">{{ audit.audit_result }}</span></p>
+                    <p><strong>Findings:</strong></p>
+                    <p>{{ audit.findings|default:"N/A" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'maintenance:audit-update' audit.pk %}" class="btn btn-warning w-100 mb-2"><i data-feather="edit"></i> Edit</a>
+                    <a href="{% url 'maintenance:audit-list' %}" class="btn btn-secondary w-100"><i data-feather="arrow-left"></i> Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

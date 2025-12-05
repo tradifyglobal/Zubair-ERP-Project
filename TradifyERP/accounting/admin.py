@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 from .models import (
     Entity, Currency, Account, LedgerEntry, TrialBalance, ProfitLossReport,
     BalanceSheet, CashFlowForecast, CashTransaction, BankProfile, BankStatement,
@@ -7,16 +9,101 @@ from .models import (
     Customer, Vendor, VendorInvoice, VendorPayment,
     FixedAsset, DeferredExpense, DeferredRevenue,
     PeriodLock, AuditLog,
-    Stakeholder, CapitalContribution, Shareholding
+    Stakeholder, CapitalContribution, Shareholding, UserEntity,
+    CashReceiptLine, CashPaymentLine, BankReceiptLine, BankPaymentLine
 )
+from .models_theme import Theme, UserThemePreference
+from .module_permissions import ModulePermission
 
 
-@admin.register(Entity)
+# ==================== Module Permissions ====================
+
+class ModulePermissionInline(admin.TabularInline):
+    """Inline admin for module permissions - allows editing permissions directly in User admin."""
+    model = ModulePermission
+    fk_name = 'user'  # Specify which ForeignKey to use for the inline
+    extra = 0
+    fields = ('module', 'can_view', 'can_add', 'can_edit', 'can_delete', 'can_review', 'can_approve', 'can_export', 'is_active')
+    readonly_fields = ('module',)
+    
+    def get_queryset(self, request):
+        """Show only active permissions by default."""
+        qs = super().get_queryset(request)
+        return qs.select_related('user')
+
+
+@admin.register(ModulePermission)
+class ModulePermissionAdmin(admin.ModelAdmin):
+    """Admin interface for managing module permissions."""
+    list_display = ('user', 'module', 'permission_summary', 'is_active', 'granted_date')
+    list_filter = ('module', 'is_active', 'granted_date', 'can_view', 'can_add', 'can_edit', 'can_delete')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
+    readonly_fields = ('granted_date', 'created_at', 'updated_at', 'permission_summary')
+    date_hierarchy = 'granted_date'
+    
+    fieldsets = (
+        ('User & Module', {
+            'fields': ('user', 'module')
+        }),
+        ('Permissions', {
+            'fields': ('can_view', 'can_add', 'can_edit', 'can_delete', 'can_review', 'can_approve', 'can_export'),
+            'description': 'Check the permissions this user should have for this module'
+        }),
+        ('Additional Info', {
+            'fields': ('access_level', 'is_active', 'notes'),
+            'classes': ('wide',)
+        }),
+        ('Audit Information', {
+            'fields': ('granted_by', 'granted_date', 'created_at', 'updated_at', 'permission_summary'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        """Set granted_by when creating new permission."""
+        if not change:  # Creating new object
+            obj.granted_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+# Unregister the default User admin and register custom one
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class CustomUserAdmin(BaseUserAdmin):
+    """Extended User admin with module permissions."""
+    inlines = BaseUserAdmin.inlines + (ModulePermissionInline,)
+    
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ('Module Permissions', {
+            'fields': (),
+            'description': 'Manage module permissions using the "Module Permissions" section below'
+        }),
+    )
+
+
+
 class EntityAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'is_active', 'created_at')
     list_filter = ('is_active', 'created_at')
     search_fields = ('code', 'name')
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(UserEntity)
+class UserEntityAdmin(admin.ModelAdmin):
+    list_display = ('user', 'entity', 'is_default', 'can_switch', 'assigned_at')
+    list_filter = ('is_default', 'can_switch', 'entity', 'assigned_at')
+    search_fields = ('user__username', 'user__email', 'entity__name', 'entity__code')
+    readonly_fields = ('assigned_at',)
+    raw_id_fields = ('user', 'entity', 'assigned_by')
+    
+    def save_model(self, request, obj, form, change):
+        """Set assigned_by when creating new UserEntity."""
+        if not change:  # Creating new object
+            obj.assigned_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Currency)
@@ -315,3 +402,157 @@ class ShareholdingAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+# ============ CASH MANAGEMENT ADMIN ============
+
+@admin.register(CashReceiptLine)
+class CashReceiptLineAdmin(admin.ModelAdmin):
+    list_display = ('date', 'entity', 'description', 'debit_amount', 'credit_amount', 'status')
+    list_filter = ('entity', 'status', 'date')
+    search_fields = ('description', 'reference_number')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('account',)
+    
+    fieldsets = (
+        ('General', {
+            'fields': ('entity', 'date', 'description', 'reference_number')
+        }),
+        ('Transaction', {
+            'fields': ('account', 'debit_amount', 'credit_amount', 'status')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(CashPaymentLine)
+class CashPaymentLineAdmin(admin.ModelAdmin):
+    list_display = ('date', 'entity', 'description', 'debit_amount', 'credit_amount', 'status')
+    list_filter = ('entity', 'status', 'date')
+    search_fields = ('description', 'reference_number')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('account',)
+    
+    fieldsets = (
+        ('General', {
+            'fields': ('entity', 'date', 'description', 'reference_number')
+        }),
+        ('Transaction', {
+            'fields': ('account', 'debit_amount', 'credit_amount', 'status')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(BankReceiptLine)
+class BankReceiptLineAdmin(admin.ModelAdmin):
+    list_display = ('date', 'entity', 'debit_amount', 'workflow_status', 'status')
+    list_filter = ('entity', 'status', 'workflow_status', 'date')
+    search_fields = ('description', 'reference_number')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('account', 'credit_account')
+    
+    fieldsets = (
+        ('General', {
+            'fields': ('entity', 'date', 'description', 'reference_number')
+        }),
+        ('Transaction', {
+            'fields': ('account', 'credit_account', 'debit_amount', 'credit_amount', 'status', 'workflow_status')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(BankPaymentLine)
+class BankPaymentLineAdmin(admin.ModelAdmin):
+    list_display = ('date', 'entity', 'debit_amount', 'workflow_status', 'status')
+    list_filter = ('entity', 'status', 'workflow_status', 'date')
+    search_fields = ('description', 'reference_number')
+    readonly_fields = ('created_at', 'updated_at')
+    raw_id_fields = ('account', 'credit_account')
+    
+    fieldsets = (
+        ('General', {
+            'fields': ('entity', 'date', 'description', 'reference_number')
+        }),
+        ('Transaction', {
+            'fields': ('account', 'credit_account', 'debit_amount', 'credit_amount', 'status', 'workflow_status')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+# Theme Management Admin
+@admin.register(Theme)
+class ThemeAdmin(admin.ModelAdmin):
+    list_display = ('display_name', 'name', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'display_name', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('Theme Information', {
+            'fields': ('name', 'display_name', 'description', 'is_active')
+        }),
+        ('Media', {
+            'fields': ('thumbnail_url',),
+            'classes': ('collapse',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(UserThemePreference)
+class UserThemePreferenceAdmin(admin.ModelAdmin):
+    list_display = ('user', 'theme', 'sidebar_color', 'layout_mode')
+    list_filter = ('theme', 'layout_mode', 'created_at')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('user', 'created_at', 'updated_at')
+    
+    fieldsets = (
+        ('User & Theme', {
+            'fields': ('user', 'theme')
+        }),
+        ('Layout Preferences', {
+            'fields': ('sidebar_color', 'layout_mode', 'layout_size')
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        """Prevent manual creation - preferences are auto-created by signal."""
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion - preferences are tied to user."""
+        return False

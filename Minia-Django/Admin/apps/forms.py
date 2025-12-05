@@ -1,7 +1,21 @@
+
 from crispy_forms.helper import FormHelper
 from allauth.account.forms import LoginForm,SignupForm,ChangePasswordForm,ResetPasswordForm,ResetPasswordKeyForm,SetPasswordForm
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
+from .models import Vendor, Invoice
+class InvoiceForm(forms.ModelForm):
+        class Meta:
+                model = Invoice
+                fields = ['vendor', 'invoice_number', 'date', 'amount', 'description']
+        def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.fields['vendor'].queryset = Vendor.objects.all()
+                self.fields['vendor'].widget = forms.Select(attrs={'class': 'form-control'})
+                self.fields['invoice_number'].widget = forms.TextInput(attrs={'class': 'form-control'})
+                self.fields['date'].widget = forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+                self.fields['amount'].widget = forms.NumberInput(attrs={'class': 'form-control'})
+                self.fields['description'].widget = forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
 
 
 class UserLoginForm(LoginForm):

@@ -96,7 +96,7 @@
                         <div class="card-header align-items-center d-flex">
                             <h4 class="card-title mb-0 flex-grow-1">Bank Accounts</h4>
                             <div class="flex-shrink-0">
-                                <a href="{% url 'admin:accounting_bankprofile_add' %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'accounting:bank_profile_create' %}" class="btn btn-sm btn-primary">
                                     <i class="mdi mdi-plus"></i> New Account
                                 </a>
                             </div>
@@ -176,13 +176,13 @@
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                     <li>
-                                                        <a class="dropdown-item" href="{% url 'admin:accounting_bankprofile_change' bank.id %}">
+                                                        <a class="dropdown-item" href="{% url 'accounting:bank_profile_edit' bank.id %}">
                                                             <i class="mdi mdi-pencil"></i> Edit
                                                         </a>
                                                     </li>
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li>
-                                                        <a class="dropdown-item text-danger" href="{% url 'admin:accounting_bankprofile_delete' bank.id %}">
+                                                        <a class="dropdown-item text-danger" href="{% url 'accounting:bank_profile_delete' bank.id %}">
                                                             <i class="mdi mdi-trash-can"></i> Delete
                                                         </a>
                                                     </li>
@@ -196,7 +196,7 @@
                             {% else %}
                             <div class="alert alert-info m-4" role="alert">
                                 <i class="mdi mdi-information"></i> No bank accounts found. 
-                                <a href="{% url 'admin:accounting_bankprofile_add' %}" class="alert-link">Create a new account</a>
+                                <a href="{% url 'accounting:bank_profile_create' %}" class="alert-link">Create a new account</a>
                             </div>
                             {% endif %}
                         </div>

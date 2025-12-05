@@ -21,6 +21,35 @@
             </div>
         </div>
 
+        <!-- Error Messages -->
+        {% if form.non_field_errors %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error:</strong>
+                        {{ form.non_field_errors }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if form.errors %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Form Errors:</strong>
+                        <ul class="mb-0 mt-2">
+                        {% for field, errors in form.errors.items %}
+                            <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                        {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
         <!-- Form Card -->
         <div class="row">
             <div class="col-lg-8">
@@ -29,34 +58,237 @@
                         <h4 class="card-title">Contribution Details</h4>
                     </div>
                     <div class="card-body">
-                        <form method="post" enctype="multipart/form-data">
+                        <form method="post" enctype="multipart/form-data" id="contribution-form">
                             {% csrf_token %}
-                            
-                            {% if form.non_field_errors %}
-                                <div class="alert alert-danger">
-                                    {{ form.non_field_errors }}
-                                </div>
-                            {% endif %}
-
                             {% crispy form %}
-
-                            <div class="row mt-3">
-                                <div class="col-sm-6">
-                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
-                                        <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Record{% endif %}
-                                    </button>
-                                </div>
-                                <div class="col-sm-6 text-end">
-                                    <a href="{% url 'shareholder:capital-contribution-list' %}" class="btn btn-secondary waves-effect waves-light">
-                                        Cancel
-                                    </a>
-                                </div>
-                            </div>
                         </form>
+                        
+                        <!-- Submit buttons OUTSIDE the crispy form to ensure they work -->
+                        <div class="row mt-4">
+                            <div class="col-sm-6">
+                                <button form="contribution-form" type="submit" class="btn btn-primary waves-effect waves-light w-100">
+                                    <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Record Contribution{% endif %}
+                                </button>
+                            </div>
+                            <div class="col-sm-6">
+                                <a href="{% url 'shareholder:capital-contribution-list' %}" class="btn btn-secondary waves-effect waves-light w-100">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Preview Panel -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Document Preview</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="file-preview-container" style="min-height: 400px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; border: 2px dashed #dee2e6;">
+                            <div class="text-center text-muted">
+                                <i class="feather-file" style="font-size: 48px; opacity: 0.5;"></i>
+                                <p class="mt-3">Select a file to preview</p>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-3">
+                            <i class="feather-info"></i> Supported formats: PDF, Images (JPG, PNG, GIF)
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.querySelector('input[name="document_file"]');
+    const previewContainer = document.getElementById('file-preview-container');
+    
+    function showEmptyPreview() {
+        previewContainer.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="feather-file" style="font-size: 48px; opacity: 0.5;"></i>
+                <p class="mt-3">Select a file to preview</p>
+            </div>
+        `;
+    }
+    
+    function showExistingFilePreview(fileName, fileSize, fileUrl) {
+        const displayFileName = fileName.split('/').pop();
+        const fileExtension = displayFileName.split('.').pop().toLowerCase();
+        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+        
+        console.log('Preview details:', {displayFileName, fileExtension, imageExtensions: imageExtensions.includes(fileExtension), fileUrl});
+        
+        // Check if it's an image file
+        if (imageExtensions.includes(fileExtension)) {
+            // Create image element to check if it loads
+            const img = new Image();
+            img.onload = function() {
+                previewContainer.innerHTML = `
+                    <div style="width: 100%; text-align: center;">
+                        <img src="${fileUrl}" style="max-width: 100%; max-height: 350px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <p class="mt-3 mb-0"><strong>${displayFileName}</strong></p>
+                        <small class="text-muted">${fileSize}</small>
+                        <div class="mt-3">
+                            <a href="${fileUrl}" target="_blank" download class="btn btn-sm btn-primary me-2">
+                                <i class="feather-download"></i> Download
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFilePreview()">
+                                <i class="feather-x"></i> Change
+                            </button>
+                        </div>
+                    </div>
+                `;
+            };
+            img.onerror = function() {
+                console.error('Failed to load image from:', fileUrl);
+                // Fallback to display the image anyway or show error
+                previewContainer.innerHTML = `
+                    <div style="width: 100%; text-align: center;">
+                        <div style="background: #f8f9fa; padding: 40px; border-radius: 8px; border: 2px dashed #dee2e6;">
+                            <i class="feather-image" style="font-size: 64px; color: #6c757d; opacity: 0.5;"></i>
+                            <p class="mt-3"><strong>Image File</strong></p>
+                            <p class="mb-2"><strong>${displayFileName}</strong></p>
+                            <small class="text-muted">${fileSize}</small>
+                            <p class="mt-2 text-danger" style="font-size: 12px;">Unable to load image preview. Click download to view.</p>
+                        </div>
+                        <div class="mt-3">
+                            <a href="${fileUrl}" target="_blank" download class="btn btn-sm btn-primary me-2">
+                                <i class="feather-download"></i> Download
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFilePreview()">
+                                <i class="feather-x"></i> Change
+                            </button>
+                        </div>
+                    </div>
+                `;
+            };
+            img.src = fileUrl;
+        }
+        // Check if it's a PDF
+        else if (fileExtension === 'pdf') {
+            previewContainer.innerHTML = `
+                <div style="width: 100%; text-align: center;">
+                    <div style="font-size: 64px; color: #dc3545; margin-bottom: 20px;">
+                        <i class="feather-file-text"></i>
+                    </div>
+                    <p><strong>PDF Document</strong></p>
+                    <p class="mb-2"><strong>${displayFileName}</strong></p>
+                    <small class="text-muted">${fileSize}</small>
+                    <div class="mt-3">
+                        <a href="${fileUrl}" target="_blank" download class="btn btn-sm btn-primary me-2">
+                            <i class="feather-download"></i> Download
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFilePreview()">
+                            <i class="feather-x"></i> Change
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        // Other file types
+        else {
+            previewContainer.innerHTML = `
+                <div style="width: 100%; text-align: center;">
+                    <div style="font-size: 64px; color: #6c757d; margin-bottom: 20px;">
+                        <i class="feather-file"></i>
+                    </div>
+                    <p><strong>File Uploaded</strong></p>
+                    <p class="mb-2"><strong>${displayFileName}</strong></p>
+                    <small class="text-muted">${fileSize}</small>
+                    <div class="mt-3">
+                        <a href="${fileUrl}" target="_blank" download class="btn btn-sm btn-primary me-2">
+                            <i class="feather-download"></i> Download
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFilePreview()">
+                            <i class="feather-x"></i> Change
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    function showNewFilePreview(file) {
+        const fileType = file.type;
+        const fileName = file.name;
+        const fileSize = (file.size / 1024).toFixed(2); // Convert to KB
+        
+        // Check if file is an image
+        if (fileType.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewContainer.innerHTML = `
+                    <div style="width: 100%; text-align: center;">
+                        <img src="${e.target.result}" style="max-width: 100%; max-height: 350px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <p class="mt-3 mb-0"><strong>${fileName}</strong></p>
+                        <small class="text-muted">${fileSize} KB</small>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+        // Check if file is PDF
+        else if (fileType === 'application/pdf') {
+            previewContainer.innerHTML = `
+                <div style="width: 100%; text-align: center;">
+                    <div style="font-size: 64px; color: #dc3545; margin-bottom: 20px;">
+                        <i class="feather-file-text"></i>
+                    </div>
+                    <p><strong>PDF Document</strong></p>
+                    <p class="mb-2"><strong>${fileName}</strong></p>
+                    <small class="text-muted">${fileSize} KB</small>
+                </div>
+            `;
+        }
+        // Other file types
+        else {
+            previewContainer.innerHTML = `
+                <div style="width: 100%; text-align: center;">
+                    <div style="font-size: 64px; color: #6c757d; margin-bottom: 20px;">
+                        <i class="feather-file"></i>
+                    </div>
+                    <p><strong>File Selected</strong></p>
+                    <p class="mb-2"><strong>${fileName}</strong></p>
+                    <small class="text-muted">${fileSize} KB</small>
+                </div>
+            `;
+        }
+    }
+    
+    window.clearFilePreview = function() {
+        fileInput.value = '';
+        showEmptyPreview();
+    };
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (!file) {
+                showEmptyPreview();
+                return;
+            }
+            
+            showNewFilePreview(file);
+        });
+        
+        // Show existing file preview if editing
+        {% if form.instance.document_file %}
+        const fileName = "{{ form.instance.document_file.name }}";
+        const fileSize = "{{ form.instance.document_file.size|filesizeformat }}";
+        const fileUrl = "{{ form.instance.document_file.url }}";
+        console.log('File preview data:', {fileName, fileSize, fileUrl});
+        showExistingFilePreview(fileName, fileSize, fileUrl);
+        {% else %}
+        showEmptyPreview();
+        {% endif %}
+    }
+});
+</script>
 {% endblock %}

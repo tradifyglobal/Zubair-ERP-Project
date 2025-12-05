@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ asset.asset_name }} - Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Asset Details</h4>
+                <div class="page-title-right">
+                    <a href="{% url 'maintenance:asset-update' asset.pk %}" class="btn btn-warning me-2">
+                        <i data-feather="edit"></i> Edit
+                    </a>
+                    <a href="{% url 'maintenance:asset-list' %}" class="btn btn-secondary">
+                        <i data-feather="arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ asset.asset_name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Asset Code</label>
+                            <p class="mb-2"><strong>{{ asset.asset_code }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Status</label>
+                            <p class="mb-2">
+                                <span class="badge {% if asset.status == 'Active' %}bg-success{% elif asset.status == 'Maintenance' %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ asset.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Asset Type</label>
+                            <p class="mb-2">{{ asset.asset_type|default:"N/A" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Location</label>
+                            <p class="mb-2">{{ asset.location|default:"N/A" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Acquisition Date</label>
+                            <p class="mb-2">{{ asset.acquisition_date|date:"Y-m-d"|default:"N/A" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Current Value</label>
+                            <p class="mb-2">${{ asset.current_value|default:"0" }}</p>
+                        </div>
+                    </div>
+
+                    {% if asset.description %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Description</label>
+                        <p class="mb-0">{{ asset.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">Created: {{ asset.created_at|date:"Y-m-d H:i" }}</small>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted float-end">Last Updated: {{ asset.updated_at|date:"Y-m-d H:i" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'maintenance:workorder-create' %}" class="btn btn-sm btn-outline-primary">
+                            <i data-feather="plus"></i> Create Work Order
+                        </a>
+                        <a href="{% url 'maintenance:task-create' %}" class="btn btn-sm btn-outline-primary">
+                            <i data-feather="plus"></i> Create Task
+                        </a>
+                        <a href="{% url 'maintenance:downtime-create' %}" class="btn btn-sm btn-outline-warning">
+                            <i data-feather="alert-circle"></i> Log Downtime
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>
+    feather.replace();
+</script>
+{% endblock %}

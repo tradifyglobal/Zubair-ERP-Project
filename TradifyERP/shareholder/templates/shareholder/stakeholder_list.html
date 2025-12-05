@@ -4,6 +4,83 @@
 {% block title %}Shareholders - Stakeholder Management{% endblock %}
 
 {% block content %}
+<style>
+    /* Hide default Bootstrap backdrop */
+    .modal-backdrop {
+        display: none !important;
+    }
+    
+    /* Custom dark overlay for modal */
+    #importModal.show {
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        pointer-events: auto !important;
+    }
+    
+    /* Make modal content clickable and visible */
+    #importModal .modal-dialog {
+        pointer-events: auto !important;
+        background: transparent;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1061 !important;
+    }
+    
+    /* Modal content styling */
+    #importModal .modal-content {
+        pointer-events: auto !important;
+        background-color: #ffffff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+    }
+    
+    /* Header and footer */
+    #importModal .modal-header,
+    #importModal .modal-body,
+    #importModal .modal-footer {
+        pointer-events: auto !important;
+    }
+    
+    /* Form elements */
+    #importModal .form-control,
+    #importModal .form-label,
+    #importModal .form-check-input,
+    #importModal .form-check-label,
+    #importModal input,
+    #importModal label,
+    #importModal button,
+    #importModal .btn,
+    #importModal .alert {
+        pointer-events: auto !important;
+    }
+    
+    /* Buttons */
+    #importModal .btn-close {
+        pointer-events: auto !important;
+    }
+    
+    #importModal .btn-secondary,
+    #importModal .btn-primary {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+    
+    /* Form sections */
+    #importModal .mb-3,
+    #importModal form {
+        pointer-events: auto !important;
+    }
+    
+    /* Ensure export dropdown is visible above modal */
+    .btn-group .dropdown-menu {
+        z-index: 1100 !important;
+    }
+</style>
 <div class="main-content">
     <div class="page-content">
     <div class="container-fluid">
@@ -13,6 +90,21 @@
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">Shareholders</h4>
                     <div class="page-title-right">
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-secondary waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="feather-download"></i> Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'shareholder:stakeholder-export' %}?format=csv">Export as CSV</a></li>
+                                <li><a class="dropdown-item" href="{% url 'shareholder:stakeholder-export' %}?format=excel">Export as Excel</a></li>
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-secondary waves-effect waves-light me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="feather-upload"></i> Import
+                        </button>
+                        <button type="button" class="btn btn-danger waves-effect waves-light me-2" id="bulkDeleteBtn" style="display:none;">
+                            <i class="feather-trash-2"></i> Delete Selected
+                        </button>
                         <a href="{% url 'shareholder:stakeholder-create' %}" class="btn btn-primary waves-effect waves-light">
                             <i class="feather-plus"></i> Add New Shareholder
                         </a>
@@ -35,7 +127,13 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Total Capital Invested</h5>
-                        <p class="text-muted">${{ total_capital|floatformat:2 }}</p>
+                        <p class="text-muted">
+                            {% if entity.company_currency %}
+                                {{ entity.company_currency.symbol }}{{ total_capital|floatformat:2 }}
+                            {% else %}
+                                ${{ total_capital|floatformat:2 }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -58,62 +156,77 @@
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Email</th>
-                                        <th>Phone</th>
-                                        <th>Status</th>
-                                        <th>Total Invested</th>
-                                        <th>Shares</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for stakeholder in stakeholders %}
-                                    <tr>
-                                        <td><strong>{{ stakeholder.full_name }}</strong></td>
-                                        <td>
-                                            <span class="badge badge-soft-info">
-                                                {{ stakeholder.get_stakeholder_type_display }}
-                                            </span>
-                                        </td>
-                                        <td>{{ stakeholder.email }}</td>
-                                        <td>{{ stakeholder.phone_number }}</td>
-                                        <td>
-                                            {% if stakeholder.status == 'ACTIVE' %}
-                                                <span class="badge bg-success">Active</span>
-                                            {% elif stakeholder.status == 'INACTIVE' %}
-                                                <span class="badge bg-warning">Inactive</span>
-                                            {% elif stakeholder.status == 'SUSPENDED' %}
-                                                <span class="badge bg-danger">Suspended</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">{{ stakeholder.get_status_display }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>${{ stakeholder.total_invested|floatformat:2 }}</td>
-                                        <td>{{ stakeholder.total_shares }}</td>
-                                        <td>
-                                            <a href="{% url 'shareholder:stakeholder-detail' stakeholder.pk %}" class="btn btn-sm btn-info" title="View">
-                                                <i class="feather-eye"></i>
-                                            </a>
-                                            <a href="{% url 'shareholder:stakeholder-edit' stakeholder.pk %}" class="btn btn-sm btn-primary" title="Edit">
-                                                <i class="feather-edit"></i>
-                                            </a>
-                                            <a href="{% url 'shareholder:stakeholder-delete' stakeholder.pk %}" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure?')">
-                                                <i class="feather-trash-2"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="8" class="text-center text-muted">No shareholders found</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                            <form id="bulkDeleteForm" method="post" action="{% url 'shareholder:stakeholder-bulk-delete' %}">
+                                {% csrf_token %}
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th width="50">
+                                                <input type="checkbox" id="selectAllCheckbox" title="Select all">
+                                            </th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Status</th>
+                                            <th>Total Invested</th>
+                                            <th>Shares</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stakeholder in stakeholders %}
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" class="stakeholder-checkbox" name="stakeholder_ids" value="{{ stakeholder.id }}">
+                                            </td>
+                                            <td><strong>{{ stakeholder.full_name }}</strong></td>
+                                            <td>
+                                                <span class="badge badge-soft-info">
+                                                    {{ stakeholder.get_stakeholder_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ stakeholder.email }}</td>
+                                            <td>{{ stakeholder.phone_number }}</td>
+                                            <td>
+                                                {% if stakeholder.status == 'ACTIVE' %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% elif stakeholder.status == 'INACTIVE' %}
+                                                    <span class="badge bg-warning">Inactive</span>
+                                                {% elif stakeholder.status == 'SUSPENDED' %}
+                                                    <span class="badge bg-danger">Suspended</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ stakeholder.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if entity.company_currency %}
+                                                    {{ entity.company_currency.symbol }}{{ stakeholder.total_invested|floatformat:2 }}
+                                                {% else %}
+                                                    ${{ stakeholder.total_invested|floatformat:2 }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ stakeholder.total_shares }}</td>
+                                            <td>
+                                                <a href="{% url 'shareholder:stakeholder-detail' stakeholder.pk %}" class="btn btn-sm btn-info" title="View">
+                                                    <i class="feather-eye"></i>
+                                                </a>
+                                                <a href="{% url 'shareholder:stakeholder-edit' stakeholder.pk %}" class="btn btn-sm btn-primary" title="Edit">
+                                                    <i class="feather-edit"></i>
+                                                </a>
+                                                <a href="{% url 'shareholder:stakeholder-delete' stakeholder.pk %}" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure?')">
+                                                    <i class="feather-trash-2"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="9" class="text-center text-muted">No shareholders found</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </form>
                         </div>
 
                         <!-- Pagination -->
@@ -150,4 +263,96 @@
         </div>
     </div>
 </div>
+
+<!-- Import Modal - Outside main content to avoid overflow issues -->
+<div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Import Shareholders</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{% url 'shareholder:stakeholder-import' %}">
+                {% csrf_token %}
+                <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Select CSV or Excel File</label>
+                        <input class="form-control" type="file" id="importFile" name="file" accept=".csv,.xlsx,.xls" required>
+                        <small class="form-text text-muted d-block mt-1">Supported formats: CSV, Excel (.xlsx, .xls)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="overwriteCheckbox" class="form-check-label">
+                            <input type="checkbox" id="overwriteCheckbox" name="overwrite" value="true" class="form-check-input">
+                            Overwrite existing shareholders (if ID matches)
+                        </label>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <strong>Required columns:</strong> first_name, last_name, email, phone_number
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const stakeholderCheckboxes = document.querySelectorAll('.stakeholder-checkbox');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+    
+    // Select All functionality
+    selectAllCheckbox.addEventListener('change', function() {
+        stakeholderCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkDeleteButton();
+    });
+    
+    // Individual checkbox change
+    stakeholderCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectAllCheckbox();
+            updateBulkDeleteButton();
+        });
+    });
+    
+    // Update select all checkbox state
+    function updateSelectAllCheckbox() {
+        const allChecked = Array.from(stakeholderCheckboxes).every(cb => cb.checked);
+        const someChecked = Array.from(stakeholderCheckboxes).some(cb => cb.checked);
+        selectAllCheckbox.checked = allChecked;
+        selectAllCheckbox.indeterminate = someChecked && !allChecked;
+    }
+    
+    // Show/hide bulk delete button
+    function updateBulkDeleteButton() {
+        const anyChecked = Array.from(stakeholderCheckboxes).some(cb => cb.checked);
+        bulkDeleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
+    }
+    
+    // Bulk delete handler
+    bulkDeleteBtn.addEventListener('click', function() {
+        const selected = Array.from(stakeholderCheckboxes).filter(cb => cb.checked);
+        if (selected.length === 0) {
+            alert('Please select at least one shareholder to delete');
+            return;
+        }
+        
+        const names = selected.map(cb => {
+            return cb.closest('tr').querySelector('td:nth-child(3)').textContent;
+        }).join('\n');
+        
+        const confirmMsg = `Are you sure you want to delete the following ${selected.length} shareholder(s)?\n\n${names}`;
+        if (confirm(confirmMsg)) {
+            bulkDeleteForm.submit();
+        }
+    });
+});
+</script>
 {% endblock %}

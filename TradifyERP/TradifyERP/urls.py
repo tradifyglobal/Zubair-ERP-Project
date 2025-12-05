@@ -19,6 +19,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from accounting.views import LogoutView
+from dashboard_views import MainDashboardView
 
 # Customize admin site title
 admin.site.site_header = "Tradify Global Administration"
@@ -27,9 +29,9 @@ admin.site.index_title = "Welcome to Tradify Global Administration"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Root dashboard redirect to accounting dashboard
-    path('', RedirectView.as_view(url='/accounting/dashboard/', permanent=False), name='home'),
-    path('dashboard/', RedirectView.as_view(url='/accounting/dashboard/', permanent=False), name='dashboard'),
+    # Main dashboard - entity selection after login
+    path('', MainDashboardView.as_view(), name='home'),
+    path('dashboard/', MainDashboardView.as_view(), name='dashboard'),
     # Accounting module - includes /dashboard/ route
     path('accounting/', include('accounting.urls')),
     # Shareholder management module
@@ -56,8 +58,18 @@ urlpatterns = [
     path('ar/', include('ar.urls')),
     # Site Maintenance module
     path('maintenance/', include('maintenance.urls')),
+
+    # Auth logout for all apps - custom logout view
+    path('logout/', LogoutView.as_view(), name='logout'),
+
+    # Django Allauth URLs for authentication (login, signup, etc.)
+    path('accounts/', include('allauth.urls')),
+
+    # Social auth for OAuth (Google, etc.)
+    path('social-auth/', include('social_django.urls', namespace='social')),
 ]
 
-# Serve static files in development
+# Serve static and media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

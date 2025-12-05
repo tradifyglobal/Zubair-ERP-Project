@@ -21,6 +21,35 @@
             </div>
         </div>
 
+        <!-- Error Messages -->
+        {% if form.non_field_errors %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error:</strong>
+                        {{ form.non_field_errors }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if form.errors %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Form Errors:</strong>
+                        <ul class="mb-0 mt-2">
+                        {% for field, errors in form.errors.items %}
+                            <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                        {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
         <!-- Form Card -->
         <div class="row">
             <div class="col-lg-8">
@@ -29,34 +58,108 @@
                         <h4 class="card-title">Shareholder Information</h4>
                     </div>
                     <div class="card-body">
-                        <form method="post" enctype="multipart/form-data">
+                        <form method="post" enctype="multipart/form-data" id="shareholder-form">
                             {% csrf_token %}
-                            
-                            {% if form.non_field_errors %}
-                                <div class="alert alert-danger">
-                                    {{ form.non_field_errors }}
-                                </div>
-                            {% endif %}
-
                             {% crispy form %}
-
-                            <div class="row mt-3">
-                                <div class="col-sm-6">
-                                    <button type="submit" class="btn btn-primary waves-effect waves-light">
-                                        <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Add{% endif %}
-                                    </button>
-                                </div>
-                                <div class="col-sm-6 text-end">
-                                    <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-secondary waves-effect waves-light">
-                                        Cancel
-                                    </a>
-                                </div>
-                            </div>
                         </form>
+                        
+                        <!-- Submit buttons OUTSIDE the crispy form to ensure they work -->
+                        <div class="row mt-4">
+                            <div class="col-sm-6">
+                                <button form="shareholder-form" type="submit" class="btn btn-primary waves-effect waves-light w-100">
+                                    <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Add Shareholder{% endif %}
+                                </button>
+                            </div>
+                            <div class="col-sm-6">
+                                <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-secondary waves-effect waves-light w-100">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the checkbox
+    const checkbox = document.querySelector('input[name="same_as_permanent"]');
+    
+    // Get Current Address form fields
+    const currentAddressFields = {
+        line1: document.querySelector('input[name="address_line_1"]'),
+        line2: document.querySelector('input[name="address_line_2"]'),
+        city: document.querySelector('input[name="city"]'),
+        state: document.querySelector('input[name="state_province"]'),
+        postal: document.querySelector('input[name="postal_code"]'),
+        country: document.querySelector('input[name="country"]')
+    };
+    
+    // Get Permanent Address form fields
+    const permanentAddressFields = {
+        line1: document.querySelector('input[name="permanent_address_line_1"]'),
+        line2: document.querySelector('input[name="permanent_address_line_2"]'),
+        city: document.querySelector('input[name="permanent_city"]'),
+        state: document.querySelector('input[name="permanent_state_province"]'),
+        postal: document.querySelector('input[name="permanent_postal_code"]'),
+        country: document.querySelector('input[name="permanent_country"]')
+    };
+    
+    function updateCurrentAddress() {
+        if (!checkbox) return;
+        
+        if (checkbox.checked) {
+            // Copy permanent address to current address
+            currentAddressFields.line1.value = permanentAddressFields.line1.value || '';
+            currentAddressFields.line2.value = permanentAddressFields.line2.value || '';
+            currentAddressFields.city.value = permanentAddressFields.city.value || '';
+            currentAddressFields.state.value = permanentAddressFields.state.value || '';
+            currentAddressFields.postal.value = permanentAddressFields.postal.value || '';
+            currentAddressFields.country.value = permanentAddressFields.country.value || '';
+            
+            // Disable and grey out Current Address fields
+            Object.values(currentAddressFields).forEach(field => {
+                if (field) {
+                    field.disabled = true;
+                    field.style.backgroundColor = '#e9ecef';
+                    field.style.cursor = 'not-allowed';
+                    field.classList.add('disabled-field');
+                }
+            });
+        } else {
+            // Enable Current Address fields
+            Object.values(currentAddressFields).forEach(field => {
+                if (field) {
+                    field.disabled = false;
+                    field.style.backgroundColor = '';
+                    field.style.cursor = 'auto';
+                    field.classList.remove('disabled-field');
+                }
+            });
+        }
+    }
+    
+    // Listen for checkbox changes
+    if (checkbox) {
+        checkbox.addEventListener('change', updateCurrentAddress);
+        
+        // Also listen for permanent address field changes when checkbox is checked
+        Object.values(permanentAddressFields).forEach(field => {
+            if (field) {
+                field.addEventListener('change', function() {
+                    if (checkbox.checked) {
+                        updateCurrentAddress();
+                    }
+                });
+            }
+        });
+        
+        // Call function on page load to set initial state
+        updateCurrentAddress();
+    }
+});
+</script>
 {% endblock %}

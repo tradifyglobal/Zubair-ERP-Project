@@ -122,6 +122,20 @@
                                             {% endif %}
                                         </div>
                                     </div>
+
+                                    <!-- Debit Investor Field -->
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label" for="id_debit_investor">Investor/Shareholder (Select if Capital Account)</label>
+                                            {{ form.debit_investor }}
+                                            {% if form.debit_investor.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.debit_investor.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted d-block mt-2" id="debit_investor_hint"></small>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Credit Side -->
@@ -153,6 +167,20 @@
                                             {% endif %}
                                         </div>
                                     </div>
+
+                                    <!-- Credit Investor Field -->
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label" for="id_credit_investor">Investor/Shareholder (Select if Capital Account)</label>
+                                            {{ form.credit_investor }}
+                                            {% if form.credit_investor.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.credit_investor.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted d-block mt-2" id="credit_investor_hint"></small>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Non-form Errors -->
@@ -175,13 +203,35 @@
                                 </div>
 
                                 <!-- Buttons -->
-                                <div class="row mt-4">
+                                <div class="row mt-4 sticky-bottom">
                                     <div class="col-12">
-                                        <div class="d-flex gap-2">
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-check-circle"></i> Create Journal Entry
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <!-- Save as Draft -->
+                                            <button type="submit" name="action" value="draft" class="btn btn-secondary btn-lg">
+                                                <i class="bi bi-file-earmark"></i> Save as Draft
                                             </button>
-                                            <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-secondary">
+                                            
+                                            <!-- Submit for Approval -->
+                                            <button type="submit" name="action" value="submit" class="btn btn-info btn-lg">
+                                                <i class="bi bi-send"></i> Submit for Approval
+                                            </button>
+                                            
+                                            <!-- Approve -->
+                                            <button type="submit" name="action" value="approve" class="btn btn-success btn-lg">
+                                                <i class="bi bi-check2-circle"></i> Approve
+                                            </button>
+                                            
+                                            <!-- Authorize -->
+                                            <button type="submit" name="action" value="authorize" class="btn btn-primary btn-lg">
+                                                <i class="bi bi-shield-check"></i> Authorize & Post
+                                            </button>
+                                            
+                                            <!-- Reject -->
+                                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-lg">
+                                                <i class="bi bi-x-circle"></i> Reject
+                                            </button>
+                                            
+                                            <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-secondary btn-lg ms-auto">
                                                 <i class="bi bi-arrow-left"></i> Cancel
                                             </a>
                                         </div>
@@ -219,6 +269,22 @@
     border-color: #80bdff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
+
+.sticky-bottom {
+    position: sticky;
+    bottom: 0;
+    background-color: white;
+    padding: 20px 0;
+    border-top: 1px solid #dee2e6;
+    z-index: 100;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
 </style>
 {% endblock %}
 
@@ -245,6 +311,60 @@
 document.addEventListener('DOMContentLoaded', function() {
     const debitAmount = document.getElementById('id_debit_amount');
     const creditAmount = document.getElementById('id_credit_amount');
+    const debitAccountSelect = document.getElementById('id_debit_account_select');
+    const creditAccountSelect = document.getElementById('id_credit_account_select');
+    const debitInvestorSelect = document.getElementById('id_debit_investor_select');
+    const creditInvestorSelect = document.getElementById('id_credit_investor_select');
+    
+    // Store account info for checking if it's a capital account
+    const accountOptions = {};
+    
+    // Build account info map from the account select options
+    if (debitAccountSelect) {
+        Array.from(debitAccountSelect.options).forEach(option => {
+            if (option.value) {
+                // Check if account name contains "Capital"
+                accountOptions[option.value] = {
+                    name: option.text,
+                    isCapital: option.text.toLowerCase().includes('capital')
+                };
+            }
+        });
+    }
+    
+    // Function to show/hide investor dropdown based on account type
+    function updateInvestorVisibility(accountSelect, investorSelect) {
+        if (!accountSelect || !investorSelect) return;
+        
+        const selectedAccountId = accountSelect.value;
+        const accountInfo = accountOptions[selectedAccountId];
+        
+        // Show investor dropdown if it's a capital account, otherwise hide and clear
+        if (accountInfo && accountInfo.isCapital) {
+            investorSelect.closest('.row').style.display = 'block';
+        } else {
+            investorSelect.closest('.row').style.display = 'none';
+            investorSelect.value = '';
+        }
+    }
+    
+    // Handle debit account change
+    if (debitAccountSelect) {
+        debitAccountSelect.addEventListener('change', function() {
+            updateInvestorVisibility(debitAccountSelect, debitInvestorSelect);
+        });
+        // Initial check on page load
+        updateInvestorVisibility(debitAccountSelect, debitInvestorSelect);
+    }
+    
+    // Handle credit account change
+    if (creditAccountSelect) {
+        creditAccountSelect.addEventListener('change', function() {
+            updateInvestorVisibility(creditAccountSelect, creditInvestorSelect);
+        });
+        // Initial check on page load
+        updateInvestorVisibility(creditAccountSelect, creditInvestorSelect);
+    }
     
     function updateBalanceHint() {
         const debit = parseFloat(debitAmount.value) || 0;

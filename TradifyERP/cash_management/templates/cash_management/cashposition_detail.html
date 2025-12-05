@@ -1,0 +1,208 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block head_title %}
+<title>Cash Position Detail | Cash Management</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="page-title mb-0">Cash Position Detail</h4>
+                            <p class="text-muted mt-2">Position for {{ cashposition.bank_account.bank_name }}</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'cash_management:position_list' %}" class="btn btn-secondary btn-sm">
+                                <i class="ri-arrow-left-line"></i> Back
+                            </a>
+                            {% if perms.cash_management.change_cashposition %}
+                            <a href="{% url 'cash_management:position_edit' cashposition.pk %}" class="btn btn-primary btn-sm">
+                                <i class="ri-edit-line"></i> Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Position Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Position Date</label>
+                                        <p class="h6">{{ cashposition.position_date|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Entity</label>
+                                        <p class="h6">{{ cashposition.entity.entity_name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Bank Account</label>
+                                        <p class="h6">{{ cashposition.bank_account.bank_name }}</p>
+                                        <p class="text-muted small">{{ cashposition.bank_account.account_number }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Currency</label>
+                                        <p class="h6">{{ cashposition.bank_account.currency.code }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Opening Balance</label>
+                                        <p class="h5 text-info">
+                                            {{ cashposition.bank_account.currency.symbol }}
+                                            {{ cashposition.opening_balance|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Closing Balance</label>
+                                        <p class="h5 text-success">
+                                            {{ cashposition.bank_account.currency.symbol }}
+                                            {{ cashposition.closing_balance|floatformat:2 }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Daily Change</label>
+                                        {% with change=cashposition.closing_balance|add:cashposition.opening_balance|stringformat:"-f" %}
+                                        <p class="h5 {% if change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ cashposition.bank_account.currency.symbol }}
+                                            {{ change|floatformat:2 }}
+                                        </p>
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Reconciliation Status</label>
+                                        {% if cashposition.is_reconciled %}
+                                        <span class="badge bg-success">
+                                            <i class="ri-check-line"></i> Reconciled
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="ri-close-line"></i> Pending
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Reconciliation Details -->
+                    {% if cashposition.is_reconciled and cashposition.reconciled_by %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Reconciliation Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Reconciled By</label>
+                                <p class="h6">{{ cashposition.reconciled_by.get_full_name|default:cashposition.reconciled_by.username|default:"Unknown" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Reconciliation Date</label>
+                                <p class="h6">{{ cashposition.reconciliation_date|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Timeline -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Timeline</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Created</label>
+                                <p class="h6">{{ cashposition.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Last Updated</label>
+                                <p class="h6">{{ cashposition.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bank Account Summary -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Bank Account Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Bank Name</label>
+                                <p class="h6">{{ cashposition.bank_account.bank_name }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Account Type</label>
+                                <p class="h6">
+                                    {% if cashposition.bank_account.account_type == 'CHECKING' %}
+                                    Checking Account
+                                    {% elif cashposition.bank_account.account_type == 'SAVING' %}
+                                    Saving Account
+                                    {% elif cashposition.bank_account.account_type == 'LOAN' %}
+                                    Loan Account
+                                    {% else %}
+                                    {{ cashposition.bank_account.get_account_type_display }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Status</label>
+                                <p class="h6">
+                                    {% if cashposition.bank_account.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

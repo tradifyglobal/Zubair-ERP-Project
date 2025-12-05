@@ -1,1 +1,124 @@
-{% extends 'partials/base.html' %}{% load static %}{% block head_title %}<title>Warranty Form | TradifyERP</title>{% endblock %}{% block content %}<div class="main-content"><div class="page-content"><div class="container-fluid"><div class="row"><div class="col-lg-8"><div class="card"><div class="card-body"><form method="post">{% csrf_token %}{% for field in form %}{% if field.widget.input_type != 'hidden' %}<div class="mb-3"><label class="form-label">{{ field.label }}</label>{{ field }}</div>{% endif %}{% endfor %}<button type="submit" class="btn btn-primary">Save</button><a href="{% url 'manufacturing:warrantyregistration_list' %}" class="btn btn-light">Cancel</a></form></div></div></div></div></div></div></div>{% endblock %}
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Warranty Form | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" id="warranty-form">
+                                {% csrf_token %}
+                                
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.warranty_type.id_for_label }}">{{ form.warranty_type.label }}</label>
+                                            {{ form.warranty_type }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.distributor.id_for_label }}">{{ form.distributor.label }}</label>
+                                            {{ form.distributor }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.product_code.id_for_label }}">{{ form.product_code.label }}</label>
+                                            {{ form.product_code }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.serial_number.id_for_label }}">{{ form.serial_number.label }}</label>
+                                            {{ form.serial_number }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.purchase_date.id_for_label }}">{{ form.purchase_date.label }}</label>
+                                            {{ form.purchase_date }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.coverage_start_date.id_for_label }}">Start Date</label>
+                                            {{ form.coverage_start_date }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.coverage_end_date.id_for_label }}">End Date</label>
+                                            {{ form.coverage_end_date }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.end_customer_name.id_for_label }}">{{ form.end_customer_name.label }}</label>
+                                            {{ form.end_customer_name }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.end_customer_email.id_for_label }}">{{ form.end_customer_email.label }}</label>
+                                            {{ form.end_customer_email }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.end_customer_phone.id_for_label }}">{{ form.end_customer_phone.label }}</label>
+                                            {{ form.end_customer_phone }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1" for="{{ form.coverage_description.id_for_label }}">{{ form.coverage_description.label }}</label>
+                                            {{ form.coverage_description }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <div class="mb-0">
+                                            <label class="form-label small mb-1" for="{{ form.terms_and_conditions.id_for_label }}">{{ form.terms_and_conditions.label }}</label>
+                                            {{ form.terms_and_conditions }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+                        <div class="card-footer d-flex gap-2 justify-content-end">
+                            <button type="submit" form="warranty-form" class="btn btn-primary">Save</button>
+                            <a href="{% url 'manufacturing:warrantyregistration_list' %}" class="btn btn-light">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

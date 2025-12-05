@@ -12,11 +12,15 @@
             <div class="col-md-8">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'admin:accounting_auditlog_changelist' %}">Audit Logs</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">List</li>
+                        <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Audit Logs</li>
                     </ol>
                 </nav>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if current_entity %}
+                <span class="badge bg-info">Entity: <strong>{{ current_entity.name }}</strong></span>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -106,21 +110,21 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="search_model" class="form-label">Search by Model</label>
-                    <input type="text" class="form-control form-control-sm" id="search_model" placeholder="e.g., LedgerEntry">
+                    <input type="text" class="form-control form-control-sm" id="search_model" placeholder="e.g., LedgerEntry" value="{{ search_model }}">
                 </div>
                 <div class="col-md-3">
                     <label for="search_user" class="form-label">Search by User</label>
-                    <input type="text" class="form-control form-control-sm" id="search_user" placeholder="e.g., admin">
+                    <input type="text" class="form-control form-control-sm" id="search_user" placeholder="e.g., admin" value="{{ search_user }}">
                 </div>
                 <div class="col-md-3">
                     <label for="filter_action" class="form-label">Filter by Action</label>
                     <select class="form-select form-select-sm" id="filter_action">
                         <option value="">All Actions</option>
-                        <option value="CREATE">Create</option>
-                        <option value="UPDATE">Update</option>
-                        <option value="DELETE">Delete</option>
-                        <option value="POST">Post</option>
-                        <option value="RECONCILE">Reconcile</option>
+                        <option value="CREATE" {% if filter_action == 'CREATE' %}selected{% endif %}>Create</option>
+                        <option value="UPDATE" {% if filter_action == 'UPDATE' %}selected{% endif %}>Update</option>
+                        <option value="DELETE" {% if filter_action == 'DELETE' %}selected{% endif %}>Delete</option>
+                        <option value="POST" {% if filter_action == 'POST' %}selected{% endif %}>Post</option>
+                        <option value="RECONCILE" {% if filter_action == 'RECONCILE' %}selected{% endif %}>Reconcile</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -199,28 +203,7 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <div class="dropdown">
-                                        <button class="btn btn-link btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="mdi mdi-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <a class="dropdown-item" href="{% url 'admin:accounting_auditlog_change' log.id %}">
-                                                    <i class="mdi mdi-eye"></i> View Details
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="{% url 'admin:accounting_auditlog_change' log.id %}">
-                                                    <i class="mdi mdi-pencil"></i> Edit
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item text-danger" href="{% url 'admin:accounting_auditlog_delete' log.id %}">
-                                                    <i class="mdi mdi-delete"></i> Delete
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                    <span class="badge bg-light text-dark">Read-only</span>
                                 </td>
                             </tr>
                         {% endfor %}

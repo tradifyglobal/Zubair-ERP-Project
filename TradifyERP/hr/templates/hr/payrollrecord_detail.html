@@ -1,0 +1,239 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Payroll Record - {{ payroll_record.employee.first_name }} {{ payroll_record.employee.last_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">Payroll Record</h1>
+            <p class="text-muted">{{ payroll_record.employee.first_name }} {{ payroll_record.employee.last_name }} - {{ payroll_record.payroll.payroll_number }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:payrollrecord-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Employee Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Employee Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Employee</h6>
+                            <p><strong>{{ payroll_record.employee.first_name }} {{ payroll_record.employee.last_name }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Employee ID</h6>
+                            <p><strong>{{ payroll_record.employee.employee_id }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Department</h6>
+                            <p>{{ payroll_record.employee.department.name|default:"--" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Position</h6>
+                            <p>{{ payroll_record.employee.position.title|default:"--" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payroll Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Payroll Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Payroll Run</h6>
+                            <p><strong>{{ payroll_record.payroll.payroll_number }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Status</h6>
+                            <p>
+                                {% if payroll_record.payroll.get_status_display == 'PROCESSED' %}
+                                    <span class="badge bg-success">{{ payroll_record.payroll.get_status_display }}</span>
+                                {% elif payroll_record.payroll.get_status_display == 'PENDING' %}
+                                    <span class="badge bg-warning">{{ payroll_record.payroll.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-info">{{ payroll_record.payroll.get_status_display }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Pay Period Start</h6>
+                            <p>{{ payroll_record.payroll.period_start|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Pay Period End</h6>
+                            <p>{{ payroll_record.payroll.period_end|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salary Breakdown -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Salary Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Base Salary</h6>
+                            <p><strong class="text-success">{{ payroll_record.base_salary }}</strong></p>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Overtime</h6>
+                            <p><strong class="text-success">{{ payroll_record.overtime_amount|default:"0.00" }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Bonus</h6>
+                            <p><strong class="text-success">{{ payroll_record.bonus|default:"0.00" }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Allowances</h6>
+                            <p><strong class="text-success">{{ payroll_record.allowances|default:"0.00" }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <hr>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Gross Salary</h6>
+                            <p><strong class="text-primary" style="font-size: 1.2em;">{{ payroll_record.gross_amount }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deductions -->
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Deductions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Employee Tax</h6>
+                            <p><strong>{{ payroll_record.employee_tax|default:"0.00" }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Social Security</h6>
+                            <p><strong>{{ payroll_record.social_security|default:"0.00" }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Health Insurance</h6>
+                            <p><strong>{{ payroll_record.health_insurance|default:"0.00" }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Other Deductions</h6>
+                            <p><strong>{{ payroll_record.other_deductions|default:"0.00" }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h6 class="text-muted">Total Deductions</h6>
+                            <p><strong class="text-danger">{{ payroll_record.total_deductions }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Net Salary -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Net Salary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h2 class="text-center" style="color: #28a745; font-weight: bold;">{{ payroll_record.net_amount }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'hr:payrollrecord-list' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-list"></i> Back to Records
+                    </a>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Summary</h5>
+                </div>
+                <div class="card-body small">
+                    <div class="mb-3">
+                        <strong>Gross Salary:</strong>
+                        <div class="text-success" style="font-size: 1.1em;">{{ payroll_record.gross_amount }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Total Deductions:</strong>
+                        <div class="text-danger" style="font-size: 1.1em;">{{ payroll_record.total_deductions }}</div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <strong>Net Salary:</strong>
+                        <div class="text-primary" style="font-size: 1.2em; font-weight: bold;">{{ payroll_record.net_amount }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Details</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Created:</strong> {{ payroll_record.created_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>Updated:</strong> {{ payroll_record.updated_at|date:"M d, Y H:i" }}</p>
+                    <p class="mb-0"><strong>Entity:</strong> {{ payroll_record.employee.entity.name }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+    .table th {
+        border-top: none;
+    }
+</style>
+{% endblock %}

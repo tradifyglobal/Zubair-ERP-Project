@@ -1,0 +1,245 @@
+{% extends "dashboard.html" %}
+{% load static %}
+
+{% block content %}
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Leave Request Details
+                </h2>
+            </div>
+            <div class="col-auto">
+                <div class="btn-list">
+                    <a href="{% url 'hr:leave-request-list' %}" class="btn btn-outline-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M9 6l-6 6l6 6m3 -12v12" />
+                        </svg>
+                        Back to Requests
+                    </a>
+                    {% if leave_request.status == 'SUBMITTED' %}
+                    <a href="{% url 'hr:leave-request-approve' leave_request.id %}" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M5 12l5 5l10 -10" />
+                        </svg>
+                        Approve Request
+                    </a>
+                    <a href="{% url 'hr:leave-request-reject' leave_request.id %}" class="btn btn-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M12 9v2m0 4v2m6.403 -12.403a6 6 0 1 0 8.485 8.485a6 6 0 0 0 -8.485 -8.485" />
+                        </svg>
+                        Reject Request
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row">
+                <!-- Main Content -->
+                <div class="col-md-8 col-lg-9">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Request Information</h3>
+                            <div class="ms-auto">
+                                <span class="badge bg-{% if leave_request.status == 'APPROVED' %}success{% elif leave_request.status == 'REJECTED' %}danger{% elif leave_request.status == 'SUBMITTED' %}warning{% else %}secondary{% endif %} badge-lg">
+                                    {{ leave_request.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Employee</label>
+                                    <p class="form-control-plaintext">{{ leave_request.employee }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Leave Type</label>
+                                    <p class="form-control-plaintext">{{ leave_request.leave_type }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Start Date</label>
+                                    <p class="form-control-plaintext">{{ leave_request.start_date|date:"d M Y" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">End Date</label>
+                                    <p class="form-control-plaintext">{{ leave_request.end_date|date:"d M Y" }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Duration (Days)</label>
+                                    <p class="form-control-plaintext"><strong>{{ leave_request.duration }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Requested By</label>
+                                    <p class="form-control-plaintext">
+                                        {% if leave_request.requested_by %}
+                                            {% if leave_request.requested_by.get_full_name %}
+                                                {{ leave_request.requested_by.get_full_name }}
+                                            {% else %}
+                                                {{ leave_request.requested_by.username }}
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Reason</label>
+                                <p class="form-control-plaintext">{{ leave_request.reason|linebreaks }}</p>
+                            </div>
+
+                            {% if leave_request.status != 'SUBMITTED' %}
+                            <hr>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Approved By</label>
+                                    <p class="form-control-plaintext">
+                                        {% if leave_request.approved_by %}
+                                            {% if leave_request.approved_by.get_full_name %}
+                                                {{ leave_request.approved_by.get_full_name }}
+                                            {% else %}
+                                                {{ leave_request.approved_by.username }}
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Approval Date</label>
+                                    <p class="form-control-plaintext">
+                                        {% if leave_request.approval_date %}
+                                            {{ leave_request.approval_date|date:"d M Y H:i" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Comments</label>
+                                <p class="form-control-plaintext">
+                                    {% if leave_request.comments %}
+                                        {{ leave_request.comments|linebreaks }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-md-4 col-lg-3">
+                    <!-- Leave Balance Summary -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Leave Balance</h3>
+                        </div>
+                        <div class="card-body">
+                            {% with balance=leave_request.employee.get_leave_balance %}
+                                {% if balance %}
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <span class="text-muted small">Opening Balance:</span>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <strong>{{ balance.opening_balance }}</strong> days
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <span class="text-muted small">Allocated:</span>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <strong>{{ balance.allocated }}</strong> days
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <span class="text-muted small">Taken:</span>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <strong>{{ balance.taken }}</strong> days
+                                        </div>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <span class="text-muted small">Available:</span>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <strong class="text-primary">{{ balance.available }}</strong> days
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted mb-0 small">No leave balance found.</p>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+
+                    <!-- Request Timeline -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Timeline</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline timeline-simple">
+                                <div class="timeline-event">
+                                    <div class="timeline-event-icon bg-primary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M12 3l8 5v6a8 8 0 1 1 -16 0v-6l8 -5" />
+                                            <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                                        </svg>
+                                    </div>
+                                    <div class="timeline-event-content">
+                                        <div class="timeline-event-title small">Request Submitted</div>
+                                        <p class="text-muted text-sm">{{ leave_request.created_at|date:"d M Y H:i" }}</p>
+                                    </div>
+                                </div>
+
+                                {% if leave_request.status != 'SUBMITTED' %}
+                                <div class="timeline-event">
+                                    <div class="timeline-event-icon {% if leave_request.status == 'APPROVED' %}bg-success{% else %}bg-danger{% endif %}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M5 12l5 5l10 -10" />
+                                        </svg>
+                                    </div>
+                                    <div class="timeline-event-content">
+                                        <div class="timeline-event-title small">{{ leave_request.get_status_display }}</div>
+                                        <p class="text-muted text-sm">{{ leave_request.approval_date|date:"d M Y H:i" }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

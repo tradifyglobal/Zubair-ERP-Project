@@ -1,0 +1,158 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Benefit - {{ benefit.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">Benefit Details</h1>
+            <p class="text-muted">{{ benefit.name }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:benefit-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6">
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Benefit Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Benefit Name</h6>
+                            <p class="mb-0"><strong>{{ benefit.name }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Type</h6>
+                            <p class="mb-0">{{ benefit.get_benefit_type_display }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Status</h6>
+                            <p class="mb-0">
+                                {% if benefit.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% if benefit.description %}
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Description</h6>
+                            <p class="mb-0">{{ benefit.description }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Cost Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Cost Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Employee Cost (per period)</h6>
+                            <p class="mb-0"><strong style="font-size: 1.1em;">{{ benefit.employee_cost }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Employer Cost (per period)</h6>
+                            <p class="mb-0"><strong style="font-size: 1.1em;">{{ benefit.employer_cost }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GL Accounts -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">GL Accounts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Employee Expense Account</h6>
+                            <p class="mb-0">{{ benefit.employee_expense_account|default:"--" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Employer Expense Account</h6>
+                            <p class="mb-0">{{ benefit.employer_expense_account|default:"--" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'hr:benefit-update' benefit.pk %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-edit"></i> Edit Benefit
+                    </a>
+                    <a href="{% url 'hr:benefit-list' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-list"></i> View All Benefits
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">System Information</h5>
+                </div>
+                <div class="card-body small">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Entity</h6>
+                            <p class="mb-0">{{ benefit.entity.name }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-1">Benefit ID</h6>
+                            <p class="mb-0">#{{ benefit.pk }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

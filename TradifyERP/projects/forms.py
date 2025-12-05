@@ -4,7 +4,7 @@ Forms for projects, phases, tasks, time tracking, budgets, etc.
 """
 
 from django import forms
-from .models import Project, ProjectPhase, ProjectTask, TimeEntry, ResourceAllocation, ProjectBudget, ProjectKPI
+from .models import Project, ProjectPhase, Task, TimeEntry, ResourceAllocation, ProjectBudget, ProjectKPI
 
 
 class ProjectForm(forms.ModelForm):
@@ -80,13 +80,9 @@ class ProjectPhaseForm(forms.ModelForm):
     
     class Meta:
         model = ProjectPhase
-        fields = ['project', 'phase_name', 'description', 'sequence', 'start_date', 
-                  'planned_end_date', 'status']
+        fields = ['phase_name', 'description', 'sequence', 'start_date', 
+                  'end_date', 'status']
         widgets = {
-            'project': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
-            }),
             'phase_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Phase name',
@@ -108,7 +104,7 @@ class ProjectPhaseForm(forms.ModelForm):
                 'class': 'form-control',
                 'required': 'required'
             }),
-            'planned_end_date': forms.DateInput(attrs={
+            'end_date': forms.DateInput(attrs={
                 'type': 'date',
                 'class': 'form-control',
                 'required': 'required'
@@ -119,13 +115,13 @@ class ProjectPhaseForm(forms.ModelForm):
         }
 
 
-class ProjectTaskForm(forms.ModelForm):
+class TaskForm(forms.ModelForm):
     """Form for creating/editing project tasks."""
     
     class Meta:
-        model = ProjectTask
+        model = Task
         fields = ['project', 'phase', 'task_name', 'description', 'assigned_to', 'start_date', 
-                  'planned_end_date', 'estimated_hours', 'priority', 'status', 'depends_on']
+                  'due_date', 'estimated_hours', 'status', 'depends_on']
         widgets = {
             'project': forms.Select(attrs={
                 'class': 'form-select',
@@ -145,15 +141,14 @@ class ProjectTaskForm(forms.ModelForm):
                 'placeholder': 'Task description'
             }),
             'assigned_to': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
+                'class': 'form-select'
             }),
             'start_date': forms.DateInput(attrs={
                 'type': 'date',
                 'class': 'form-control',
                 'required': 'required'
             }),
-            'planned_end_date': forms.DateInput(attrs={
+            'due_date': forms.DateInput(attrs={
                 'type': 'date',
                 'class': 'form-control',
                 'required': 'required'
@@ -164,9 +159,6 @@ class ProjectTaskForm(forms.ModelForm):
                 'min': '0',
                 'step': '0.5',
                 'required': 'required'
-            }),
-            'priority': forms.Select(attrs={
-                'class': 'form-select'
             }),
             'status': forms.Select(attrs={
                 'class': 'form-select'
@@ -183,15 +175,14 @@ class TimeEntryForm(forms.ModelForm):
     class Meta:
         model = TimeEntry
         fields = ['project', 'task', 'employee', 'entry_date', 'hours_worked', 
-                  'work_description', 'billable', 'status']
+                  'description', 'is_billable']
         widgets = {
             'project': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
             }),
             'task': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
+                'class': 'form-select'
             }),
             'employee': forms.Select(attrs={
                 'class': 'form-select',
@@ -210,16 +201,13 @@ class TimeEntryForm(forms.ModelForm):
                 'max': '24',
                 'required': 'required'
             }),
-            'work_description': forms.Textarea(attrs={
+            'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
                 'placeholder': 'What work was done?'
             }),
-            'billable': forms.CheckboxInput(attrs={
+            'is_billable': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
-            }),
-            'status': forms.Select(attrs={
-                'class': 'form-select'
             }),
         }
 
@@ -229,42 +217,47 @@ class ResourceAllocationForm(forms.ModelForm):
     
     class Meta:
         model = ResourceAllocation
-        fields = ['project', 'employee', 'allocation_percentage', 'start_date', 
-                  'end_date', 'role', 'status']
+        fields = ['project', 'task', 'employee', 'allocation_start_date', 
+                  'allocation_end_date', 'hours_per_week', 'hourly_rate', 'is_active']
         widgets = {
             'project': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
             }),
+            'task': forms.Select(attrs={
+                'class': 'form-select'
+            }),
             'employee': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
             }),
-            'allocation_percentage': forms.NumberInput(attrs={
+            'allocation_start_date': forms.DateInput(attrs={
+                'type': 'date',
                 'class': 'form-control',
-                'placeholder': '100',
+                'required': 'required'
+            }),
+            'allocation_end_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'hours_per_week': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '40',
                 'min': '0',
-                'max': '100',
-                'step': '5',
+                'max': '168',
+                'step': '0.5',
                 'required': 'required'
             }),
-            'start_date': forms.DateInput(attrs={
-                'type': 'date',
+            'hourly_rate': forms.NumberInput(attrs={
                 'class': 'form-control',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'min': '0',
                 'required': 'required'
             }),
-            'end_date': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control',
-                'required': 'required'
-            }),
-            'role': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Role/Title in project',
-                'required': 'required'
-            }),
-            'status': forms.Select(attrs={
-                'class': 'form-select'
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
             }),
         }
 
@@ -274,16 +267,15 @@ class ProjectBudgetForm(forms.ModelForm):
     
     class Meta:
         model = ProjectBudget
-        fields = ['project', 'budget_category', 'description', 'budgeted_amount', 
-                  'spent_amount', 'committed_amount', 'status']
+        fields = ['project', 'category', 'description', 'budgeted_amount', 
+                  'committed_amount', 'gl_account']
         widgets = {
             'project': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
             }),
-            'budget_category': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Labor, Materials, Equipment, etc.',
+            'category': forms.Select(attrs={
+                'class': 'form-select',
                 'required': 'required'
             }),
             'description': forms.Textarea(attrs={
@@ -298,20 +290,13 @@ class ProjectBudgetForm(forms.ModelForm):
                 'min': '0',
                 'required': 'required'
             }),
-            'spent_amount': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': '0.00',
-                'step': '0.01',
-                'min': '0',
-                'readonly': 'readonly'
-            }),
             'committed_amount': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
                 'step': '0.01',
                 'min': '0'
             }),
-            'status': forms.Select(attrs={
+            'gl_account': forms.Select(attrs={
                 'class': 'form-select'
             }),
         }
@@ -322,8 +307,8 @@ class ProjectKPIForm(forms.ModelForm):
     
     class Meta:
         model = ProjectKPI
-        fields = ['project', 'kpi_name', 'kpi_type', 'target_value', 'current_value', 
-                  'measurement_date', 'unit', 'status', 'notes']
+        fields = ['project', 'kpi_name', 'description', 'target_value', 'actual_value', 
+                  'unit', 'measurement_date', 'status']
         widgets = {
             'project': forms.Select(attrs={
                 'class': 'form-select',
@@ -334,9 +319,10 @@ class ProjectKPIForm(forms.ModelForm):
                 'placeholder': 'KPI name',
                 'required': 'required'
             }),
-            'kpi_type': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'KPI description'
             }),
             'target_value': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -344,10 +330,14 @@ class ProjectKPIForm(forms.ModelForm):
                 'step': '0.01',
                 'required': 'required'
             }),
-            'current_value': forms.NumberInput(attrs={
+            'actual_value': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': '0.00',
-                'step': '0.01',
+                'step': '0.01'
+            }),
+            'unit': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '%,hours,etc.',
                 'required': 'required'
             }),
             'measurement_date': forms.DateInput(attrs={
@@ -355,18 +345,8 @@ class ProjectKPIForm(forms.ModelForm):
                 'class': 'form-control',
                 'required': 'required'
             }),
-            'unit': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '%,hours,etc.',
-                'required': 'required'
-            }),
             'status': forms.Select(attrs={
                 'class': 'form-select'
-            }),
-            'notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 2,
-                'placeholder': 'KPI notes'
             }),
         }
 

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Contract Details - CRM{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box"><div class="row align-items-center"><div class="col-md-8"><h4 class="page-title">Contract #{{ object.contract_number }}</h4></div><div class="col-md-4 text-right"><a href="{% url 'crm:contracts' %}" class="btn btn-sm btn-secondary"><i class="fas fa-arrow-left"></i></a> <a href="{% url 'crm:contract_update' object.id %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a> <a href="{% url 'crm:contract_delete' object.id %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></a></div></div></div>
+    <div class="row"><div class="col-lg-8"><div class="card"><div class="card-body">
+        <h5 class="card-title mb-3">Contract Information</h5>
+        <div class="row mb-3"><div class="col-md-6"><strong>Contract Number:</strong><br>{{ object.contract_number }}</div><div class="col-md-6"><strong>Status:</strong><br><span class="badge badge-{% if object.status == 'Active' %}success{% elif object.status == 'Expired' %}danger{% else %}warning{% endif %}">{{ object.status }}</span></div></div>
+        <div class="row mb-3"><div class="col-md-6"><strong>Customer:</strong><br>{{ object.customer|default:'N/A' }}</div><div class="col-md-6"><strong>Value:</strong><br>${{ object.contract_value|default:'0.00' }}</div></div>
+        <div class="row mb-3"><div class="col-md-6"><strong>Start Date:</strong><br>{{ object.start_date|date:'M d, Y'|default:'N/A' }}</div><div class="col-md-6"><strong>End Date:</strong><br>{{ object.end_date|date:'M d, Y'|default:'N/A' }}</div></div>
+        <div class="row mb-3"><div class="col-md-12"><strong>Renewal Date:</strong><br>{{ object.renewal_date|date:'M d, Y'|default:'N/A' }}</div></div>
+        {% if object.terms_and_conditions %}<div class="row"><div class="col-md-12"><strong>Terms & Conditions:</strong><br><p class="text-muted">{{ object.terms_and_conditions }}</p></div></div>{% endif %}
+    </div></div></div></div>
+</div>
+{% endblock %}

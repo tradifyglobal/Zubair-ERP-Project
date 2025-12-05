@@ -1,0 +1,92 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Delete Entity | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Delete Entity</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:entities_list' %}">Entities</a></li>
+                                <li class="breadcrumb-item active">Delete</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation -->
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="alert alert-danger" role="alert">
+                                <i class="mdi mdi-alert-circle"></i>
+                                <strong>Warning!</strong> You are about to permanently delete this entity.
+                            </div>
+
+                            <div class="row mb-4 p-3 bg-light rounded">
+                                <div class="col-md-6">
+                                    <p><strong>Entity Code:</strong></p>
+                                    <p class="text-muted">{{ object.code }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Entity Name:</strong></p>
+                                    <p class="text-muted">{{ object.name }}</p>
+                                </div>
+                                <div class="col-md-12">
+                                    <p><strong>Description:</strong></p>
+                                    <p class="text-muted">{{ object.description|default:"-" }}</p>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info" role="alert">
+                                <i class="mdi mdi-information"></i>
+                                <strong>Note:</strong> Deleting an entity will also delete all associated data (accounts, ledger entries, etc.). This action cannot be undone.
+                            </div>
+
+                            {% if has_related_records %}
+                            <div class="alert alert-warning" role="alert">
+                                <i class="mdi mdi-alert"></i>
+                                <strong>⚠️ Warning:</strong> This entity has related records that may prevent deletion:
+                                <ul class="mt-2 mb-0">
+                                    {% if opp_count %}
+                                        <li>{{ opp_count }} Opportunity(ies)</li>
+                                    {% endif %}
+                                    {% if sales_order_count %}
+                                        <li>{{ sales_order_count }} Sales Order(s)</li>
+                                    {% endif %}
+                                    {% if po_count %}
+                                        <li>{{ po_count }} Purchase Order(s)</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="mdi mdi-trash-can"></i> Delete Entity
+                                </button>
+                                <a href="{% url 'accounting:entities_list' %}" class="btn btn-secondary">
+                                    <i class="mdi mdi-close"></i> Cancel
+                                </a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

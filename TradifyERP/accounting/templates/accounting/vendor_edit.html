@@ -1,0 +1,252 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Edit Vendor | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Edit Vendor</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:vendor_list' %}">Vendors</a></li>
+                                <li class="breadcrumb-item active">Edit</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-xl-8">
+                    <div class="card">
+                        <div class="card-header bg-light-subtle">
+                            <h5 class="card-title mb-0">{{ vendor.name }}</h5>
+                            <small class="text-muted">Code: {{ vendor.vendor_code }}</small>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" class="needs-validation">
+                                {% csrf_token %}
+
+                                <!-- Vendor Code -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.vendor_code.id_for_label }}" class="col-md-3 col-form-label">
+                                        Vendor Code <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.vendor_code }}
+                                        {% if form.vendor_code.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.vendor_code.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Vendor Name -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="col-md-3 col-form-label">
+                                        Vendor Name <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.name.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.email.id_for_label }}" class="col-md-3 col-form-label">
+                                        Email
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.email }}
+                                        {% if form.email.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.email.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.phone.id_for_label }}" class="col-md-3 col-form-label">
+                                        Phone
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.phone }}
+                                        {% if form.phone.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.phone.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Address -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.address.id_for_label }}" class="col-md-3 col-form-label">
+                                        Address
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.address }}
+                                        {% if form.address.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.address.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Tax ID -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.tax_id.id_for_label }}" class="col-md-3 col-form-label">
+                                        Tax/VAT ID
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.tax_id }}
+                                        {% if form.tax_id.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.tax_id.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <!-- Currency -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.currency.id_for_label }}" class="col-md-3 col-form-label">
+                                        Currency <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.currency }}
+                                        {% if form.currency.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.currency.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Payment Terms -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.payment_terms.id_for_label }}" class="col-md-3 col-form-label">
+                                        Payment Terms
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.payment_terms }}
+                                        {% if form.payment_terms.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.payment_terms.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Form Errors -->
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <h4 class="alert-heading">Error!</h4>
+                                    {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Buttons -->
+                                <div class="row">
+                                    <div class="col-md-9 offset-md-3">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ri-save-line me-2"></i>Save Changes
+                                        </button>
+                                        <a href="{% url 'accounting:vendor_list' %}" class="btn btn-secondary">
+                                            <i class="ri-close-line me-2"></i>Cancel
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Card -->
+                <div class="col-xl-4">
+                    <div class="card">
+                        <div class="card-header bg-light-subtle">
+                            <h5 class="card-title mb-0">Edit Vendor Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted font-size-13">
+                                Update vendor information directly from the vendor list page.
+                            </p>
+                            <h6>Vendor Info:</h6>
+                            <ul class="ps-3 font-size-13">
+                                <li><strong>Code:</strong> {{ vendor.vendor_code }}</li>
+                                <li><strong>Created:</strong> {{ vendor.created_at|date:"d M Y" }}</li>
+                                <li><strong>Status:</strong> 
+                                    {% if vendor.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                            <div class="alert alert-info mt-3" role="alert">
+                                <small>
+                                    <strong>Note:</strong> All changes are automatically logged in the audit trail.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-color: #dee2e6;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

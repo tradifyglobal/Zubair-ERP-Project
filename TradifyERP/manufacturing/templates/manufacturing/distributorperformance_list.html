@@ -1,2 +1,92 @@
-{% extends 'partials/base.html' %}{% load static %}
-{% load permission_tags %}{% block head_title %}<title>Distributor Performance | TradifyERP</title>{% endblock %}{% block content %}<div class="main-content"><div class="page-content"><div class="container-fluid"><div class="row"><div class="col-12"><div class="page-title-box"><h4 class="mb-0">Distributor Performance</h4></div></div></div><div class="row mb-3"><div class="col-12"><div class="card"><form method="get" class="row g-2 p-3"><div class="col-md-8"><input type="text" name="search" class="form-control form-control-sm" placeholder="Search..." value="{{ search|default:'' }}"></div><div class="col-md-4"><button type="submit" class="btn btn-primary btn-sm">Search</button><a href="?" class="btn btn-light btn-sm">Reset</a><a href="{% url 'manufacturing:distributorperformance_create' %}" class="btn btn-success btn-sm">New</a></div></form></div></div></div><div class="row"><div class="col-12"><div class="card"><div class="card-body">{% if object_list %}<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Distributor</th><th>Rating</th><th>Orders</th><th>Period</th><th>Actions</th></tr></thead><tbody>{% for item in object_list %}<tr><td>{{ item.distributor.name }}</td><td><span class="badge bg-success">{{ item.rating|floatformat:1 }}/10</span></td><td>{{ item.total_orders }}</td><td>{{ item.performance_period }}</td><td><a href="{% url 'manufacturing:distributorperformance_update' item.pk %}" class="btn btn-sm btn-warning">Edit</a><a href="{% url 'manufacturing:distributorperformance_delete' item.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Sure?')">Delete</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="alert alert-info">No data</div>{% endif %}</div></div></div></div></div></div></div>{% endblock %}
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block head_title %}
+    <title>Distributor Performance | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="mb-0">Distributor Performance</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <form method="get" class="row g-2 p-3">
+                            <div class="col-md-8">
+                                <input type="text" name="search" class="form-control form-control-sm" 
+                                       placeholder="Search..." value="{{ search|default:'' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                                <a href="?" class="btn btn-light btn-sm">Reset</a>
+                                <a href="{% url 'manufacturing:distributorperformance_create' %}" 
+                                   class="btn btn-success btn-sm">New</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            {% if object_list %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Distributor</th>
+                                            <th>Rating</th>
+                                            <th>Orders</th>
+                                            <th>Period</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in object_list %}
+                                        <tr>
+                                            <td>{{ item.distributor.distributor_name }}</td>
+                                            <td>
+                                                <span class="badge bg-success">
+                                                    {{ item.overall_rating }}/5
+                                                </span>
+                                            </td>
+                                            <td>{{ item.orders_count }}</td>
+                                            <td>{{ item.performance_month }}/{{ item.performance_year }}</td>
+                                            <td>
+                                                <a href="{% url 'manufacturing:distributorperformance_detail' item.pk %}" 
+                                                   class="btn btn-info btn-sm" title="View">
+                                                    <i class="mdi mdi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'manufacturing:distributorperformance_update' item.pk %}" 
+                                                   class="btn btn-warning btn-sm">Edit</a>
+                                                <a href="{% url 'manufacturing:distributorperformance_delete' item.pk %}" 
+                                                   class="btn btn-danger btn-sm" onclick="return confirm('Sure?')">Delete</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">No data</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Opportunity: {{ opportunity.opportunity_name }} | CRM</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content" style="padding-bottom: 120px;">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="page-title mb-0">Opportunity Details</h4>
+                        <div>
+                            <a href="{% url 'crm:opportunity_update' opportunity.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            <a href="{% url 'crm:opportunity_delete' opportunity.pk %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
+                            <a href="{% url 'crm:opportunity_list' %}" class="btn btn-secondary btn-sm">Back to List</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opportunity Information -->
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <!-- Basic Information Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Basic Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Opportunity Number</label>
+                                    <strong>{{ opportunity.opportunity_number }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Opportunity Name</label>
+                                    <strong>{{ opportunity.opportunity_name }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Customer</label>
+                                    <strong>{{ opportunity.customer.customer_name }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Lead</label>
+                                    <strong>{{ opportunity.lead.lead_name|default:"N/A" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deal Details Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Deal Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Deal Amount</label>
+                                    <strong>${{ opportunity.deal_amount|floatformat:2 }} {{ opportunity.currency }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Weighted Value</label>
+                                    <strong>${{ opportunity.weighted_value|floatformat:2 }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Stage</label>
+                                    <strong>{{ opportunity.stage.stage_name }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Status</label>
+                                    <span class="badge bg-{% if opportunity.status == 'WON' %}success{% elif opportunity.status == 'LOST' %}danger{% elif opportunity.status == 'PENDING' %}warning{% else %}info{% endif %}">
+                                        {{ opportunity.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Probability Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Probability & Forecast</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Win Probability</label>
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ opportunity.win_probability }}%;" aria-valuenow="{{ opportunity.win_probability }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ opportunity.win_probability }}%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Assigned To</label>
+                                    <strong>{{ opportunity.assigned_to|default:"Unassigned" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dates Card -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Dates</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Created Date</label>
+                                    <strong>{{ opportunity.created_date|date:"M d, Y" }}</strong>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Expected Close Date</label>
+                                    <strong>{{ opportunity.expected_close_date|date:"M d, Y" }}</strong>
+                                </div>
+                                {% if opportunity.actual_close_date %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small d-block">Actual Close Date</label>
+                                    <strong>{{ opportunity.actual_close_date|date:"M d, Y" }}</strong>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description Card -->
+                    {% if opportunity.description or opportunity.next_steps %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Additional Information</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if opportunity.description %}
+                            <div class="mb-3">
+                                <label class="text-muted small d-block">Description</label>
+                                <p>{{ opportunity.description|linebreaks }}</p>
+                            </div>
+                            {% endif %}
+                            {% if opportunity.next_steps %}
+                            <div class="mb-3">
+                                <label class="text-muted small d-block">Next Steps</label>
+                                <p>{{ opportunity.next_steps|linebreaks }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Footer Button Bar -->
+<div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #dee2e6; padding: 15px 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); z-index: 100;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <a href="{% url 'crm:opportunity_update' opportunity.pk %}" class="btn btn-primary">Edit Opportunity</a>
+                <a href="{% url 'crm:opportunity_list' %}" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

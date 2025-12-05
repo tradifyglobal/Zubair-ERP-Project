@@ -485,9 +485,8 @@ class DistributorOrderForm(forms.ModelForm):
                 'step': '0.01',
                 'required': 'required'
             }),
-            'payment_terms': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Net 30, COD, etc.'
+            'payment_terms': forms.Select(attrs={
+                'class': 'form-select'
             }),
         }
 
@@ -801,3 +800,107 @@ class DistributorPerformanceForm(forms.ModelForm):
         return instance
 
 
+# ===== NEW MANUFACTURING MASTERS FORMS =====
+
+class WorkstationForm(forms.ModelForm):
+    class Meta:
+        from .models import Workstation
+        model = Workstation
+        fields = [
+            'workstation_code', 'workstation_name', 'description',
+            'workstation_type', 'capacity_per_hour',
+            'plant_floor_section', 'status', 'hourly_rate', 'is_active'
+        ]
+        widgets = {
+            'workstation_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., WS-001'}),
+            'workstation_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Workstation Name'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'workstation_type': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., CNC, Assembly'}),
+            'capacity_per_hour': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'plant_floor_section': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Section/Area'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'hourly_rate': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class OperationForm(forms.ModelForm):
+    class Meta:
+        from .models import Operation
+        model = Operation
+        fields = [
+            'operation_code', 'operation_name', 'description',
+            'workstation', 'standard_time_minutes', 'cost_per_unit', 'is_active'
+        ]
+        widgets = {
+            'operation_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., OP-001'}),
+            'operation_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Operation Name'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'workstation': forms.Select(attrs={'class': 'form-select'}),
+            'standard_time_minutes': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'cost_per_unit': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class StockEntryForm(forms.ModelForm):
+    class Meta:
+        from .models import StockEntry
+        model = StockEntry
+        fields = [
+            'entry_type', 'item', 'quantity', 'unit_cost',
+            'source_warehouse', 'destination_warehouse',
+            'reference_type', 'remarks'
+        ]
+        widgets = {
+            'entry_type': forms.Select(attrs={'class': 'form-select'}),
+            'item': forms.Select(attrs={'class': 'form-select'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'unit_cost': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'source_warehouse': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Source Warehouse'}),
+            'destination_warehouse': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Destination Warehouse'}),
+            'reference_type': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Reference Type'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class JobCardForm(forms.ModelForm):
+    class Meta:
+        from .models import JobCard
+        model = JobCard
+        fields = [
+            'production_order', 'operation', 'workstation', 'assigned_to',
+            'status', 'scheduled_start_date', 'scheduled_end_date',
+            'quantity_to_produce', 'instructions', 'remarks'
+        ]
+        widgets = {
+            'production_order': forms.Select(attrs={'class': 'form-select'}),
+            'operation': forms.Select(attrs={'class': 'form-select'}),
+            'workstation': forms.Select(attrs={'class': 'form-select'}),
+            'assigned_to': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'scheduled_start_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'scheduled_end_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'quantity_to_produce': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class DowntimeEntryForm(forms.ModelForm):
+    class Meta:
+        from .models import DowntimeEntry
+        model = DowntimeEntry
+        fields = [
+            'job_card', 'workstation', 'downtime_reason',
+            'start_time', 'end_time', 'description', 'corrective_action'
+        ]
+        widgets = {
+            'job_card': forms.Select(attrs={'class': 'form-select'}),
+            'workstation': forms.Select(attrs={'class': 'form-select'}),
+            'downtime_reason': forms.Select(attrs={'class': 'form-select'}),
+            'start_time': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'end_time': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'corrective_action': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }

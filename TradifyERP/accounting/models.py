@@ -9,6 +9,14 @@ class Entity(models.Model):
     name = models.CharField(max_length=255, unique=True)
     code = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
+    company_currency = models.ForeignKey(
+        'Currency',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='entities',
+        help_text="Default currency for this entity (e.g., INR)"
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -19,6 +27,24 @@ class Entity(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.name}"
+
+
+class UserEntity(models.Model):
+    """Link users to entities they have access to."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='entity_assignments')
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='user_assignments')
+    is_default = models.BooleanField(default=False, help_text="User's default entity on login")
+    can_switch = models.BooleanField(default=True, help_text="User can switch to other assigned entities")
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='entity_assignments_given')
+
+    class Meta:
+        unique_together = ('user', 'entity')
+        verbose_name_plural = "User Entities"
+        ordering = ['-is_default', 'entity__name']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.entity.name}"
 
 
 class Currency(models.Model):
@@ -56,6 +82,7 @@ class Account(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True)
     opening_balance = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    parent_account = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='sub_accounts')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -65,6 +92,50 @@ class Account(models.Model):
 
     def __str__(self):
         return f"{self.account_number} - {self.name}"
+    
+    def is_capital_account(self):
+        """Check if this is a capital/equity account."""
+        return 'capital' in self.name.lower() and self.account_type == 'EQUITY'
+    
+    def get_shareholder_subaccount(self, stakeholder):
+        """Get or create a shareholder sub-account under this capital account."""
+        if not self.is_capital_account():
+            return None
+        
+        # Find highest sub-account number
+        sub_accounts = self.sub_accounts.filter(account_number__startswith=self.account_number + '-').order_by('-account_number')
+        
+        if sub_accounts.exists():
+            last_number = sub_accounts.first().account_number
+            # Extract the sub-number (e.g., "3100-02" -> 02)
+            sub_num = int(last_number.split('-')[-1])
+            next_sub_num = sub_num + 1
+        else:
+            next_sub_num = 1
+        
+        # Generate sub-account code
+        new_account_number = f"{self.account_number}-{next_sub_num:02d}"
+        
+        # Get stakeholder name
+        if stakeholder.stakeholder_type == 'INDIVIDUAL':
+            shareholder_name = stakeholder.full_name
+        else:
+            shareholder_name = stakeholder.company_name or str(stakeholder)
+        
+        # Create or get the sub-account
+        sub_account, created = Account.objects.get_or_create(
+            entity=self.entity,
+            account_number=new_account_number,
+            defaults={
+                'name': f"{shareholder_name} - Capital",
+                'account_type': self.account_type,
+                'currency': self.currency,
+                'parent_account': self,
+                'is_active': True,
+                'description': f"Capital account for {shareholder_name}"
+            }
+        )
+        return sub_account
 
 
 class LedgerEntry(models.Model):
@@ -72,6 +143,14 @@ class LedgerEntry(models.Model):
     ENTRY_TYPES = [
         ('DEBIT', 'Debit'),
         ('CREDIT', 'Credit'),
+    ]
+    
+    WORKFLOW_STATUS = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
     ]
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='ledger_entries')
@@ -82,6 +161,7 @@ class LedgerEntry(models.Model):
     description = models.TextField(blank=True, null=True)
     reference_number = models.CharField(max_length=100, blank=True, null=True)
     is_posted = models.BooleanField(default=False)
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS, default='DRAFT')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -595,6 +675,7 @@ class Stakeholder(models.Model):
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     middle_name = models.CharField(max_length=100, blank=True, null=True)
+    father_name = models.CharField(max_length=100, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
     gender = models.CharField(max_length=20, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')], blank=True, null=True)
     
@@ -605,17 +686,31 @@ class Stakeholder(models.Model):
     
     # Contact Information
     email = models.EmailField()
-    phone_number = models.CharField(max_length=20)
-    secondary_phone = models.CharField(max_length=20, blank=True, null=True)
-    fax = models.CharField(max_length=20, blank=True, null=True)
+    phone_number = models.CharField(max_length=50)
+    secondary_phone = models.CharField(max_length=50, blank=True, null=True)
+    fax = models.CharField(max_length=50, blank=True, null=True)
     
-    # Address Information
+    # Address Information - Permanent Address
+    permanent_address_line_1 = models.CharField(max_length=255, blank=True, null=True)
+    permanent_address_line_2 = models.CharField(max_length=255, blank=True, null=True)
+    permanent_city = models.CharField(max_length=100, blank=True, null=True)
+    permanent_state_province = models.CharField(max_length=100, blank=True, null=True)
+    permanent_postal_code = models.CharField(max_length=20, blank=True, null=True)
+    permanent_country = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Address Information - Current Address
     address_line_1 = models.CharField(max_length=255)
     address_line_2 = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100)
     state_province = models.CharField(max_length=100, blank=True, null=True)
     postal_code = models.CharField(max_length=20)
     country = models.CharField(max_length=100)
+    same_as_permanent = models.BooleanField(default=False, help_text="Check if current address is same as permanent address")
+    
+    # Identity Documents
+    passport_number = models.CharField(max_length=50, blank=True, null=True)
+    aadhar_number = models.CharField(max_length=50, blank=True, null=True)
+    pan_sin_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="PAN / SIN Number")
     
     # Tax & Identification
     tax_identification_number = models.CharField(max_length=50, blank=True, null=True)  # SSN, EIN, VAT ID, etc.
@@ -653,14 +748,25 @@ class Stakeholder(models.Model):
     
     @property
     def total_invested(self):
-        """Calculate total capital invested by this stakeholder."""
-        # Include both completed and pending contributions for total invested
-        total = 0
-        for cc in self.capital_contributions.all():
-            # Use amount_company_currency if amount_usd is not set or is 0
-            amount = cc.amount_usd if cc.amount_usd else (cc.amount_company_currency or cc.amount)
-            total += float(amount or 0)
-        return total
+        """Calculate total capital invested by this stakeholder.
+        
+        Includes:
+        - Approved capital contributions (workflow_status=APPROVED)
+        - Paid shareholder payment commitments (status=PAID)
+        """
+        total = Decimal('0.00')
+        
+        # Add approved capital contributions (workflow_status = APPROVED)
+        approved_contributions = self.capital_contributions.filter(workflow_status='APPROVED')
+        for cc in approved_contributions:
+            total += Decimal(str(cc.amount_company_currency or 0))
+        
+        # Add paid payment commitments
+        paid_commitments = self.payment_commitments.filter(status='PAID')
+        for pc in paid_commitments:
+            total += Decimal(str(pc.committed_amount or 0))
+        
+        return float(total)
     
     @property
     def total_shares(self):
@@ -703,11 +809,108 @@ class CapitalContribution(models.Model):
         ('RETURNED', 'Returned'),
     ]
     
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('SUBMITTED', 'Submitted'),
+        ('FIRST_REVIEW_COMPLETED', 'First Review Completed'),
+        ('REVIEWED', 'Both Reviews Completed'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
     # Core Fields
     entity = models.ForeignKey('accounting.Entity', on_delete=models.CASCADE, related_name='capital_contributions')
     stakeholder = models.ForeignKey(Stakeholder, on_delete=models.CASCADE, related_name='capital_contributions')
     contribution_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    
+    # Workflow Status
+    workflow_status = models.CharField(
+        max_length=30, 
+        choices=WORKFLOW_STATUS_CHOICES, 
+        default='DRAFT',
+        help_text="Workflow approval status"
+    )
+    
+    # Workflow Users
+    submitted_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='submitted_capital_contributions',
+        help_text="User who submitted the contribution"
+    )
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    
+    # Assigned Reviewers (Track who is assigned to review)
+    assigned_reviewer_1 = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_review_capital_contributions',
+        help_text="User assigned to perform first review"
+    )
+    
+    assigned_reviewer_2 = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_review_capital_contributions_2',
+        help_text="User assigned to perform second review"
+    )
+    
+    reviewed_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_capital_contributions',
+        help_text="First reviewer of the contribution"
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(blank=True, null=True, help_text="Notes from first reviewer")
+    
+    # Second Reviewer
+    reviewed_by_2 = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_capital_contributions_2',
+        help_text="Second reviewer of the contribution"
+    )
+    reviewed_at_2 = models.DateTimeField(null=True, blank=True, help_text="When second reviewer completed review")
+    review_notes_2 = models.TextField(blank=True, null=True, help_text="Notes from second reviewer")
+    
+    approved_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_capital_contributions',
+        help_text="User who approved the contribution"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approval_notes = models.TextField(blank=True, null=True, help_text="Notes from approver")
+    
+    # Assigned Approver (Track who can approve)
+    assigned_approver = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_approval_capital_contributions',
+        help_text="User assigned to perform approval"
+    )
+    
+    rejection_reason = models.TextField(blank=True, null=True, help_text="Reason for rejection")
+    
+    # Amount Details
+    amount = models.DecimalField(max_digits=18, decimal_places=2, help_text="Amount in original currency")
+    currency = models.ForeignKey('accounting.Currency', on_delete=models.PROTECT, related_name='capital_contributions')
     
     # Amount Details
     amount = models.DecimalField(max_digits=18, decimal_places=2, help_text="Amount in original currency")
@@ -742,7 +945,14 @@ class CapitalContribution(models.Model):
     # Payment Details
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODES)
     reference_number = models.CharField(max_length=100, blank=True, null=True)
-    payment_bank_account = models.CharField(max_length=255, blank=True, null=True)
+    payment_bank_account = models.ForeignKey(
+        'accounting.BankProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='capital_contributions',
+        help_text="Bank profile for receiving this contribution"
+    )
     payment_method_details = models.TextField(blank=True, null=True)  # Cheque number, wire tracking, etc.
     
     # Bank/Account Details
@@ -799,13 +1009,16 @@ class CapitalContribution(models.Model):
         
         self.amount_company_currency = self.amount * self.exchange_rate
         
-        # Calculate USD equivalent (assuming company currency exchange rate is set)
+        # Calculate USD equivalent
+        # currency_destination.exchange_rate is the rate from that currency to USD
+        # So multiply to convert to USD
         try:
             usd_currency = Currency.objects.get(code='USD')
             if self.currency_destination == usd_currency:
                 self.amount_usd = self.amount_company_currency
             else:
-                self.amount_usd = self.amount_company_currency / self.currency_destination.exchange_rate
+                # Multiply by the exchange rate to get USD amount
+                self.amount_usd = self.amount_company_currency * self.currency_destination.exchange_rate
         except:
             self.amount_usd = self.amount_company_currency
         
@@ -887,6 +1100,12 @@ class CapitalContribution(models.Model):
         except Exception as e:
             # Log error but don't fail the contribution
             pass
+    
+    def create_ledger_entry(self):
+        """Public method to create ledger entry when approval is completed."""
+        if not self.ledger_entry and self.status == 'COMPLETED':
+            self._create_ledger_entry()
+
 
 
 class Shareholding(models.Model):
@@ -974,6 +1193,320 @@ class Shareholding(models.Model):
             return Decimal('0.00')
         
         return (Decimal(self.number_of_shares) / Decimal(total_shares) * 100).quantize(Decimal('0.01'))
+
+
+# ============ CASH MANAGEMENT MODULE ============
+
+class CashReceiptLine(models.Model):
+    """Line items for cash receipts."""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+        ('POSTED', 'Posted'),
+    ]
+    
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='cash_receipt_lines')
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_receipt_debit', help_text="Debit account (e.g., 3100-01 Capital)")
+    credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_receipt_credit', help_text="Credit account (e.g., 100001 Cash)", null=True, blank=True)
+    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    date = models.DateField(default=timezone.now)
+    description = models.CharField(max_length=500)
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['entity', '-date']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Cash Receipt - {self.date} - {self.description[:50]}"
+
+
+class CashPaymentLine(models.Model):
+    """Line items for cash payments."""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+        ('POSTED', 'Posted'),
+    ]
+    
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='cash_payment_lines')
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_payment_debit', help_text="Debit account (e.g., shareholder capital)")
+    credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_payment_credit', help_text="Credit account (e.g., 100001 Cash)", null=True, blank=True)
+    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    date = models.DateField(default=timezone.now)
+    description = models.CharField(max_length=500)
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['entity', '-date']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Cash Payment - {self.date} - {self.description[:50]}"
+
+
+class BankReceiptLine(models.Model):
+    """Line items for bank receipts."""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+        ('POSTED', 'Posted'),
+    ]
+    
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='bank_receipt_lines')
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_receipt_debit', help_text="Debit account (e.g., 3100-01 Capital)", null=True, blank=True)
+    credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_receipt_credit', help_text="Credit account (e.g., 1000 Bank)", null=True, blank=True)
+    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    date = models.DateField(default=timezone.now)
+    description = models.CharField(max_length=500)
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['entity', '-date']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Bank Receipt - {self.date} - {self.debit_amount}"
+
+
+class BankPaymentLine(models.Model):
+    """Line items for bank payments."""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+        ('POSTED', 'Posted'),
+    ]
+    
+    WORKFLOW_STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('AUTHORIZED', 'Authorized'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='bank_payment_lines')
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_payment_debit', help_text="Debit account (e.g., 1000 Bank)", null=True, blank=True)
+    credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_payment_credit', help_text="Credit account (e.g., 3100-01 Capital)", null=True, blank=True)
+    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    date = models.DateField(default=timezone.now)
+    description = models.CharField(max_length=500)
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['entity', '-date']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Bank Payment - {self.date} - {self.debit_amount}"
+
+
+class ShareholderInvestmentLimit(models.Model):
+    """Investment limits and commitments for shareholders."""
+    
+    entity = models.ForeignKey(
+        Entity,
+        on_delete=models.CASCADE,
+        related_name='shareholder_limits'
+    )
+    stakeholder = models.OneToOneField(
+        Stakeholder,
+        on_delete=models.CASCADE,
+        related_name='investment_limit'
+    )
+    currency = models.ForeignKey(
+        Currency,
+        on_delete=models.PROTECT,
+        default=1  # Assuming INR is currency_id 1
+    )
+    
+    # Investment Commitment
+    target_investment_amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        default=1000000,  # 10 lacs default
+        help_text="Target investment amount per shareholder"
+    )
+    
+    # Tracking
+    total_invested = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        default=0,
+        editable=False,
+        help_text="Total amount already invested"
+    )
+    balance_to_invest = models.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        default=0,
+        editable=False,
+        help_text="Remaining amount to meet target"
+    )
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('entity', 'stakeholder')
+        verbose_name_plural = "Shareholder Investment Limits"
+    
+    def __str__(self):
+        return f"{self.stakeholder.full_name} - {self.target_investment_amount} limit"
+    
+    def update_totals(self):
+        """Update total_invested and balance_to_invest from capital contributions."""
+        # Sum all completed contributions
+        completed_contributions = self.stakeholder.capital_contributions.filter(
+            status='COMPLETED',
+            entity=self.entity
+        ).aggregate(total=models.Sum('amount_company_currency'))['total'] or 0
+        
+        self.total_invested = completed_contributions
+        self.balance_to_invest = self.target_investment_amount - self.total_invested
+        self.save()
+    
+    @property
+    def invested_percentage(self):
+        """Calculate investment percentage."""
+        if self.target_investment_amount == 0:
+            return 0
+        return (self.total_invested / self.target_investment_amount) * 100
+
+
+class ShareholderPaymentCommitment(models.Model):
+    """Track promised payment dates and commitments from shareholders."""
+    
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('PAID', 'Paid'),
+        ('OVERDUE', 'Overdue'),
+        ('RESCHEDULED', 'Rescheduled'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    entity = models.ForeignKey(
+        Entity,
+        on_delete=models.CASCADE,
+        related_name='shareholder_commitments'
+    )
+    stakeholder = models.ForeignKey(
+        Stakeholder,
+        on_delete=models.CASCADE,
+        related_name='payment_commitments'
+    )
+    
+    # Commitment Details
+    committed_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
+    promised_payment_date = models.DateField(help_text="Date shareholder promised to pay")
+    
+    # Status Tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    actual_payment_date = models.DateField(null=True, blank=True)
+    
+    # Reference
+    notes = models.TextField(blank=True, null=True)
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-promised_payment_date']
+        verbose_name_plural = "Shareholder Payment Commitments"
+        indexes = [
+            models.Index(fields=['stakeholder', 'status']),
+            models.Index(fields=['promised_payment_date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.stakeholder.full_name} - {self.committed_amount} on {self.promised_payment_date}"
+    
+    @property
+    def is_overdue(self):
+        """Check if payment is overdue."""
+        if self.status == 'PENDING':
+            return timezone.now().date() > self.promised_payment_date
+        return False
 
 
 # Import RBAC models to register them with Django ORM

@@ -1,0 +1,126 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Distributor Order #{{ object.order_number }} | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Order #{{ object.order_number }}</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:dashboard' %}">Manufacturing</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:distributororder_list' %}">Orders</a></li>
+                                <li class="breadcrumb-item active">Detail</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Order Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Order Number</label>
+                                    <p class="mb-0"><strong>{{ object.order_number }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Status</label>
+                                    <p class="mb-0">
+                                        <span class="badge {% if object.status == 'SUBMITTED' %}bg-info{% elif object.status == 'CONFIRMED' %}bg-success{% elif object.status == 'SHIPPED' %}bg-primary{% elif object.status == 'DELIVERED' %}bg-success{% elif object.status == 'CANCELLED' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ object.get_status_display }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Distributor</label>
+                                    <p class="mb-0"><strong>{{ object.distributor.distributor_name }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Distributor Code</label>
+                                    <p class="mb-0"><strong>{{ object.distributor.distributor_code }}</strong></p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Order Date</label>
+                                    <p class="mb-0"><strong>{{ object.order_date|date:"d M Y" }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Required Delivery Date</label>
+                                    <p class="mb-0"><strong>{{ object.required_delivery_date|date:"d M Y" }}</strong></p>
+                                </div>
+                            </div>
+
+                            {% if object.description %}
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label text-muted">Description</label>
+                                    <p class="mb-0">{{ object.description }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Subtotal</label>
+                                    <p class="mb-0"><strong>{{ object.subtotal }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Discount Amount</label>
+                                    <p class="mb-0"><strong>{{ object.discount_amount }}</strong></p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Tax Amount</label>
+                                    <p class="mb-0"><strong>{{ object.tax_amount }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Total Amount</label>
+                                    <p class="mb-0"><strong>{{ object.total_amount }}</strong></p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Payment Terms</label>
+                                    <p class="mb-0"><strong>{{ object.get_payment_terms_display }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Created</label>
+                                    <p class="mb-0"><small>{{ object.created_at|date:"d M Y, H:i" }}</small></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'manufacturing:distributororder_update' object.pk %}" class="btn btn-warning"><i class="mdi mdi-pencil"></i> Edit</a>
+                                <a href="{% url 'manufacturing:distributororder_delete' object.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure?')"><i class="mdi mdi-delete"></i> Delete</a>
+                                <a href="{% url 'manufacturing:distributororder_list' %}" class="btn btn-light">Back</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

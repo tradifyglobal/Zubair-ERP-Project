@@ -1,0 +1,193 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Cash Position - Capital Contributions{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="mb-sm-0">Cash Position</h4>
+                        <p class="text-muted mb-0 mt-2">Capital Contributions & Cash Balance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if error %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% else %}
+
+        <!-- Summary Section -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <span class="text-muted d-block">Completed Contributions</span>
+                        <h4 class="my-2">{{ summary.completed.count }}</h4>
+                        <p class="text-muted mb-0">
+                            <strong class="text-success">{{ summary.completed.amount|floatformat:2 }}</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <span class="text-muted d-block">Pending Contributions</span>
+                        <h4 class="my-2">{{ summary.pending.count }}</h4>
+                        <p class="text-muted mb-0">
+                            <strong class="text-warning">{{ summary.pending.amount|floatformat:2 }}</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <span class="text-muted d-block">Cancelled Contributions</span>
+                        <h4 class="my-2">{{ summary.cancelled.count }}</h4>
+                        <p class="text-muted mb-0">
+                            <strong class="text-danger">{{ summary.cancelled.amount|floatformat:2 }}</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <span class="text-muted d-block">Total Received (USD)</span>
+                        <h4 class="my-2">$ {{ total_received|floatformat:2 }}</h4>
+                        <p class="text-muted mb-0 small">At current rates</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- By Entity -->
+        {% if by_entity %}
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Capital Received by Entity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Entity</th>
+                                        <th class="text-end">Contributions</th>
+                                        <th class="text-end">Total Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entity_data in by_entity %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ entity_data.entity__name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ entity_data.entity__code }}</small>
+                                            </td>
+                                            <td class="text-end">{{ entity_data.count }}</td>
+                                            <td class="text-end">
+                                                <strong class="text-success">{{ entity_data.total|floatformat:2 }}</strong>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Timeline of All Contributions -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Capital Contributions Timeline</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if contributions_timeline %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Investor</th>
+                                            <th>Amount (Original)</th>
+                                            <th>Source Currency</th>
+                                            <th>Exchange Rate</th>
+                                            <th class="text-end">Amount (Company Currency)</th>
+                                            <th>Status</th>
+                                            <th>GL Entry</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for contribution in contributions_timeline %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ contribution.contribution_date|date:"M d, Y" }}</strong>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'shareholder:stakeholder-detail' contribution.stakeholder.pk %}" class="text-primary">
+                                                        {{ contribution.stakeholder.first_name }} {{ contribution.stakeholder.last_name }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ contribution.amount|floatformat:2 }}</td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">{{ contribution.currency.code }}</span>
+                                                </td>
+                                                <td>{{ contribution.exchange_rate|floatformat:6 }}</td>
+                                                <td class="text-end">
+                                                    <strong class="text-success">{{ contribution.amount_company_currency|floatformat:2 }}</strong>
+                                                </td>
+                                                <td>
+                                                    {% if contribution.status == 'COMPLETED' %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                    {% elif contribution.status == 'PENDING' %}
+                                                        <span class="badge bg-warning">Pending</span>
+                                                    {% elif contribution.status == 'CANCELLED' %}
+                                                        <span class="badge bg-danger">Cancelled</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">{{ contribution.get_status_display }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if contribution.ledger_entry %}
+                                                        <a href="#" class="badge bg-info">Posted</a>
+                                                    {% else %}
+                                                        <span class="badge bg-light">Not Posted</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <p class="text-muted mb-0">No capital contributions recorded</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

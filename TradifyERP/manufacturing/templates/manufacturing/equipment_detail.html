@@ -1,0 +1,101 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block head_title %}<title>{{ object.name }} | Equipment | TradifyERP</title>{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">{{ object.name }}</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:dashboard' %}">Manufacturing</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'manufacturing:equipment_list' %}">Equipment</a></li>
+                                <li class="breadcrumb-item active">Detail</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Equipment Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Equipment Code</label>
+                                    <p class="mb-0"><strong>{{ object.equipment_code }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Status</label>
+                                    <p class="mb-0">
+                                        <span class="badge {% if object.status == 'OPERATIONAL' %}bg-success{% elif object.status == 'MAINTENANCE' %}bg-warning{% elif object.status == 'REPAIR' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ object.get_status_display }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Model</label>
+                                    <p class="mb-0"><strong>{{ object.model|default:"—" }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Serial Number</label>
+                                    <p class="mb-0"><strong>{{ object.serial_number|default:"—" }}</strong></p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Acquisition Date</label>
+                                    <p class="mb-0"><strong>{{ object.acquisition_date|date:"d M Y" }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Acquisition Cost</label>
+                                    <p class="mb-0"><strong>{{ object.acquisition_cost }}</strong></p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Last Maintenance</label>
+                                    <p class="mb-0"><strong>{{ object.last_maintenance_date|default:"—" }}</strong></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Next Maintenance</label>
+                                    <p class="mb-0"><strong>{{ object.next_maintenance_date|default:"—" }}</strong></p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label text-muted">Maintenance Interval (Days)</label>
+                                    <p class="mb-0"><strong>{{ object.maintenance_interval_days }}</strong></p>
+                                </div>
+                            </div>
+                            {% if object.description %}
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label text-muted">Description</label>
+                                    <p class="mb-0">{{ object.description }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-light">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'manufacturing:equipment_update' object.pk %}" class="btn btn-warning"><i class="mdi mdi-pencil"></i> Edit</a>
+                                <a href="{% url 'manufacturing:equipment_delete' object.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure?')"><i class="mdi mdi-delete"></i> Delete</a>
+                                <a href="{% url 'manufacturing:equipment_list' %}" class="btn btn-light">Back</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

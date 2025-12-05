@@ -5,6 +5,7 @@ Forms for employee management, payroll, and leave requests.
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 
 from .models import (
@@ -33,7 +34,7 @@ class EmployeeForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'ssn': forms.TextInput(attrs={'class': 'form-control', 'type': 'password'}),
+            'ssn': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}),
             'tax_id': forms.TextInput(attrs={'class': 'form-control'}),
             'position': forms.Select(attrs={'class': 'form-control'}),
             'department': forms.Select(attrs={'class': 'form-control'}),
@@ -51,6 +52,53 @@ class EmployeeForm(forms.ModelForm):
             'country': forms.TextInput(attrs={'class': 'form-control'}),
             'user': forms.Select(attrs={'class': 'form-control'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        # Extract request if passed
+        request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+        
+        # Pre-populate entity from session
+        if request and hasattr(request, 'session'):
+            entity_id = request.session.get('selected_entity_id')
+            if entity_id:
+                self.fields['entity'].initial = entity_id
+    
+    def clean_email(self):
+        """Validate email uniqueness excluding current instance."""
+        email = self.cleaned_data.get('email')
+        if email:
+            # Exclude current instance from uniqueness check
+            qs = Employee.objects.filter(email=email)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError('This email address is already in use.')
+        return email
+    
+    def clean_employee_id(self):
+        """Validate employee_id uniqueness excluding current instance."""
+        employee_id = self.cleaned_data.get('employee_id')
+        if employee_id:
+            # Exclude current instance from uniqueness check
+            qs = Employee.objects.filter(employee_id=employee_id)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError('This employee ID is already in use.')
+        return employee_id
+    
+    def clean_ssn(self):
+        """Validate SSN uniqueness excluding current instance."""
+        ssn = self.cleaned_data.get('ssn')
+        if ssn:
+            # Exclude current instance from uniqueness check
+            qs = Employee.objects.filter(ssn=ssn)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError('This SSN is already in use.')
+        return ssn
 
 
 class DepartmentForm(forms.ModelForm):
@@ -58,8 +106,9 @@ class DepartmentForm(forms.ModelForm):
     
     class Meta:
         model = Department
-        fields = ['name', 'code', 'description', 'cost_center_account', 'manager', 'annual_budget', 'is_active']
+        fields = ['entity', 'name', 'code', 'description', 'cost_center_account', 'manager', 'annual_budget', 'is_active']
         widgets = {
+            'entity': forms.Select(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'DEPT001'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -68,6 +117,17 @@ class DepartmentForm(forms.ModelForm):
             'annual_budget': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        # Extract request if passed
+        request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+        
+        # Pre-populate entity from session
+        if request and hasattr(request, 'session'):
+            entity_id = request.session.get('selected_entity_id')
+            if entity_id:
+                self.fields['entity'].initial = entity_id
 
 
 class PositionForm(forms.ModelForm):
@@ -76,11 +136,12 @@ class PositionForm(forms.ModelForm):
     class Meta:
         model = Position
         fields = [
-            'title', 'code', 'description', 'department', 'employment_type',
+            'entity', 'title', 'code', 'description', 'department', 'employment_type',
             'salary_grade', 'min_salary', 'max_salary', 'salary_expense_account',
             'reports_to', 'is_active'
         ]
         widgets = {
+            'entity': forms.Select(attrs={'class': 'form-control'}),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'POS001'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -93,6 +154,17 @@ class PositionForm(forms.ModelForm):
             'reports_to': forms.Select(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        # Extract request if passed
+        request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+        
+        # Pre-populate entity from session
+        if request and hasattr(request, 'session'):
+            entity_id = request.session.get('selected_entity_id')
+            if entity_id:
+                self.fields['entity'].initial = entity_id
 
 
 class PayrollForm(forms.ModelForm):
@@ -103,11 +175,24 @@ class PayrollForm(forms.ModelForm):
         fields = ['entity', 'payroll_number', 'payroll_date', 'period_start', 'period_end']
         widgets = {
             'entity': forms.Select(attrs={'class': 'form-control'}),
-            'payroll_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PAY-2025-01'}),
+            'payroll_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PAY-2025-01 (optional - auto-generated if blank)'}),
             'payroll_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'period_start': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'period_end': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        # Extract request if passed
+        request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+        # Make payroll_number optional
+        self.fields['payroll_number'].required = False
+        
+        # Pre-populate entity from session
+        if request and hasattr(request, 'session'):
+            entity_id = request.session.get('selected_entity_id')
+            if entity_id:
+                self.fields['entity'].initial = entity_id
     
     def clean(self):
         cleaned_data = super().clean()
@@ -165,6 +250,29 @@ class LeaveRequestForm(forms.ModelForm):
             'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
     
+    def __init__(self, *args, entity_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Filter employee by entity
+        if entity_id:
+            self.fields['employee'].queryset = Employee.objects.filter(entity_id=entity_id)
+            # Filter leave_type by entity - show all leaves but prefer approved
+            # This allows users to see what's available and get proper error messages
+            self.fields['leave_type'].queryset = Leave.objects.filter(entity_id=entity_id)
+        else:
+            self.fields['employee'].queryset = Employee.objects.none()
+            self.fields['leave_type'].queryset = Leave.objects.none()
+    
+    def clean_leave_type(self):
+        """Validate that selected leave type is approved."""
+        leave_type = self.cleaned_data.get('leave_type')
+        if leave_type and leave_type.status != 'APPROVED':
+            raise forms.ValidationError(
+                f"Leave type '{leave_type.name}' is not approved yet. "
+                f"Current status: {leave_type.get_status_display()}"
+            )
+        return leave_type
+    
     def clean(self):
         cleaned_data = super().clean()
         start_date = cleaned_data.get('start_date')
@@ -209,6 +317,28 @@ class PerformanceForm(forms.ModelForm):
             'goals_for_next_period': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'recommended_raise': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
+    
+    def clean(self):
+        """Validate the form."""
+        cleaned_data = super().clean()
+        
+        employee = cleaned_data.get('employee')
+        review_date = cleaned_data.get('review_date')
+        
+        if employee and review_date:
+            # Check if a review already exists for this employee on this date
+            from hr.models import Performance
+            existing = Performance.objects.filter(
+                employee=employee,
+                review_date=review_date
+            ).exists()
+            
+            if existing:
+                raise forms.ValidationError(
+                    f"A performance review already exists for {employee} on {review_date}."
+                )
+        
+        return cleaned_data
 
 
 class DisciplinaryForm(forms.ModelForm):
@@ -241,11 +371,12 @@ class BenefitForm(forms.ModelForm):
     class Meta:
         model = Benefit
         fields = [
-            'name', 'benefit_type', 'description', 'employee_cost',
-            'employer_cost', 'employee_expense_account', 'employer_expense_account',
-            'is_active'
+            'entity', 'name', 'benefit_type', 'description',
+            'employee_cost', 'employer_cost', 'employee_expense_account', 
+            'employer_expense_account', 'is_active'
         ]
         widgets = {
+            'entity': forms.Select(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'benefit_type': forms.Select(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -255,6 +386,17 @@ class BenefitForm(forms.ModelForm):
             'employer_expense_account': forms.Select(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        # Extract request if passed
+        request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+        
+        # Pre-populate entity from session
+        if request and hasattr(request, 'session'):
+            entity_id = request.session.get('selected_entity_id')
+            if entity_id:
+                self.fields['entity'].initial = entity_id
 
 
 class EmployeeBenefitForm(forms.ModelForm):
@@ -278,13 +420,22 @@ class EmployeeBenefitForm(forms.ModelForm):
 
 
 class SalaryHistoryForm(forms.ModelForm):
-    """Form for salary change records."""
+    """Form for salary change records with workflow approval."""
+    
+    # Additional field for approver selection
+    approved_by = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_staff=True),
+        required=False,
+        label='Select Approver',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        help_text='Select who should approve this salary change'
+    )
     
     class Meta:
         model = SalaryHistory
         fields = [
             'employee', 'effective_date', 'salary_before', 'salary_after',
-            'change_reason', 'performance_rating', 'approval_notes'
+            'change_reason', 'performance_rating', 'status', 'approved_by', 'approval_notes'
         ]
         widgets = {
             'employee': forms.Select(attrs={'class': 'form-control'}),
@@ -293,5 +444,119 @@ class SalaryHistoryForm(forms.ModelForm):
             'salary_after': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'change_reason': forms.Select(attrs={'class': 'form-control'}),
             'performance_rating': forms.Select(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
             'approval_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+
+class LeaveForm(forms.ModelForm):
+    """Form for creating/editing leave types."""
+    
+    ACCRUAL_CHOICES = [
+        ('ANNUAL', 'Annual - All days at beginning of year'),
+        ('MONTHLY', 'Monthly - Accrued each month'),
+        ('QUARTERLY', 'Quarterly - Accrued each quarter'),
+    ]
+    
+    accrual_method = forms.ChoiceField(
+        choices=ACCRUAL_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        help_text="How and when leave is accrued"
+    )
+    
+    class Meta:
+        model = Leave
+        fields = [
+            'entity', 'name', 'code', 'annual_allocation', 'accrual_method',
+            'can_carry_over', 'max_carryover', 'requires_approval', 'notice_days_required'
+        ]
+        widgets = {
+            'entity': forms.Select(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_name', 'placeholder': 'Enter leave type name'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_code', 'readonly': 'readonly', 'placeholder': 'Auto-generated'}),
+            'annual_allocation': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'can_carry_over': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'max_carryover': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '5'}),
+            'requires_approval': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'notice_days_required': forms.NumberInput(attrs={'class': 'form-control', 'type': 'number'}),
+        }
+    
+    def __init__(self, *args, entity_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter entity field to show only the selected entity
+        if entity_id:
+            from accounting.models import Entity
+            self.fields['entity'].queryset = Entity.objects.filter(id=entity_id)
+            self.fields['entity'].initial = entity_id
+    
+    def clean_max_carryover(self):
+        """Validate that max carryover is not more than 5 days."""
+        max_carryover = self.cleaned_data.get('max_carryover')
+        if max_carryover and max_carryover > 5:
+            raise forms.ValidationError('Maximum carryover cannot exceed 5 days.')
+        return max_carryover
+    
+    def clean_code(self):
+        """Validate that code is unique (excluding current instance)."""
+        code = self.cleaned_data.get('code')
+        if code:
+            qs = Leave.objects.filter(code=code)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError('This leave code already exists.')
+        return code
+
+
+class LeaveBalanceForm(forms.ModelForm):
+    """Form for managing employee leave balances."""
+    
+    class Meta:
+        model = LeaveBalance
+        fields = [
+            'employee', 'leave_type', 'year', 'opening_balance',
+            'allocated', 'taken'
+        ]
+        widgets = {
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'leave_type': forms.Select(attrs={'class': 'form-control'}),
+            'year': forms.NumberInput(attrs={'class': 'form-control', 'type': 'number', 'min': '2020'}),
+            'opening_balance': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'allocated': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'taken': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+        }
+    
+    def __init__(self, *args, entity_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Filter employee by entity
+        if entity_id:
+            self.fields['employee'].queryset = Employee.objects.filter(entity_id=entity_id)
+            self.fields['leave_type'].queryset = Leave.objects.filter(entity_id=entity_id)
+        else:
+            self.fields['employee'].queryset = Employee.objects.none()
+            self.fields['leave_type'].queryset = Leave.objects.none()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        employee = cleaned_data.get('employee')
+        leave_type = cleaned_data.get('leave_type')
+        year = cleaned_data.get('year')
+        
+        # Check for duplicate leave balance
+        if employee and leave_type and year:
+            qs = LeaveBalance.objects.filter(
+                employee=employee,
+                leave_type=leave_type,
+                year=year
+            )
+            # Exclude current instance if updating
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            
+            if qs.exists():
+                raise forms.ValidationError(
+                    f'Leave balance for {employee} - {leave_type} ({year}) already exists.'
+                )
+        
+        return cleaned_data

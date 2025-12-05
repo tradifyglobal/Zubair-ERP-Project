@@ -38,6 +38,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '0.0.0.0',
     '192.168.2.55',
+    'www.tradifyglobal.com',
+    'tradifyglobal.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -46,6 +48,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://0.0.0.0:8000',
     'http://192.168.2.55:8000',
+    'https://www.tradifyglobal.com',
+    'https://tradifyglobal.com',
+    'http://www.tradifyglobal.com',
+    'http://tradifyglobal.com',
 ]
 
 CSRF_COOKIE_SECURE = False
@@ -122,9 +128,13 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.template.context_processors.csrf',
+                'django.template.context_processors.media',  # Make MEDIA_URL available in templates
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounting.context_processors.user_module_permissions',  # Module permissions
+                'accounting.context_processors.session_entity_context',  # Session entity info
+                'accounting.context_processors.theme_context',  # Theme settings
+                'shareholder.context_processors.pending_notifications',  # Pending review/approval notifications
             ],
         },
     },
@@ -173,7 +183,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'US/Eastern'
 
 USE_I18N = True
 
@@ -186,9 +196,15 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
+    # Include local static assets
+    BASE_DIR / 'static',
     # Include Starterkit static assets so the Tradify Global theme is served
     str(ADMIN_PATH / 'static'),
 ]
+
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -215,7 +231,7 @@ AUTHENTICATION_BACKENDS = [
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-LOGIN_REDIRECT_URL = "/"  # Main dashboard
+LOGIN_REDIRECT_URL = "/dashboard/"  # Main dashboard with entity selection
 LOGIN_URL = "account_login"
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_EMAIL_REQUIRED = True
@@ -324,6 +340,17 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 # --- end Tradify Global Starterkit selective settings ---
+
+# HTTPS and Security Settings
+SECURE_SSL_REDIRECT = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = False  # Set to True in production
+CSRF_COOKIE_SECURE = False  # Set to True in production
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_SECURITY_POLICY = {
+    "default-src": ("'self'",),
+}
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 
 # Load local overrides when present (local_settings.py is ignored by git by default)
 try:

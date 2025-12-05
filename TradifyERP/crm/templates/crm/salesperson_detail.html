@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ salesperson.salesperson_name }} - Sales Person - CRM{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8"><h4 class="page-title mb-0">{{ salesperson.salesperson_name }}</h4></div>
+            <div class="col-md-4 text-right">
+                <a href="{% url 'crm:salesperson_update' salesperson.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                <a href="{% url 'crm:salesperson_delete' salesperson.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</a>
+                <a href="{% url 'crm:salespersons' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+            </div>
+        </div>
+    </div>
+    <div class="row"><div class="col-lg-8"><div class="card"><div class="card-body">
+        <div class="row">
+            <div class="col-md-6"><div class="mb-3"><label class="text-muted">Name</label><p class="mb-0"><strong>{{ salesperson.salesperson_name }}</strong></p></div></div>
+            <div class="col-md-6"><div class="mb-3"><label class="text-muted">User</label><p class="mb-0">{{ salesperson.user.get_full_name|default:"—" }}</p></div></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6"><div class="mb-3"><label class="text-muted">Territory</label><p class="mb-0">{{ salesperson.territory|default:"—" }}</p></div></div>
+            <div class="col-md-6"><div class="mb-3"><label class="text-muted">Manager</label><p class="mb-0">{{ salesperson.manager.get_full_name|default:"—" }}</p></div></div>
+        </div>
+        <div class="mb-0"><label class="text-muted">Commission %</label><p class="mb-0">{{ salesperson.commission_percentage|default:"—" }}%</p></div>
+    </div></div></div></div>
+</div>
+{% endblock %}

@@ -5,6 +5,83 @@
 {% block title %}Capital Contributions - Shareholder Management{% endblock %}
 
 {% block content %}
+<style>
+    /* Hide default Bootstrap backdrop */
+    .modal-backdrop {
+        display: none !important;
+    }
+    
+    /* Custom dark overlay for modal */
+    #importModal.show {
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        pointer-events: auto !important;
+    }
+    
+    /* Make modal content clickable and visible */
+    #importModal .modal-dialog {
+        pointer-events: auto !important;
+        background: transparent;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1061 !important;
+    }
+    
+    /* Modal content styling */
+    #importModal .modal-content {
+        pointer-events: auto !important;
+        background-color: #ffffff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+    }
+    
+    /* Header and footer */
+    #importModal .modal-header,
+    #importModal .modal-body,
+    #importModal .modal-footer {
+        pointer-events: auto !important;
+    }
+    
+    /* Form elements */
+    #importModal .form-control,
+    #importModal .form-label,
+    #importModal .form-check-input,
+    #importModal .form-check-label,
+    #importModal input,
+    #importModal label,
+    #importModal button,
+    #importModal .btn,
+    #importModal .alert {
+        pointer-events: auto !important;
+    }
+    
+    /* Buttons */
+    #importModal .btn-close {
+        pointer-events: auto !important;
+    }
+    
+    #importModal .btn-secondary,
+    #importModal .btn-primary {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+    
+    /* Form sections */
+    #importModal .mb-3,
+    #importModal form {
+        pointer-events: auto !important;
+    }
+    
+    /* Ensure export dropdown is visible above modal */
+    .btn-group .dropdown-menu {
+        z-index: 1100 !important;
+    }
+</style>
 <div class="page-content">
     <div class="container-fluid">
         <!-- Page Title -->
@@ -13,6 +90,18 @@
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">Capital Contributions</h4>
                     <div class="page-title-right">
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-secondary waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="feather-download"></i> Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'shareholder:capital-contribution-export' %}?format=csv">Export as CSV</a></li>
+                                <li><a class="dropdown-item" href="{% url 'shareholder:capital-contribution-export' %}?format=excel">Export as Excel</a></li>
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-secondary waves-effect waves-light me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="feather-upload"></i> Import
+                        </button>
                         <a href="{% url 'shareholder:capital-contribution-create' %}" class="btn btn-primary waves-effect waves-light">
                             <i class="feather-plus"></i> Record Contribution
                         </a>
@@ -35,7 +124,13 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Pending Amount</h5>
-                        <p class="text-muted">${{ pending_total|floatformat:2 }}</p>
+                        <p class="text-muted">
+                            {% if entity.company_currency %}
+                                {{ entity.company_currency.symbol }}{{ pending_total|floatformat:2 }}
+                            {% else %}
+                                ${{ pending_total|floatformat:2 }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -43,7 +138,13 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Completed Amount</h5>
-                        <p class="text-muted">${{ completed_total|floatformat:2 }}</p>
+                        <p class="text-muted">
+                            {% if entity.company_currency %}
+                                {{ entity.company_currency.symbol }}{{ completed_total|floatformat:2 }}
+                            {% else %}
+                                ${{ completed_total|floatformat:2 }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -85,17 +186,30 @@
                                                 <span class="badge bg-secondary">{{ contribution.get_status_display }}</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ contribution.amount|floatformat:2 }}</td>
-                                        <td>{{ contribution.amount_company_currency|floatformat:2 }}</td>
+                                        <td>{{ contribution.currency.symbol }}{{ contribution.amount|floatformat:2 }}</td>
+                                        <td>
+                                            {% if entity.company_currency %}
+                                                {{ entity.company_currency.symbol }}{{ contribution.amount_company_currency|floatformat:2 }}
+                                            {% else %}
+                                                ${{ contribution.amount_company_currency|floatformat:2 }}
+                                            {% endif %}
+                                        </td>
                                         <td>{{ contribution.currency_destination.code }}</td>
                                         <td>{{ contribution.get_payment_mode_display }}</td>
                                         <td>
-                                            <a href="{% url 'shareholder:capital-contribution-detail' contribution.pk %}" class="btn btn-sm btn-info" title="View">
-                                                <i class="feather-eye"></i>
-                                            </a>
-                                            <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-sm btn-primary" title="Edit">
-                                                <i class="feather-edit"></i>
-                                            </a>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'shareholder:capital-contribution-detail' contribution.pk %}" class="btn btn-info" title="View Details">
+                                                    <i class="feather-eye"></i> View
+                                                </a>
+                                                <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-primary" title="Edit Contribution">
+                                                    <i class="feather-edit"></i> Edit
+                                                </a>
+                                                {% if contribution.workflow_status == 'DRAFT' %}
+                                                <a href="{% url 'shareholder:capital-contribution-submit' contribution.pk %}" class="btn btn-warning" title="Submit for Review">
+                                                    <i class="feather-send"></i> Submit
+                                                </a>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                     </tr>
                                     {% empty %}
@@ -138,6 +252,42 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal - Outside main content to avoid overflow issues -->
+<!-- Import Modal - Outside main content to avoid overflow issues -->
+<div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Import Capital Contributions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{% url 'shareholder:capital-contribution-import' %}">
+                {% csrf_token %}
+                <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Select CSV or Excel File</label>
+                        <input class="form-control" type="file" id="importFile" name="file" accept=".csv,.xlsx,.xls" required>
+                        <small class="form-text text-muted d-block mt-1">Supported formats: CSV, Excel (.xlsx, .xls)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="overwriteCheckbox" class="form-check-label">
+                            <input type="checkbox" id="overwriteCheckbox" name="overwrite" value="true" class="form-check-input">
+                            Overwrite existing contributions (if ID matches)
+                        </label>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <strong>Required columns:</strong> stakeholder_id, contribution_date, amount, currency_code, payment_mode
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -18,7 +18,7 @@
             <div class="row">
                 <div class="col-lg-8 offset-lg-2">
                     <div class="card">
-                        <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
+                        <div class="card-body">
                             <form method="post" id="quoteForm">
                                 {% csrf_token %}
                                 
@@ -69,4 +69,31 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const subtotalInput = document.getElementById('id_subtotal');
+    const taxInput = document.getElementById('id_tax_amount');
+    const totalInput = document.getElementById('id_total_amount');
+    
+    function calculateTotal() {
+        const subtotal = parseFloat(subtotalInput.value) || 0;
+        const tax = parseFloat(taxInput.value) || 0;
+        const total = subtotal + tax;
+        totalInput.value = total.toFixed(2);
+    }
+    
+    // Calculate on input change
+    if (subtotalInput) {
+        subtotalInput.addEventListener('input', calculateTotal);
+    }
+    if (taxInput) {
+        taxInput.addEventListener('input', calculateTotal);
+    }
+    
+    // Calculate on page load if values exist
+    calculateTotal();
+});
+</script>
 {% endblock %}
+

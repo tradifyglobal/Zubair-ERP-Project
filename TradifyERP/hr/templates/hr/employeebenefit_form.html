@@ -1,0 +1,154 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Assign{% endif %} Employee Benefit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3">{% if is_edit %}Edit Employee Benefit{% else %}Assign Benefit to Employee{% endif %}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'hr:employeebenefit-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% if is_edit %}Edit{% else %}Assign{% endif %} Benefit</h5>
+                </div>
+                <div class="card-body">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Errors:</strong>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <!-- Row 1: Employee and Benefit -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.employee.id_for_label }}" class="form-label">Employee <span class="text-danger">*</span></label>
+                                {{ form.employee }}
+                                {% if form.employee.errors %}<div class="invalid-feedback d-block">{{ form.employee.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.benefit.id_for_label }}" class="form-label">Benefit <span class="text-danger">*</span></label>
+                                {{ form.benefit }}
+                                {% if form.benefit.errors %}<div class="invalid-feedback d-block">{{ form.benefit.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Enrollment Date and Termination Date -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.enrollment_date.id_for_label }}" class="form-label">Enrollment Date <span class="text-danger">*</span></label>
+                                {{ form.enrollment_date }}
+                                {% if form.enrollment_date.errors %}<div class="invalid-feedback d-block">{{ form.enrollment_date.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.termination_date.id_for_label }}" class="form-label">Termination Date</label>
+                                {{ form.termination_date }}
+                                <small class="text-muted d-block">Leave blank if benefit is ongoing</small>
+                                {% if form.termination_date.errors %}<div class="invalid-feedback d-block">{{ form.termination_date.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Employee and Employer Contributions -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.employee_contribution.id_for_label }}" class="form-label">Employee Contribution</label>
+                                {{ form.employee_contribution }}
+                                <small class="text-muted d-block">Leave blank to use benefit default</small>
+                                {% if form.employee_contribution.errors %}<div class="invalid-feedback d-block">{{ form.employee_contribution.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.employer_contribution.id_for_label }}" class="form-label">Employer Contribution</label>
+                                {{ form.employer_contribution }}
+                                <small class="text-muted d-block">Leave blank to use benefit default</small>
+                                {% if form.employer_contribution.errors %}<div class="invalid-feedback d-block">{{ form.employer_contribution.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 4: Status -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.is_active.id_for_label }}" class="form-label">
+                                    {{ form.is_active }} Active
+                                </label>
+                                {% if form.is_active.errors %}<div class="invalid-feedback d-block">{{ form.is_active.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> {% if is_edit %}Update Benefit Assignment{% else %}Assign Benefit{% endif %}
+                                </button>
+                                <a href="{% url 'hr:employeebenefit-list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Information</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Benefit Assignment:</strong></p>
+                    <ul class="mb-0">
+                        <li>Select employee and benefit</li>
+                        <li>Set enrollment date</li>
+                        <li>Optional: Override default costs</li>
+                        <li>Mark as active</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Tips</h5>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Custom Contributions:</strong></p>
+                    <ul class="mb-0">
+                        <li>Leave contribution fields blank to use benefit defaults</li>
+                        <li>Enter specific amounts for employee overrides</li>
+                        <li>Useful for negotiated rates or special cases</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    .card-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

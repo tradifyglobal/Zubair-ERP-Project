@@ -1,0 +1,217 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Distributor Performance Detail | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-10">
+                    <!-- Breadcrumb Navigation -->
+                    {% include 'partials/breadcrumb.html' %}
+
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <!-- Overall Rating -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Overall Rating</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h2 class="text-center">
+                                                <span class="badge bg-success" style="font-size: 2rem;">{{ object.overall_rating }}/5</span>
+                                            </h2>
+                                            <p class="text-center text-muted">{{ object.get_overall_rating_display }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Period Information -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Performance Period</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Month</h6>
+                                            <p>{{ object.performance_month }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Year</h6>
+                                            <p>{{ object.performance_year }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-0">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Performance Date</h6>
+                                            <p>{{ object.performance_date|date:"d M Y" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sales Metrics -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Sales Metrics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <h6 class="text-muted mb-1">Orders Count</h6>
+                                            <p><strong>{{ object.orders_count }}</strong></p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-muted mb-1">Total Sales</h6>
+                                            <p><strong>{{ object.total_sales|floatformat:2 }}</strong></p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-muted mb-1">Avg. Order Value</h6>
+                                            <p><strong>{{ object.average_order_value|floatformat:2 }}</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fulfillment Metrics -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Fulfillment Metrics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">On-Time Delivery %</h6>
+                                            <p>
+                                                <strong>{{ object.on_time_delivery_percentage|floatformat:1 }}%</strong>
+                                                <div class="progress mt-1" style="height: 5px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                         style="width: {{ object.on_time_delivery_percentage }}%"></div>
+                                                </div>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Order Accuracy %</h6>
+                                            <p>
+                                                <strong>{{ object.order_accuracy_percentage|floatformat:1 }}%</strong>
+                                                <div class="progress mt-1" style="height: 5px;">
+                                                    <div class="progress-bar bg-info" role="progressbar" 
+                                                         style="width: {{ object.order_accuracy_percentage }}%"></div>
+                                                </div>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Service Quality Metrics -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Service Quality</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Return Rate %</h6>
+                                            <p>
+                                                <strong>{{ object.return_rate_percentage|floatformat:1 }}%</strong>
+                                                <div class="progress mt-1" style="height: 5px;">
+                                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                                         style="width: {{ object.return_rate_percentage }}%"></div>
+                                                </div>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Complaint Count</h6>
+                                            <p><strong>{{ object.complaint_count }}</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Metrics -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Payment Performance</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-0">
+                                        <div class="col-md-12">
+                                            <h6 class="text-muted mb-1">Payment On-Time %</h6>
+                                            <p>
+                                                <strong>{{ object.payment_on_time_percentage|floatformat:1 }}%</strong>
+                                                <div class="progress mt-1" style="height: 5px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                                         style="width: {{ object.payment_on_time_percentage }}%"></div>
+                                                </div>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <!-- Distributor Info -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Distributor Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-1">Name</h6>
+                                        <p>{{ object.distributor.distributor_name }}</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-1">Code</h6>
+                                        <p>{{ object.distributor.distributor_code }}</p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <h6 class="text-muted mb-1">Contact</h6>
+                                        <p>{{ object.distributor.contact_person|default:"—" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metadata -->
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-1">Created</h6>
+                                        <p>{{ object.created_at|date:"d M Y H:i" }}</p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <h6 class="text-muted mb-1">Updated</h6>
+                                        <p>{{ object.updated_at|date:"d M Y H:i" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-lg-10">
+                    <div class="card-footer d-flex gap-2 justify-content-end">
+                        <a href="{% url 'manufacturing:distributorperformance_update' object.pk %}" class="btn btn-warning">Edit</a>
+                        <a href="{% url 'manufacturing:distributorperformance_delete' object.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                        <a href="{% url 'manufacturing:distributorperformance_list' %}" class="btn btn-light">Back</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

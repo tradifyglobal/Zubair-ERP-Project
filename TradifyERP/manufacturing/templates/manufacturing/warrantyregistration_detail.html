@@ -1,0 +1,193 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Warranty Detail | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-10">
+                    <!-- Breadcrumb Navigation -->
+                    {% include 'partials/breadcrumb.html' %}
+
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <!-- Warranty Information -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Warranty Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Warranty Number</h6>
+                                            <p><strong>{{ object.warranty_number }}</strong></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Warranty Type</h6>
+                                            <p>{{ object.get_warranty_type_display }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Distributor</h6>
+                                            <p>{{ object.distributor.distributor_name }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Status</h6>
+                                            <p>
+                                                {% if object.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Details -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Product Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Product Code</h6>
+                                            <p>{{ object.product_code }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Serial Number</h6>
+                                            <p>{{ object.serial_number }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Purchase Date</h6>
+                                            <p>{{ object.purchase_date|date:"d M Y" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Coverage Details -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Coverage Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Coverage Start Date</h6>
+                                            <p>{{ object.coverage_start_date|date:"d M Y" }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Coverage End Date</h6>
+                                            <p>{{ object.coverage_end_date|date:"d M Y" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-0">
+                                        <div class="col-12">
+                                            <h6 class="text-muted mb-1">Coverage Description</h6>
+                                            <p>{{ object.coverage_description }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- End Customer Information -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">End Customer Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Customer Name</h6>
+                                            <p>{{ object.end_customer_name|default:"—" }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Email</h6>
+                                            <p>{{ object.end_customer_email|default:"—" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-0">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-1">Phone</h6>
+                                            <p>{{ object.end_customer_phone|default:"—" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if object.terms_and_conditions %}
+                            <!-- Terms & Conditions -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Terms & Conditions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ object.terms_and_conditions }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-lg-4">
+                            <!-- Claims Information -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Claims Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-1">Total Claims</h6>
+                                        <p><strong>{{ object.claims_count }}</strong></p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <h6 class="text-muted mb-1">Total Claims Value</h6>
+                                        <p><strong>{{ object.total_claims_value }}</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metadata -->
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-1">Created</h6>
+                                        <p>{{ object.created_at|date:"d M Y H:i" }}</p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <h6 class="text-muted mb-1">Updated</h6>
+                                        <p>{{ object.updated_at|date:"d M Y H:i" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-lg-10">
+                    <div class="card-footer d-flex gap-2 justify-content-end">
+                        <a href="{% url 'manufacturing:warrantyregistration_update' object.pk %}" class="btn btn-warning">Edit</a>
+                        <a href="{% url 'manufacturing:warrantyregistration_delete' object.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                        <a href="{% url 'manufacturing:warrantyregistration_list' %}" class="btn btn-light">Back</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

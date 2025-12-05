@@ -1,0 +1,67 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Delete Bank Profile | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Delete Bank Profile</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:bank_profiles_list' %}">Bank Profiles</a></li>
+                                <li class="breadcrumb-item active">Delete</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation -->
+            <div class="row">
+                <div class="col-xl-6 offset-xl-3">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger-subtle">
+                            <h5 class="card-title mb-0 text-danger">
+                                <i class="mdi mdi-alert"></i> Confirm Delete
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">
+                                Are you sure you want to delete this bank profile?
+                            </p>
+                            <div class="alert alert-warning" role="alert">
+                                <strong>{{ object.bank_name }}</strong> ({{ object.account_number }})
+                            </div>
+                            <p class="text-muted font-size-13">
+                                This action cannot be undone. All associated data may be affected.
+                            </p>
+
+                            <!-- Buttons -->
+                            <div class="mt-4">
+                                <form method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="mdi mdi-trash-can"></i> Delete Bank Profile
+                                    </button>
+                                </form>
+                                <a href="{% url 'accounting:bank_profiles_list' %}" class="btn btn-secondary">
+                                    <i class="mdi mdi-close"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -21,15 +21,6 @@
                                     <span data-key="t-dashboard">Dashboard</span>
                                 </a>
                             </li>
-                        
-                            <li class="menu-title" data-key="t-menu">Main</li>
-
-                            <li>
-                                <a href="{% url 'accounting:dashboard' %}">
-                                    <i data-feather="home"></i>
-                                    <span data-key="t-dashboard">Dashboard</span>
-                                </a>
-                            </li>
 
                             <!-- User Management (Superuser Only) -->
                             {% if user.is_superuser %}
@@ -50,6 +41,59 @@
                                     <span data-key="t-accounting">Accounting</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Cash Management -->
+                                    <li class="menu-title">Cash Management</li>
+                                    <li>
+                                        <a href="{% url 'accounting:cash_receipt_list' %}">
+                                            <span>Cash Receipts</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:cash_payment_list' %}">
+                                            <span>Cash Payments</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:bank_receipt_list' %}">
+                                            <span>Bank Receipts</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'accounting:bank_payment_list' %}">
+                                            <span>Bank Payments</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:dashboard' %}">
+                                            <span>Cash Dashboard</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:payment_list' %}">
+                                            <span>Payment Schedule</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:position_list' %}">
+                                            <span>Cash Positions</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:forecast_list' %}">
+                                            <span>Liquidity Forecast</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:treasury_list' %}">
+                                            <span>Treasury Accounts</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'cash_management:fx_list' %}">
+                                            <span>FX Exposure</span>
+                                        </a>
+                                    </li>
+
                                     <!-- Financial Reports -->
                                     <li class="menu-title">Financial Reports</li>
                                     <li>
@@ -134,39 +178,6 @@
                                     <li>
                                         <a href="{% url 'accounting:cash_flow_forecast_list' %}">
                                             <span>Cash Flow Forecast</span>
-                                        </a>
-                                    </li>
-
-                                    <!-- Cash Management -->
-                                    <li class="menu-title">Cash Management</li>
-                                    <li>
-                                        <a href="{% url 'cash_management:dashboard' %}">
-                                            <span>Cash Dashboard</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'cash_management:payment_list' %}">
-                                            <span>Payment Schedule</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'cash_management:position_list' %}">
-                                            <span>Cash Positions</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'cash_management:forecast_list' %}">
-                                            <span>Liquidity Forecast</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'cash_management:treasury_list' %}">
-                                            <span>Treasury Accounts</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{% url 'cash_management:fx_list' %}">
-                                            <span>FX Exposure</span>
                                         </a>
                                     </li>
 
@@ -340,7 +351,7 @@
                                     <li class="menu-title">Employee Management</li>
                                     <li>
                                         <a href="{% url 'hr:employee-list' %}">
-                                            <span>All Employees</span>
+                                            <span>Employees</span>
                                         </a>
                                     </li>
                                     <li>
@@ -349,11 +360,37 @@
                                         </a>
                                     </li>
 
+                                    <!-- Attendance Management -->
+                                    <li class="menu-title">Attendance</li>
+                                    <li>
+                                        <a href="{% url 'hr:attendance-list' %}">
+                                            <span>Attendances</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'hr:attendance-list' %}">
+                                            <span>Add Attendance</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Positions & Departments -->
+                                    <li class="menu-title">Organization</li>
+                                    <li>
+                                        <a href="{% url 'hr:position-list' %}">
+                                            <span>Positions</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'hr:department-list' %}">
+                                            <span>Departments</span>
+                                        </a>
+                                    </li>
+
                                     <!-- Payroll Management -->
                                     <li class="menu-title">Payroll Management</li>
                                     <li>
                                         <a href="{% url 'hr:payroll-list' %}">
-                                            <span>All Payroll Runs</span>
+                                            <span>Payrolls</span>
                                         </a>
                                     </li>
                                     <li>
@@ -361,9 +398,42 @@
                                             <span>Create Payroll</span>
                                         </a>
                                     </li>
+                                    <li>
+                                        <a href="{% url 'hr:payrollrecord-list' %}">
+                                            <span>Payroll Records</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'hr:salaryhistory-list' %}">
+                                            <span>Salary History</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Compensation & Benefits -->
+                                    <li class="menu-title">Benefits</li>
+                                    <li>
+                                        <a href="{% url 'hr:benefit-list' %}">
+                                            <span>Benefits</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'hr:employeebenefit-list' %}">
+                                            <span>Employee Benefits</span>
+                                        </a>
+                                    </li>
 
                                     <!-- Leave Management -->
                                     <li class="menu-title">Leave Management</li>
+                                    <li>
+                                        <a href="{% url 'hr:leave-list' %}">
+                                            <span>Leaves</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'hr:leavebalance-list' %}">
+                                            <span>Leave Balances</span>
+                                        </a>
+                                    </li>
                                     <li>
                                         <a href="{% url 'hr:leave-request-list' %}">
                                             <span>Leave Requests</span>
@@ -374,7 +444,12 @@
                                     <li class="menu-title">Performance & Discipline</li>
                                     <li>
                                         <a href="{% url 'hr:performance-list' %}">
-                                            <span>Performance Reviews</span>
+                                            <span>Performances</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'hr:disciplinary-list' %}">
+                                            <span>Disciplinary</span>
                                         </a>
                                     </li>
                                 </ul>
@@ -704,6 +779,24 @@
                                             <span>All Campaigns</span>
                                         </a>
                                     </li>
+
+                                    <!-- Service & Maintenance -->
+                                    <li class="menu-title">Service & Maintenance</li>
+                                    <li>
+                                        <a href="{% url 'crm:maintenance-schedules' %}">
+                                            <span>Maintenance Schedules</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'crm:maintenance-visits' %}">
+                                            <span>Maintenance Visits</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'crm:warranty-claims' %}">
+                                            <span>Warranty Claims</span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
                             {% endif %}
@@ -877,13 +970,13 @@
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
                                     <li>
-                                        <a href="{% url 'apps:calendar' %}">
+                                        {# <a href="{% url 'apps:calendar' %}"> #}
                                             <span data-key="t-calendar">Calendar</span>
                                         </a>
                                     </li>
         
                                     <li>
-                                        <a href="{% url 'apps:chat' %}">
+                                        {# <a href="{% url 'apps:chat' %}"> #}
                                             <span data-key="t-chat">Chat</span>
                                         </a>
                                     </li>
@@ -893,8 +986,8 @@
                                             <span data-key="t-email">Email</span>
                                         </a>
                                         <ul class="sub-menu" aria-expanded="false">
-                                            <li><a href="{% url 'apps:email.inbox' %}" data-key="t-inbox">Inbox</a></li>
-                                            <li><a href="{% url 'apps:email.read' %}" data-key="t-read-email">Read Email</a></li>
+                                            {# <li><a href="{% url 'apps:email.inbox' %}" data-key="t-inbox">Inbox</a></li> #}
+                                            {# <li><a href="{% url 'apps:email.read' %}" data-key="t-read-email">Read Email</a></li> #}
                                         </ul>
                                     </li>
                                     <li>
@@ -902,8 +995,8 @@
                                             <span data-key="t-invoices">Invoices</span>
                                         </a>
                                         <ul class="sub-menu" aria-expanded="false">
-                                            <li><a href="{% url 'apps:invoice.list' %}" data-key="t-invoice-list">Invoice List</a></li>
-                                            <li><a href="{% url 'apps:invoice.details' %}" data-key="t-invoice-detail">Invoice Detail</a></li>
+                                            {# <li><a href="{% url 'apps:invoice.list' %}" data-key="t-invoice-list">Invoice List</a></li> #}
+                                            {# <li><a href="{% url 'apps:invoice.details' %}" data-key="t-invoice-detail">Invoice Detail</a></li> #}
                                         </ul>
                                     </li>
                                     <li>
@@ -911,9 +1004,9 @@
                                             <span data-key="t-contacts">Contacts</span>
                                         </a>
                                         <ul class="sub-menu" aria-expanded="false">
-                                            <li><a href="{% url 'apps:contacts.usergrid' %}" data-key="t-user-grid">User Grid</a></li>
-                                            <li><a href="{% url 'apps:contacts.userlist' %}" data-key="t-user-list">User List</a></li>
-                                            <li><a href="{% url 'apps:contacts.profile' %}" data-key="t-profile">Profile</a></li>
+                                            {# <li><a href="{% url 'apps:contacts.usergrid' %}" data-key="t-user-grid">User Grid</a></li> #}
+                                            {# <li><a href="{% url 'apps:contacts.userlist' %}" data-key="t-user-list">User List</a></li> #}
+                                            {# <li><a href="{% url 'apps:contacts.profile' %}" data-key="t-profile">Profile</a></li> #}
                                         </ul>
                                     </li>
                                     <li>
@@ -922,9 +1015,9 @@
                                             <span class="badge rounded-pill badge-soft-danger float-end" key="t-new">New</span>
                                         </a>
                                         <ul class="sub-menu" aria-expanded="false">
-                                            <li><a href="{% url 'apps:blogs.grid' %}" data-key="t-blog-grid">Blog Grid</a></li>
-                                            <li><a href="{% url 'apps:blogs.list' %}" data-key="t-blog-list">Blog List</a></li>
-                                            <li><a href="{% url 'apps:blogs.details' %}" data-key="t-blog-details">Blog Details</a></li>
+                                            {# <li><a href="{% url 'apps:blogs.grid' %}" data-key="t-blog-grid">Blog Grid</a></li> #}
+                                            {# <li><a href="{% url 'apps:blogs.list' %}" data-key="t-blog-list">Blog List</a></li> #}
+                                            {# <li><a href="{% url 'apps:blogs.details' %}" data-key="t-blog-details">Blog Details</a></li> #}
                                         </ul>
                                     </li>
                                 </ul>
@@ -936,14 +1029,14 @@
                                     <span data-key="t-authentication">Authentication</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'apps:authentication.auth-login' %}" data-key="t-login">Login</a></li>
-                                    <li><a href="{% url 'apps:authentication.auth-register' %}" data-key="t-register">Sign Up</a></li>
-                                    <li><a href="{% url 'apps:authentication.auth-recoverpassword' %}" data-key="t-recover-password">Recover Password</a></li>
-                                    <li><a href="{% url 'apps:authentication.auth-lockscreen' %}" data-key="t-lock-screen">Lock Screen</a></li>
-                                    <li><a href="{% url 'apps:authentication.auth-logout' %}" data-key="t-logout">Log Out</a></li>
-                                    <li><a href="{% url 'apps:authentication.auth-confirm-mail' %}" data-key="t-confirm-mail">Confirm Mail</a></li>
-                                    <li><a href="{% url 'apps:authentication.auth-email-verification' %}" data-key="t-email-verification">Email Verification</a></li>
-                                    <li><a href="{% url 'apps:authentication.auth-two-step-verification' %}" data-key="t-two-step-verification">Two Step Verification</a></li>
+                                    {# <li><a href="{% url 'apps:authentication.auth-login' %}" data-key="t-login">Login</a></li> #}
+                                    {# <li><a href="{% url 'apps:authentication.auth-register' %}" data-key="t-register">Sign Up</a></li> #}
+                                    {# <li><a href="{% url 'apps:authentication.auth-recoverpassword' %}" data-key="t-recover-password">Recover Password</a></li> #}
+                                    {# <li><a href="{% url 'apps:authentication.auth-lockscreen' %}" data-key="t-lock-screen">Lock Screen</a></li> #}
+                                    {# <li><a href="{% url 'apps:authentication.auth-logout' %}" data-key="t-logout">Log Out</a></li> #}
+                                    {# <li><a href="{% url 'apps:authentication.auth-confirm-mail' %}" data-key="t-confirm-mail">Confirm Mail</a></li> #}
+                                    {# <li><a href="{% url 'apps:authentication.auth-email-verification' %}" data-key="t-email-verification">Email Verification</a></li> #}
+                                    {# <li><a href="{% url 'apps:authentication.auth-two-step-verification' %}" data-key="t-two-step-verification">Two Step Verification</a></li> #}
                                 </ul>
                             </li>
 
@@ -953,14 +1046,14 @@
                                     <span data-key="t-pages">Pages</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'pages:pages.starterpage' %}" data-key="t-starter-page">Starter Page</a></li>
-                                    <li><a href="{% url 'pages:pages.maintenance' %}" data-key="t-maintenance">Maintenance</a></li>
-                                    <li><a href="{% url 'pages:pages.comingsoon' %}" data-key="t-coming-soon">Coming Soon</a></li>
-                                    <li><a href="{% url 'pages:pages.timeline' %}" data-key="t-timeline">Timeline</a></li>
-                                    <li><a href="{% url 'pages:pages.faqs' %}" data-key="t-faqs">FAQs</a></li>
-                                    <li><a href="{% url 'pages:pages.pricing' %}" data-key="t-pricing">Pricing</a></li>
-                                    <li><a href="{% url 'pages:pages.404error' %}" data-key="t-error-404">Error 404</a></li>
-                                    <li><a href="{% url 'pages:pages.500error' %}" data-key="t-error-500">Error 500</a></li>
+                                    {# <li><a href="{% url 'pages:pages.starterpage' %}" data-key="t-starter-page">Starter Page</a></li> #}
+                                    {# <li><a href="{% url 'pages:pages.maintenance' %}" data-key="t-maintenance">Maintenance</a></li> #}
+                                    {# <li><a href="{% url 'pages:pages.comingsoon' %}" data-key="t-coming-soon">Coming Soon</a></li> #}
+                                    {# <li><a href="{% url 'pages:pages.timeline' %}" data-key="t-timeline">Timeline</a></li> #}
+                                    {# <li><a href="{% url 'pages:pages.faqs' %}" data-key="t-faqs">FAQs</a></li> #}
+                                    {# <li><a href="{% url 'pages:pages.pricing' %}" data-key="t-pricing">Pricing</a></li> #}
+                                    {# <li><a href="{% url 'pages:pages.404error' %}" data-key="t-error-404">Error 404</a></li> #}
+                                    {# <li><a href="{% url 'pages:pages.500error' %}" data-key="t-error-500">Error 500</a></li> #}
                                 </ul>
                             </li>
 
@@ -972,23 +1065,23 @@
                                     <span data-key="t-components">Components</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'elements:elements.components.alerts' %}" data-key="t-alerts">Alerts</a></li>
-                                    <li><a href="{% url 'elements:elements.components.buttons' %}" data-key="t-buttons">Buttons</a></li>
-                                    <li><a href="{% url 'elements:elements.components.cards' %}" data-key="t-cards">Cards</a></li>
-                                    <li><a href="{% url 'elements:elements.components.carousel' %}" data-key="t-carousel">Carousel</a></li>
-                                    <li><a href="{% url 'elements:elements.components.dropdowns' %}" data-key="t-dropdowns">Dropdowns</a></li>
-                                    <li><a href="{% url 'elements:elements.components.grid' %}" data-key="t-grid">Grid</a></li>
-                                    <li><a href="{% url 'elements:elements.components.images' %}" data-key="t-images">Images</a></li>
-                                    <li><a href="{% url 'elements:elements.components.modals' %}" data-key="t-modals">Modals</a></li>
-                                    <li><a href="{% url 'elements:elements.components.offcanvas' %}" data-key="t-offcanvas">Offcanvas</a></li>
-                                    <li><a href="{% url 'elements:elements.components.progressbars' %}" data-key="t-progress-bars">Progress Bars</a></li>
-                                    <li><a href="{% url 'elements:elements.components.tabs' %}" data-key="t-tabs-accordions">Tabs & Accordions</a></li>
-                                    <li><a href="{% url 'elements:elements.components.typography' %}" data-key="t-typography">Typography</a></li>
-                                    <li><a href="{% url 'elements:elements.components.toasts' %}" data-key="t-toasts">Toasts</a></li>
-                                    <li><a href="{% url 'elements:elements.components.video' %}" data-key="t-video">Video</a></li>
-                                    <li><a href="{% url 'elements:elements.components.general' %}" data-key="t-general">General</a></li>
-                                    <li><a href="{% url 'elements:elements.components.colors' %}" data-key="t-colors">Colors</a></li>
-                                    <li><a href="{% url 'elements:elements.components.utilities' %}" data-key="t-colors">Utilities</a></li>
+                                    {# <li><a href="{% url 'elements:elements.components.alerts' %}" data-key="t-alerts">Alerts</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.buttons' %}" data-key="t-buttons">Buttons</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.cards' %}" data-key="t-cards">Cards</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.carousel' %}" data-key="t-carousel">Carousel</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.dropdowns' %}" data-key="t-dropdowns">Dropdowns</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.grid' %}" data-key="t-grid">Grid</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.images' %}" data-key="t-images">Images</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.modals' %}" data-key="t-modals">Modals</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.offcanvas' %}" data-key="t-offcanvas">Offcanvas</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.progressbars' %}" data-key="t-progress-bars">Progress Bars</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.tabs' %}" data-key="t-tabs-accordions">Tabs & Accordions</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.typography' %}" data-key="t-typography">Typography</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.toasts' %}" data-key="t-toasts">Toasts</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.video' %}" data-key="t-video">Video</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.general' %}" data-key="t-general">General</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.colors' %}" data-key="t-colors">Colors</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.components.utilities' %}" data-key="t-colors">Utilities</a></li> #}
                                 </ul>
                             </li>   
 
@@ -998,12 +1091,12 @@
                                     <span data-key="t-ui-elements">Extended</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'elements:elements.extended.lightbox' %}" data-key="t-lightbox">Lightbox</a></li>
-                                    <li><a href="{% url 'elements:elements.extended.rangeslider' %}" data-key="t-range-slider">Range Slider</a></li>
-                                    <li><a href="{% url 'elements:elements.extended.sweetalerts2' %}" data-key="t-sweet-alert">SweetAlert 2</a></li>
-                                    <li><a href="{% url 'elements:elements.extended.sessiontimeout' %}" data-key="t-session-timeout">Session Timeout</a></li>
-                                    <li><a href="{% url 'elements:elements.extended.rating' %}" data-key="t-rating">Rating</a></li>
-                                    <li><a href="{% url 'elements:elements.extended.notifications' %}" data-key="t-notifications">Notifications</a></li>
+                                    {# <li><a href="{% url 'elements:elements.extended.lightbox' %}" data-key="t-lightbox">Lightbox</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.extended.rangeslider' %}" data-key="t-range-slider">Range Slider</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.extended.sweetalerts2' %}" data-key="t-sweet-alert">SweetAlert 2</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.extended.sessiontimeout' %}" data-key="t-session-timeout">Session Timeout</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.extended.rating' %}" data-key="t-rating">Rating</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.extended.notifications' %}" data-key="t-notifications">Notifications</a></li> #}
                                 </ul>
                             </li>
 
@@ -1014,13 +1107,13 @@
                                     <span data-key="t-forms">Forms</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'elements:elements.forms.basic_elements' %}" data-key="t-form-elements">Basic Elements</a></li>
-                                    <li><a href="{% url 'elements:elements.forms.validation' %}" data-key="t-form-validation">Validation</a></li>
-                                    <li><a href="{% url 'elements:elements.forms.advancedplugins' %}" data-key="t-form-advanced">Advanced Plugins</a></li>
-                                    <li><a href="{% url 'elements:elements.forms.editors' %}" data-key="t-form-editors">Editors</a></li>
-                                    <li><a href="{% url 'elements:elements.forms.fileupload' %}" data-key="t-form-upload">File Upload</a></li>
-                                    <li><a href="{% url 'elements:elements.forms.wizard' %}" data-key="t-form-wizard">Wizard</a></li>
-                                    <li><a href="{% url 'elements:elements.forms.mask' %}" data-key="t-form-mask">Mask</a></li>
+                                    {# <li><a href="{% url 'elements:elements.forms.basic_elements' %}" data-key="t-form-elements">Basic Elements</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.forms.validation' %}" data-key="t-form-validation">Validation</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.forms.advancedplugins' %}" data-key="t-form-advanced">Advanced Plugins</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.forms.editors' %}" data-key="t-form-editors">Editors</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.forms.fileupload' %}" data-key="t-form-upload">File Upload</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.forms.wizard' %}" data-key="t-form-wizard">Wizard</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.forms.mask' %}" data-key="t-form-mask">Mask</a></li> #}
                                 </ul>
                             </li>
 
@@ -1030,10 +1123,10 @@
                                     <span data-key="t-tables">Tables</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'elements:elements.tables.bootstrap_basic' %}" data-key="t-basic-tables">Bootstrap Basic</a></li>
-                                    <li><a href="{% url 'elements:elements.tables.datatables' %}" data-key="t-data-tables">DataTables</a></li>
-                                    <li><a href="{% url 'elements:elements.tables.responsive_tables' %}" data-key="t-responsive-table">Responsive</a></li>
-                                    <li><a href="{% url 'elements:elements.tables.editable_tables' %}" data-key="t-editable-table">Editable</a></li>
+                                    {# <li><a href="{% url 'elements:elements.tables.bootstrap_basic' %}" data-key="t-basic-tables">Bootstrap Basic</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.tables.datatables' %}" data-key="t-data-tables">DataTables</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.tables.responsive_tables' %}" data-key="t-responsive-table">Responsive</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.tables.editable_tables' %}" data-key="t-editable-table">Editable</a></li> #}
                                 </ul>
                             </li>
 
@@ -1043,36 +1136,11 @@
                                     <span data-key="t-charts">Charts</span>
                                 </a>
                                 <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'elements:elements.charts.apexcharts' %}" data-key="t-apex-charts">Apexcharts</a></li>
-                                    <li><a href="{% url 'elements:elements.charts.echarts' %}" data-key="t-e-charts">Echarts</a></li>
-                                    <li><a href="{% url 'elements:elements.charts.chartjs' %}" data-key="t-chartjs-charts">Chartjs</a></li>
-                                    <li><a href="{% url 'elements:elements.charts.jqueryknob' %}" data-key="t-knob-charts">Jquery Knob</a></li>
-                                    <li><a href="{% url 'elements:elements.charts.sparkline' %}" data-key="t-sparkline-charts">Sparkline</a></li>
-                                </ul>
-                            </li>
-
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow">
-                                    <i data-feather="cpu"></i>
-                                    <span data-key="t-icons">Icons</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'elements:elements.icons.boxicons' %}" data-key="t-boxicons">Boxicons</a></li>
-                                    <li><a href="{% url 'elements:elements.icons.materialdesign' %}" data-key="t-material-design">Material Design</a></li>
-                                    <li><a href="{% url 'elements:elements.icons.dripicons' %}" data-key="t-dripicons">Dripicons</a></li>
-                                    <li><a href="{% url 'elements:elements.icons.fontawesome' %}" data-key="t-font-awesome">Font Awesome 5</a></li>
-                                </ul>
-                            </li>
-
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow">
-                                    <i data-feather="map"></i>
-                                    <span data-key="t-maps">Maps</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{% url 'elements:elements.maps.googlemaps' %}" data-key="t-g-maps">Google Maps</a></li>
-                                    <li><a href="{% url 'elements:elements.maps.vectormaps' %}" data-key="t-v-maps">Vector Maps</a></li>
-                                    <li><a href="{% url 'elements:elements.maps.leaflet' %}" data-key="t-l-maps">Leaflet Maps</a></li>
+                                    {# <li><a href="{% url 'elements:elements.charts.apexcharts' %}" data-key="t-apex-charts">Apexcharts</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.charts.echarts' %}" data-key="t-e-charts">Echarts</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.charts.chartjs' %}" data-key="t-chartjs-charts">Chartjs</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.charts.jqueryknob' %}" data-key="t-knob-charts">Jquery Knob</a></li> #}
+                                    {# <li><a href="{% url 'elements:elements.charts.sparkline' %}" data-key="t-sparkline-charts">Sparkline</a></li> #}
                                 </ul>
                             </li>
 

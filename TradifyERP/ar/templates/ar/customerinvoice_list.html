@@ -14,7 +14,7 @@
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="page-title mb-0">Customer Invoices</h4>
-                        <a href="#" class="btn btn-primary btn-sm">Create Invoice</a>
+                        <a href="{% url 'ar:invoice_create' %}" class="btn btn-primary btn-sm">Create Invoice</a>
                     </div>
                 </div>
             </div>
@@ -56,27 +56,31 @@
                                 <table class="table table-striped mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Invoice #</th>
-                                            <th>Customer</th>
-                                            <th>Invoice Date</th>
-                                            <th>Due Date</th>
-                                            <th>Amount</th>
-                                            <th>Paid</th>
-                                            <th>Outstanding</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
+                                            <th style="min-width: 120px;">Invoice #</th>
+                                            <th style="min-width: 180px;">Customer</th>
+                                            <th style="min-width: 120px;">Invoice Date</th>
+                                            <th style="min-width: 120px;">Due Date</th>
+                                            <th class="text-end" style="min-width: 100px;">Amount</th>
+                                            <th class="text-end" style="min-width: 100px;">Paid</th>
+                                            <th class="text-end" style="min-width: 110px;">Outstanding</th>
+                                            <th style="min-width: 100px;">Status</th>
+                                            <th style="min-width: 150px;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for invoice in invoices %}
                                         <tr>
-                                            <td>{{ invoice.invoice_number }}</td>
-                                            <td>{{ invoice.customer.customer_name }}</td>
+                                            <td><strong>{{ invoice.invoice_number }}</strong></td>
+                                            <td>
+                                                <span title="{{ invoice.customer.name }}">
+                                                    {{ invoice.customer.name|truncatewords:3 }}
+                                                </span>
+                                            </td>
                                             <td>{{ invoice.invoice_date|date:"M d, Y" }}</td>
                                             <td>{{ invoice.due_date|date:"M d, Y" }}</td>
-                                            <td>₹{{ invoice.total_amount|floatformat:2 }}</td>
-                                            <td>₹{{ invoice.amount_paid|floatformat:2 }}</td>
-                                            <td>₹{{ invoice.get_outstanding_amount|floatformat:2 }}</td>
+                                            <td class="text-end">₹{{ invoice.total_amount|floatformat:2 }}</td>
+                                            <td class="text-end">₹{{ invoice.amount_paid|floatformat:2 }}</td>
+                                            <td class="text-end"><strong>₹{{ invoice.get_outstanding_amount|floatformat:2 }}</strong></td>
                                             <td>
                                                 {% if invoice.status == 'DRAFT' %}
                                                     <span class="badge bg-secondary">Draft</span>
@@ -96,8 +100,8 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{% url 'ar:invoice_detail' invoice.pk %}" class="btn btn-sm btn-info">View</a>
-                                                <a href="#" class="btn btn-sm btn-warning">Edit</a>
+                                                <a href="{% url 'ar:invoice_detail' invoice.pk %}" class="btn btn-sm btn-info" title="View Details">View</a>
+                                                <a href="{% url 'ar:invoice_edit' invoice.pk %}" class="btn btn-sm btn-warning" title="Edit Invoice">Edit</a>
                                             </td>
                                         </tr>
                                         {% empty %}

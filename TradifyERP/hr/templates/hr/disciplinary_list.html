@@ -1,0 +1,51 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Disciplinary Records - HR Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8"><h1 class="h3">Disciplinary Records</h1></div>
+        <div class="col-md-4 text-end"><a href="#" class="btn btn-primary"><i class="fas fa-plus"></i> New Record</a></div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6"><input type="text" name="search" class="form-control" placeholder="Search by employee name..." value="{{ request.GET.search }}"></div>
+                <div class="col-md-2"><button type="submit" class="btn btn-secondary w-100"><i class="fas fa-search"></i> Filter</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr>
+                    <th>Employee</th>
+                    <th>Incident Date</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr></thead>
+                <tbody>
+                    {% for record in disciplinary_records %}
+                    <tr>
+                        <td>{{ record.employee.first_name }} {{ record.employee.last_name }}</td>
+                        <td>{{ record.incident_date }}</td>
+                        <td>{{ record.get_category_display }}</td>
+                        <td>{{ record.get_action_taken_display }}</td>
+                        <td>{{ record.description|truncatewords:10 }}</td>
+                        <td><span class="badge bg-warning">{{ record.get_status_display }}</span></td>
+                        <td><a href="#" class="btn btn-sm btn-outline-primary">View</a></td>
+                    </tr>
+                    {% empty %}<tr><td colspan="7" class="text-center text-muted py-4">No disciplinary records</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Ledger Entry Detail | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Ledger Entry Detail</h4>
+                        <div class="page-title-right">
+                            <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-secondary waves-effect waves-light">
+                                <i class="feather-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entry Details -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Entry Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr>
+                                        <td width="30%"><strong>Entry Date:</strong></td>
+                                        <td>{{ entry.entry_date|date:"M d, Y" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Account:</strong></td>
+                                        <td>
+                                            <a href="{% url 'accounting:account_detail' entry.account.id %}">
+                                                {{ entry.account.account_number }} - {{ entry.account.name }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Account Type:</strong></td>
+                                        <td>{{ entry.account.account_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Entry Type:</strong></td>
+                                        <td>
+                                            {% if entry.entry_type == 'DEBIT' %}
+                                                <span class="badge bg-danger-subtle text-danger font-size-14">DEBIT</span>
+                                            {% else %}
+                                                <span class="badge bg-success-subtle text-success font-size-14">CREDIT</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Amount:</strong></td>
+                                        <td>
+                                            <strong>{{ entry.amount }}</strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Reference Number:</strong></td>
+                                        <td>{{ entry.reference_number|default:"—" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Description:</strong></td>
+                                        <td>{{ entry.description|default:"—" }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Card -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Status</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Posting Status</label>
+                                <div>
+                                    {% if entry.is_posted %}
+                                        <span class="badge bg-success-subtle text-success font-size-14">
+                                            <i class="mdi mdi-check-circle"></i> Posted
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning font-size-14">
+                                            <i class="mdi mdi-clock"></i> Draft
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Entity</label>
+                                <div>{{ entry.entity.name }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Created At</label>
+                                <div>{{ entry.created_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Updated At</label>
+                                <div>{{ entry.updated_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Information -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Account Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr>
+                                        <td width="30%"><strong>Account Code:</strong></td>
+                                        <td>{{ entry.account.account_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Account Name:</strong></td>
+                                        <td>{{ entry.account.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Account Category:</strong></td>
+                                        <td>{{ entry.account.account_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Sub Account Type:</strong></td>
+                                        <td>{{ entry.account.subtype|default:"—" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Current Balance:</strong></td>
+                                        <td>
+                                            {% if entry.account.current_balance %}
+                                                <strong>{{ entry.account.current_balance }}</strong>
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}

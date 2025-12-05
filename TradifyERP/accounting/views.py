@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, TemplateView, CreateView, FormView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView, DeleteView, FormView, View
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.contrib.auth import logout
 from django.db import models, transaction
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -13,33 +14,89 @@ from .models import (
     TaxRate, TaxTransaction, TaxSummary,
     DeferredExpense, DeferredRevenue, PeriodLock
 )
-from .forms import DoubleEntryJournalForm, SimpleLedgerEntryForm
+from .mixins import SessionEntityMixin
+from .forms import DoubleEntryJournalForm, SimpleLedgerEntryForm, QuickAddCustomerForm, QuickAddVendorForm, QuickAddVendorPaymentForm, QuickAddVendorInvoiceForm, QuickAddBankProfileForm, FixedAssetForm
+from .permission_utils import get_user_accessible_entities
+from .trial_balance import calculate_trial_balance, get_trial_balance_details
+
+
+def get_session_entity(request):
+    """
+    Helper function to get the current session entity.
+    Returns the entity for the selected_entity_id in session,
+    or the first active entity if none selected.
+    """
+    entity_id = request.session.get('selected_entity_id')
+    if entity_id:
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        if entity:
+            return entity
+    # Fallback to first active entity
+    return Entity.objects.filter(is_active=True).first()
+
+
+class LogoutView(View):
+    """Custom logout view that accepts GET and POST requests."""
+    def get(self, request):
+        logout(request)
+        # Clear all messages to prevent them from showing on login page
+        storage = messages.get_messages(request)
+        storage.used = True
+        return redirect('account_login')
+    
+    def post(self, request):
+        logout(request)
+        # Clear all messages to prevent them from showing on login page
+        storage = messages.get_messages(request)
+        storage.used = True
+        return redirect('account_login')
 
 
 class PermissionRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Mixin to check if user has add permission for a specific model."""
     permission_codename = None
+    permission_type = 'add'  # 'add', 'change', 'delete'
     
     def test_func(self):
-        """Check if user has permission to add the model."""
+        """Check if user has permission for the model."""
         if not self.permission_codename:
             return True
-        return self.request.user.has_perm(f'accounting.add_{self.permission_codename}')
+        return self.request.user.has_perm(f'accounting.{self.permission_type}_{self.permission_codename}')
     
     def handle_no_permission(self):
         """Redirect if user doesn't have permission."""
-        messages.error(self.request, 'You do not have permission to add this item.')
+        messages.error(self.request, f'You do not have permission to {self.permission_type} this item.')
         return redirect('accounting:dashboard')
 
 
-class DashboardView(LoginRequiredMixin, TemplateView):
+class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """General Ledger Dashboard - overview of accounting data."""
     template_name = 'accounting/dashboard_new.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Get primary entity (first active entity)
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get user's accessible entities (respects entity access control)
+        user_accessible_entities = get_user_accessible_entities(self.request.user)
+        # Convert to list if it's a queryset
+        if hasattr(user_accessible_entities, 'model'):  # It's a queryset
+            user_accessible_entities = list(user_accessible_entities)
+        context['all_entities'] = user_accessible_entities
+        
+        # IMPORTANT: Always use the session entity if available
+        # The SessionEntityMixin.dispatch() ensures entity_id exists in session
+        entity_id = self.request.session.get('selected_entity_id')
+        
+        # Get the entity from session (will always exist due to SessionEntityMixin)
+        if entity_id:
+            entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+            if not entity:
+                # Entity was deleted or deactivated - this shouldn't happen due to mixin
+                # but handle gracefully
+                # Get first from user's accessible entities
+                entity = user_accessible_entities[0] if user_accessible_entities else None
+        else:
+            # Fallback - shouldn't happen due to SessionEntityMixin redirect
+            entity = user_accessible_entities[0] if user_accessible_entities else None
         
         if entity:
             context['entity'] = entity
@@ -56,6 +113,24 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['total_stakeholders'] = Stakeholder.objects.filter(entity=entity).count()
             context['total_contributions'] = CapitalContribution.objects.filter(entity=entity).count()
             context['total_shareholdings'] = Shareholding.objects.filter(entity=entity).count()
+            
+            # Pending review tasks for current user in this entity
+            context['entity_pending_reviews_1'] = CapitalContribution.objects.filter(
+                entity=entity,
+                assigned_reviewer_1=self.request.user,
+                workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
+            ).select_related('stakeholder', 'submitted_by').order_by('-submitted_at')
+            
+            context['entity_pending_reviews_2'] = CapitalContribution.objects.filter(
+                entity=entity,
+                assigned_reviewer_2=self.request.user,
+                workflow_status='FIRST_REVIEW_COMPLETED'
+            ).select_related('stakeholder', 'submitted_by').order_by('-submitted_at')
+            
+            context['entity_pending_reviews_count'] = (
+                context['entity_pending_reviews_1'].count() + 
+                context['entity_pending_reviews_2'].count()
+            )
             
             # HR module statistics
             try:
@@ -242,16 +317,36 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['country_sales'] = []
             context['state_sales'] = []
         
+        # Add pending review tasks for the current user across all entities
+        from accounting.models import CapitalContribution
+        pending_reviews_1 = CapitalContribution.objects.filter(
+            assigned_reviewer_1=self.request.user,
+            workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
+        ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+        
+        pending_reviews_2 = CapitalContribution.objects.filter(
+            assigned_reviewer_2=self.request.user,
+            workflow_status='FIRST_REVIEW_COMPLETED'
+        ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+        
+        # Combine and count pending reviews
+        context['pending_reviews_1'] = pending_reviews_1
+        context['pending_reviews_2'] = pending_reviews_2
+        context['total_pending_reviews'] = pending_reviews_1.count() + pending_reviews_2.count()
+        
         return context
 
 
-class GLDashboardView(LoginRequiredMixin, TemplateView):
+class GLDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """Detailed GL Dashboard with financial metrics."""
     template_name = 'accounting/gl_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        entity = Entity.objects.filter(is_active=True).first()
+        
+        # Use session entity (guaranteed by SessionEntityMixin)
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if entity:
             context['entity'] = entity
@@ -272,12 +367,40 @@ class GLDashboardView(LoginRequiredMixin, TemplateView):
             context['latest_trial_balance'] = entity.trial_balances.order_by('-as_of_date').first()
             context['latest_pl_report'] = entity.pl_reports.order_by('-period_end').first()
             context['latest_balance_sheet'] = entity.balance_sheets.order_by('-as_of_date').first()
-            context['accounts'] = entity.accounts.all()
+            
+            # Calculate current balances for all accounts from GL entries
+            accounts = entity.accounts.all()
+            accounts_with_balances = []
+            
+            for account in accounts:
+                debits = account.ledger_entries.filter(entry_type='DEBIT').aggregate(
+                    total=models.Sum('amount')
+                )['total'] or Decimal('0.00')
+                credits = account.ledger_entries.filter(entry_type='CREDIT').aggregate(
+                    total=models.Sum('amount')
+                )['total'] or Decimal('0.00')
+                
+                # Determine if debit-based or credit-based account
+                is_debit_based = account.account_type in ['ASSET', 'EXPENSE']
+                
+                if is_debit_based:
+                    current_balance = debits - credits
+                else:
+                    current_balance = credits - debits
+                
+                accounts_with_balances.append({
+                    'account': account,
+                    'current_balance': current_balance,
+                    'debits': debits,
+                    'credits': credits
+                })
+            
+            context['accounts'] = accounts_with_balances
         
         return context
 
 
-class AccountListView(LoginRequiredMixin, ListView):
+class AccountListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all accounts."""
     model = Account
     template_name = 'accounting/account_list.html'
@@ -285,10 +408,8 @@ class AccountListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
-        if entity:
-            return entity.accounts.all()
-        return Account.objects.none()
+        # SessionEntityMixin.get_queryset() handles filtering by entity
+        return super().get_queryset()
 
 
 class AccountDetailView(LoginRequiredMixin, DetailView):
@@ -300,18 +421,37 @@ class AccountDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Add entity to context for currency display
+        context['entity'] = self.object.entity
+        
         # Get all ledger entries for this account, ordered by date
         entries = self.object.ledger_entries.order_by('entry_date', 'created_at')
         
-        # Calculate running balance (debit positive, credit negative for assets)
+        # Calculate running balance based on account type
+        # For ASSET accounts: Debit increases, Credit decreases
+        # For LIABILITY/EQUITY/CAPITAL accounts: Credit increases, Debit decreases
+        # For REVENUE accounts: Credit increases, Debit decreases
+        # For EXPENSE accounts: Debit increases, Credit decreases
+        
         running_balance = Decimal('0.00')
         entries_with_balance = []
         
+        # Determine if this is a debit-based or credit-based account
+        is_debit_based = self.object.account_type in ['ASSET', 'EXPENSE']
+        
         for entry in entries:
-            if entry.entry_type == 'DEBIT':
-                running_balance += entry.amount
-            else:  # CREDIT
-                running_balance -= entry.amount
+            if is_debit_based:
+                # For debit-based accounts (Assets, Expenses): Debit positive, Credit negative
+                if entry.entry_type == 'DEBIT':
+                    running_balance += entry.amount
+                else:  # CREDIT
+                    running_balance -= entry.amount
+            else:
+                # For credit-based accounts (Liabilities, Equity, Revenue): Credit positive, Debit negative
+                if entry.entry_type == 'CREDIT':
+                    running_balance += entry.amount
+                else:  # DEBIT
+                    running_balance -= entry.amount
             
             entries_with_balance.append({
                 'entry': entry,
@@ -339,7 +479,7 @@ class AccountDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class LedgerEntryListView(LoginRequiredMixin, ListView):
+class LedgerEntryListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List ledger entries."""
     model = LedgerEntry
     template_name = 'accounting/ledger_entry_list.html'
@@ -347,13 +487,152 @@ class LedgerEntryListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
-        if entity:
-            return entity.ledger_entries.order_by('-entry_date')
-        return LedgerEntry.objects.none()
+        queryset = super().get_queryset()
+        
+        # Filter by search term if provided
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(
+                models.Q(account__name__icontains=search) |
+                models.Q(reference_number__icontains=search) |
+                models.Q(description__icontains=search)
+            )
+        
+        # Filter by entry type if provided
+        entry_type = self.request.GET.get('entry_type', '').strip()
+        if entry_type:
+            queryset = queryset.filter(entry_type=entry_type)
+        
+        # Filter by workflow status
+        status_filter = self.request.GET.get('status', '').strip()
+        
+        # If status is empty in URL, default to showing APPROVED and AUTHORIZED
+        if not status_filter:
+            status_filter = 'APPROVED,AUTHORIZED'
+        
+        # Only filter by status if it's not "all"
+        if status_filter and status_filter.lower() != 'all':
+            statuses = [s.strip() for s in status_filter.split(',')]
+            queryset = queryset.filter(workflow_status__in=statuses)
+        
+        return queryset.order_by('-entry_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get total counts for debugging
+        entity_id = self.request.session.get('selected_entity_id')
+        
+        # Counts for CURRENT entity only
+        all_entries = LedgerEntry.objects.filter(entity_id=entity_id)
+        context['total_entries'] = all_entries.count()
+        context['draft_count'] = all_entries.filter(workflow_status='DRAFT').count()
+        context['pending_count'] = all_entries.filter(workflow_status='PENDING_APPROVAL').count()
+        context['approved_count'] = all_entries.filter(workflow_status='APPROVED').count()
+        context['authorized_count'] = all_entries.filter(workflow_status='AUTHORIZED').count()
+        context['rejected_count'] = all_entries.filter(workflow_status='REJECTED').count()
+        
+        # TOTAL counts across ALL entities (for debugging)
+        all_entries_total = LedgerEntry.objects.all()
+        context['total_all_entities'] = all_entries_total.count()
+        context['approved_all_entities'] = all_entries_total.filter(workflow_status='APPROVED').count()
+        context['authorized_all_entities'] = all_entries_total.filter(workflow_status='AUTHORIZED').count()
+        
+        return context
 
 
-class TrialBalanceListView(LoginRequiredMixin, ListView):
+class LedgerEntryDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
+    """View ledger entry details."""
+    model = LedgerEntry
+    template_name = 'accounting/ledger_entry_detail.html'
+    context_object_name = 'entry'
+
+
+class LedgerEntryPrintView(SessionEntityMixin, LoginRequiredMixin, DetailView):
+    """Print view for ledger entry."""
+    model = LedgerEntry
+    template_name = 'accounting/ledger_entry_print.html'
+    context_object_name = 'entry'
+
+
+class LedgerEntryEditWorkflowView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
+    """Edit ledger entry workflow status (approve/authorize/reject)."""
+    model = LedgerEntry
+    template_name = 'accounting/ledger_entry_edit_workflow.html'
+    fields = []  # Read-only, just for workflow status change
+    context_object_name = 'entry'
+    
+    def get_success_url(self):
+        return reverse_lazy('accounting:ledger_entry_list')
+    
+    def post(self, request, *args, **kwargs):
+        """Handle workflow action buttons."""
+        entry = self.get_object()
+        action = request.POST.get('action', '')
+        
+        workflow_status_map = {
+            'approve': 'APPROVED',
+            'authorize': 'AUTHORIZED',
+            'reject': 'REJECTED',
+            'draft': 'DRAFT'
+        }
+        
+        new_status = workflow_status_map.get(action)
+        if not new_status:
+            messages.error(request, 'Invalid action')
+            return redirect(entry)
+        
+        # Validate status transition
+        current_status = entry.workflow_status
+        valid_transitions = {
+            'DRAFT': ['PENDING_APPROVAL', 'REJECTED'],
+            'PENDING_APPROVAL': ['APPROVED', 'REJECTED', 'DRAFT'],
+            'APPROVED': ['AUTHORIZED', 'REJECTED'],
+            'AUTHORIZED': ['REJECTED'],
+            'REJECTED': ['DRAFT']
+        }
+        
+        if new_status not in valid_transitions.get(current_status, []):
+            messages.error(request, f'Cannot transition from {current_status} to {new_status}')
+            return redirect(entry)
+        
+        # Update status
+        entry.workflow_status = new_status
+        
+        # Set is_posted only when AUTHORIZED
+        if new_status == 'AUTHORIZED':
+            entry.is_posted = True
+        elif new_status == 'REJECTED' or new_status == 'DRAFT':
+            entry.is_posted = False
+        
+        entry.save()
+        
+        # Create audit log
+        status_messages = {
+            'DRAFT': 'Reverted to Draft',
+            'PENDING_APPROVAL': 'Submitted for Approval',
+            'APPROVED': 'Approved',
+            'AUTHORIZED': 'Authorized and Posted',
+            'REJECTED': 'Rejected'
+        }
+        
+        AuditLog.objects.create(
+            entity=entry.entity,
+            model_name='LedgerEntry',
+            action='UPDATE',
+            object_id=str(entry.id),
+            user=str(request.user),
+            description=f"Workflow status changed to {new_status}",
+            old_values={'workflow_status': current_status},
+            new_values={'workflow_status': new_status}
+        )
+        
+        msg = status_messages.get(new_status, 'Status updated')
+        messages.success(request, f'{msg}')
+        
+        return redirect(self.get_success_url())
+
+
+class TrialBalanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List trial balances."""
     model = TrialBalance
     template_name = 'accounting/trial_balance_list.html'
@@ -361,13 +640,32 @@ class TrialBalanceListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
+        queryset = super().get_queryset()
+        return queryset.order_by('-as_of_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity = self.request.entity
+        
+        # Generate trial balance for today
         if entity:
-            return entity.trial_balances.order_by('-as_of_date')
-        return TrialBalance.objects.none()
+            from datetime import date
+            today = date.today()
+            
+            # Calculate trial balance from GL entries
+            tb_data = calculate_trial_balance(entity, today)
+            
+            if tb_data:
+                context['trial_balance'] = tb_data.get('trial_balance')
+                context['account_balances'] = tb_data.get('account_balances', [])
+                context['total_debits'] = tb_data.get('total_debits', 0)
+                context['total_credits'] = tb_data.get('total_credits', 0)
+                context['is_balanced'] = tb_data.get('is_balanced', False)
+        
+        return context
 
 
-class ProfitLossListView(LoginRequiredMixin, ListView):
+class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List P&L reports."""
     model = ProfitLossReport
     template_name = 'accounting/profit_loss_list.html'
@@ -375,13 +673,11 @@ class ProfitLossListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
-        if entity:
-            return entity.pl_reports.order_by('-period_end')
-        return ProfitLossReport.objects.none()
+        queryset = super().get_queryset()
+        return queryset.order_by('-period_end')
 
 
-class BalanceSheetListView(LoginRequiredMixin, ListView):
+class BalanceSheetListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List balance sheets."""
     model = BalanceSheet
     template_name = 'accounting/balance_sheet_list.html'
@@ -389,13 +685,11 @@ class BalanceSheetListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
-        if entity:
-            return entity.balance_sheets.order_by('-as_of_date')
-        return BalanceSheet.objects.none()
+        queryset = super().get_queryset()
+        return queryset.order_by('-as_of_date')
 
 
-class CustomerListView(LoginRequiredMixin, ListView):
+class CustomerListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List customers."""
     model = Customer
     template_name = 'accounting/customer_list.html'
@@ -403,13 +697,11 @@ class CustomerListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
-        if entity:
-            return entity.customers.all()
-        return Customer.objects.none()
+        # SessionEntityMixin.get_queryset() handles filtering by entity
+        return super().get_queryset()
 
 
-class VendorListView(LoginRequiredMixin, ListView):
+class VendorListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List vendors."""
     model = Vendor
     template_name = 'accounting/vendor_list.html'
@@ -417,13 +709,61 @@ class VendorListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
+        # SessionEntityMixin.get_queryset() handles filtering by entity
+        return super().get_queryset()
+
+
+class VendorDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
+    """Vendor detail view."""
+    model = Vendor
+    template_name = 'accounting/vendor_detail.html'
+    context_object_name = 'vendor'
+
+
+class VendorUpdateView(PermissionRequiredMixin, FormView):
+    """Update vendor from vendor list."""
+    from .forms import QuickAddVendorForm
+    form_class = QuickAddVendorForm
+    template_name = 'accounting/vendor_edit.html'
+    permission_codename = 'vendor'
+    permission_type = 'change'
+
+    def get_object(self):
+        return get_object_or_404(Vendor, pk=self.kwargs['pk'])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        vendor = self.get_object()
+        kwargs['instance'] = vendor
         entity = Entity.objects.filter(is_active=True).first()
-        if entity:
-            return entity.vendors.all()
-        return Vendor.objects.none()
+        kwargs['entity'] = entity
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['vendor'] = self.get_object()
+        return context
+
+    def form_valid(self, form):
+        entity = Entity.objects.filter(is_active=True).first()
+        vendor = form.save(commit=False)
+        vendor.entity = entity
+        vendor.save()
+        
+        AuditLog.objects.create(
+            entity=entity,
+            user=self.request.user.username,
+            action='UPDATE',
+            model_name='Vendor',
+            object_id=vendor.id,
+            description=f'Updated vendor: {vendor.name}'
+        )
+        
+        messages.success(self.request, f'Vendor {vendor.name} updated successfully.')
+        return redirect('accounting:vendor_list')
 
 
-class VendorInvoiceListView(LoginRequiredMixin, ListView):
+class VendorInvoiceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List vendor invoices."""
     model = VendorInvoice
     template_name = 'accounting/vendor_invoice_list.html'
@@ -431,13 +771,15 @@ class VendorInvoiceListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         if entity:
             return entity.vendor_invoices.order_by('-invoice_date')
         return VendorInvoice.objects.none()
 
 
-class VendorInvoiceDetailView(LoginRequiredMixin, DetailView):
+class VendorInvoiceDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Vendor invoice detail view."""
     model = VendorInvoice
     template_name = 'accounting/vendor_invoice_detail.html'
@@ -449,9 +791,8 @@ class VendorInvoiceDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class VendorInvoiceUpdateView(LoginRequiredMixin, FormView):
+class VendorInvoiceUpdateView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Update vendor invoice."""
-    from .forms import QuickAddVendorInvoiceForm
     form_class = QuickAddVendorInvoiceForm
     template_name = 'accounting/vendor_invoice_form.html'
 
@@ -500,7 +841,7 @@ class VendorInvoiceUpdateView(LoginRequiredMixin, FormView):
             return self.form_invalid(form)
 
 
-class RecordVendorPaymentView(LoginRequiredMixin, FormView):
+class RecordVendorPaymentView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Record payment for vendor invoice."""
     from .forms import QuickAddVendorPaymentForm
     form_class = QuickAddVendorPaymentForm
@@ -511,7 +852,9 @@ class RecordVendorPaymentView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         kwargs['initial'] = {'vendor_invoice': self.get_invoice()}
         return kwargs
@@ -519,11 +862,15 @@ class RecordVendorPaymentView(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['invoice'] = self.get_invoice()
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         invoice = self.get_invoice()
         
         try:
@@ -553,13 +900,15 @@ class RecordVendorPaymentView(LoginRequiredMixin, FormView):
             return self.form_invalid(form)
 
 
-class VendorInvoiceStatusUpdateView(LoginRequiredMixin, FormView):
+class VendorInvoiceStatusUpdateView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Update vendor invoice status."""
     
     def post(self, request, *args, **kwargs):
         invoice = get_object_or_404(VendorInvoice, pk=kwargs['pk'])
         new_status = request.POST.get('status')
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         valid_transitions = {
             'DRAFT': ['SUBMITTED', 'CANCELLED'],
@@ -594,7 +943,7 @@ class VendorInvoiceStatusUpdateView(LoginRequiredMixin, FormView):
         return redirect('accounting:vendor_invoice_detail', pk=invoice.pk)
 
 
-class FixedAssetListView(LoginRequiredMixin, ListView):
+class FixedAssetListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List fixed assets."""
     model = FixedAsset
     template_name = 'accounting/fixed_asset_list.html'
@@ -602,7 +951,8 @@ class FixedAssetListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         if entity:
             return entity.fixed_assets.all()
         return FixedAsset.objects.none()
@@ -623,7 +973,56 @@ class FixedAssetListView(LoginRequiredMixin, ListView):
         return context
 
 
-class AuditLogListView(LoginRequiredMixin, ListView):
+class FixedAssetCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
+    """Create a new fixed asset."""
+    model = FixedAsset
+    form_class = FixedAssetForm
+    template_name = 'accounting/fixedasset_form.html'
+    success_url = reverse_lazy('accounting:fixed_asset_list')
+
+    def form_valid(self, form):
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        
+        if not entity:
+            messages.error(self.request, 'No entity configured. Please contact administrator.')
+            return self.form_invalid(form)
+        
+        form.instance.entity = entity
+        # Calculate book value
+        form.instance.book_value = form.instance.purchase_cost
+        messages.success(self.request, f'Fixed asset "{form.instance.name}" created successfully.')
+        return super().form_valid(form)
+
+
+class FixedAssetUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
+    """Update a fixed asset."""
+    model = FixedAsset
+    form_class = FixedAssetForm
+    template_name = 'accounting/fixedasset_form.html'
+    success_url = reverse_lazy('accounting:fixed_asset_list')
+
+    def get_queryset(self):
+        entity_id = self.request.session.get('selected_entity_id')
+        return FixedAsset.objects.filter(entity_id=entity_id)
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Fixed asset "{form.instance.name}" updated successfully.')
+        return super().form_valid(form)
+
+
+class FixedAssetDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
+    """Delete a fixed asset."""
+    model = FixedAsset
+    template_name = 'accounting/fixedasset_confirm_delete.html'
+    success_url = reverse_lazy('accounting:fixed_asset_list')
+
+    def get_queryset(self):
+        entity_id = self.request.session.get('selected_entity_id')
+        return FixedAsset.objects.filter(entity_id=entity_id)
+
+
+class AuditLogListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List audit logs."""
     model = AuditLog
     template_name = 'accounting/audit_log_list.html'
@@ -631,13 +1030,45 @@ class AuditLogListView(LoginRequiredMixin, ListView):
     paginate_by = 100
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
-        if entity:
-            return entity.audit_logs.order_by('-timestamp')
-        return AuditLog.objects.none()
+        entity_id = self.request.session.get('selected_entity_id')
+        
+        # If no entity in session, return empty
+        if not entity_id:
+            return AuditLog.objects.none()
+        
+        # Start with entity-filtered logs
+        queryset = AuditLog.objects.filter(entity_id=entity_id).order_by('-timestamp')
+        
+        # Apply additional filters from request parameters
+        search_model = self.request.GET.get('model', '').strip()
+        if search_model:
+            queryset = queryset.filter(model_name__icontains=search_model)
+        
+        search_user = self.request.GET.get('user', '').strip()
+        if search_user:
+            queryset = queryset.filter(user__icontains=search_user)
+        
+        filter_action = self.request.GET.get('action', '').strip()
+        if filter_action:
+            queryset = queryset.filter(action=filter_action)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add entity info to context for debugging
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            entity = Entity.objects.filter(id=entity_id).first()
+            context['current_entity'] = entity
+        # Pass filter parameters back to template
+        context['search_model'] = self.request.GET.get('model', '')
+        context['search_user'] = self.request.GET.get('user', '')
+        context['filter_action'] = self.request.GET.get('action', '')
+        return context
 
 
-class DoubleEntryJournalView(LoginRequiredMixin, FormView):
+class DoubleEntryJournalView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Create double-entry journal entries (Debit and Credit simultaneously)."""
     template_name = 'accounting/journal_entry_create.html'
     form_class = DoubleEntryJournalForm
@@ -645,15 +1076,41 @@ class DoubleEntryJournalView(LoginRequiredMixin, FormView):
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        context['entity'] = entity
+        return context
+    
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         if not entity:
-            messages.error(self.request, 'No active entity found. Please create one in the admin panel.')
+            messages.error(self.request, 'No entity selected. Please select an entity first.')
             return redirect('accounting:dashboard')
+        
+        # Get the workflow action from the submitted button
+        action = self.request.POST.get('action', 'submit')
+        print(f"[DoubleEntryJournal] Action button pressed: {action}")
+        
+        # Map actions to workflow statuses
+        workflow_status_map = {
+            'draft': 'DRAFT',
+            'submit': 'PENDING_APPROVAL',
+            'approve': 'APPROVED',
+            'authorize': 'AUTHORIZED',
+            'reject': 'REJECTED'
+        }
+        
+        workflow_status = workflow_status_map.get(action, 'DRAFT')
+        print(f"[DoubleEntryJournal] Mapped to workflow_status: {workflow_status}")
+        is_posted = workflow_status == 'AUTHORIZED'  # Only post when authorized
         
         try:
             with transaction.atomic():
@@ -666,8 +1123,10 @@ class DoubleEntryJournalView(LoginRequiredMixin, FormView):
                     entry_date=form.cleaned_data['entry_date'],
                     description=form.cleaned_data['description'],
                     reference_number=form.cleaned_data['reference_number'],
-                    is_posted=form.cleaned_data['is_posted']
+                    is_posted=is_posted,
+                    workflow_status=workflow_status
                 )
+                print(f"[DoubleEntryJournal] Created debit entry {debit_entry.id} with status: {debit_entry.workflow_status}")
                 
                 # Create credit entry
                 credit_entry = LedgerEntry.objects.create(
@@ -678,18 +1137,30 @@ class DoubleEntryJournalView(LoginRequiredMixin, FormView):
                     entry_date=form.cleaned_data['entry_date'],
                     description=form.cleaned_data['description'],
                     reference_number=form.cleaned_data['reference_number'],
-                    is_posted=form.cleaned_data['is_posted']
+                    is_posted=is_posted,
+                    workflow_status=workflow_status
                 )
+                print(f"[DoubleEntryJournal] Created credit entry {credit_entry.id} with status: {credit_entry.workflow_status}")
                 
                 # Create audit log
+                status_messages = {
+                    'DRAFT': 'Saved as Draft',
+                    'PENDING_APPROVAL': 'Submitted for Approval',
+                    'APPROVED': 'Approved',
+                    'AUTHORIZED': 'Authorized and Posted',
+                    'REJECTED': 'Rejected'
+                }
+                
                 AuditLog.objects.create(
                     entity=entity,
-                    entity_type='LedgerEntry',
+                    model_name='LedgerEntry',
                     action='CREATE',
-                    reference_id=debit_entry.id,
-                    user=self.request.user,
+                    object_id=str(debit_entry.id),
+                    user=str(self.request.user),
+                    description=f"Created double-entry journal with status {workflow_status}",
                     old_values={},
                     new_values={
+                        'workflow_status': workflow_status,
                         'debit_account': form.cleaned_data['debit_account'].name,
                         'debit_amount': str(form.cleaned_data['debit_amount']),
                         'credit_account': form.cleaned_data['credit_account'].name,
@@ -698,22 +1169,37 @@ class DoubleEntryJournalView(LoginRequiredMixin, FormView):
                     }
                 )
                 
+                status_msg = status_messages.get(workflow_status, 'Journal entry created')
                 messages.success(
                     self.request,
-                    f'Journal entry created successfully. Debit: {form.cleaned_data["debit_amount"]} | Credit: {form.cleaned_data["credit_amount"]}'
+                    f'{status_msg}. Debit: {form.cleaned_data["debit_amount"]} | Credit: {form.cleaned_data["credit_amount"]}'
                 )
+                print(f"[DoubleEntryJournal] Successfully created entries with status: {workflow_status}")
+                
+                # Don't call super().form_valid(form) since we're not using a ModelForm
+                # and we've already handled the creation ourselves
+                # Instead, just redirect to the success URL
+                print(f"[DoubleEntryJournal] Redirecting to success_url: {self.success_url}")
+                
         except Exception as e:
             messages.error(self.request, f'Error creating journal entry: {str(e)}')
+            import traceback
+            print(f"ERROR in form_valid: {str(e)}")
+            print(traceback.format_exc())
+            return self.form_invalid(form)
         
-        return super().form_valid(form)
+        # Return the redirect response directly
+        return redirect(self.success_url)
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
-        return context
+    def form_invalid(self, form):
+        """Handle form validation errors."""
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f'{field}: {error}')
+        return super().form_invalid(form)
 
 
-class LedgerEntryCreateView(LoginRequiredMixin, FormView):
+class LedgerEntryCreateView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Create individual ledger entries (simple form)."""
     template_name = 'accounting/ledger_entry_form.html'
     form_class = SimpleLedgerEntryForm
@@ -721,14 +1207,16 @@ class LedgerEntryCreateView(LoginRequiredMixin, FormView):
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
     
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         if not entity:
-            messages.error(self.request, 'No active entity found.')
+            messages.error(self.request, 'No entity selected. Please select an entity first.')
             return redirect('accounting:dashboard')
         
         try:
@@ -739,10 +1227,11 @@ class LedgerEntryCreateView(LoginRequiredMixin, FormView):
             # Create audit log
             AuditLog.objects.create(
                 entity=entity,
-                entity_type='LedgerEntry',
+                model_name='LedgerEntry',
                 action='CREATE',
-                reference_id=entry.id,
-                user=self.request.user,
+                object_id=str(entry.id),
+                user=str(self.request.user),
+                description=f"Created simple ledger entry for {entry.account.name}",
                 old_values={},
                 new_values={
                     'account': entry.account.name,
@@ -765,7 +1254,7 @@ class LedgerEntryCreateView(LoginRequiredMixin, FormView):
 
 
 # ============ VENDOR PAYMENTS ============
-class VendorPaymentListView(LoginRequiredMixin, ListView):
+class VendorPaymentListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List vendor payments."""
     from .models import VendorPayment
     model = VendorPayment
@@ -774,25 +1263,172 @@ class VendorPaymentListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         if entity:
             return entity.vendor_payments.order_by('-payment_date')
         return VendorPayment.objects.none()
 
 
+class VendorPaymentDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
+    """Vendor payment detail view."""
+    model = VendorPayment
+    template_name = 'accounting/vendor_payment_detail.html'
+    context_object_name = 'payment'
+
+
+class VendorPaymentUpdateView(SessionEntityMixin, PermissionRequiredMixin, FormView):
+    """Update vendor payment from vendor payment list."""
+    form_class = QuickAddVendorPaymentForm
+    template_name = 'accounting/vendor_payment_edit.html'
+    permission_codename = 'vendor_payment'
+    permission_type = 'change'
+
+    def get_object(self):
+        from .models import VendorPayment
+        return get_object_or_404(VendorPayment, pk=self.kwargs['pk'])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        payment = self.get_object()
+        kwargs['instance'] = payment
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['payment'] = self.get_object()
+        return context
+
+    def form_valid(self, form):
+        entity = Entity.objects.filter(is_active=True).first()
+        payment = form.save(commit=False)
+        payment.save()
+        
+        AuditLog.objects.create(
+            entity=entity,
+            user=self.request.user.username,
+            action='UPDATE',
+            model_name='VendorPayment',
+            object_id=payment.id,
+            description=f'Updated vendor payment: {payment.reference_number}'
+        )
+        
+        messages.success(self.request, f'Vendor payment updated successfully.')
+        return redirect('accounting:vendor_payments_list')
+
+
+class VendorPaymentCreateView(SessionEntityMixin, PermissionRequiredMixin, FormView):
+    """Create vendor payment from vendor payment list."""
+    form_class = QuickAddVendorPaymentForm
+    template_name = 'accounting/vendor_payment_form.html'
+    permission_codename = 'vendor_payment'
+    permission_type = 'add'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        kwargs['entity'] = entity
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
+        return context
+
+    def form_valid(self, form):
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        payment = form.save(commit=False)
+        payment.entity = entity
+        payment.save()
+        
+        AuditLog.objects.create(
+            entity=entity,
+            user=self.request.user.username,
+            action='CREATE',
+            model_name='VendorPayment',
+            object_id=payment.id,
+            description=f'Created vendor payment: {payment.reference_number}'
+        )
+        
+        messages.success(self.request, f'Vendor payment created successfully.')
+        return redirect('accounting:vendor_payments_list')
+
+
 # ============ BANK PROFILES ============
-class BankProfileListView(LoginRequiredMixin, ListView):
+class BankProfileListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List bank profiles."""
     model = BankProfile
     template_name = 'accounting/bank_profile_list.html'
     context_object_name = 'profiles'
     paginate_by = 50
 
-    def get_queryset(self):
-        entity = Entity.objects.filter(is_active=True).first()
-        if entity:
-            return entity.bank_profiles.all()
-        return BankProfile.objects.none()
+
+class BankProfileCreateView(SessionEntityMixin, PermissionRequiredMixin, LoginRequiredMixin, CreateView):
+    """Create a new bank profile."""
+    model = BankProfile
+    form_class = QuickAddBankProfileForm
+    template_name = 'accounting/bank_profile_form.html'
+    permission_required = 'accounting.add_bankprofile'
+    success_url = reverse_lazy('accounting:bank_profiles_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        kwargs['entity'] = entity
+        return kwargs
+
+    def form_valid(self, form):
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        
+        if not entity:
+            messages.error(self.request, 'No entity configured.')
+            return self.form_invalid(form)
+        
+        form.instance.entity = entity
+        messages.success(self.request, f'Bank profile {form.instance.bank_name} created successfully.')
+        return super().form_valid(form)
+
+
+class BankProfileUpdateView(SessionEntityMixin, PermissionRequiredMixin, LoginRequiredMixin, UpdateView):
+    """Update a bank profile."""
+    model = BankProfile
+    form_class = QuickAddBankProfileForm
+    template_name = 'accounting/bank_profile_form.html'
+    permission_required = 'accounting.change_bankprofile'
+    success_url = reverse_lazy('accounting:bank_profiles_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        kwargs['entity'] = entity
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Bank profile {form.instance.bank_name} updated successfully.')
+        return super().form_valid(form)
+
+
+class BankProfileDeleteView(SessionEntityMixin, PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
+    """Delete a bank profile."""
+    model = BankProfile
+    template_name = 'accounting/bank_profile_confirm_delete.html'
+    permission_required = 'accounting.delete_bankprofile'
+    success_url = reverse_lazy('accounting:bank_profiles_list')
+
+    def delete(self, request, *args, **kwargs):
+        bank_profile = self.get_object()
+        messages.success(request, f'Bank profile {bank_profile.bank_name} deleted successfully.')
+        return super().delete(request, *args, **kwargs)
 
 
 # ============ BANK STATEMENTS ============
@@ -961,6 +1597,109 @@ class EntityListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Entity.objects.all()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entities = self.get_queryset()
+        context['active_count'] = entities.filter(is_active=True).count()
+        context['inactive_count'] = entities.filter(is_active=False).count()
+        return context
+
+
+class EntityCreateView(LoginRequiredMixin, CreateView):
+    """Create a new entity."""
+    model = Entity
+    template_name = 'accounting/entity_form.html'
+    fields = ['code', 'name', 'description', 'is_active']
+    success_url = reverse_lazy('accounting:entities_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Entity "{form.instance.name}" created successfully.')
+        return super().form_valid(form)
+
+
+class EntityUpdateView(LoginRequiredMixin, UpdateView):
+    """Update an entity."""
+    model = Entity
+    template_name = 'accounting/entity_form.html'
+    fields = ['code', 'name', 'description', 'is_active']
+    success_url = reverse_lazy('accounting:entities_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Entity "{form.instance.name}" updated successfully.')
+        return super().form_valid(form)
+
+
+class EntityDeleteView(LoginRequiredMixin, DeleteView):
+    """Delete an entity."""
+    model = Entity
+    template_name = 'accounting/entity_confirm_delete.html'
+    success_url = reverse_lazy('accounting:entities_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity = self.get_object()
+        
+        # Check for related records that might prevent deletion
+        from crm.models import SalesStage, Opportunity
+        from sales.models import SalesOrder
+        from procurement.models import PurchaseOrder
+        
+        sales_stages = SalesStage.objects.filter(entity=entity)
+        opp_count = Opportunity.objects.filter(stage__in=sales_stages).count()
+        sales_order_count = SalesOrder.objects.filter(entity=entity).count()
+        po_count = PurchaseOrder.objects.filter(entity=entity).count()
+        
+        context['opp_count'] = opp_count
+        context['sales_order_count'] = sales_order_count
+        context['po_count'] = po_count
+        context['has_related_records'] = opp_count > 0 or sales_order_count > 0 or po_count > 0
+        
+        return context
+    
+    def delete(self, request, *args, **kwargs):
+        from django.db.models.deletion import ProtectedError
+        
+        try:
+            messages.success(request, f'Entity deleted successfully.')
+            return super().delete(request, *args, **kwargs)
+        except ProtectedError as e:
+            # Handle protected foreign key relationships
+            entity = self.get_object()
+            
+            # Get human-readable error message
+            error_msg = f"Cannot delete entity '{entity.name}' because it has related records. "
+            error_msg += "Please delete or reassign the following related items first:"
+            
+            # Check for specific related records
+            related_counts = {}
+            
+            # Check opportunities (via SalesStage)
+            from crm.models import SalesStage, Opportunity
+            sales_stages = SalesStage.objects.filter(entity=entity)
+            opp_count = Opportunity.objects.filter(stage__in=sales_stages).count()
+            if opp_count > 0:
+                related_counts['Opportunities'] = opp_count
+            
+            # Check sales orders
+            from sales.models import SalesOrder
+            sales_order_count = SalesOrder.objects.filter(entity=entity).count()
+            if sales_order_count > 0:
+                related_counts['Sales Orders'] = sales_order_count
+            
+            # Check purchase orders
+            from procurement.models import PurchaseOrder
+            po_count = PurchaseOrder.objects.filter(entity=entity).count()
+            if po_count > 0:
+                related_counts['Purchase Orders'] = po_count
+            
+            # Build error message with counts
+            details = ' | '.join([f"{name}: {count}" for name, count in related_counts.items()])
+            if details:
+                error_msg += f" {details}"
+            
+            messages.error(request, error_msg)
+            return redirect('accounting:entities_list')
 
 
 # ============ CURRENCIES ============
@@ -991,7 +1730,7 @@ class PeriodLockListView(LoginRequiredMixin, ListView):
 
 
 # ============ QUICK ADD VIEWS FOR DASHBOARD ============
-class QuickAddLedgerEntryView(LoginRequiredMixin, FormView):
+class QuickAddLedgerEntryView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add ledger entry from dashboard."""
     form_class = DoubleEntryJournalForm
     template_name = 'accounting/quick_add_ledger_entry.html'
@@ -999,12 +1738,16 @@ class QuickAddLedgerEntryView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1058,12 +1801,14 @@ class QuickAddLedgerEntryView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR CUSTOMERS ============
-class QuickAddCustomerView(PermissionRequiredMixin, FormView):
+class QuickAddCustomerView(SessionEntityMixin, PermissionRequiredMixin, FormView):
     """Quick add customer from dashboard."""
     from .forms import QuickAddCustomerForm
     form_class = QuickAddCustomerForm
@@ -1073,12 +1818,16 @@ class QuickAddCustomerView(PermissionRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1104,6 +1853,56 @@ class QuickAddCustomerView(PermissionRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context['entity'] = Entity.objects.filter(is_active=True).first()
         return context
+
+
+class CustomerDetailView(LoginRequiredMixin, DetailView):
+    """Customer detail view."""
+    model = Customer
+    template_name = 'accounting/customer_detail.html'
+    context_object_name = 'customer'
+
+
+class CustomerUpdateView(PermissionRequiredMixin, FormView):
+    """Update customer from customer list."""
+    from .forms import QuickAddCustomerForm
+    form_class = QuickAddCustomerForm
+    template_name = 'accounting/customer_edit.html'
+    permission_codename = 'customer'
+    permission_type = 'change'
+
+    def get_object(self):
+        return get_object_or_404(Customer, pk=self.kwargs['pk'])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        customer = self.get_object()
+        kwargs['instance'] = customer
+        entity = Entity.objects.filter(is_active=True).first()
+        kwargs['entity'] = entity
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['customer'] = self.get_object()
+        return context
+
+    def form_valid(self, form):
+        entity = Entity.objects.filter(is_active=True).first()
+        customer = form.save(commit=False)
+        customer.entity = entity
+        customer.save()
+        
+        AuditLog.objects.create(
+            entity=entity,
+            user=self.request.user.username,
+            action='UPDATE',
+            model_name='Customer',
+            object_id=customer.id,
+            description=f'Updated customer: {customer.name}'
+        )
+        
+        messages.success(self.request, f'Customer {customer.name} updated successfully.')
+        return redirect('accounting:customer_list')
 
 
 # ============ QUICK ADD VIEWS FOR VENDORS ============
@@ -1195,7 +1994,7 @@ class QuickAddAccountView(PermissionRequiredMixin, FormView):
 
 
 # ============ QUICK ADD VIEWS FOR VENDOR INVOICES ============
-class QuickAddVendorInvoiceView(LoginRequiredMixin, FormView):
+class QuickAddVendorInvoiceView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add vendor invoice from dashboard."""
     from .forms import QuickAddVendorInvoiceForm
     form_class = QuickAddVendorInvoiceForm
@@ -1204,12 +2003,16 @@ class QuickAddVendorInvoiceView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session instead of first active
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1239,12 +2042,14 @@ class QuickAddVendorInvoiceView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR VENDOR PAYMENTS ============
-class QuickAddVendorPaymentView(LoginRequiredMixin, FormView):
+class QuickAddVendorPaymentView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add vendor payment from dashboard."""
     from .forms import QuickAddVendorPaymentForm
     form_class = QuickAddVendorPaymentForm
@@ -1253,12 +2058,16 @@ class QuickAddVendorPaymentView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1287,12 +2096,14 @@ class QuickAddVendorPaymentView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR FIXED ASSETS ============
-class QuickAddFixedAssetView(LoginRequiredMixin, FormView):
+class QuickAddFixedAssetView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add fixed asset from dashboard."""
     from .forms import QuickAddFixedAssetForm
     form_class = QuickAddFixedAssetForm
@@ -1301,12 +2112,16 @@ class QuickAddFixedAssetView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1406,12 +2221,14 @@ class QuickAddFixedAssetView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR CASH TRANSACTIONS ============
-class QuickAddCashTransactionView(LoginRequiredMixin, FormView):
+class QuickAddCashTransactionView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add cash transaction from dashboard."""
     from .forms import QuickAddCashTransactionForm
     form_class = QuickAddCashTransactionForm
@@ -1420,12 +2237,16 @@ class QuickAddCashTransactionView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1454,12 +2275,14 @@ class QuickAddCashTransactionView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR BANK PROFILES ============
-class QuickAddBankProfileView(LoginRequiredMixin, FormView):
+class QuickAddBankProfileView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add bank profile from dashboard."""
     from .forms import QuickAddBankProfileForm
     form_class = QuickAddBankProfileForm
@@ -1468,12 +2291,16 @@ class QuickAddBankProfileView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1502,12 +2329,14 @@ class QuickAddBankProfileView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR TAX RATES ============
-class QuickAddTaxRateView(LoginRequiredMixin, FormView):
+class QuickAddTaxRateView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add tax rate from dashboard."""
     from .forms import QuickAddTaxRateForm
     form_class = QuickAddTaxRateForm
@@ -1516,12 +2345,16 @@ class QuickAddTaxRateView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1550,12 +2383,14 @@ class QuickAddTaxRateView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR DEFERRED EXPENSES ============
-class QuickAddDeferredExpenseView(LoginRequiredMixin, FormView):
+class QuickAddDeferredExpenseView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add deferred expense from dashboard."""
     from .forms import QuickAddDeferredExpenseForm
     form_class = QuickAddDeferredExpenseForm
@@ -1564,12 +2399,16 @@ class QuickAddDeferredExpenseView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1598,12 +2437,14 @@ class QuickAddDeferredExpenseView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR DEFERRED REVENUES ============
-class QuickAddDeferredRevenueView(LoginRequiredMixin, FormView):
+class QuickAddDeferredRevenueView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add deferred revenue from dashboard."""
     from .forms import QuickAddDeferredRevenueForm
     form_class = QuickAddDeferredRevenueForm
@@ -1612,12 +2453,16 @@ class QuickAddDeferredRevenueView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1646,12 +2491,14 @@ class QuickAddDeferredRevenueView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['entity'] = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        context['entity'] = Entity.objects.filter(id=entity_id, is_active=True).first()
         return context
 
 
 # ============ QUICK ADD VIEWS FOR RECONCILIATION RECORDS ============
-class QuickAddReconciliationRecordView(LoginRequiredMixin, FormView):
+class QuickAddReconciliationRecordView(SessionEntityMixin, LoginRequiredMixin, FormView):
     """Quick add reconciliation record from dashboard."""
     from .forms import QuickAddReconciliationRecordForm
     form_class = QuickAddReconciliationRecordForm
@@ -1660,12 +2507,16 @@ class QuickAddReconciliationRecordView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         kwargs['entity'] = entity
         return kwargs
 
     def form_valid(self, form):
-        entity = Entity.objects.filter(is_active=True).first()
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
         
         if not entity:
             messages.error(self.request, 'No entity configured. Please contact administrator.')
@@ -1696,3 +2547,40 @@ class QuickAddReconciliationRecordView(LoginRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context['entity'] = Entity.objects.filter(is_active=True).first()
         return context
+
+
+class GetAccountShareholderAPIView(View):
+    """API endpoint to get shareholder info for a capital account."""
+    
+    def get(self, request):
+        """Return shareholder name for a given account ID."""
+        from django.http import JsonResponse
+        
+        account_id = request.GET.get('account_id')
+        
+        if not account_id:
+            return JsonResponse({'investor_name': '', 'error': 'No account ID provided'}, status=400)
+        
+        try:
+            from .models import CapitalContribution, Stakeholder
+            
+            # Find capital contribution linked to this account
+            capital_contrib = CapitalContribution.objects.filter(
+                equity_account_id=account_id
+            ).first()
+            
+            if capital_contrib and capital_contrib.stakeholder:
+                investor_name = capital_contrib.stakeholder.full_name
+                return JsonResponse({
+                    'investor_name': investor_name,
+                    'stakeholder_id': capital_contrib.stakeholder.id,
+                    'contribution_amount': str(capital_contrib.amount_company_currency),
+                    'currency': capital_contrib.currency_destination.code
+                })
+            else:
+                # No capital contribution linked to this account
+                return JsonResponse({'investor_name': '', 'stakeholder_id': None})
+        
+        except Exception as e:
+            return JsonResponse({'investor_name': '', 'error': str(e)}, status=400)
+

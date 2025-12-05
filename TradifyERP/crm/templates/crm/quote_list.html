@@ -23,7 +23,42 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <p class="text-muted">Quote list will display here</p>
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Quote Number</th>
+                                        <th>Customer</th>
+                                        <th>Opportunity</th>
+                                        <th>Total Amount</th>
+                                        <th>Status</th>
+                                        <th>Valid Until</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for quote in quotes %}
+                                        <tr>
+                                            <td><strong>{{ quote.quote_number }}</strong></td>
+                                            <td>{{ quote.customer.customer_name }}</td>
+                                            <td>{{ quote.opportunity.opportunity_name }}</td>
+                                            <td>${{ quote.total_amount|floatformat:2 }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if quote.status == 'ACCEPTED' %}success{% elif quote.status == 'REJECTED' %}danger{% elif quote.status == 'EXPIRED' %}warning{% elif quote.status == 'SENT' %}info{% else %}secondary{% endif %}">
+                                                    {{ quote.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ quote.valid_until|date:"M d, Y" }}</td>
+                                            <td>
+                                                <a href="{% url 'crm:quote_detail' quote.pk %}" class="btn btn-sm btn-info">View</a>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-3">No quotes found</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

@@ -7,7 +7,7 @@
                         <div class="d-flex align-items-center">
                             <!-- LOGO -->
                             <div class="navbar-brand-box" style="margin: 0; padding-left: 1.5rem;">
-                                <a href="{% url 'accounting:dashboard' %}" class="logo logo-dark">
+                                <a href="{% url 'dashboard' %}" class="logo logo-dark">
                                     <span class="logo-sm">
                                         <img src="{% static 'images/logo.png' %}" alt="" height="24">
                                     </span>
@@ -16,7 +16,7 @@
                                     </span>
                                 </a>
 
-                                <a href="{% url 'accounting:dashboard' %}" class="logo logo-light">
+                                <a href="{% url 'dashboard' %}" class="logo logo-light">
                                     <span class="logo-sm">
                                         <img src="{% static 'images/logo.png' %}" alt="" height="24">
                                     </span>
@@ -159,86 +159,54 @@
                             <button type="button" class="btn header-item noti-icon position-relative" style="color: #545a6d;" id="page-header-notifications-dropdown"
                             data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i data-feather="bell" class="icon-lg"></i>
-                                <span class="badge bg-danger rounded-pill">5</span>
+                                <span class="badge bg-danger rounded-pill" id="notification-badge" style="display: {% if pending_notifications.total_pending %}block{% else %}none{% endif %};">{{ pending_notifications.total_pending }}</span>
                             </button>
                             <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
                                 aria-labelledby="page-header-notifications-dropdown">
                                 <div class="p-3">
                                     <div class="row align-items-center">
                                         <div class="col">
-                                            <h6 class="m-0"> Notifications </h6>
+                                            <h6 class="m-0">Awaiting Action</h6>
                                         </div>
                                         <div class="col-auto">
-                                            <a href="#!" class="small text-reset text-decoration-underline"> Unread (3)</a>
+                                            <a href="#!" class="small text-reset text-decoration-underline" id="notification-unread-count">
+                                                <span id="notification-total">{{ pending_notifications.total_pending }}</span> pending
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
-                                <div data-simplebar style="max-height: 230px;">
-                                    <a href="#!" class="text-reset notification-item">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0 me-3">
-                                                <img src="{% static 'images/users/avatar-3.jpg' %}" class="rounded-circle avatar-sm" alt="user-pic">
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">James Lemire</h6>
-                                                <div class="font-size-13 text-muted">
-                                                    <p class="mb-1">It will seem like simplified English.</p>
-                                                    <p class="mb-0"><i class="mdi mdi-clock-outline"></i> <span>1 hour ago</span></p>
-                                                </div>
-                                            </div>
+                                <div data-simplebar style="max-height: 400px;" id="notification-container">
+                                    <!-- Reviews Section -->
+                                    {% if pending_notifications.pending_reviews_count %}
+                                    <div class="p-2 border-bottom">
+                                        <h6 class="text-muted small text-uppercase mb-2">Awaiting Review ({{ pending_notifications.pending_reviews_count }})</h6>
+                                        <div id="review-notifications">
+                                            <!-- Populated by JS -->
                                         </div>
-                                    </a>
-                                    <a href="#!" class="text-reset notification-item">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0 avatar-sm me-3">
-                                                <span class="avatar-title bg-primary rounded-circle font-size-16">
-                                                    <i class="bx bx-cart"></i>
-                                                </span>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">Your order is placed</h6>
-                                                <div class="font-size-13 text-muted">
-                                                    <p class="mb-1">If several languages coalesce the grammar</p>
-                                                    <p class="mb-0"><i class="mdi mdi-clock-outline"></i> <span>3 min ago</span></p>
-                                                </div>
-                                            </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Approvals Section -->
+                                    {% if pending_notifications.pending_approvals_count %}
+                                    <div class="p-2 border-bottom">
+                                        <h6 class="text-muted small text-uppercase mb-2">Awaiting Approval ({{ pending_notifications.pending_approvals_count }})</h6>
+                                        <div id="approval-notifications">
+                                            <!-- Populated by JS -->
                                         </div>
-                                    </a>
-                                    <a href="#!" class="text-reset notification-item">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0 avatar-sm me-3">
-                                                <span class="avatar-title bg-success rounded-circle font-size-16">
-                                                    <i class="bx bx-badge-check"></i>
-                                                </span>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">Your item is shipped</h6>
-                                                <div class="font-size-13 text-muted">
-                                                    <p class="mb-1">If several languages coalesce the grammar</p>
-                                                    <p class="mb-0"><i class="mdi mdi-clock-outline"></i> <span>3 min ago</span></p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-
-                                    <a href="#!" class="text-reset notification-item">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0 me-3">
-                                                <img src="{% static 'images/users/avatar-6.jpg' %}" class="rounded-circle avatar-sm" alt="user-pic">
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">Salena Layfield</h6>
-                                                <div class="font-size-13 text-muted">
-                                                    <p class="mb-1">As a skeptical Cambridge friend of mine occidental.</p>
-                                                    <p class="mb-0"><i class="mdi mdi-clock-outline"></i> <span>1 hour ago</span></p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- No notifications -->
+                                    {% if not pending_notifications.total_pending %}
+                                    <div class="p-3 text-center text-muted">
+                                        <i class="feather-check-circle" style="font-size: 2rem; opacity: 0.5;"></i>
+                                        <p class="mt-2 mb-0">All caught up! No pending actions.</p>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 <div class="p-2 border-top d-grid">
-                                    <a class="btn btn-sm btn-link font-size-14 text-center" href="javascript:void(0)">
-                                        <i class="mdi mdi-arrow-right-circle me-1"></i> <span>View More..</span> 
+                                    <a class="btn btn-sm btn-info font-size-14" href="{% url 'shareholder:capital-contribution-list' %}">
+                                        <i class="mdi mdi-arrow-right-circle me-1"></i> View All Contributions
                                     </a>
                                 </div>
                             </div>
@@ -251,6 +219,31 @@
                         </div>
 
                         <div class="dropdown d-inline-block">
+                            <button type="button" class="btn header-item bg-light-subtle me-2" id="entity-selector-dropdown"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Switch Entity">
+                                <i class="mdi mdi-office-building font-size-18" style="color: #667eea;"></i>
+                                <span class="d-none d-sm-inline-block ms-1 fw-medium text-dark" style="font-size: 0.85rem;">
+                                    {{ selected_entity_code|default:"Entity" }}
+                                </span>
+                                <i class="mdi mdi-chevron-down d-none d-sm-inline-block"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" style="min-width: 250px;">
+                                <h6 class="dropdown-header px-3">Select Entity</h6>
+                                <div class="dropdown-divider m-0"></div>
+                                <form method="post" action="{% url 'accounting:switch-entity' %}" id="entity-switch-form">
+                                    {% csrf_token %}
+                                    {% for entity in all_entities %}
+                                    <button type="submit" name="entity_id" value="{{ entity.id }}" class="dropdown-item {% if entity.id == selected_entity_id %}active bg-light{% endif %}" style="text-align: left; padding: 0.75rem 1rem; width: 100%; border: none; cursor: pointer; background: none;">
+                                        <i class="mdi mdi-{% if entity.id == selected_entity_id %}check-circle{% else %}circle-outline{% endif %} me-2"></i>
+                                        <strong>{{ entity.code }}</strong><br>
+                                        <small class="text-muted">{{ entity.name }}</small>
+                                    </button>
+                                    {% endfor %}
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="dropdown d-inline-block">
                             <button type="button" class="btn header-item bg-light-subtle border-start border-end" id="page-header-user-dropdown"
                             data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img class="rounded-circle header-profile-user" src="{% static 'images/users/avatar-1.jpg' %}"
@@ -260,11 +253,11 @@
                             </button>
                             <div class="dropdown-menu dropdown-menu-end">
                                 <!-- item-->
-                                <a class="dropdown-item" href="{% url 'apps:contacts.profile' %}"><i class="mdi mdi-face-man font-size-16 align-middle me-1"></i> Profile</a>
-                                <a class="dropdown-item" href="{% url 'lockscreen' %}"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i> Lock screen</a>
+                                {# <a class="dropdown-item" href="{% url 'apps:contacts.profile' %}"><i class="mdi mdi-face-man font-size-16 align-middle me-1"></i> Profile</a> #}
+                                {# <a class="dropdown-item" href="{% url 'lockscreen' %}"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i> Lock screen</a> #}
                                 {% if user.is_authenticated %}
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{% url 'account_change_password' %}"><i class="mdi mdi-lock text-muted font-size-16 align-middle me-1"></i> Change
+                                {# <a class="dropdown-item" href="{% url 'account_change_password' %}"><i class="mdi mdi-lock text-muted font-size-16 align-middle me-1"></i> Change #}
                                     Password</a>
 
                                 <a class="dropdown-item" href="{% url 'logout' %}"><i class="mdi mdi-logout font-size-16 align-middle me-1"></i> Logout</a>

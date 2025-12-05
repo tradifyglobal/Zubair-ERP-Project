@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ vendor.vendor_name }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">{{ vendor.vendor_name }}</h5></div>
+                <div class="card-body">
+                    <p><strong>Code:</strong> {{ vendor.vendor_code }}</p>
+                    <p><strong>Contact:</strong> {{ vendor.contact_person|default:"N/A" }}</p>
+                    <p><strong>Phone:</strong> {{ vendor.phone|default:"N/A" }}</p>
+                    <p><strong>Email:</strong> {{ vendor.email|default:"N/A" }}</p>
+                    <p><strong>Address:</strong> {{ vendor.address|default:"N/A" }}</p>
+                </div>
+            </div>
+            {% if contracts %}
+            <div class="card mt-3">
+                <div class="card-header"><h5 class="mb-0">Contracts</h5></div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Contract #</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contract in contracts %}
+                            <tr>
+                                <td>{{ contract.contract_number }}</td>
+                                <td>{{ contract.start_date|date:"Y-m-d" }}</td>
+                                <td>{{ contract.end_date|date:"Y-m-d" }}</td>
+                                <td>${{ contract.contract_value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'maintenance:vendor-update' vendor.pk %}" class="btn btn-warning w-100 mb-2"><i data-feather="edit"></i> Edit</a>
+                    <a href="{% url 'maintenance:vendor-list' %}" class="btn btn-secondary w-100"><i data-feather="arrow-left"></i> Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script>feather.replace();</script>
+{% endblock %}

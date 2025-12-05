@@ -1,0 +1,65 @@
+{% extends 'partials/base.html' %}
+{% block head_title %}<title>{% if form.instance.pk %}Edit{% else %}Create{% endif %} FX Exposure | Cash Management</title>{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="mb-0">{% if form.instance.pk %}Edit{% else %}Create{% endif %} FX Exposure</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body p-4">
+                            <form method="post" id="fxexposure-form">{% csrf_token %}
+                                {% for field in form %}
+                                <div class="mb-3">
+                                    <label class="form-label">{{ field.label }}{% if field.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+                                    {{ field }}
+                                    {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors.0 }}</div>{% endif %}
+                                </div>
+                                {% endfor %}
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                    <a href="{% url 'cash_management:fx_list' %}" class="btn btn-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const foreignAmountInput = document.querySelector('input[name="foreign_amount"]');
+    const exchangeRateInput = document.querySelector('input[name="exchange_rate"]');
+    const homeCurrencyAmountDisplay = document.getElementById('home_currency_amount_display');
+
+    function calculateHomeCurrencyAmount() {
+        const foreignAmount = parseFloat(foreignAmountInput.value) || 0;
+        const exchangeRate = parseFloat(exchangeRateInput.value) || 0;
+        
+        if (foreignAmount > 0 && exchangeRate > 0) {
+            const homeCurrencyAmount = (foreignAmount * exchangeRate).toFixed(2);
+            homeCurrencyAmountDisplay.value = homeCurrencyAmount;
+        } else {
+            homeCurrencyAmountDisplay.value = '';
+        }
+    }
+
+    // Calculate on input change
+    foreignAmountInput.addEventListener('input', calculateHomeCurrencyAmount);
+    exchangeRateInput.addEventListener('input', calculateHomeCurrencyAmount);
+
+    // Initial calculation if editing
+    calculateHomeCurrencyAmount();
+});
+</script>
+{% endblock %}
