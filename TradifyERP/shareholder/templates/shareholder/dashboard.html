@@ -38,7 +38,13 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="text-muted d-block text-truncate">Total Capital Invested</span>
-                                <h4 class="my-2">{{ total_capital_invested|floatformat:2 }}</h4>
+                                <h4 class="my-2">
+                                    {% if entity.company_currency %}
+                                        {{ entity.company_currency.symbol }}{{ total_capital_invested|floatformat:2 }}
+                                    {% else %}
+                                        ${{ total_capital_invested|floatformat:2 }}
+                                    {% endif %}
+                                </h4>
                             </div>
                             <div class="avatar-md bg-light rounded">
                                 <i data-feather="dollar-sign" class="avatar-title font-size-24 text-success"></i>
@@ -107,7 +113,14 @@
                                                     </a>
                                                 </td>
                                                 <td class="text-end text-success">
-                                                    <strong>{{ shareholder.total_contributed|floatformat:2 }}</strong>
+                                                    <strong>
+                                                        {% if entity.company_currency %}
+                                                            {{ entity.company_currency.symbol }}
+                                                        {% else %}
+                                                            $
+                                                        {% endif %}
+                                                        {{ shareholder.total_contributed|floatformat:2 }}
+                                                    </strong>
                                                 </td>
                                             </tr>
                                         {% endfor %}
@@ -194,7 +207,14 @@
                                                 </td>
                                                 <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
                                                 <td class="text-end">
-                                                    <span class="badge bg-success">{{ contribution.amount_company_currency|floatformat:2 }}</span>
+                                                    <span class="badge bg-success">
+                                                        {% if entity.company_currency %}
+                                                            {{ entity.company_currency.symbol }}
+                                                        {% else %}
+                                                            $
+                                                        {% endif %}
+                                                        {{ contribution.amount_company_currency|floatformat:2 }}
+                                                    </span>
                                                 </td>
                                             </tr>
                                         {% endfor %}

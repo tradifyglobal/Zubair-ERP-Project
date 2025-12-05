@@ -79,6 +79,20 @@ class UserCreateFormWithPermissions(UserCreationForm):
             'username': forms.TextInput(attrs={'class': 'form-control'}),
         }
     
+    def clean_username(self):
+        """Allow duplicate usernames across entities by appending entity suffix if needed."""
+        username = self.cleaned_data.get('username')
+        
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            # Suggest an alternative username
+            raise forms.ValidationError(
+                f'Username "{username}" already exists. Please try "{username}_v2" or another variation. '
+                'Users can have different login names per entity.'
+            )
+        
+        return username
+    
     def save(self, commit=True):
         user = super().save(commit=False)
         # Ensure is_staff is True by default for admin access
@@ -216,6 +230,17 @@ class BulkModulePermissionForm(forms.Form):
                 })
             )
             
+            self.fields[f'{module_code}_can_review'] = forms.BooleanField(
+                required=False,
+                initial=existing_perm.can_review if existing_perm else False,
+                label='Review',
+                widget=forms.CheckboxInput(attrs={
+                    'class': 'form-check-input permission-checkbox',
+                    'data-module': module_code,
+                    'data-permission': 'review'
+                })
+            )
+            
             self.fields[f'{module_code}_can_approve'] = forms.BooleanField(
                 required=False,
                 initial=existing_perm.can_approve if existing_perm else False,
@@ -248,11 +273,12 @@ class BulkModulePermissionForm(forms.Form):
             can_add = self.cleaned_data.get(f'{module_code}_can_add', False)
             can_edit = self.cleaned_data.get(f'{module_code}_can_edit', False)
             can_delete = self.cleaned_data.get(f'{module_code}_can_delete', False)
+            can_review = self.cleaned_data.get(f'{module_code}_can_review', False)
             can_approve = self.cleaned_data.get(f'{module_code}_can_approve', False)
             can_export = self.cleaned_data.get(f'{module_code}_can_export', False)
             
             # Only create/update if at least one permission is granted
-            if any([can_view, can_add, can_edit, can_delete, can_approve, can_export]):
+            if any([can_view, can_add, can_edit, can_delete, can_review, can_approve, can_export]):
                 permission, created = ModulePermission.objects.update_or_create(
                     user=user,
                     module=module_code,
@@ -261,6 +287,7 @@ class BulkModulePermissionForm(forms.Form):
                         'can_add': can_add,
                         'can_edit': can_edit,
                         'can_delete': can_delete,
+                        'can_review': can_review,
                         'can_approve': can_approve,
                         'can_export': can_export,
                         'granted_by': granted_by,
@@ -378,7 +405,8 @@ class UserEntityAssignmentForm(forms.Form):
             'class': 'form-check-input entity-checkbox',
         }),
         label="Assigned Entities",
-        help_text="Select which entities this user can access"
+        help_text="Select which entities this user can access",
+        required=False  # Make optional so permission saves even if no entity selected
     )
     
     default_entity = forms.ModelChoiceField(
@@ -416,6 +444,20 @@ class UserEntityAssignmentForm(forms.Form):
             can_switch = user.entity_assignments.filter(can_switch=True).exists()
             self.fields['can_switch_entities'].initial = can_switch
     
+    def clean(self):
+        """Validate that if default_entity is set, it must be in selected entities."""
+        cleaned_data = super().clean()
+        selected_entities = cleaned_data.get('entities', [])
+        default_entity = cleaned_data.get('default_entity')
+        
+        # If default_entity is set but not in selected_entities, add it
+        if default_entity and selected_entities and default_entity not in selected_entities:
+            # Add the default entity to selected entities
+            selected_entities = list(selected_entities) + [default_entity]
+            cleaned_data['entities'] = selected_entities
+        
+        return cleaned_data
+    
     def save(self, user=None, granted_by=None):
         """Save entity assignments for user."""
         target_user = user or self.user
@@ -426,16 +468,18 @@ class UserEntityAssignmentForm(forms.Form):
         default_entity = self.cleaned_data.get('default_entity')
         can_switch = self.cleaned_data.get('can_switch_entities', True)
         
-        # Remove all existing assignments
-        UserEntity.objects.filter(user=target_user).delete()
-        
-        # Create new assignments
-        for entity in selected_entities:
-            is_default = (entity == default_entity) if default_entity else False
-            UserEntity.objects.create(
-                user=target_user,
-                entity=entity,
-                is_default=is_default,
-                can_switch=can_switch,
-                assigned_by=granted_by
-            )
+        # Only update if entities are actually selected
+        if selected_entities:
+            # Remove all existing assignments
+            UserEntity.objects.filter(user=target_user).delete()
+            
+            # Create new assignments
+            for entity in selected_entities:
+                is_default = (entity == default_entity) if default_entity else False
+                UserEntity.objects.create(
+                    user=target_user,
+                    entity=entity,
+                    is_default=is_default,
+                    can_switch=can_switch,
+                    assigned_by=granted_by
+                )

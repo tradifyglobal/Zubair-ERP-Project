@@ -76,7 +76,28 @@
                         <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title">Total Invested</h5>
-                                <h3 class="text-primary">${{ stakeholder.total_invested|floatformat:2 }}</h3>
+                                <h3 class="text-primary">
+                                    {% if entity.company_currency %}
+                                        {{ entity.company_currency.symbol }}{{ stakeholder.total_invested|floatformat:2 }}
+                                    {% else %}
+                                        ${{ stakeholder.total_invested|floatformat:2 }}
+                                    {% endif %}
+                                </h3>
+                                <small class="text-muted">
+                                    Completed Contributions: 
+                                    {% if entity.company_currency %}
+                                        {{ entity.company_currency.symbol }}{{ completed_contributions_total|floatformat:2 }}
+                                    {% else %}
+                                        ${{ completed_contributions_total|floatformat:2 }}
+                                    {% endif %}
+                                    <br>
+                                    Paid Commitments: 
+                                    {% if entity.company_currency %}
+                                        {{ entity.company_currency.symbol }}{{ paid_commitments_total|floatformat:2 }}
+                                    {% else %}
+                                        ${{ paid_commitments_total|floatformat:2 }}
+                                    {% endif %}
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -129,10 +150,18 @@
                                         {% for contribution in contributions %}
                                         <tr>
                                             <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
-                                            <td>{{ contribution.amount|floatformat:2 }}</td>
+                                            <td>{{ contribution.currency.symbol }}{{ contribution.amount|floatformat:2 }}</td>
                                             <td>{{ contribution.currency.code }}</td>
                                             <td>{{ contribution.exchange_rate|floatformat:6 }}</td>
-                                            <td><strong class="text-success">{{ contribution.amount_company_currency|floatformat:2 }}</strong></td>
+                                            <td>
+                                                <strong class="text-success">
+                                                    {% if entity.company_currency %}
+                                                        {{ entity.company_currency.symbol }}{{ contribution.amount_company_currency|floatformat:2 }}
+                                                    {% else %}
+                                                        ${{ contribution.amount_company_currency|floatformat:2 }}
+                                                    {% endif %}
+                                                </strong>
+                                            </td>
                                             <td>
                                                 {% if contribution.status == 'COMPLETED' %}
                                                     <span class="badge bg-success">Completed</span>

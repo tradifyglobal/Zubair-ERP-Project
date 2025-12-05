@@ -38,6 +38,9 @@
         <!-- Mobile Optimization Styles -->
         {% include 'partials/mobile_optimization.html' %}
 
+        <!-- Responsive Scrollbar System - Shows scrollbars based on zoom and screen size -->
+        <link href="{% static 'css/responsive-scrollbars.css' %}" rel="stylesheet" type="text/css" />
+
         {% comment %} <link href="{% static 'css/bootstrap-rtl.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" /> {% endcomment %}
         {% comment %} <link href="{% static 'css/app-rtl.min.css' %}" id="app-style" rel="stylesheet" type="text/css" /> {% endcomment %}
         {% endblock%}
@@ -48,6 +51,70 @@
 
     <!-- <body data-layout="horizontal"> -->
     <style>
+        /* Boxed layout - full width from sidebar to right edge (horizontal layout only) */
+        body[data-layout="horizontal"][data-layout-size="boxed"] {
+            background-position: 0 0;
+        }
+
+        body[data-layout="horizontal"][data-layout-size="boxed"] #layout-wrapper {
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            width: 100% !important;
+        }
+
+        body[data-layout="horizontal"][data-layout-size="boxed"] .main-content {
+            width: 100% !important;
+        }
+
+        body[data-layout="horizontal"][data-layout-size="boxed"] .container-fluid {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        body[data-layout="horizontal"][data-layout-size="boxed"] .page-content {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+        }
+
+        /* Boxed layout for vertical - maintain sidebar spacing */
+        body:not([data-layout="horizontal"])[data-layout-size="boxed"] #layout-wrapper {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        body:not([data-layout="horizontal"])[data-layout-size="boxed"] .main-content {
+            width: calc(100% - 250px) !important;
+            margin-left: 250px !important;
+        }
+        
+        /* Topbar always extends full viewport in both boxed AND fluid vertical layouts */
+        body:not([data-layout="horizontal"]) #page-topbar {
+            width: 100% !important;
+            margin-left: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 1050 !important;
+        }
+
+        /* MASTER RULE: Main content ALWAYS has 250px left margin in all vertical layouts (fluid + boxed) */
+        body:not([data-layout="horizontal"]) .main-content {
+            margin-left: 250px !important;
+            width: calc(100% - 250px) !important;
+        }
+
+        /* MASTER RULE: Content inside main-content should NOT have left margin (sidebar is outside main-content) */
+        body:not([data-layout="horizontal"]) .main-content > .content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+
         /* Full width header alignment for horizontal layout */
         body[data-layout="horizontal"] .navbar-header {
             max-width: 100% !important;
@@ -67,6 +134,7 @@
             overflow-x: hidden !important;
             height: auto !important;
             width: 100% !important;
+            scrollbar-gutter: stable !important;
         }
 
         /* Remove all custom scrollbars - use browser default */
@@ -75,6 +143,8 @@
             scrollbar-width: auto !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         /* Remove simplebar and all custom scrollbar implementations */
@@ -101,22 +171,26 @@
             box-sizing: border-box !important;
         }
 
-        /* Navbar must be fixed and sticky */
+        /* Navbar must be fixed and sticky - extends to full viewport */
         #page-topbar {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;
             z-index: 1050 !important;
-            width: 100% !important;
             height: 70px !important;
             box-sizing: border-box !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            overflow: hidden !important;
+            display: flex !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         /* Push content below fixed navbar */
         .vertical-layout-header {
-            position: fixed !important;
+            position: relative !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;
@@ -129,13 +203,26 @@
         /* Main content should not have additional top margin since layout-wrapper has padding */
         .main-content {
             margin-top: 0 !important;
-            margin-left: 0 !important;
             margin-right: 0 !important;
             padding-top: 0 !important;
             position: relative !important;
             z-index: 1 !important;
             width: 100% !important;
             box-sizing: border-box !important;
+        }
+        
+        /* In vertical layout (fluid AND boxed), always add left margin */
+        body:not([data-layout="horizontal"]) .main-content,
+        body:not([data-layout="horizontal"]) .content {
+            margin-left: 250px !important;
+        }
+        
+        /* Mobile: sidebar should overlay content */
+        @media (max-width: 992px) {
+            body:not([data-layout="horizontal"]) .main-content,
+            body:not([data-layout="horizontal"]) .content {
+                margin-left: 0 !important;
+            }
         }
 
         /* Page content positioning */
@@ -314,29 +401,38 @@
         /* Constrain navbar-brand-box and logo */
         .navbar-brand-box {
             max-height: 70px;
-            overflow: hidden;
-            padding-left: 2.5rem !important;
-            padding-right: 0 !important;
+            min-width: 250px;
+            width: 250px;
+            overflow: visible !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1rem !important;
             display: flex !important;
             align-items: center !important;
+            background: inherit !important;
         }
         
         .navbar-brand-box .logo {
             margin-left: 0 !important;
             padding-left: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
         }
         
         /* Fix logo size ONLY in vertical layout */
         body:not([data-layout="horizontal"]) .navbar-brand-box .logo img {
             max-height: 24px !important;
-            max-width: 100% !important;
+            width: auto !important;
             object-fit: contain !important;
+            display: inline-block !important;
         }
         
         body:not([data-layout="horizontal"]) .navbar-brand-box .logo-txt {
-            font-size: 18px !important;
+            font-size: 16px !important;
             line-height: 24px !important;
             vertical-align: middle !important;
+            margin-left: 8px !important;
+            font-weight: 600 !important;
         }
         
         /* Horizontal layout specific - FORCE DISPLAY */
@@ -564,15 +660,150 @@
         .navbar-header {
             padding-left: 0 !important;
             padding-right: 0 !important;
+            width: 100% !important;
         }
         
         #page-topbar {
             padding-left: 0 !important;
             padding-right: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            position: fixed !important;
+        }
+        
+        #page-topbar .navbar-header {
+            width: 100% !important;
+            flex: 1 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            overflow: visible !important;
+            max-width: none !important;
+        }
+        
+        #page-topbar .navbar-header .d-flex {
+            width: 100% !important;
+            flex: 1 !important;
+            overflow: visible !important;
+            max-width: none !important;
+        }
+        
+        #page-topbar .navbar-header .d-flex:first-child {
+            flex: 0 1 auto !important;
         }
         
         #page-topbar .navbar-header .d-flex:last-child {
-            padding-right: 1.5rem;
+            padding-right: 1.5rem !important;
+            flex: 1 !important;
+            justify-content: flex-end !important;
+        }
+        
+        #page-topbar .app-search {
+            margin-right: 0 !important;
+            margin-left: auto !important;
+        }
+        
+        /* Hide/Show logos based on theme to prevent duplication - STRICT RULES */
+        .navbar-brand-box .logo-dark {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .navbar-brand-box .logo-light {
+            display: block !important;
+            visibility: visible !important;
+        }
+        
+        body[data-bs-theme="dark"] .navbar-brand-box .logo-dark {
+            display: block !important;
+            visibility: visible !important;
+            width: auto !important;
+            height: auto !important;
+        }
+        
+        body[data-bs-theme="dark"] .navbar-brand-box .logo-light {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        body[data-bs-theme="light"] .navbar-brand-box .logo-light {
+            display: block !important;
+            visibility: visible !important;
+        }
+        
+        body[data-bs-theme="light"] .navbar-brand-box .logo-dark {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        /* Ensure header icons are always visible */
+        .header-item i[data-feather],
+        .header-item svg {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 20px !important;
+            height: 20px !important;
+            stroke-width: 2 !important;
+            font-size: 20px !important;
+            line-height: 20px !important;
+        }
+        
+        .layout-mode-dark {
+            display: none !important;
+        }
+        
+        .layout-mode-light {
+            display: inline-block !important;
+        }
+        
+        body[data-bs-theme="dark"] .layout-mode-dark {
+            display: inline-block !important;
+        }
+        
+        body[data-bs-theme="dark"] .layout-mode-light {
+            display: none !important;
+        }
+        
+        /* Vertical layout - ensure only one logo is visible and navbar-brand-box is proper size */
+        body:not([data-layout="horizontal"]) .navbar-brand-box {
+            max-height: 70px !important;
+            min-height: 70px !important;
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .navbar-brand-box .logo {
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .navbar-brand-box .logo-sm {
+            display: none !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .navbar-brand-box .logo-lg {
+            display: flex !important;
+            align-items: center !important;
         }
         
         .navbar-brand-box .logo-lg img {
@@ -585,6 +816,19 @@
             max-width: 100%;
         }
         
+        /* Vertical layout sidebar - ensure it doesn't overlap main content */
+        body:not([data-layout="horizontal"]) .vertical-layout-sidebar {
+            position: fixed !important;
+            left: 0 !important;
+            top: 70px !important;
+            height: calc(100vh - 70px) !important;
+            width: 250px !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            z-index: 999 !important;
+        }
+        
+        /* Vertical layout main content - proper spacing with sidebar */
         /* Fix page title overflow */
         .page-title-box {
             margin-top: 0 !important;
@@ -650,7 +894,7 @@
         
         body:not([data-layout="horizontal"]) .main-content {
             order: 2;
-            margin-left: 0 !important;
+            margin-left: 250px !important;
         }
         
         .main-content .content {
@@ -687,9 +931,10 @@
             margin-top: 70px !important;
         }
         
-        /* Vertical layout content */
+        /* Vertical layout content - no left padding, starts at sidebar edge */
         body:not([data-layout="horizontal"]) .page-content {
             padding-top: 1.5rem !important;
+            padding-left: 0 !important;
         }
         
         /* Ensure container-fluid fits properly */
@@ -726,6 +971,48 @@
             grid-row: 1 !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
             background-color: #fff !important;
+        }
+
+        /* Topbar dark theme - entire navbar becomes dark */
+        body[data-topbar="dark"] #page-topbar {
+            background-color: #1f2937 !important;
+            background-image: none !important;
+        }
+
+        body[data-topbar="dark"] #page-topbar .navbar-header {
+            background-color: #1f2937 !important;
+        }
+
+        body[data-topbar="dark"] .navbar-brand-box {
+            background-color: #1f2937 !important;
+        }
+
+        /* Topbar dark theme - text and icons */
+        body[data-topbar="dark"] #page-topbar .navbar-nav .nav-link,
+        body[data-topbar="dark"] #page-topbar .header-item,
+        body[data-topbar="dark"] #page-topbar .navbar-brand-box .logo-txt {
+            color: #e5e7eb !important;
+        }
+
+        body[data-topbar="dark"] #page-topbar .navbar-nav .nav-link:hover,
+        body[data-topbar="dark"] #page-topbar .header-item:hover {
+            color: #fff !important;
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Topbar dark theme - dropdown menus */
+        body[data-topbar="dark"] #page-topbar .dropdown-menu {
+            background-color: #111827 !important;
+            border-color: #374151 !important;
+        }
+
+        body[data-topbar="dark"] #page-topbar .dropdown-item {
+            color: #e5e7eb !important;
+        }
+
+        body[data-topbar="dark"] #page-topbar .dropdown-item:hover {
+            background-color: #374151 !important;
+            color: #fff !important;
         }
 
         /* Ensure page content starts below fixed navbar */
@@ -795,15 +1082,6 @@
             padding-top: 1.5rem !important;
             margin-top: 70px !important;
         }        /* Main content wrapper */
-        body:not([data-layout="horizontal"]) .main-content {
-            display: block !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            margin-top: 0 !important;
-            width: 100% !important;
-            height: calc(100vh - 70px) !important;
-        }
-        
         body[data-layout="horizontal"] .main-content {
             flex: 1 !important;
             overflow-y: auto !important;
@@ -897,13 +1175,10 @@
                 direction: savedDirection
             });
             
-            // Force horizontal layout
-            localStorage.setItem('minia-layout', 'horizontal');
-            
             // 2. Set the body data-layout attribute BEFORE app.js reads it
-            // Force horizontal layout only
-            document.body.setAttribute('data-layout', 'horizontal');
-            console.log('[Layout Init] Forced horizontal layout');
+            // Respect user's saved layout preference (vertical or horizontal)
+            document.body.setAttribute('data-layout', savedLayout);
+            console.log('[Layout Init] Applied layout:', savedLayout);
             
             // 3. Set the body data-bs-theme attribute for dark/light mode
             if (savedTheme === 'dark') {
@@ -955,39 +1230,8 @@
                 console.log('[Layout Init] Applied LTR direction');
             }
             
-            // 5. Override all redirect methods to block layout redirects
-            const blockLayoutRedirects = (targetUrl) => {
-                if (targetUrl && (targetUrl.includes('/apps/horizontal') || targetUrl === '/')) {
-                    console.log('[Layout Block] Redirect blocked:', targetUrl);
-                    return false; // Block redirect
-                }
-                return true; // Allow other redirects
-            };
-            
-            // Override href setter
-            Object.defineProperty(Location.prototype, 'href', {
-                set: function(url) {
-                    if (!blockLayoutRedirects(url)) return;
-                    window.history.pushState({}, '', url);
-                },
-                get: function() {
-                    return window.location.toString();
-                }
-            });
-            
-            // Override replace method
-            const originalReplace = window.location.replace;
-            window.location.replace = function(url) {
-                if (!blockLayoutRedirects(url)) return;
-                originalReplace.call(window.location, url);
-            };
-            
-            // Override assign method
-            const originalAssign = window.location.assign;
-            window.location.assign = function(url) {
-                if (!blockLayoutRedirects(url)) return;
-                originalAssign.call(window.location, url);
-            };
+            // Layout preference will be respected - no forced redirects
+            console.log('[Layout Init] Layout initialization complete');
         })();
     </script>
     <div id="layout-wrapper">
@@ -1032,6 +1276,9 @@
         {% include 'partials/rightsidebar.html' %}          
         {% endblock %}
         
+        <!-- Pending Notifications Modal -->
+        {% include 'partials/pending_notifications_modal.html' %}
+        
         
         {% block javascript %}
         <script src="{% static 'libs/jquery/dist/jquery.min.js' %}"></script>
@@ -1042,86 +1289,20 @@
         <script src="{% static 'libs/feather-icons/dist/feather.min.js' %}"></script>
         <script src="{% static 'libs/pace-js/pace.min.js' %}"></script>
 
-        <!-- Fix Feather icon visibility IMMEDIATELY after library loads -->
+        <!-- Feather icons initialization -->
         <script>
+            // Simple initialization - just ensure feather icons are replaced globally
             (function() {
-                console.log('[Icon Fix] Starting icon visibility fix');
-                
-                // First, manually call feather.replace() to ensure icons are rendered
-                if (typeof feather !== 'undefined') {
-                    try {
-                        // Remove any invalid data-feather attributes that might cause errors
-                        document.querySelectorAll('[data-feather]').forEach(function(el) {
-                            var iconName = el.getAttribute('data-feather');
-                            if (!iconName || iconName.trim() === '') {
-                                console.warn('[Icon Fix] Removing empty data-feather attribute from:', el);
-                                el.removeAttribute('data-feather');
-                            }
-                        });
-                        
-                        feather.replace();
-                        console.log('[Icon Fix] Called feather.replace()');
-                    } catch (e) {
-                        console.error('[Icon Fix] Error calling feather.replace():', e);
+                // Wait for page load, then replace feather icons
+                window.addEventListener('load', function() {
+                    if (typeof feather !== 'undefined') {
+                        try {
+                            feather.replace();
+                            console.log('[Icon Init] Feather icons replaced');
+                        } catch (e) {
+                            console.error('[Icon Init] Error:', e);
+                        }
                     }
-                }
-                
-                // Function to fix icon colors based on theme
-                function fixIconColors() {
-                    var fixed = 0;
-                    var isDark = document.body.getAttribute('data-bs-theme') === 'dark';
-                    var strokeColor = isDark ? '#ffffff' : '#000000';  // Changed to black for light mode
-                    
-                    console.log('[Icon Fix] Theme:', isDark ? 'dark' : 'light', 'Using color:', strokeColor);
-                    
-                    document.querySelectorAll('.header-item svg, .header-item i[data-feather]').forEach(function(el) {
-                        if (el.tagName === 'svg') {
-                            el.setAttribute('stroke', strokeColor);
-                            el.setAttribute('fill', 'none');
-                            el.setAttribute('style', 'stroke: ' + strokeColor + ' !important; fill: none !important; opacity: 1 !important; visibility: visible !important; display: inline-block !important; width: 20px !important; height: 20px !important;');
-                            fixed++;
-                        }
-                    });
-                    console.log('[Icon Fix] Fixed ' + fixed + ' icons');
-                    return fixed;
-                }
-                
-                // Fix icons immediately when DOM is ready
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        setTimeout(fixIconColors, 100);
-                        setTimeout(fixIconColors, 500);
-                        setTimeout(fixIconColors, 1000);
-                        setTimeout(fixIconColors, 2000);
-                    });
-                } else {
-                    setTimeout(fixIconColors, 100);
-                    setTimeout(fixIconColors, 500);
-                    setTimeout(fixIconColors, 1000);
-                    setTimeout(fixIconColors, 2000);
-                }
-                
-                // Watch for new SVGs being added and theme changes
-                var observer = new MutationObserver(function(mutations) {
-                    var shouldFix = false;
-                    mutations.forEach(function(mutation) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'data-bs-theme') {
-                            shouldFix = true;
-                        }
-                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                            shouldFix = true;
-                        }
-                    });
-                    if (shouldFix) {
-                        setTimeout(fixIconColors, 50);
-                    }
-                });
-                
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true,
-                    attributes: true,
-                    attributeFilter: ['data-bs-theme']
                 });
             })();
         </script>
@@ -1517,6 +1698,115 @@
                 });
             })(jQuery);
         </script>
+        
+        <!-- Notification System -->
+        <script>
+            (function() {
+                // Initialize notification system
+                function initializeNotifications() {
+                    console.log('[Notifications] Initializing notification system');
+                    
+                    // Fetch notifications on page load
+                    fetchNotifications();
+                    
+                    // Refresh notifications every 30 seconds
+                    setInterval(fetchNotifications, 30000);
+                }
+                
+                function fetchNotifications() {
+                    // Only fetch if user is authenticated
+                    if (!document.body.querySelector('[data-authenticated="true"]') && !document.querySelector('.page-content')) {
+                        return; // User not authenticated
+                    }
+                    
+                    fetch('{% url "shareholder:api-notifications" %}')
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('[Notifications] Fetched:', data);
+                            updateNotificationUI(data);
+                        })
+                        .catch(error => console.error('[Notifications] Error:', error));
+                }
+                
+                function updateNotificationUI(data) {
+                    // Update badge
+                    const badge = document.getElementById('notification-badge');
+                    const totalCount = document.getElementById('notification-total');
+                    const notificationCount = document.getElementById('notification-unread-count');
+                    
+                    if (data.total_pending > 0) {
+                        badge.textContent = data.total_pending;
+                        badge.style.display = 'block';
+                        totalCount.textContent = data.total_pending;
+                        
+                        if (notificationCount) {
+                            notificationCount.innerHTML = `<span id="notification-total">${data.total_pending}</span> pending`;
+                        }
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                    
+                    // Update review notifications
+                    const reviewContainer = document.getElementById('review-notifications');
+                    if (reviewContainer) {
+                        if (data.review_items.length > 0) {
+                            reviewContainer.innerHTML = data.review_items.map(item => `
+                                <a href="${item.url}" class="text-reset notification-item">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0 avatar-sm me-3">
+                                            <span class="avatar-title bg-warning rounded-circle font-size-16">
+                                                <i class="bx bx-check-double"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">${item.stakeholder}</h6>
+                                            <div class="font-size-13 text-muted">
+                                                <p class="mb-0"><strong>${item.amount}</strong> - Review required</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            `).join('');
+                        }
+                    }
+                    
+                    // Update approval notifications
+                    const approvalContainer = document.getElementById('approval-notifications');
+                    if (approvalContainer) {
+                        if (data.approval_items.length > 0) {
+                            approvalContainer.innerHTML = data.approval_items.map(item => `
+                                <a href="${item.url}" class="text-reset notification-item">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0 avatar-sm me-3">
+                                            <span class="avatar-title bg-success rounded-circle font-size-16">
+                                                <i class="bx bx-badge-check"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">${item.stakeholder}</h6>
+                                            <div class="font-size-13 text-muted">
+                                                <p class="mb-0"><strong>${item.amount}</strong> - Approval required</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            `).join('');
+                        }
+                    }
+                }
+                
+                // Initialize when DOM is ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initializeNotifications);
+                } else {
+                    initializeNotifications();
+                }
+            })();
+        </script>
+
+        <!-- Responsive Scrollbar Manager - Handles zoom-aware scrollbars -->
+        <script src="{% static 'js/responsive-scrollbars.js' %}" type="text/javascript"></script>
+
         {% endblock %}
         
         

@@ -1,0 +1,121 @@
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Submit Capital Contribution for Review{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box">
+                    <h4 class="mb-0">Submit Capital Contribution for Review</h4>
+                </div>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Submit Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Contribution Details for {{ object.stakeholder.full_name }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Contribution Summary -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Contribution Date:</strong> {{ object.contribution_date|date:"M d, Y" }}</p>
+                                        <p><strong>Amount:</strong> {{ object.amount }} {{ object.currency.code }}</p>
+                                        <p><strong>Status:</strong> 
+                                            {% if object.status == 'COMPLETED' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif object.status == 'PENDING' %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ object.get_status_display }}</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Payment Mode:</strong> {{ object.get_payment_mode_display }}</p>
+                                        <p><strong>Reference Number:</strong> {{ object.reference_number }}</p>
+                                        <p><strong>Workflow Status:</strong> <span class="badge bg-secondary">Draft</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Form -->
+                        <form method="post" class="form-horizontal">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="id_reviewer">Assign First Reviewer <span class="text-danger">*</span></label>
+                                        <select name="reviewer" id="id_reviewer" class="form-select" required>
+                                            <option value="">-- Select Reviewer --</option>
+                                            {% for user in form.reviewer.field.queryset %}
+                                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-muted">First reviewer to review this contribution</small>
+                                        {% if form.reviewer.errors %}
+                                            <div class="alert alert-danger mt-2">{{ form.reviewer.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="id_reviewer_2">Assign Second Reviewer <span class="text-danger">*</span></label>
+                                        <select name="reviewer_2" id="id_reviewer_2" class="form-select" required>
+                                            <option value="">-- Select Reviewer --</option>
+                                            {% for user in form.reviewer_2.field.queryset %}
+                                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-muted">Second reviewer (must be different from first)</small>
+                                        {% if form.reviewer_2.errors %}
+                                            <div class="alert alert-danger mt-2">{{ form.reviewer_2.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="id_review_notes">Notes for Reviewers</label>
+                                <textarea name="review_notes" id="id_review_notes" class="form-control" rows="3" placeholder="Optional notes for the reviewers...">{{ form.review_notes.value }}</textarea>
+                                {% if form.review_notes.errors %}
+                                    <div class="alert alert-danger mt-2">{{ form.review_notes.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-info waves-effect waves-light">
+                                    <i class="feather-send"></i> Submit for Review
+                                </button>
+                                <a href="{% url 'shareholder:capital-contribution-detail' object.pk %}" class="btn btn-secondary waves-effect waves-light">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

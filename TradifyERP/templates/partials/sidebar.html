@@ -21,15 +21,6 @@
                                     <span data-key="t-dashboard">Dashboard</span>
                                 </a>
                             </li>
-                        
-                            <li class="menu-title" data-key="t-menu">Main</li>
-
-                            <li>
-                                <a href="{% url 'accounting:dashboard' %}">
-                                    <i data-feather="home"></i>
-                                    <span data-key="t-dashboard">Dashboard</span>
-                                </a>
-                            </li>
 
                             <!-- User Management (Superuser Only) -->
                             {% if user.is_superuser %}

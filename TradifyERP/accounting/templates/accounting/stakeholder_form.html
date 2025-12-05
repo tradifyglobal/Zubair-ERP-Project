@@ -64,3 +64,83 @@
     </div>
 </div>
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the checkbox
+    const checkbox = document.querySelector('input[name="same_as_permanent"]');
+    
+    // Get Current Address form fields
+    const currentAddressFields = {
+        line1: document.querySelector('input[name="address_line_1"]'),
+        line2: document.querySelector('input[name="address_line_2"]'),
+        city: document.querySelector('input[name="city"]'),
+        state: document.querySelector('input[name="state_province"]'),
+        postal: document.querySelector('input[name="postal_code"]'),
+        country: document.querySelector('input[name="country"]')
+    };
+    
+    // Get Permanent Address form fields
+    const permanentAddressFields = {
+        line1: document.querySelector('input[name="permanent_address_line_1"]'),
+        line2: document.querySelector('input[name="permanent_address_line_2"]'),
+        city: document.querySelector('input[name="permanent_city"]'),
+        state: document.querySelector('input[name="permanent_state_province"]'),
+        postal: document.querySelector('input[name="permanent_postal_code"]'),
+        country: document.querySelector('input[name="permanent_country"]')
+    };
+    
+    function updateCurrentAddress() {
+        if (!checkbox) return;
+        
+        if (checkbox.checked) {
+            // Copy permanent address to current address
+            currentAddressFields.line1.value = permanentAddressFields.line1.value || '';
+            currentAddressFields.line2.value = permanentAddressFields.line2.value || '';
+            currentAddressFields.city.value = permanentAddressFields.city.value || '';
+            currentAddressFields.state.value = permanentAddressFields.state.value || '';
+            currentAddressFields.postal.value = permanentAddressFields.postal.value || '';
+            currentAddressFields.country.value = permanentAddressFields.country.value || '';
+            
+            // Disable and grey out Current Address fields
+            Object.values(currentAddressFields).forEach(field => {
+                if (field) {
+                    field.disabled = true;
+                    field.style.backgroundColor = '#e9ecef';
+                    field.style.cursor = 'not-allowed';
+                    field.classList.add('disabled-field');
+                }
+            });
+        } else {
+            // Enable Current Address fields
+            Object.values(currentAddressFields).forEach(field => {
+                if (field) {
+                    field.disabled = false;
+                    field.style.backgroundColor = '';
+                    field.style.cursor = 'auto';
+                    field.classList.remove('disabled-field');
+                }
+            });
+        }
+    }
+    
+    // Listen for checkbox changes
+    if (checkbox) {
+        checkbox.addEventListener('change', updateCurrentAddress);
+        
+        // Also listen for permanent address field changes when checkbox is checked
+        Object.values(permanentAddressFields).forEach(field => {
+            if (field) {
+                field.addEventListener('change', function() {
+                    if (checkbox.checked) {
+                        updateCurrentAddress();
+                    }
+                });
+            }
+        });
+        
+        // Call function on page load to set initial state
+        updateCurrentAddress();
+    }
+});
+</script>

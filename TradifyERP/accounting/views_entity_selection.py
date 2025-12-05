@@ -41,6 +41,22 @@ class EntitySelectionView(LoginRequiredMixin, View):
             }
             return render(request, self.template_name, context)
         
+        # Check if user has a default entity set
+        default_user_entity = UserEntity.objects.filter(
+            user=request.user,
+            is_default=True,
+            entity__is_active=True
+        ).first()
+        
+        if default_user_entity:
+            # Auto-select the default entity
+            entity = default_user_entity.entity
+            request.session['selected_entity_id'] = entity.id
+            request.session['selected_entity_code'] = entity.code
+            request.session['selected_entity_name'] = entity.name
+            request.session.modified = True
+            return redirect('accounting:dashboard')
+        
         # If only one entity, auto-select it
         if len(entities) == 1:
             entity = entities[0]

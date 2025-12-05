@@ -59,7 +59,7 @@
                                 <div class="col-6">
                                     <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Debits</span>
                                     <h4 class="mb-3">
-                                        {{ total_debits }}
+                                        <span>{{ account.entity.company_currency.symbol }}</span>{{ total_debits }}
                                     </h4>
                                 </div>
                                 <div class="col-6">
@@ -81,7 +81,7 @@
                                 <div class="col-6">
                                     <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Credits</span>
                                     <h4 class="mb-3">
-                                        {{ total_credits }}
+                                        <span>{{ account.entity.company_currency.symbol }}</span>{{ total_credits }}
                                     </h4>
                                 </div>
                                 <div class="col-6">
@@ -103,7 +103,7 @@
                                 <div class="col-6">
                                     <span class="text-muted mb-3 lh-1 d-block text-truncate">Current Balance</span>
                                     <h4 class="mb-3">
-                                        <strong>{{ current_balance }}</strong>
+                                        <strong><span>{{ account.entity.company_currency.symbol }}</span>{{ current_balance }}</strong>
                                     </h4>
                                 </div>
                                 <div class="col-6">
@@ -142,7 +142,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <p class="text-muted mb-2">
-                                        <strong>Currency:</strong> {{ account.currency.code }}
+                                        <strong>Currency:</strong> {{ account.entity.company_currency.code }}
                                     </p>
                                     <p class="text-muted mb-2">
                                         <strong>Status:</strong>
@@ -215,9 +215,8 @@
                                                     <span class="badge bg-success-subtle text-success">CREDIT</span>
                                                 {% endif %}
                                             </td>
-                                            <td><strong>{{ item.entry.amount }}</strong></td>
-                                            <td><strong class="text-info">{{ item.balance }}</strong></td>
-                                            <td>
+                                            <td><strong><span>{{ account.entity.company_currency.symbol }}</span>{{ item.entry.amount }}</strong></td>
+                                            <td><strong class="text-info"><span>{{ account.entity.company_currency.symbol }}</span>{{ item.balance }}</strong></td>\n                                            <td>
                                                 {% if item.entry.is_posted %}
                                                     <span class="badge bg-success-subtle text-success">Posted</span>
                                                 {% else %}

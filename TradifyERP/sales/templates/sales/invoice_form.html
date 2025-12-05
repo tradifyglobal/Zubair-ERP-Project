@@ -87,19 +87,28 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.subtotal.id_for_label }}" class="form-label">Subtotal</label>
+                                <label for="{{ form.subtotal.id_for_label }}" class="form-label">Subtotal *</label>
                                 {{ form.subtotal }}
+                                {% if form.subtotal.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.subtotal.errors }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.tax_amount.id_for_label }}" class="form-label">Tax Amount</label>
+                                <label for="{{ form.tax_amount.id_for_label }}" class="form-label">Tax % (e.g., 18 for GST)</label>
                                 {{ form.tax_amount }}
+                                <small class="text-muted">Enter percentage (0-100)</small>
+                                {% if form.tax_amount.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.tax_amount.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.total_amount.id_for_label }}" class="form-label">Total Amount *</label>
+                                <label for="{{ form.total_amount.id_for_label }}" class="form-label"><strong>Total Amount</strong></label>
                                 {{ form.total_amount }}
+                                <small class="text-muted text-success"><strong>Auto-calculated</strong></small>
+                                <div id="total-calc-status" style="display:none; font-size: 0.85rem; color: #17a2b8; margin-top: 0.25rem;">Calculating...</div>
                                 {% if form.total_amount.errors %}
                                     <div class="invalid-feedback d-block">{{ form.total_amount.errors }}</div>
                                 {% endif %}
@@ -107,6 +116,10 @@
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.amount_paid.id_for_label }}" class="form-label">Amount Paid</label>
                                 {{ form.amount_paid }}
+                                <small class="text-muted">(Auto: Can set to Total or partial payment)</small>
+                                {% if form.amount_paid.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.amount_paid.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -132,29 +145,80 @@
 </div>
 
 <script>
-    // Auto-calculate Total Amount = Subtotal + Tax Amount
-    document.addEventListener('DOMContentLoaded', function() {
-        const subtotalField = document.getElementById('{{ form.subtotal.id_for_label }}');
-        const taxField = document.getElementById('{{ form.tax_amount.id_for_label }}');
-        const totalField = document.getElementById('{{ form.total_amount.id_for_label }}');
-        
-        function calculateTotal() {
-            const subtotal = parseFloat(subtotalField.value) || 0;
-            const tax = parseFloat(taxField.value) || 0;
-            const total = (subtotal + tax).toFixed(2);
-            totalField.value = total;
+    // Auto-calculate Total Amount and Amount Paid
+    function initializeCalculation() {
+        const subtotalInput = document.getElementById('id_subtotal');
+        const taxInput = document.getElementById('id_tax_percentage');
+        const totalInput = document.getElementById('id_total_amount');
+        const amountPaidInput = document.getElementById('id_amount_paid');
+        const statusDiv = document.getElementById('total-calc-status');
+
+        // Check if all fields exist
+        if (!subtotalInput || !taxInput || !totalInput || !amountPaidInput) {
+            console.warn('Invoice form fields not found', {
+                subtotal: !!subtotalInput,
+                tax: !!taxInput,
+                total: !!totalInput,
+                amountPaid: !!amountPaidInput
+            });
+            return;
         }
-        
+
+        function calculateTotal() {
+            const subtotal = parseFloat(subtotalInput.value) || 0;
+            const taxPercentage = parseFloat(taxInput.value) || 0;
+            
+            console.log('Calculating: subtotal=' + subtotal + ', taxPercentage=' + taxPercentage);
+            
+            // Calculate tax amount from percentage: taxAmount = subtotal * (taxPercentage / 100)
+            const taxAmount = subtotal * (taxPercentage / 100);
+            const total = subtotal + taxAmount;
+            
+            console.log('Result: taxAmount=' + taxAmount + ', total=' + total);
+            
+            totalInput.value = total.toFixed(2);
+            if (statusDiv) statusDiv.textContent = 'Total: ' + total.toFixed(2);
+            
+            // Auto-set amount_paid to total if amount_paid is empty or zero
+            const currentPaid = parseFloat(amountPaidInput.value) || 0;
+            if (currentPaid === 0) {
+                amountPaidInput.value = total.toFixed(2);
+            }
+        }
+
+        function handleAmountPaidInput() {
+            // Allow manual entry but validate it doesn't exceed total
+            const paid = parseFloat(amountPaidInput.value) || 0;
+            const total = parseFloat(totalInput.value) || 0;
+            
+            if (paid > total) {
+                amountPaidInput.value = total.toFixed(2);
+            }
+        }
+
         // Calculate on page load
         calculateTotal();
+        if (statusDiv) statusDiv.style.display = 'block';
         
-        // Calculate whenever subtotal or tax changes
-        subtotalField.addEventListener('input', calculateTotal);
-        taxField.addEventListener('input', calculateTotal);
+        // Calculate whenever subtotal or tax changes (input, change, and blur events)
+        subtotalInput.addEventListener('input', calculateTotal);
+        subtotalInput.addEventListener('change', calculateTotal);
+        subtotalInput.addEventListener('blur', calculateTotal);
+        taxInput.addEventListener('input', calculateTotal);
+        taxInput.addEventListener('change', calculateTotal);
+        taxInput.addEventListener('blur', calculateTotal);
         
-        // Also handle change event for better compatibility
-        subtotalField.addEventListener('change', calculateTotal);
-        taxField.addEventListener('change', calculateTotal);
-    });
+        // Handle amount_paid input to prevent exceeding total
+        amountPaidInput.addEventListener('change', handleAmountPaidInput);
+        amountPaidInput.addEventListener('blur', handleAmountPaidInput);
+    }
+
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeCalculation);
+    } else {
+        // If page is already loaded, initialize immediately
+        setTimeout(initializeCalculation, 100);
+    }
 </script>
 {% endblock %}

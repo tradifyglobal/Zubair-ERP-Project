@@ -121,3 +121,28 @@ def permission_button(user, permission_string, url_name, btn_class, icon_class, 
             f'</button>'
         )
 
+
+@register.filter
+def get_form_field(form, field_name):
+    """
+    Get a form field by name.
+    Usage: {{ permission_form|get_form_field:'reviewer_can_view' }}
+    """
+    if form and hasattr(form, 'fields') and field_name in form.fields:
+        return form[field_name]
+    return None
+
+
+@register.filter
+def get_item(form, key):
+    """
+    Get an item from a form by key (for use with context-provided keys).
+    Usage: {{ permission_form|get_item:field_name }}
+    """
+    if form and hasattr(form, '__getitem__'):
+        try:
+            return form[key]
+        except (KeyError, TypeError):
+            return None
+    return None
+

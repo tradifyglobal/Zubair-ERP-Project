@@ -1,5 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+{% load permission_tags %}
 
 {% block head_title %}
 <title>{% if object %}Edit{% else %}Create{% endif %} User | TradifyERP</title>
@@ -251,26 +252,29 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th style="width: 25%;">Module</th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9.4%;">
                                                     <input type="checkbox" id="select-all-permissions" class="form-check-input" title="Select all permissions">
                                                     <div class="small">All</div>
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9.4%;">
                                                     <i class="mdi mdi-eye"></i> View
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9.4%;">
                                                     <i class="mdi mdi-plus"></i> Add
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9.4%;">
                                                     <i class="mdi mdi-pencil"></i> Edit
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9.4%;">
                                                     <i class="mdi mdi-delete"></i> Delete
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9.4%;">
+                                                    <i class="mdi mdi-clipboard-check"></i> Review
+                                                </th>
+                                                <th class="text-center" style="width: 9.4%;">
                                                     <i class="mdi mdi-check-decagram"></i> Approve
                                                 </th>
-                                                <th class="text-center" style="width: 10.7%;">
+                                                <th class="text-center" style="width: 9.4%;">
                                                     <i class="mdi mdi-file-export"></i> Export
                                                 </th>
                                             </tr>
@@ -285,48 +289,13 @@
                                                 <td class="text-center">
                                                     <input type="checkbox" class="form-check-input module-select-all" data-module="{{ module_code }}" title="Select all for this module">
                                                 </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_view" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_add" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_edit" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_delete" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_approve" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
-                                                <td class="text-center">
-                                                    {% for field in permission_form %}
-                                                        {% if field.name == module_code|add:"_can_export" %}
-                                                            {{ field }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"view" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"add" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"edit" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"delete" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"review" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"approve" }}</td>
+                                                <td class="text-center">{{ form_fields|get_item:module_code|get_item:"export" }}</td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>
@@ -382,7 +351,7 @@
         checkbox.addEventListener('change', function() {
             const module = this.dataset.module;
             const isChecked = this.checked;
-            document.querySelectorAll(`input[name="${module}_can_view"], input[name="${module}_can_add"], input[name="${module}_can_edit"], input[name="${module}_can_delete"], input[name="${module}_can_approve"], input[name="${module}_can_export"]`).forEach(cb => {
+            document.querySelectorAll(`input[name="${module}_can_view"], input[name="${module}_can_add"], input[name="${module}_can_edit"], input[name="${module}_can_delete"], input[name="${module}_can_review"], input[name="${module}_can_approve"], input[name="${module}_can_export"]`).forEach(cb => {
                 cb.checked = isChecked;
             });
         });

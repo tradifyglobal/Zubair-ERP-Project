@@ -14,6 +14,7 @@ from .forms import (
     PurchaseOrderForm, POLineItemForm, GoodsReceiptForm, GoodsReceiptLineItemForm,
     RequestForQuotationForm, VendorQuotationForm, ThreeWayMatchingForm
 )
+from .gl_integration import create_po_gl_entries, create_gr_gl_entries, create_po_payment_gl_entries, reverse_po_gl_entries
 
 
 class ProcurementDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
@@ -133,6 +134,23 @@ class PurchaseOrderUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView
     template_name = 'procurement/purchaseorder_form.html'
     success_url = reverse_lazy('procurement:po_list')
     login_url = 'login'
+    
+    def form_valid(self, form):
+        old_instance = self.get_object()
+        old_status = old_instance.status
+        
+        instance = form.save(commit=True)
+        new_status = instance.status
+        
+        # If status changed to RECEIVED, create GL entries
+        if old_status != 'RECEIVED' and new_status == 'RECEIVED':
+            create_po_gl_entries(instance)
+        
+        # If PO was cancelled, reverse GL entries
+        if old_status != 'CANCELLED' and new_status == 'CANCELLED':
+            reverse_po_gl_entries(instance)
+        
+        return redirect(self.success_url)
 
 
 class PurchaseOrderApproveView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
@@ -197,6 +215,37 @@ class GoodsReceiptCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView)
     template_name = 'procurement/goodsreceipt_form.html'
     success_url = reverse_lazy('procurement:receipt_list')
     login_url = 'login'
+    
+    def form_valid(self, form):
+        instance = form.save(commit=True)
+        
+        # Create GL entries if goods receipt is RECEIVED
+        if instance.status == 'RECEIVED':
+            create_gr_gl_entries(instance)
+        
+        return redirect(self.success_url)
+
+
+class GoodsReceiptUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
+    """Update an existing goods receipt."""
+    model = GoodsReceipt
+    form_class = GoodsReceiptForm
+    template_name = 'procurement/goodsreceipt_form.html'
+    success_url = reverse_lazy('procurement:receipt_list')
+    login_url = 'login'
+    
+    def form_valid(self, form):
+        old_instance = self.get_object()
+        old_status = old_instance.status
+        
+        instance = form.save(commit=True)
+        new_status = instance.status
+        
+        # If status changed to RECEIVED, create GL entries
+        if old_status != 'RECEIVED' and new_status == 'RECEIVED':
+            create_gr_gl_entries(instance)
+        
+        return redirect(self.success_url)
 
 
 class RequestForQuotationListView(SessionEntityMixin, LoginRequiredMixin, ListView):

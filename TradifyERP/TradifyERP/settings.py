@@ -134,6 +134,7 @@ TEMPLATES = [
                 'accounting.context_processors.user_module_permissions',  # Module permissions
                 'accounting.context_processors.session_entity_context',  # Session entity info
                 'accounting.context_processors.theme_context',  # Theme settings
+                'shareholder.context_processors.pending_notifications',  # Pending review/approval notifications
             ],
         },
     },
@@ -182,7 +183,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'US/Eastern'
 
 USE_I18N = True
 
@@ -195,6 +196,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
+    # Include local static assets
+    BASE_DIR / 'static',
     # Include Starterkit static assets so the Tradify Global theme is served
     str(ADMIN_PATH / 'static'),
 ]

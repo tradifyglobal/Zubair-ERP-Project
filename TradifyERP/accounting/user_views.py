@@ -9,6 +9,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db import transaction, models
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control
 
 from accounting.user_permission_forms import (
     UserCreateFormWithPermissions,
@@ -18,6 +20,8 @@ from accounting.user_permission_forms import (
     UserEntityAssignmentForm
 )
 from accounting.module_permissions import ModulePermission, UserModuleAccessLog
+from accounting.mixins import SessionEntityMixin
+from accounting.models import Entity
 
 
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -31,15 +35,28 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return redirect('accounting:dashboard')
 
 
-class UserListView(AdminRequiredMixin, ListView):
-    """List all users with their module permissions."""
+class UserListView(AdminRequiredMixin, SessionEntityMixin, ListView):
+    """List users with their module permissions filtered by entity."""
     model = User
     template_name = 'accounting/user_management/user_list.html'
     context_object_name = 'users'
     paginate_by = 20
     
+    @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True, max_age=0))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
     def get_queryset(self):
-        queryset = User.objects.all().order_by('-date_joined')
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        
+        # Filter users by entity through UserEntity
+        from accounting.models import UserEntity
+        user_ids = UserEntity.objects.filter(
+            entity_id=entity_id
+        ).values_list('user_id', flat=True)
+        
+        queryset = User.objects.filter(id__in=user_ids).order_by('-date_joined')
         
         # Search functionality
         search = self.request.GET.get('search')
@@ -56,6 +73,27 @@ class UserListView(AdminRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        from accounting.models import UserEntity
+        
+        # Get current entity object
+        try:
+            current_entity = Entity.objects.get(id=entity_id)
+            context['current_entity'] = current_entity
+        except Entity.DoesNotExist:
+            current_entity = None
+        
+        # Get all entities for dropdown
+        context['all_entities'] = Entity.objects.filter(is_active=True).order_by('name')
+        
+        # Get filtered user IDs for current entity
+        user_ids = UserEntity.objects.filter(
+            entity_id=entity_id
+        ).values_list('user_id', flat=True)
+        
+        entity_users = User.objects.filter(id__in=user_ids)
+        
         # Add module permission counts for each user
         for user in context['users']:
             user.permission_count = ModulePermission.objects.filter(
@@ -68,8 +106,9 @@ class UserListView(AdminRequiredMixin, ListView):
                 can_view=True
             ).values_list('module', flat=True)
         
-        context['total_users'] = User.objects.count()
-        context['active_users'] = User.objects.filter(is_active=True).count()
+        # Count users for current entity only
+        context['total_users'] = entity_users.count()
+        context['active_users'] = entity_users.filter(is_active=True).count()
         
         return context
 
@@ -100,6 +139,7 @@ class UserCreateView(AdminRequiredMixin, CreateView):
     @transaction.atomic
     def form_valid(self, form):
         from django.contrib.auth.models import Permission
+        from accounting.models import UserEntity
         
         # Create user
         user = form.save()
@@ -108,6 +148,15 @@ class UserCreateView(AdminRequiredMixin, CreateView):
         if user.is_staff and not user.is_superuser:
             all_permissions = Permission.objects.all()
             user.user_permissions.set(all_permissions)
+        
+        # Assign user to current entity
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            UserEntity.objects.get_or_create(
+                user=user,
+                entity_id=entity_id,
+                defaults={'is_default': True}
+            )
         
         # Get permission form
         permission_form = BulkModulePermissionForm(self.request.POST, user=user)
@@ -137,6 +186,10 @@ class UserEditView(AdminRequiredMixin, UpdateView):
     success_url = reverse_lazy('accounting:user_list')
     context_object_name = 'edited_user'
     
+    @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True, max_age=0))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
@@ -159,6 +212,21 @@ class UserEditView(AdminRequiredMixin, UpdateView):
         # Add module list for display
         context['modules'] = ModulePermission.MODULE_CHOICES
         
+        # Add organized form fields for easier template access
+        permission_form = context['permission_form']
+        form_fields_by_module = {}
+        for module_code, module_name in ModulePermission.MODULE_CHOICES:
+            form_fields_by_module[module_code] = {
+                'view': permission_form[f'{module_code}_can_view'] if f'{module_code}_can_view' in permission_form.fields else None,
+                'add': permission_form[f'{module_code}_can_add'] if f'{module_code}_can_add' in permission_form.fields else None,
+                'edit': permission_form[f'{module_code}_can_edit'] if f'{module_code}_can_edit' in permission_form.fields else None,
+                'delete': permission_form[f'{module_code}_can_delete'] if f'{module_code}_can_delete' in permission_form.fields else None,
+                'review': permission_form[f'{module_code}_can_review'] if f'{module_code}_can_review' in permission_form.fields else None,
+                'approve': permission_form[f'{module_code}_can_approve'] if f'{module_code}_can_approve' in permission_form.fields else None,
+                'export': permission_form[f'{module_code}_can_export'] if f'{module_code}_can_export' in permission_form.fields else None,
+            }
+        context['form_fields'] = form_fields_by_module
+        
         # Get existing permissions
         context['existing_permissions'] = ModulePermission.objects.filter(
             user=self.object,
@@ -170,47 +238,65 @@ class UserEditView(AdminRequiredMixin, UpdateView):
     @transaction.atomic
     def form_valid(self, form):
         from django.contrib.auth.models import Permission
+        import logging
+        logger = logging.getLogger('django')
         
-        # Update user
-        user = form.save()
-        
-        # Grant all Django admin permissions if user is staff but not superuser
-        if user.is_staff and not user.is_superuser:
-            all_permissions = Permission.objects.all()
-            user.user_permissions.set(all_permissions)
-        
-        # Get permission form
-        permission_form = BulkModulePermissionForm(self.request.POST, user=user)
-        
-        if permission_form.is_valid():
-            # Save permissions
-            permission_form.save_permissions(user, granted_by=self.request.user)
+        try:
+            # Update user
+            user = form.save()
+            logger.info(f"UserEditView: Saved user {user.username}")
             
-            messages.success(
+            # Grant all Django admin permissions if user is staff but not superuser
+            if user.is_staff and not user.is_superuser:
+                all_permissions = Permission.objects.all()
+                user.user_permissions.set(all_permissions)
+            
+            # Get permission form
+            permission_form = BulkModulePermissionForm(self.request.POST, user=user)
+            
+            if permission_form.is_valid():
+                logger.info(f"Permission form valid for {user.username}")
+                # Save permissions
+                permission_form.save_permissions(user, granted_by=self.request.user)
+                logger.info(f"Permissions saved for {user.username}")
+                
+                messages.success(
+                    self.request,
+                    f'User "{user.username}" updated successfully with module permissions and admin access.'
+                )
+            else:
+                logger.error(f"Permission form invalid: {permission_form.errors}")
+                messages.warning(
+                    self.request,
+                    f'User "{user.username}" updated but there were issues saving permissions: {permission_form.errors}'
+                )
+            
+            # Get entity assignment form
+            entity_form = UserEntityAssignmentForm(self.request.POST, user=user)
+            if entity_form.is_valid():
+                entity_form.save(user=user, granted_by=self.request.user)
+                messages.success(
+                    self.request,
+                    f'Entity assignments updated for "{user.username}".'
+                )
+            else:
+                # Log entity form errors but don't prevent saving
+                logger.warning(f"Entity form had validation errors (non-blocking): {entity_form.errors}")
+                # Show warning to user about entity assignments, but permissions should still save
+                if entity_form.errors.get('entities'):
+                    messages.info(
+                        self.request,
+                        f'Note: Entity assignments were not changed. Please select at least one entity to update assignments.'
+                    )
+            
+            return redirect(self.success_url)
+        except Exception as e:
+            logger.exception(f"Error in UserEditView.form_valid: {str(e)}")
+            messages.error(
                 self.request,
-                f'User "{user.username}" updated successfully with module permissions and admin access.'
+                f'An error occurred while updating user: {str(e)}'
             )
-        else:
-            messages.warning(
-                self.request,
-                f'User "{user.username}" updated but there were issues saving permissions.'
-            )
-        
-        # Get entity assignment form
-        entity_form = UserEntityAssignmentForm(self.request.POST, user=user)
-        if entity_form.is_valid():
-            entity_form.save(user=user, granted_by=self.request.user)
-            messages.success(
-                self.request,
-                f'Entity assignments updated for "{user.username}".'
-            )
-        else:
-            messages.warning(
-                self.request,
-                f'Entity assignments had validation errors: {entity_form.errors}'
-            )
-        
-        return redirect(self.success_url)
+            return redirect(self.success_url)
 
 
 class UserDetailView(AdminRequiredMixin, DetailView):
@@ -218,6 +304,10 @@ class UserDetailView(AdminRequiredMixin, DetailView):
     model = User
     template_name = 'accounting/user_management/user_detail.html'
     context_object_name = 'viewed_user'
+    
+    @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True, max_age=0))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
