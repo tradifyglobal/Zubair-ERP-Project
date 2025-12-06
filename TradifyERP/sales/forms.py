@@ -9,6 +9,7 @@ from .models import (
     Customer, SalesOrder, SalesOrderLine, Invoice,
     Quotation, QuotationLine, PricingRule, DiscountPolicy, SalesCustomerSegment
 )
+from accounting.models import Currency
 
 
 class CustomerForm(forms.ModelForm):
@@ -179,21 +180,22 @@ class QuotationForm(forms.ModelForm):
         model = Quotation
         fields = [
             'quote_number', 'customer', 'opportunity',
-            'quote_date', 'valid_until',
+            'quote_date', 'valid_until', 'validity_days',
             'contact_person', 'contact_email',
-            'currency', 'validity_days', 'payment_terms',
+            'currency', 'payment_terms',
             'internal_notes', 'customer_notes'
         ]
         widgets = {
             'quote_number': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'e.g., QUOT-001',
+                'placeholder': 'Auto-generated',
                 'readonly': True
             }),
             'customer': forms.Select(attrs={'class': 'form-select'}),
             'opportunity': forms.Select(attrs={'class': 'form-select', 'required': False}),
             'quote_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'valid_until': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'validity_days': forms.Select(attrs={'class': 'form-select'}),
             'contact_person': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Contact person name'
@@ -202,8 +204,7 @@ class QuotationForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'email@example.com'
             }),
-            'currency': forms.TextInput(attrs={'class': 'form-control'}),
-            'validity_days': forms.Select(attrs={'class': 'form-select'}),
+            'currency': forms.Select(attrs={'class': 'form-select'}),
             'payment_terms': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g., Net 30, 50% deposit'
@@ -211,6 +212,63 @@ class QuotationForm(forms.ModelForm):
             'internal_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'customer_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Ensure quote_number field is always readonly
+        if self.instance.pk:
+            # For existing quotations, keep quote_number readonly
+            self.fields['quote_number'].widget.attrs['readonly'] = True
+        else:
+            # For new quotations, auto-generate and set readonly
+            self.fields['quote_number'].widget.attrs['readonly'] = True
+            self.fields['quote_number'].widget.attrs['disabled'] = True
+        
+        # Replace currency field with ForeignKey lookup to Currency model
+        from accounting.models import Currency
+        active_currencies = Currency.objects.filter(is_active=True).order_by('code')
+        
+        # Get the currency code from the model instance if editing
+        current_currency = None
+        if self.instance.pk and self.instance.currency:
+            current_currency = self.instance.currency
+        
+        # Create choices for currency dropdown
+        currency_choices = [('', '-- Select Currency --')]
+        for curr in active_currencies:
+            currency_choices.append((curr.code, f'{curr.code} - {curr.name}'))
+        
+        # Update the currency field to use the dropdown
+        self.fields['currency'].widget = forms.Select(
+            choices=currency_choices,
+            attrs={'class': 'form-select'}
+        )
+        if current_currency:
+            self.fields['currency'].initial = current_currency
+        
+        # Add labels to all fields
+        self.fields['quote_number'].label = 'Quote Number'
+        self.fields['customer'].label = 'Customer *'
+        self.fields['opportunity'].label = 'CRM Opportunity'
+        self.fields['quote_date'].label = 'Quote Date *'
+        self.fields['valid_until'].label = 'Valid Until *'
+        self.fields['validity_days'].label = 'Validity Period *'
+        self.fields['contact_person'].label = 'Contact Person'
+        self.fields['contact_email'].label = 'Contact Email'
+        self.fields['currency'].label = 'Currency *'
+        self.fields['payment_terms'].label = 'Payment Terms'
+        self.fields['internal_notes'].label = 'Internal Notes (Not shown to customer)'
+        self.fields['customer_notes'].label = 'Customer Notes (Visible to customer)'
+        
+        # Ensure all other fields are NOT readonly
+        for field_name, field in self.fields.items():
+            if field_name != 'quote_number':
+                # Remove any readonly attribute from other fields
+                if 'readonly' in self.fields[field_name].widget.attrs:
+                    del self.fields[field_name].widget.attrs['readonly']
+                if 'disabled' in self.fields[field_name].widget.attrs:
+                    del self.fields[field_name].widget.attrs['disabled']
 
 
 class QuotationLineForm(forms.ModelForm):
