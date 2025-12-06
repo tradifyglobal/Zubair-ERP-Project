@@ -226,6 +226,23 @@
                                         <div class="dropdown-header">Invoicing</div>
                                         <a href="{% url 'sales:invoice_list' %}" class="dropdown-item">Invoices</a>
                                         <a href="{% url 'sales:invoice_create' %}" class="dropdown-item">Create Invoice</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Quotations & Pricing</div>
+                                        <a href="{% url 'sales:quotation_list' %}" class="dropdown-item">Quotations</a>
+                                        <a href="{% url 'sales:pricing_rule_list' %}" class="dropdown-item">Pricing Rules</a>
+                                        <a href="{% url 'sales:discount_policy_list' %}" class="dropdown-item">Discount Policies</a>
+                                        <a href="{% url 'sales:customer_segment_list' %}" class="dropdown-item">Customer Segments</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Accounts Receivable</div>
+                                        <a href="#" class="dropdown-item">AR Aging Report</a>
+                                        <a href="#" class="dropdown-item">Collection Forecast</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Payments & Adjustments</div>
+                                        <a href="#" class="dropdown-item">Customer Payments</a>
+                                        <a href="#" class="dropdown-item">Sales Adjustments</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Financial Reports</div>
+                                        <a href="#" class="dropdown-item">Sales Financial Reports</a>
                                     </div>
                                 </li>
                                 {% endif %}

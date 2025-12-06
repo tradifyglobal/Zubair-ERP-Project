@@ -732,6 +732,122 @@
                             </li>
                             {% endif %}
 
+                            {% if user|has_module_permission:'sales' %}
+                            <li class="menu-title" data-key="t-sales-app">Sales Module</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="shopping-cart"></i>
+                                    <span data-key="t-sales">Sales</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Dashboard -->
+                                    <li class="menu-title">Dashboard</li>
+                                    <li>
+                                        <a href="{% url 'sales:dashboard' %}">
+                                            <span>Sales Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Customers -->
+                                    <li class="menu-title">Customers</li>
+                                    <li>
+                                        <a href="{% url 'sales:customer_list' %}">
+                                            <span>All Customers</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:customer_create' %}">
+                                            <span>Add Customer</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Sales Orders -->
+                                    <li class="menu-title">Sales Orders</li>
+                                    <li>
+                                        <a href="{% url 'sales:salesorder_list' %}">
+                                            <span>All Orders</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:salesorder_create' %}">
+                                            <span>New Order</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Invoicing -->
+                                    <li class="menu-title">Invoicing</li>
+                                    <li>
+                                        <a href="{% url 'sales:invoice_list' %}">
+                                            <span>Invoices</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:invoice_create' %}">
+                                            <span>Create Invoice</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Quotations & Pricing -->
+                                    <li class="menu-title">Quotations & Pricing</li>
+                                    <li>
+                                        <a href="{% url 'sales:quotation_list' %}">
+                                            <span>Quotations</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:pricing_rule_list' %}">
+                                            <span>Pricing Rules</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:discount_policy_list' %}">
+                                            <span>Discount Policies</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'sales:customer_segment_list' %}">
+                                            <span>Customer Segments</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Accounts Receivable -->
+                                    <li class="menu-title">Accounts Receivable</li>
+                                    <li>
+                                        <a href="#">
+                                            <span>AR Aging Report</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#">
+                                            <span>Collection Forecast</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Payments & Adjustments -->
+                                    <li class="menu-title">Payments & Adjustments</li>
+                                    <li>
+                                        <a href="#">
+                                            <span>Customer Payments</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#">
+                                            <span>Sales Adjustments</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Financial Reports -->
+                                    <li class="menu-title">Financial Reports</li>
+                                    <li>
+                                        <a href="#">
+                                            <span>Sales Financial Reports</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            {% endif %}
+
                             {% if user|has_module_permission:'crm' %}
                             <li class="menu-title" data-key="t-crm-app">CRM & Sales</li>
 
