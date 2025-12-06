@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Quotation{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>{% if form.instance.pk %}Edit Quotation{% else %}New Quotation{% endif %}</h1>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'sales:quotation_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-file-earmark"></i> Quotation Information</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.quote_number }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.customer }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.opportunity }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.currency }}
+                </div>
+
+                <!-- Dates -->
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-calendar"></i> Dates</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.quote_date }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.valid_until }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.validity_days }}
+                </div>
+
+                <!-- Contact Information -->
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-person"></i> Contact Information</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.contact_person }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.contact_email }}
+                </div>
+
+                <!-- Payment Terms -->
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-credit-card"></i> Payment & Terms</h5>
+                </div>
+                
+                <div class="col-12">
+                    {{ form.payment_terms }}
+                </div>
+
+                <!-- Notes -->
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-chat-left"></i> Notes</h5>
+                </div>
+                
+                <div class="col-12">
+                    {{ form.internal_notes }}
+                    <small class="text-muted">Internal notes not shown to customer</small>
+                </div>
+                
+                <div class="col-12">
+                    {{ form.customer_notes }}
+                    <small class="text-muted">Notes visible to customer</small>
+                </div>
+
+                <!-- Line Items -->
+                {% if quotation_lines %}
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-list"></i> Line Items</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Discount %</th>
+                                    <th>Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for line in quotation_lines %}
+                                <tr>
+                                    <td>{{ line.product.product_name }}</td>
+                                    <td>{{ line.quantity }}</td>
+                                    <td>{{ line.unit_price }}</td>
+                                    <td>{{ line.discount_percent }}</td>
+                                    <td>{{ line.line_total }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Save Quotation
+                    </button>
+                    <a href="{% url 'sales:quotation_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
