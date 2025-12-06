@@ -211,6 +211,23 @@ class QuotationForm(forms.ModelForm):
             'internal_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'customer_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ensure quote_number field is always readonly (for new quotes, auto-generated)
+        if self.instance.pk:
+            # For existing quotations, keep quote_number readonly
+            self.fields['quote_number'].widget.attrs['readonly'] = True
+        else:
+            # For new quotations, generate and set readonly
+            self.fields['quote_number'].widget.attrs['readonly'] = True
+        
+        # Ensure all other fields are NOT readonly
+        for field_name, field in self.fields.items():
+            if field_name != 'quote_number':
+                # Remove any readonly attribute from other fields
+                if 'readonly' in self.fields[field_name].widget.attrs:
+                    del self.fields[field_name].widget.attrs['readonly']
 
 
 class QuotationLineForm(forms.ModelForm):
