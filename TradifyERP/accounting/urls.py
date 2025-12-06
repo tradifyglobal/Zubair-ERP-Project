@@ -13,6 +13,7 @@ from .views import (
     CashFlowForecastListView, CashTransactionListView,
     ReconciliationEntryListView, ReconciliationRecordListView, ReconciliationMatchListView,
     TaxRateListView, TaxTransactionListView, TaxSummaryListView,
+    save_layout_preference,
 )
 from accounting.views_debug import theme_debug
 from .views import (
@@ -73,6 +74,9 @@ app_name = 'accounting'
 urlpatterns = [
     # Debug - Theme Test
     path('theme-debug/', theme_debug, name='theme_debug'),
+    
+    # AJAX API Endpoints
+    path('api/save-layout-preference/', save_layout_preference, name='save_layout_preference'),
     
     # Entity Selection
     path('select-entity/', EntitySelectionView.as_view(), name='select-entity'),

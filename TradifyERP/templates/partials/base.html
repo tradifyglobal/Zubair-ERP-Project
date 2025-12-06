@@ -6,6 +6,7 @@
     <head>
 
         <meta charset="utf-8" />
+        {% csrf_token %}
         {% block head_title%}
         
         {% endblock %}
@@ -277,7 +278,7 @@
         
         body[data-layout="horizontal"] .page-content {
             margin-top: 0 !important;
-            padding-top: calc(55px + 1.5rem) !important;
+            padding-top: 0.5rem !important;
         }
         
         /* Ensure layout elements don't overflow */
@@ -307,6 +308,8 @@
             width: 250px;
             overflow-y: auto;
             overflow-x: hidden;
+            order: 2;
+            flex: 0 0 250px;
         }
         
         body:not([data-layout="horizontal"]) .vertical-menu {
@@ -376,6 +379,11 @@
         }
         
         /* Horizontal layout logo styling */
+        body[data-layout="horizontal"] #layout-wrapper {
+            padding-top: 70px !important;
+            display: block !important;
+        }
+
         body[data-layout="horizontal"] .navbar-brand-box {
             padding-left: 2.5rem !important;
         }
@@ -453,6 +461,23 @@
             border-bottom-color: #374151 !important;
         }
         
+        body[data-bs-theme="dark"] #page-topbar {
+            background: #1f2937 !important;
+            border-bottom: 1px solid #374151 !important;
+        }
+        
+        body[data-bs-theme="dark"] #page-topbar .navbar-header {
+            background: #1f2937 !important;
+        }
+        
+        body[data-bs-theme="dark"] #page-topbar .nav-link {
+            color: #e5e7eb !important;
+        }
+        
+        body[data-bs-theme="dark"] #page-topbar .nav-link:hover {
+            color: #fff !important;
+        }
+        
         body[data-bs-theme="dark"] .topnav {
             background: #1f2937 !important;
         }
@@ -491,6 +516,23 @@
         body[data-bs-theme="light"] .horizontal-layout-sidebar {
             background: #c8e6c9 !important;
             border-bottom-color: #a5d6a7 !important;
+        }
+        
+        body[data-bs-theme="light"] #page-topbar {
+            background: #c8e6c9 !important;
+            border-bottom: 1px solid #a5d6a7 !important;
+        }
+        
+        body[data-bs-theme="light"] #page-topbar .navbar-header {
+            background: #c8e6c9 !important;
+        }
+        
+        body[data-bs-theme="light"] #page-topbar .nav-link {
+            color: #1b5e20 !important;
+        }
+        
+        body[data-bs-theme="light"] #page-topbar .nav-link:hover {
+            color: #0d3817 !important;
         }
         
         body[data-bs-theme="light"] .topnav {
@@ -639,21 +681,26 @@
         
         /* Vertical layout main-content flex structure */
         body:not([data-layout="horizontal"]) #layout-wrapper {
-            flex-wrap: wrap;
+            display: grid !important;
+            grid-template-areas: "header header"
+                                 "sidebar content" !important;
+            grid-template-columns: 250px 1fr !important;
+            grid-template-rows: 70px 1fr !important;
+            padding-top: 0 !important;
         }
-        
+
         body:not([data-layout="horizontal"]) .vertical-layout-header {
-            flex-basis: 100%;
-            order: 1;
+            grid-area: header !important;
         }
-        
+
         body:not([data-layout="horizontal"]) .vertical-layout-sidebar {
-            order: 2;
-        }
-        
-        body:not([data-layout="horizontal"]) .main-content {
-            order: 2;
+            grid-area: sidebar !important;
+            flex: none !important;
+        }        body:not([data-layout="horizontal"]) .main-content {
+            order: 3;
             margin-left: 0 !important;
+            flex: 1 1 auto !important;
+            grid-area: content !important;
         }
         
         .main-content .content {
@@ -682,12 +729,12 @@
         
         /* Add top margin to main-content to account for fixed header */
         .main-content {
-            margin-top: 60px !important;
+            margin-top: 0 !important;
         }
         
         /* Horizontal layout - reduce top margin */
         body[data-layout="horizontal"] .main-content {
-            margin-top: 70px !important;
+            margin-top: 0 !important;
         }
         
         /* Vertical layout content */
@@ -1233,7 +1280,7 @@
                         } else {
                             // Vertical: hide horizontal, show vertical
                             console.log('[LayoutFix] Switching to Vertical view');
-                            document.body.removeAttribute('data-layout');
+                            document.body.setAttribute('data-layout', 'vertical');
                             
                             // CRITICAL: Remove inline styles to show vertical elements
                             var horizHeader = document.querySelector('.horizontal-layout-header');
@@ -1255,14 +1302,15 @@
                         }, 50);
                     }
                     
-                    // Apply initial layout from data-layout attribute
+                    // Apply initial layout from data-layout attribute (server preference takes priority)
                     var currentLayout = $('body').attr('data-layout') || 'vertical';
                     applyLayoutView(currentLayout);
 
                     // ===== RESTORE ALL PREFERENCES FROM LOCALSTORAGE AND SELECT RADIO BUTTONS =====
                     
-                    // 1. Restore layout selection
-                    $("input[name='layout'][value='" + (localStorage.getItem('minia-layout') || 'vertical') + "']").prop('checked', true);
+                    // 1. Restore layout selection (WITHOUT triggering change event)
+                    var savedLayout = localStorage.getItem('minia-layout') || 'vertical';
+                    $("input[name='layout'][value='" + savedLayout + "']").prop('checked', true);
                     
                     // 2. Restore theme mode selection
                     $("input[name='layout-mode'][value='" + (localStorage.getItem('minia-theme-mode') || 'light') + "']").prop('checked', true);
@@ -1309,6 +1357,23 @@
                         
                         // Apply layout visually
                         applyLayoutView(layout);
+                        
+                        // Save to database via AJAX with CSRF token
+                        var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+                        $.ajax({
+                            url: '/accounting/api/save-layout-preference/',
+                            type: 'POST',
+                            data: {
+                                layout: layout,
+                                csrfmiddlewaretoken: csrftoken
+                            },
+                            success: function(response) {
+                                console.log('[LayoutFix] Layout preference saved to server:', response);
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('[LayoutFix] Error saving layout preference:', error);
+                            }
+                        });
                         
                         // Toggle sidebar settings visibility
                         if(layout === 'horizontal') {

@@ -17,7 +17,7 @@ from .models import (
 from .mixins import SessionEntityMixin
 from .forms import DoubleEntryJournalForm, SimpleLedgerEntryForm, QuickAddCustomerForm, QuickAddVendorForm, QuickAddVendorPaymentForm, QuickAddVendorInvoiceForm, QuickAddBankProfileForm, FixedAssetForm
 from .permission_utils import get_user_accessible_entities
-from .trial_balance import calculate_trial_balance, get_trial_balance_details
+# from .trial_balance import calculate_trial_balance, get_trial_balance_details
 
 
 def get_session_entity(request):
@@ -653,14 +653,15 @@ class TrialBalanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
             today = date.today()
             
             # Calculate trial balance from GL entries
-            tb_data = calculate_trial_balance(entity, today)
+            # TODO: trial_balance module needs to be implemented
+            # tb_data = calculate_trial_balance(entity, today)
             
-            if tb_data:
-                context['trial_balance'] = tb_data.get('trial_balance')
-                context['account_balances'] = tb_data.get('account_balances', [])
-                context['total_debits'] = tb_data.get('total_debits', 0)
-                context['total_credits'] = tb_data.get('total_credits', 0)
-                context['is_balanced'] = tb_data.get('is_balanced', False)
+            # if tb_data:
+            #     context['trial_balance'] = tb_data.get('trial_balance')
+            #     context['account_balances'] = tb_data.get('account_balances', [])
+            #     context['total_debits'] = tb_data.get('total_debits', 0)
+            #     context['total_credits'] = tb_data.get('total_credits', 0)
+            #     context['is_balanced'] = tb_data.get('is_balanced', False)
         
         return context
 
@@ -2584,3 +2585,42 @@ class GetAccountShareholderAPIView(View):
         except Exception as e:
             return JsonResponse({'investor_name': '', 'error': str(e)}, status=400)
 
+
+# ============ AJAX API ENDPOINTS ============
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from accounting.models_theme import UserThemePreference
+
+@require_http_methods(["POST"])
+def save_layout_preference(request):
+    """AJAX endpoint to save layout preference to database."""
+    try:
+        layout = request.POST.get('layout', 'vertical')
+        
+        if not request.user.is_authenticated:
+            return JsonResponse({'success': False, 'error': 'Not authenticated'}, status=401)
+        
+        # Get or create user theme preference
+        theme_pref, created = UserThemePreference.objects.get_or_create(user=request.user)
+        
+        # Save layout mode
+        if layout == 'horizontal':
+            theme_pref.layout_mode = 'horizontal'
+        else:
+            theme_pref.layout_mode = 'vertical'
+        
+        theme_pref.save()
+        
+        return JsonResponse({
+            'success': True,
+            'layout': layout,
+            'message': f'Layout preference saved: {layout}'
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)

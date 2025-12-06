@@ -349,6 +349,11 @@ SECURE_CONTENT_SECURITY_POLICY = {
 }
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
+# Data Upload Settings
+# Increase field limit for admin forms with many inline records (e.g., ModulePermissionInline)
+# Default is 1000, which may be exceeded when editing users with many module permissions
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB (increased from default 2.5MB)
 
 # Load local overrides when present (local_settings.py is ignored by git by default)
 try:
