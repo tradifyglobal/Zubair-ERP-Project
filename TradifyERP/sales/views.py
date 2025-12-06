@@ -57,7 +57,7 @@ class CustomerListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(Customer, self.request.user)
+        qs = Customer.objects.filter(entity=self.request.entity)
         
         search = self.request.GET.get('search', '')
         if search:
@@ -139,7 +139,7 @@ class SalesOrderListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(SalesOrder, self.request.user)
+        qs = SalesOrder.objects.filter(entity=self.request.entity)
         
         search = self.request.GET.get('search', '')
         if search:
@@ -221,7 +221,7 @@ class InvoiceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(Invoice, self.request.user)
+        qs = Invoice.objects.filter(entity=self.request.entity)
         
         search = self.request.GET.get('search', '')
         if search:
@@ -350,35 +350,37 @@ class SalesDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_entities = get_user_entities(self.request.user)
         
-        # Sales metrics
-        total_customers = Customer.objects.filter(entity_id__in=user_entities).count()
-        active_customers = Customer.objects.filter(entity_id__in=user_entities, status='ACTIVE').count()
+        # Get the current entity from request (set by SessionEntityMixin)
+        current_entity = self.request.entity
         
-        total_orders = SalesOrder.objects.filter(entity_id__in=user_entities).count()
+        # Sales metrics - filtered by current entity only
+        total_customers = Customer.objects.filter(entity=current_entity).count()
+        active_customers = Customer.objects.filter(entity=current_entity, status='ACTIVE').count()
+        
+        total_orders = SalesOrder.objects.filter(entity=current_entity).count()
         pending_orders = SalesOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity=current_entity,
             status__in=['DRAFT', 'CONFIRMED', 'PROCESSING']
         ).count()
         shipped_orders = SalesOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity=current_entity,
             status='SHIPPED'
         ).count()
         
         # Revenue metrics
         total_revenue = SalesOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity=current_entity,
             status__in=['INVOICED', 'DELIVERED']
         ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
         
         # Invoice metrics
-        total_invoices = Invoice.objects.filter(entity_id__in=user_entities).count()
-        paid_invoices = Invoice.objects.filter(entity_id__in=user_entities, status='PAID').count()
-        overdue_invoices = Invoice.objects.filter(entity_id__in=user_entities, status='OVERDUE').count()
+        total_invoices = Invoice.objects.filter(entity=current_entity).count()
+        paid_invoices = Invoice.objects.filter(entity=current_entity, status='PAID').count()
+        overdue_invoices = Invoice.objects.filter(entity=current_entity, status='OVERDUE').count()
         
         total_outstanding = Invoice.objects.filter(
-            entity_id__in=user_entities,
+            entity=current_entity,
             status__in=['ISSUED', 'PARTIAL', 'OVERDUE']
         ).aggregate(total=Sum('total_amount') - Sum('amount_paid'))['total'] or Decimal('0.00')
         
@@ -410,7 +412,7 @@ class QuotationListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(Quotation, self.request.user)
+        qs = Quotation.objects.filter(entity=self.request.entity)
         
         search = self.request.GET.get('search', '')
         if search:
@@ -500,7 +502,7 @@ class PricingRuleListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(PricingRule, self.request.user)
+        qs = PricingRule.objects.filter(entity=self.request.entity)
         
         search = self.request.GET.get('search', '')
         if search:
@@ -588,7 +590,7 @@ class DiscountPolicyListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(DiscountPolicy, self.request.user)
+        qs = DiscountPolicy.objects.filter(entity=self.request.entity)
         
         search = self.request.GET.get('search', '')
         if search:
@@ -672,12 +674,12 @@ class DiscountPolicyDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteVie
 class CustomerSegmentListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all customer segments."""
     model = SalesCustomerSegment
-    template_name = 'sales/customer_segment_list.html'
-    context_object_name = 'customer_segments'
+    template_name = 'sales/segment_list.html'
+    context_object_name = 'segments'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(SalesCustomerSegment, self.request.user)
+        qs = SalesCustomerSegment.objects.filter(entity=self.request.entity)
         
         search = self.request.GET.get('search', '')
         if search:
