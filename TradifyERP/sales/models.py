@@ -360,7 +360,7 @@ class Quotation(models.Model):
         max_length=50,
         unique=True,
         db_index=True,
-        default='TEMP'
+        blank=True
     )
     customer = models.ForeignKey(
         Customer,
@@ -442,6 +442,23 @@ class Quotation(models.Model):
     
     def __str__(self):
         return f"{self.quote_number} - {self.customer.customer_name}"
+    
+    def save(self, *args, **kwargs):
+        """Auto-generate quote_number if not provided."""
+        if not self.quote_number or self.quote_number == 'TEMP':
+            # Generate quote number in format QUOT-YYYY-XXX
+            from datetime import datetime
+            current_year = datetime.now().year
+            prefix = f'QUOT-{current_year}-'
+            
+            # Get all quotations for current year
+            quotes_this_year = Quotation.objects.filter(
+                quote_number__startswith=prefix
+            ).count()
+            
+            self.quote_number = f'{prefix}{quotes_this_year + 1:03d}'
+        
+        super().save(*args, **kwargs)
     
     def is_expired(self):
         """Check if quotation is expired."""
