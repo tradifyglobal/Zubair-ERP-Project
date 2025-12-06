@@ -5,7 +5,10 @@ CRUD forms for sales orders, customers, and invoices.
 
 from django import forms
 from django.utils import timezone
-from .models import Customer, SalesOrder, SalesOrderLine, Invoice
+from .models import (
+    Customer, SalesOrder, SalesOrderLine, Invoice,
+    Quotation, QuotationLine, PricingRule, DiscountPolicy, SalesCustomerSegment
+)
 
 
 class CustomerForm(forms.ModelForm):
@@ -166,3 +169,214 @@ class InvoiceForm(forms.ModelForm):
                 next_number = 1
         
         return f'{prefix}{next_number:03d}'
+
+
+# ==================== PHASE 1: QUOTATION & PRICING FORMS ====================
+
+class QuotationForm(forms.ModelForm):
+    """Form for creating and editing quotations."""
+    class Meta:
+        model = Quotation
+        fields = [
+            'quote_number', 'customer', 'opportunity',
+            'quote_date', 'valid_until',
+            'contact_person', 'contact_email',
+            'currency', 'validity_days', 'payment_terms',
+            'internal_notes', 'customer_notes'
+        ]
+        widgets = {
+            'quote_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., QUOT-001',
+                'readonly': True
+            }),
+            'customer': forms.Select(attrs={'class': 'form-select'}),
+            'opportunity': forms.Select(attrs={'class': 'form-select', 'required': False}),
+            'quote_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'valid_until': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'contact_person': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Contact person name'
+            }),
+            'contact_email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'email@example.com'
+            }),
+            'currency': forms.TextInput(attrs={'class': 'form-control'}),
+            'validity_days': forms.Select(attrs={'class': 'form-select'}),
+            'payment_terms': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Net 30, 50% deposit'
+            }),
+            'internal_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'customer_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class QuotationLineForm(forms.ModelForm):
+    """Form for quotation line items."""
+    class Meta:
+        model = QuotationLine
+        fields = ['product', 'description', 'quantity', 'unit_price', 'discount_percent', 'notes']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'quantity': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01'
+            }),
+            'unit_price': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0'
+            }),
+            'discount_percent': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'max': '100'
+            }),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class PricingRuleForm(forms.ModelForm):
+    """Form for creating and editing pricing rules."""
+    class Meta:
+        model = PricingRule
+        fields = [
+            'rule_code', 'rule_name', 'rule_type',
+            'product', 'customer', 'customer_segment',
+            'min_quantity', 'max_quantity',
+            'price_fixed', 'discount_percent',
+            'effective_from', 'effective_to',
+            'status', 'priority'
+        ]
+        widgets = {
+            'rule_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., RULE-VOL-001'
+            }),
+            'rule_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'rule_type': forms.Select(attrs={'class': 'form-select'}),
+            'product': forms.Select(attrs={'class': 'form-select', 'required': False}),
+            'customer': forms.Select(attrs={'class': 'form-select', 'required': False}),
+            'customer_segment': forms.Select(attrs={'class': 'form-select', 'required': False}),
+            'min_quantity': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01'
+            }),
+            'max_quantity': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01',
+                'required': False
+            }),
+            'price_fixed': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'required': False
+            }),
+            'discount_percent': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'max': '100'
+            }),
+            'effective_from': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'effective_to': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'required': False
+            }),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'priority': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+        }
+
+
+class DiscountPolicyForm(forms.ModelForm):
+    """Form for creating and editing discount policies."""
+    class Meta:
+        model = DiscountPolicy
+        fields = [
+            'policy_code', 'policy_name', 'policy_type',
+            'description', 'discount_percent',
+            'min_order_value',
+            'applicable_customers', 'applicable_products',
+            'effective_from', 'effective_to',
+            'is_active'
+        ]
+        widgets = {
+            'policy_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., DISC-SEASONAL-2024'
+            }),
+            'policy_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'policy_type': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'discount_percent': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'max': '100'
+            }),
+            'min_order_value': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0'
+            }),
+            'applicable_customers': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'applicable_products': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'effective_from': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'effective_to': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'required': False
+            }),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class CustomerSegmentForm(forms.ModelForm):
+    """Form for creating and editing customer segments."""
+    class Meta:
+        model = SalesCustomerSegment
+        fields = [
+            'segment_code', 'segment_name', 'segment_type',
+            'description',
+            'min_annual_revenue', 'max_annual_revenue',
+            'base_discount_percent', 'priority',
+            'customers', 'is_active'
+        ]
+        widgets = {
+            'segment_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., SEG-ENT-001'
+            }),
+            'segment_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'segment_type': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'min_annual_revenue': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0'
+            }),
+            'max_annual_revenue': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'required': False
+            }),
+            'base_discount_percent': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'max': '100'
+            }),
+            'priority': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'customers': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
