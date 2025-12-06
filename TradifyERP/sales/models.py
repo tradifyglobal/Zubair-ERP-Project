@@ -278,6 +278,36 @@ class Invoice(models.Model):
     # Status
     status = models.CharField(max_length=20, choices=INVOICE_STATUS, default='DRAFT')
     
+    # GL Integration Fields
+    gl_posting_id = models.ForeignKey(
+        'accounting.LedgerEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invoices_revenue',
+        help_text='GL entry for revenue recognition'
+    )
+    
+    tax_gl_posting_id = models.ForeignKey(
+        'accounting.LedgerEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invoices_tax',
+        help_text='GL entry for tax liability'
+    )
+    
+    is_posted_to_gl = models.BooleanField(
+        default=False,
+        help_text='Whether this invoice has been posted to General Ledger'
+    )
+    
+    gl_posted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Timestamp when posted to GL'
+    )
+    
     # Notes
     notes = models.TextField(blank=True)
     
@@ -798,3 +828,433 @@ class SalesCustomerSegment(models.Model):
     
     def __str__(self):
         return f"{self.segment_code} - {self.segment_name}"
+
+
+# ==================== SALES-ACCOUNTS INTEGRATION ====================
+
+class AccountsReceivable(models.Model):
+    """Tracks outstanding customer receivables linked to invoices."""
+    AR_STATUS = [
+        ('OUTSTANDING', 'Outstanding'),
+        ('PARTIAL', 'Partially Paid'),
+        ('PAID', 'Paid'),
+        ('OVERDUE', 'Overdue'),
+        ('WRITTEN_OFF', 'Written Off'),
+        ('DISPUTED', 'Disputed'),
+    ]
+    
+    AGING_BUCKETS = [
+        ('CURRENT', 'Current (0-30 days)'),
+        ('30_60', '30-60 days'),
+        ('60_90', '60-90 days'),
+        ('OVER_90', 'Over 90 days'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='accounts_receivable'
+    )
+    
+    invoice = models.OneToOneField(
+        Invoice,
+        on_delete=models.CASCADE,
+        related_name='ar_record'
+    )
+    
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name='receivables'
+    )
+    
+    # Financial tracking
+    invoice_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    amount_received = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    amount_outstanding = models.DecimalField(max_digits=18, decimal_places=2)
+    
+    # Status tracking
+    status = models.CharField(max_length=20, choices=AR_STATUS, default='OUTSTANDING')
+    aging_bucket = models.CharField(max_length=20, choices=AGING_BUCKETS, default='CURRENT')
+    
+    # Dates
+    invoice_date = models.DateField()
+    due_date = models.DateField()
+    last_payment_date = models.DateField(null=True, blank=True)
+    
+    # GL Links
+    ar_gl_posting_id = models.ForeignKey(
+        'accounting.LedgerEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ar_records',
+        help_text='GL entry for revenue recognition'
+    )
+    
+    # Audit
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-due_date']
+        verbose_name_plural = 'Accounts Receivable'
+        indexes = [
+            models.Index(fields=['entity', 'status']),
+            models.Index(fields=['entity', 'aging_bucket']),
+            models.Index(fields=['customer', 'status']),
+        ]
+    
+    def __str__(self):
+        return f"AR - {self.invoice.invoice_number} - {self.amount_outstanding}"
+    
+    def update_aging_bucket(self):
+        """Update aging bucket based on days outstanding."""
+        from django.utils import timezone
+        days_outstanding = (timezone.now().date() - self.due_date).days
+        
+        if days_outstanding <= 30:
+            self.aging_bucket = 'CURRENT'
+        elif days_outstanding <= 60:
+            self.aging_bucket = '30_60'
+        elif days_outstanding <= 90:
+            self.aging_bucket = '60_90'
+        else:
+            self.aging_bucket = 'OVER_90'
+        self.save(update_fields=['aging_bucket'])
+    
+    def calculate_days_overdue(self):
+        """Calculate days overdue if applicable."""
+        if self.status == 'PAID':
+            return 0
+        from django.utils import timezone
+        return max(0, (timezone.now().date() - self.due_date).days)
+
+
+class GeneralLedgerPosting(models.Model):
+    """Tracks GL postings generated from sales transactions."""
+    POSTING_STATUS = [
+        ('PENDING', 'Pending'),
+        ('POSTED', 'Posted'),
+        ('REVERSED', 'Reversed'),
+        ('FAILED', 'Failed'),
+    ]
+    
+    POSTING_TYPES = [
+        ('REVENUE', 'Revenue Recognition'),
+        ('TAX', 'Tax Liability'),
+        ('DISCOUNT', 'Discount Adjustment'),
+        ('RETURN', 'Sales Return'),
+        ('WRITE_OFF', 'Bad Debt Write-off'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='sales_gl_postings'
+    )
+    
+    # Reference to source documents
+    invoice = models.ForeignKey(
+        Invoice,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='gl_postings'
+    )
+    
+    sales_order = models.ForeignKey(
+        SalesOrder,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='gl_postings'
+    )
+    
+    # Posting details
+    posting_type = models.CharField(max_length=20, choices=POSTING_TYPES)
+    posting_date = models.DateField()
+    description = models.TextField()
+    
+    # GL accounts involved
+    debit_account = models.ForeignKey(
+        'accounting.Account',
+        on_delete=models.PROTECT,
+        related_name='gl_posting_debits',
+        help_text='Account to be debited'
+    )
+    
+    credit_account = models.ForeignKey(
+        'accounting.Account',
+        on_delete=models.PROTECT,
+        related_name='gl_posting_credits',
+        help_text='Account to be credited'
+    )
+    
+    debit_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    credit_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    
+    # GL entry link
+    gl_ledger_entry = models.ForeignKey(
+        'accounting.LedgerEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sales_postings'
+    )
+    
+    # Status tracking
+    status = models.CharField(max_length=20, choices=POSTING_STATUS, default='PENDING')
+    posted_at = models.DateTimeField(null=True, blank=True)
+    
+    # Audit
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_gl_postings'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-posting_date', '-created_at']
+        verbose_name_plural = 'General Ledger Postings'
+        indexes = [
+            models.Index(fields=['entity', 'status']),
+            models.Index(fields=['invoice', 'posting_type']),
+        ]
+    
+    def __str__(self):
+        return f"GL {self.posting_type} - {self.debit_account.account_number}/{self.credit_account.account_number}"
+
+
+class SalesPayment(models.Model):
+    """Records customer payments against invoices."""
+    PAYMENT_METHODS = [
+        ('CASH', 'Cash'),
+        ('CHECK', 'Cheque'),
+        ('BANK_TRANSFER', 'Bank Transfer'),
+        ('CREDIT_CARD', 'Credit Card'),
+        ('ONLINE', 'Online Payment'),
+        ('OTHER', 'Other'),
+    ]
+    
+    PAYMENT_STATUS = [
+        ('PENDING', 'Pending'),
+        ('RECONCILED', 'Reconciled'),
+        ('BOUNCED', 'Bounced'),
+        ('REVERSED', 'Reversed'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='sales_payments'
+    )
+    
+    # Payment allocation
+    invoice = models.ForeignKey(
+        Invoice,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+    
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+    
+    # Payment details
+    payment_date = models.DateField()
+    amount = models.DecimalField(max_digits=18, decimal_places=2, validators=[MinValueValidator(0)])
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
+    reference_number = models.CharField(max_length=100, blank=True, help_text='Check #, transaction ID, etc.')
+    notes = models.TextField(blank=True)
+    
+    # GL posting
+    cash_gl_posting_id = models.ForeignKey(
+        'accounting.LedgerEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sales_payments',
+        help_text='GL entry for cash receipt'
+    )
+    
+    # Status
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='PENDING')
+    
+    # Audit
+    recorded_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='recorded_sales_payments'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-payment_date']
+        indexes = [
+            models.Index(fields=['invoice', 'status']),
+            models.Index(fields=['customer', 'payment_date']),
+        ]
+    
+    def __str__(self):
+        return f"Payment - {self.reference_number or 'N/A'} - {self.amount} on {self.payment_date}"
+
+
+class SalesAdjustment(models.Model):
+    """Tracks sales adjustments (discounts, returns, write-offs)."""
+    ADJUSTMENT_TYPES = [
+        ('DISCOUNT', 'Additional Discount'),
+        ('RETURN', 'Sales Return'),
+        ('WRITE_OFF', 'Bad Debt Write-off'),
+        ('CREDIT_NOTE', 'Credit Note'),
+        ('PRICE_CORRECTION', 'Price Correction'),
+    ]
+    
+    ADJUSTMENT_STATUS = [
+        ('DRAFT', 'Draft'),
+        ('APPROVED', 'Approved'),
+        ('POSTED', 'Posted'),
+        ('REVERSED', 'Reversed'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='sales_adjustments'
+    )
+    
+    invoice = models.ForeignKey(
+        Invoice,
+        on_delete=models.CASCADE,
+        related_name='adjustments'
+    )
+    
+    # Adjustment details
+    adjustment_type = models.CharField(max_length=20, choices=ADJUSTMENT_TYPES)
+    adjustment_date = models.DateField()
+    amount = models.DecimalField(max_digits=18, decimal_places=2, validators=[MinValueValidator(0)])
+    reason = models.TextField()
+    
+    # GL posting
+    adjustment_gl_posting_id = models.ForeignKey(
+        'accounting.LedgerEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sales_adjustments'
+    )
+    
+    # Status
+    status = models.CharField(max_length=20, choices=ADJUSTMENT_STATUS, default='DRAFT')
+    
+    # Approval
+    requires_approval = models.BooleanField(default=False)
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_sales_adjustments'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    
+    # Audit
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_sales_adjustments'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-adjustment_date']
+        indexes = [
+            models.Index(fields=['invoice', 'status']),
+            models.Index(fields=['adjustment_type', 'status']),
+        ]
+    
+    def __str__(self):
+        return f"{self.adjustment_type} - {self.amount} on {self.adjustment_date}"
+
+
+class SalesFinancialReport(models.Model):
+    """Consolidated sales financial metrics linked to accounting."""
+    REPORT_TYPES = [
+        ('DAILY', 'Daily Summary'),
+        ('WEEKLY', 'Weekly Summary'),
+        ('MONTHLY', 'Monthly Summary'),
+        ('QUARTERLY', 'Quarterly Summary'),
+        ('ANNUAL', 'Annual Summary'),
+    ]
+    
+    entity = models.ForeignKey(
+        'accounting.Entity',
+        on_delete=models.CASCADE,
+        related_name='sales_financial_reports'
+    )
+    
+    # Reporting period
+    report_type = models.CharField(max_length=20, choices=REPORT_TYPES)
+    period_start = models.DateField()
+    period_end = models.DateField()
+    
+    # Revenue metrics
+    gross_revenue = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_discounts = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_returns = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    net_revenue = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    
+    # Tax metrics
+    total_tax_collected = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_tax_payable = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    
+    # AR metrics
+    total_invoiced = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_received = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    total_outstanding = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    overdue_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    
+    # Profitability
+    total_cost_of_goods = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    gross_profit = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    gross_profit_margin = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    
+    # Customer metrics
+    total_active_customers = models.IntegerField(default=0)
+    new_customers = models.IntegerField(default=0)
+    repeat_customers = models.IntegerField(default=0)
+    
+    # Generated report link to GL report
+    is_posted_to_gl = models.BooleanField(default=False)
+    gl_report_id = models.CharField(max_length=100, blank=True, help_text='Reference to GL report')
+    
+    # Audit
+    generated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='generated_sales_reports'
+    )
+    generated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-period_end']
+        unique_together = ('entity', 'report_type', 'period_start', 'period_end')
+        verbose_name_plural = 'Sales Financial Reports'
+        indexes = [
+            models.Index(fields=['entity', 'period_end']),
+            models.Index(fields=['entity', 'report_type']),
+        ]
+    
+    def __str__(self):
+        return f"Sales Report - {self.entity.code} ({self.period_start} to {self.period_end})"
