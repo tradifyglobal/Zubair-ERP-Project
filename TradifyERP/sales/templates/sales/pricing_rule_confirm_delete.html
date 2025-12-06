@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                    </h5>
+                    <p class="card-text">
+                        Are you sure you want to delete this pricing rule? This action cannot be undone.
+                    </p>
+                    <p class="text-muted">
+                        <strong>Code:</strong> {{ object.rule_code }}<br>
+                        <strong>Name:</strong> {{ object.rule_name }}<br>
+                        <strong>Type:</strong> {{ object.get_rule_type_display }}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                        <a href="{% url 'sales:pricing_rule_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

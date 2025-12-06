@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Discount Policy{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>{% if form.instance.pk %}Edit Discount Policy{% else %}New Discount Policy{% endif %}</h1>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'sales:discount_policy_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-tag"></i> Policy Information</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.policy_code }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.policy_name }}
+                </div>
+                
+                <div class="col-md-12">
+                    {{ form.policy_type }}
+                </div>
+
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-file-text"></i> Description</h5>
+                </div>
+                
+                <div class="col-12">
+                    {{ form.description }}
+                </div>
+
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-percent"></i> Discount Details</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.discount_percent }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.min_order_value }}
+                </div>
+
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-people"></i> Applicability</h5>
+                </div>
+                
+                <div class="col-12">
+                    {{ form.applicable_customers }}
+                    <small class="text-muted">Leave empty to apply to all customers</small>
+                </div>
+                
+                <div class="col-12">
+                    {{ form.applicable_products }}
+                    <small class="text-muted">Leave empty to apply to all products</small>
+                </div>
+
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-calendar"></i> Validity</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.effective_from }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.effective_to }}
+                </div>
+
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">
+                            Active
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Save Discount Policy
+                    </button>
+                    <a href="{% url 'sales:discount_policy_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

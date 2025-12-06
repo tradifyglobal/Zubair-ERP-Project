@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Customer Segment{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>{% if form.instance.pk %}Edit Customer Segment{% else %}New Customer Segment{% endif %}</h1>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'sales:customer_segment_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-tag"></i> Segment Information</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.segment_code }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.segment_name }}
+                </div>
+                
+                <div class="col-md-12">
+                    {{ form.segment_type }}
+                </div>
+
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-file-text"></i> Description</h5>
+                </div>
+                
+                <div class="col-12">
+                    {{ form.description }}
+                </div>
+
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-graph-up"></i> Revenue Criteria</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.min_annual_revenue }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.max_annual_revenue }}
+                </div>
+
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-percent"></i> Benefits</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.base_discount_percent }}
+                </div>
+                
+                <div class="col-md-6">
+                    {{ form.priority }}
+                </div>
+
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-people"></i> Customers in Segment</h5>
+                </div>
+                
+                <div class="col-12">
+                    {{ form.customers }}
+                </div>
+
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">
+                            Active
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Save Customer Segment
+                    </button>
+                    <a href="{% url 'sales:customer_segment_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                    </h5>
+                    <p class="card-text">
+                        Are you sure you want to delete this quotation? This action cannot be undone.
+                    </p>
+                    <p class="text-muted">
+                        <strong>Quote #:</strong> {{ object.quote_number }}<br>
+                        <strong>Customer:</strong> {{ object.customer.customer_name }}<br>
+                        <strong>Total Amount:</strong> {{ object.currency }} {{ object.total_amount|floatformat:2 }}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                        <a href="{% url 'sales:quotation_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

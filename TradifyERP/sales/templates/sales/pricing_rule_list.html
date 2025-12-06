@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pricing Rules{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Pricing Rules</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'sales:pricing_rule_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Pricing Rule
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search by code or name..." 
+                           value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="rule_type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for val, label in rule_types %}
+                        <option value="{{ val }}" {% if request.GET.rule_type == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pricing Rules Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Rule Code</th>
+                        <th>Rule Name</th>
+                        <th>Type</th>
+                        <th>Product</th>
+                        <th>Min Qty</th>
+                        <th>Discount %</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in pricing_rules %}
+                    <tr>
+                        <td><strong>{{ rule.rule_code }}</strong></td>
+                        <td>{{ rule.rule_name }}</td>
+                        <td><span class="badge bg-info">{{ rule.get_rule_type_display }}</span></td>
+                        <td>{{ rule.product.product_name|default:"All Products" }}</td>
+                        <td>{{ rule.min_quantity }}</td>
+                        <td>
+                            {% if rule.price_fixed %}
+                                Fixed: {{ rule.price_fixed }}
+                            {% else %}
+                                {{ rule.discount_percent }}%
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if rule.status == 'ACTIVE' %}success{% elif rule.status == 'INACTIVE' %}secondary{% elif rule.status == 'SCHEDULED' %}info{% else %}warning{% endif %}">
+                                {{ rule.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'sales:pricing_rule_update' rule.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'sales:pricing_rule_delete' rule.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            No pricing rules found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
