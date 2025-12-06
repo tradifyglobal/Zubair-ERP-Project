@@ -477,7 +477,7 @@ class QuotationUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
         return context
     
     def get_success_url(self):
-        return reverse_lazy('sales:quotation_update', kwargs={'pk': self.object.pk})
+        return reverse_lazy('sales:quotation_list')
 
 
 @method_decorator(csrf_protect, name='dispatch')
