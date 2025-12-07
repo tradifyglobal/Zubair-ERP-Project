@@ -41,7 +41,7 @@
                                             {% for report in reports %}
                                                 <tr>
                                                     <td>
-                                                        <strong>{{ report.employee.user.get_full_name }}</strong>
+                                                        <strong>{{ report.employee.first_name }} {{ report.employee.last_name }}</strong>
                                                     </td>
                                                     <td>{{ report.period_start|date:"M d, Y" }} - {{ report.period_end|date:"M d, Y" }}</td>
                                                     <td>${{ report.total_amount|floatformat:2 }}</td>
