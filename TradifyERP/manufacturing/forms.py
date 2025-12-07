@@ -777,6 +777,16 @@ class WarrantyRegistrationForm(forms.ModelForm):
 class DistributorPerformanceForm(forms.ModelForm):
     """Form for tracking distributor performance."""
     
+    entity = forms.ModelChoiceField(
+        queryset=None,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'required': 'required'
+        }),
+        label='Entity',
+        required=True
+    )
+    
     class Meta:
         model = __import__('manufacturing.models', fromlist=['DistributorPerformance']).DistributorPerformance
         fields = ['entity', 'distributor', 'performance_date', 'orders_count', 'total_sales',
@@ -784,10 +794,6 @@ class DistributorPerformanceForm(forms.ModelForm):
                   'return_rate_percentage', 'complaint_count',
                   'payment_on_time_percentage', 'overall_rating']
         widgets = {
-            'entity': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
-            }),
             'distributor': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
@@ -842,6 +848,12 @@ class DistributorPerformanceForm(forms.ModelForm):
                 'required': 'required'
             }),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Load all entities for the entity field
+        from accounting.models import Entity
+        self.fields['entity'].queryset = Entity.objects.all().order_by('name')
 
     def save(self, commit=True):
         """Auto-populate performance_month and performance_year from performance_date.
