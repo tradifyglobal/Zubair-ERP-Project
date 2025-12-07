@@ -132,14 +132,26 @@ class EmployeeExpenseReportDetailView(SessionEntityMixin, LoginRequiredMixin, De
             item.amount for item in report.items.filter(status='APPROVED')
         )
         
-        # Get all employees to populate manager dropdown
-        context['managers'] = Employee.objects.filter(
-            entity=self.request.entity
-        ).select_related('user').order_by('user__first_name', 'user__last_name')
+        # Get reviewers - users with 'reviewer' or 'expenses_can_approve' permission
+        from accounting.module_permissions import ModulePermission
+        reviewer_ids = ModulePermission.objects.filter(
+            module='reviewer',
+            can_view=True
+        ).values_list('user_id', flat=True)
         
-        # Get all finance staff to populate approver dropdown
-        context['finance_approvers'] = User.objects.filter(
-            is_staff=True,
+        context['reviewers'] = User.objects.filter(
+            id__in=reviewer_ids,
+            is_active=True
+        ).order_by('first_name', 'last_name')
+        
+        # Get approvers - users with 'approver' or expense approval permission
+        approver_ids = ModulePermission.objects.filter(
+            module='expenses',
+            can_approve=True
+        ).values_list('user_id', flat=True)
+        
+        context['approvers'] = User.objects.filter(
+            id__in=approver_ids,
             is_active=True
         ).order_by('first_name', 'last_name')
         
@@ -784,9 +796,11 @@ class ExpenseCategoryCreateView(SessionEntityMixin, LoginRequiredMixin, CreateVi
 
 
 class EmployeeExpenseInlineReviewView(SessionEntityMixin, LoginRequiredMixin, View):
-    """Inline manager review from detail page with dropdown selection"""
+    """Inline reviewer assignment from detail page with dropdown selection"""
     
     def post(self, request, pk):
+        from accounting.module_permissions import ModulePermission
+        
         report = get_object_or_404(
             EmployeeExpenseReport,
             pk=pk,
@@ -794,32 +808,36 @@ class EmployeeExpenseInlineReviewView(SessionEntityMixin, LoginRequiredMixin, Vi
             status='PENDING_REVIEW'
         )
         
-        # Check if user is manager or finance staff
-        if not request.user.is_staff and not request.user.groups.filter(name__in=['Manager', 'Finance']).exists():
-            messages.error(request, 'You do not have permission to approve this report.')
-            return redirect('expenses:report_detail', pk=pk)
-        
         action = request.POST.get('action', 'reject')
-        manager_id = request.POST.get('manager_id')
+        reviewer_id = request.POST.get('reviewer_id')
         notes = request.POST.get('notes', '')
         
-        # Get manager
+        # Get reviewer - must have reviewer permission
         try:
-            manager = Employee.objects.get(id=manager_id, entity=request.entity)
-        except Employee.DoesNotExist:
-            messages.error(request, 'Invalid manager selected.')
+            reviewer = User.objects.get(id=reviewer_id, is_active=True)
+            # Check if user has reviewer permission
+            has_permission = ModulePermission.objects.filter(
+                user=reviewer,
+                module='reviewer',
+                can_view=True
+            ).exists()
+            if not has_permission:
+                messages.error(request, 'Selected user does not have reviewer permissions.')
+                return redirect('expenses:report_detail', pk=pk)
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid reviewer selected.')
             return redirect('expenses:report_detail', pk=pk)
         
         if action == 'approve':
-            # Manager approves - move to finance approval
+            # Reviewer approves - move to finance approval
             report.status = 'PENDING_APPROVAL'
-            report.reviewed_by = request.user
+            report.reviewed_by = reviewer
             report.reviewed_at = timezone.now()
             report.review_notes = notes
             report.save()
             
             workflow = report.approval_workflow
-            workflow.manager = manager
+            workflow.manager = None  # Clear manager field, use reviewed_by on report instead
             workflow.manager_approved = True
             workflow.manager_notes = notes
             workflow.manager_review_at = timezone.now()
@@ -832,23 +850,23 @@ class EmployeeExpenseInlineReviewView(SessionEntityMixin, LoginRequiredMixin, Vi
                 model_name='EmployeeExpenseReport',
                 object_id=str(report.id),
                 user=request.user.username,
-                description=f'Manager {manager.user.get_full_name()} approved expense report',
+                description=f'Reviewer {reviewer.get_full_name()} approved expense report',
                 old_values={'status': 'PENDING_REVIEW'},
-                new_values={'status': 'PENDING_APPROVAL', 'notes': notes}
+                new_values={'status': 'PENDING_APPROVAL', 'reviewer': reviewer.username, 'notes': notes}
             )
             
-            messages.success(request, f'Report assigned to {manager.user.get_full_name()} and approved for finance review!')
+            messages.success(request, f'Report reviewed and approved by {reviewer.get_full_name()}. Forwarding to finance.')
         else:
-            # Manager rejects
+            # Reviewer rejects
             report.status = 'REJECTED'
             report.rejection_reason = notes
             report.rejected_at = timezone.now()
-            report.reviewed_by = request.user
+            report.reviewed_by = reviewer
             report.reviewed_at = timezone.now()
             report.save()
             
             workflow = report.approval_workflow
-            workflow.manager = manager
+            workflow.manager = None
             workflow.status = 'REJECTED'
             workflow.save()
             
@@ -858,12 +876,12 @@ class EmployeeExpenseInlineReviewView(SessionEntityMixin, LoginRequiredMixin, Vi
                 model_name='EmployeeExpenseReport',
                 object_id=str(report.id),
                 user=request.user.username,
-                description=f'Manager {manager.user.get_full_name()} rejected expense report',
+                description=f'Reviewer {reviewer.get_full_name()} rejected expense report',
                 old_values={'status': 'PENDING_REVIEW'},
-                new_values={'status': 'REJECTED', 'reason': notes}
+                new_values={'status': 'REJECTED', 'reviewer': reviewer.username, 'reason': notes}
             )
             
-            messages.warning(request, 'Report rejected. Employee has been notified.')
+            messages.warning(request, f'Report rejected by {reviewer.get_full_name()}. Employee has been notified.')
         
         return redirect('expenses:report_detail', pk=pk)
 
@@ -872,6 +890,8 @@ class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequired
     """Inline finance approval from detail page with dropdown selection"""
     
     def post(self, request, pk):
+        from accounting.module_permissions import ModulePermission
+        
         report = get_object_or_404(
             EmployeeExpenseReport,
             pk=pk,
@@ -879,18 +899,22 @@ class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequired
             status='PENDING_APPROVAL'
         )
         
-        # Check if user is finance staff
-        if not request.user.is_staff and not request.user.groups.filter(name='Finance').exists():
-            messages.error(request, 'You do not have permission to approve this report.')
-            return redirect('expenses:report_detail', pk=pk)
-        
         action = request.POST.get('action', 'reject')
         finance_approver_id = request.POST.get('finance_approver_id')
         notes = request.POST.get('notes', '')
         
-        # Get finance approver
+        # Get finance approver - must have expense approval permission
         try:
-            finance_approver = User.objects.get(id=finance_approver_id, is_staff=True, is_active=True)
+            finance_approver = User.objects.get(id=finance_approver_id, is_active=True)
+            # Check if user has expense approval permission
+            has_permission = ModulePermission.objects.filter(
+                user=finance_approver,
+                module='expenses',
+                can_approve=True
+            ).exists()
+            if not has_permission:
+                messages.error(request, 'Selected user does not have expense approval permissions.')
+                return redirect('expenses:report_detail', pk=pk)
         except User.DoesNotExist:
             messages.error(request, 'Invalid finance approver selected.')
             return redirect('expenses:report_detail', pk=pk)
@@ -939,10 +963,10 @@ class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequired
                     user=request.user.username,
                     description=f'Finance {finance_approver.get_full_name()} approved and posted expense report to GL',
                     old_values={'status': 'PENDING_APPROVAL'},
-                    new_values={'status': 'APPROVED', 'is_posted': True}
+                    new_values={'status': 'APPROVED', 'is_posted': True, 'approver': finance_approver.username}
                 )
                 
-                messages.success(request, f'Report assigned to {finance_approver.get_full_name()}, approved, posted to GL, and scheduled for reimbursement!')
+                messages.success(request, f'Report approved by {finance_approver.get_full_name()}, posted to GL, and scheduled for reimbursement!')
             except Exception as e:
                 logger.error(f"Error posting to GL: {str(e)}\n{traceback.format_exc()}")
                 messages.error(request, f'Error posting to GL: {str(e)}')
@@ -969,10 +993,10 @@ class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequired
                 user=request.user.username,
                 description=f'Finance {finance_approver.get_full_name()} rejected expense report',
                 old_values={'status': 'PENDING_APPROVAL'},
-                new_values={'status': 'REJECTED', 'reason': notes}
+                new_values={'status': 'REJECTED', 'approver': finance_approver.username, 'reason': notes}
             )
             
-            messages.warning(request, 'Report rejected by finance. Employee has been notified.')
+            messages.warning(request, f'Report rejected by {finance_approver.get_full_name()}. Employee has been notified.')
         
         return redirect('expenses:report_detail', pk=pk)
 

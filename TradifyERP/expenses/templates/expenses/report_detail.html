@@ -317,86 +317,167 @@
                                 </form>
                             </div>
                         </div>
+                    {% elif report.status == 'SUBMITTED' %}
+                        <!-- Waiting for reviewer assignment -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-warning">
+                                <h5 class="card-title mb-0 text-white">
+                                    <i class="fas fa-clock"></i> Pending Reviewer Assignment
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">This report is awaiting assignment to a reviewer.</p>
+                            </div>
+                        </div>
                     {% elif report.status == 'PENDING_REVIEW' %}
-                        {% if user.is_staff %}
+                        <!-- Review stage - only reviewers can act -->
+                        {% if reviewers %}
                             <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Manager Review</h5>
+                                <div class="card-header bg-info">
+                                    <h5 class="card-title mb-0 text-white">
+                                        <i data-feather="user-check"></i> Manager Review
+                                    </h5>
                                 </div>
                                 <div class="card-body">
-                                    <form method="post" action="{% url 'expenses:report_inline_review' report.id %}" class="needs-validation">
-                                        {% csrf_token %}
-                                        
-                                        <div class="mb-3">
-                                            <label for="manager_select" class="form-label">Assign to Manager</label>
-                                            <select name="manager_id" id="manager_select" class="form-select" required>
-                                                <option value="">-- Select Manager --</option>
-                                                {% for manager in managers %}
-                                                    <option value="{{ manager.id }}" 
-                                                        {% if workflow.manager.id == manager.id %}selected{% endif %}>
-                                                        {{ manager.first_name }} {{ manager.last_name }}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
+                                    {% if workflow.manager_approved %}
+                                        <div class="alert alert-success mb-3">
+                                            <i class="fas fa-check-circle"></i> 
+                                            Reviewed by {{ workflow.manager.user.get_full_name }} on {{ workflow.manager_review_at|date:"M d, Y" }}
                                         </div>
+                                    {% else %}
+                                        <form method="post" action="{% url 'expenses:report_inline_review' report.id %}">
+                                            {% csrf_token %}
+                                            
+                                            <div class="mb-3">
+                                                <label for="reviewer_select" class="form-label">Assign Reviewer</label>
+                                                <select name="reviewer_id" id="reviewer_select" class="form-select" required>
+                                                    <option value="">-- Select Reviewer --</option>
+                                                    {% for reviewer in reviewers %}
+                                                        <option value="{{ reviewer.id }}">
+                                                            {{ reviewer.get_full_name }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                                <small class="text-muted">Only users with reviewer permissions appear here</small>
+                                            </div>
 
-                                        <div class="mb-3">
-                                            <label for="review_notes" class="form-label">Review Notes (Optional)</label>
-                                            <textarea name="notes" id="review_notes" class="form-control" rows="3" placeholder="Enter manager comments..."></textarea>
-                                        </div>
+                                            <div class="mb-3">
+                                                <label for="review_notes" class="form-label">Review Notes (Optional)</label>
+                                                <textarea name="notes" id="review_notes" class="form-control" rows="3" placeholder="Enter review comments..."></textarea>
+                                            </div>
 
-                                        <div class="d-grid gap-2">
-                                            <button type="submit" name="action" value="approve" class="btn btn-success">
-                                                <i data-feather="check"></i> Approve & Forward
-                                            </button>
-                                            <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this report?');">
-                                                <i data-feather="x"></i> Reject
-                                            </button>
-                                        </div>
-                                    </form>
+                                            <div class="d-grid gap-2">
+                                                <button type="submit" name="action" value="approve" class="btn btn-success">
+                                                    <i data-feather="check"></i> Approve for Finance
+                                                </button>
+                                                <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this report?');">
+                                                    <i data-feather="x"></i> Reject
+                                                </button>
+                                            </div>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </div>
                         {% endif %}
                     {% elif report.status == 'PENDING_APPROVAL' %}
-                        {% if user.is_staff %}
+                        <!-- Approval stage - show review status and approval form -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-info">
+                                <h5 class="card-title mb-0 text-white">
+                                    <i data-feather="user-check"></i> Review Status
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if workflow.manager_approved %}
+                                    <div class="alert alert-success p-2 mb-0">
+                                        <small>
+                                            <i class="fas fa-check-circle"></i> 
+                                            Reviewed by {{ workflow.manager.user.get_full_name }}<br>
+                                            <small class="text-muted">{{ workflow.manager_review_at|date:"M d, Y H:i" }}</small>
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Finance Approval -->
+                        {% if approvers %}
                             <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Finance Approval</h5>
+                                <div class="card-header bg-success">
+                                    <h5 class="card-title mb-0 text-white">
+                                        <i data-feather="dollar-sign"></i> Finance Approval
+                                    </h5>
                                 </div>
                                 <div class="card-body">
-                                    <form method="post" action="{% url 'expenses:report_inline_finance_approval' report.id %}" class="needs-validation">
-                                        {% csrf_token %}
-                                        
-                                        <div class="mb-3">
-                                            <label for="finance_approver_select" class="form-label">Assign to Finance Approver</label>
-                                            <select name="finance_approver_id" id="finance_approver_select" class="form-select" required>
-                                                <option value="">-- Select Finance Approver --</option>
-                                                {% for finance_user in finance_approvers %}
-                                                    <option value="{{ finance_user.id }}"
-                                                        {% if workflow.finance_approver.id == finance_user.id %}selected{% endif %}>
-                                                        {{ finance_user.first_name }} {{ finance_user.last_name }}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
+                                    {% if workflow.finance_approved %}
+                                        <div class="alert alert-success mb-3">
+                                            <i class="fas fa-check-circle"></i> 
+                                            Approved by {{ workflow.finance_approver.get_full_name }} on {{ workflow.finance_approved_at|date:"M d, Y" }}
                                         </div>
+                                    {% else %}
+                                        <form method="post" action="{% url 'expenses:report_inline_finance_approval' report.id %}">
+                                            {% csrf_token %}
+                                            
+                                            <div class="mb-3">
+                                                <label for="approver_select" class="form-label">Assign Finance Approver</label>
+                                                <select name="finance_approver_id" id="approver_select" class="form-select" required>
+                                                    <option value="">-- Select Approver --</option>
+                                                    {% for approver in approvers %}
+                                                        <option value="{{ approver.id }}">
+                                                            {{ approver.get_full_name }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                                <small class="text-muted">Only users with expense approval permissions appear here</small>
+                                            </div>
 
-                                        <div class="mb-3">
-                                            <label for="finance_notes" class="form-label">Approval Notes (Optional)</label>
-                                            <textarea name="notes" id="finance_notes" class="form-control" rows="3" placeholder="Enter finance comments..."></textarea>
-                                        </div>
+                                            <div class="mb-3">
+                                                <label for="approval_notes" class="form-label">Approval Notes (Optional)</label>
+                                                <textarea name="notes" id="approval_notes" class="form-control" rows="3" placeholder="Enter approval comments..."></textarea>
+                                            </div>
 
-                                        <div class="d-grid gap-2">
-                                            <button type="submit" name="action" value="approve" class="btn btn-success">
-                                                <i data-feather="check"></i> Approve & Post to GL
-                                            </button>
-                                            <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this report?');">
-                                                <i data-feather="x"></i> Reject
-                                            </button>
-                                        </div>
-                                    </form>
+                                            <div class="d-grid gap-2">
+                                                <button type="submit" name="action" value="approve" class="btn btn-success">
+                                                    <i data-feather="check"></i> Approve & Post to GL
+                                                </button>
+                                                <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this report?');">
+                                                    <i data-feather="x"></i> Reject
+                                                </button>
+                                            </div>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </div>
                         {% endif %}
+                    {% elif report.status == 'APPROVED' %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-success">
+                                <h5 class="card-title mb-0 text-white">
+                                    <i class="fas fa-check-circle"></i> Approved & Posted
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2">
+                                    <strong>Approved by:</strong> {{ workflow.finance_approver.get_full_name }}<br>
+                                    <strong>Date:</strong> {{ workflow.finance_approved_at|date:"M d, Y H:i" }}<br>
+                                    <strong>Status:</strong> Posted to GL for accounting processing
+                                </p>
+                            </div>
+                        </div>
+                    {% elif report.status == 'REJECTED' %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger">
+                                <h5 class="card-title mb-0 text-white">
+                                    <i class="fas fa-times-circle"></i> Rejected
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if report.rejection_reason %}
+                                    <p><strong>Reason:</strong></p>
+                                    <p class="text-danger">{{ report.rejection_reason }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
                     {% endif %}
 
                     <!-- Info Panel -->
