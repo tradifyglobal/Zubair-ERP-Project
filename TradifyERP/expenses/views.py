@@ -134,8 +134,7 @@ class EmployeeExpenseReportDetailView(SessionEntityMixin, LoginRequiredMixin, De
         
         # Get all employees to populate manager dropdown
         context['managers'] = Employee.objects.filter(
-            entity=self.request.entity,
-            is_active=True
+            entity=self.request.entity
         ).select_related('user').order_by('user__first_name', 'user__last_name')
         
         # Get all finance staff to populate approver dropdown
