@@ -466,6 +466,22 @@ class WorkCenterCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+class WorkCenterUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
+    model = WorkCenter
+    form_class = WorkCenterForm
+    template_name = 'manufacturing/workcenter_form.html'
+    success_url = reverse_lazy('manufacturing:workcenter_list')
+    
+    def get_queryset(self):
+        return super().get_queryset()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['csrf_token'] = get_token(self.request)
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class WorkCenterDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = WorkCenter

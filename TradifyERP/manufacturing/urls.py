@@ -37,6 +37,7 @@ urlpatterns = [
     # Work Center URLs
     path('work-centers/', views.WorkCenterListView.as_view(), name='workcenter_list'),
     path('work-centers/new/', views.WorkCenterCreateView.as_view(), name='workcenter_create'),
+    path('work-centers/<int:pk>/edit/', views.WorkCenterUpdateView.as_view(), name='workcenter_update'),
     path('work-centers/<int:pk>/delete/', views.WorkCenterDeleteView.as_view(), name='workcenter_delete'),
     
     # Routing URLs
