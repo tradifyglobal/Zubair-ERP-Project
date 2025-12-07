@@ -860,6 +860,7 @@ class DistributorPerformanceForm(forms.ModelForm):
                 performance_month=instance.performance_month,
                 performance_year=instance.performance_year,
                 defaults={
+                    'entity_id': instance.entity_id,
                     'performance_date': instance.performance_date,
                     'orders_count': instance.orders_count,
                     'total_sales': instance.total_sales,

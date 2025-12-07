@@ -1169,9 +1169,30 @@ class DistributorPerformanceCreateView(SessionEntityMixin, LoginRequiredMixin, C
     
     def form_valid(self, form):
         entity_id = self.request.session.get("selected_entity_id")
+        # Get the instance from form.save(commit=False) to set entity_id
         instance = form.save(commit=False)
         instance.entity_id = entity_id
-        instance.save()
+        
+        # Now call the form's update_or_create logic with the updated instance
+        from manufacturing.models import DistributorPerformance
+        obj, created = DistributorPerformance.objects.update_or_create(
+            distributor=instance.distributor,
+            performance_month=instance.performance_month,
+            performance_year=instance.performance_year,
+            defaults={
+                'entity_id': entity_id,
+                'performance_date': instance.performance_date,
+                'orders_count': instance.orders_count,
+                'total_sales': instance.total_sales,
+                'average_order_value': instance.average_order_value,
+                'on_time_delivery_percentage': instance.on_time_delivery_percentage,
+                'order_accuracy_percentage': instance.order_accuracy_percentage,
+                'return_rate_percentage': instance.return_rate_percentage,
+                'complaint_count': instance.complaint_count,
+                'payment_on_time_percentage': instance.payment_on_time_percentage,
+                'overall_rating': instance.overall_rating,
+            }
+        )
         return redirect(self.success_url)
 
 
