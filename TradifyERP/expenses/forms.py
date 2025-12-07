@@ -33,9 +33,13 @@ class EmployeeExpenseReportForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
         
-        # Auto-populate employee from logged-in user
-        if self.user and hasattr(self.user, 'employee'):
-            instance.employee = self.user.employee
+        # Auto-populate employee from logged-in user (backup method)
+        if self.user:
+            try:
+                employee = Employee.objects.get(user=self.user)
+                instance.employee = employee
+            except Employee.DoesNotExist:
+                pass  # Will be handled in view
         
         if commit:
             instance.save()

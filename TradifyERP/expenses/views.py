@@ -144,9 +144,10 @@ class EmployeeExpenseReportCreateView(SessionEntityMixin, LoginRequiredMixin, Cr
         
         # Auto-populate employee from logged-in user
         try:
-            form.instance.employee = self.request.user.employee
+            employee = Employee.objects.get(user=self.request.user)
+            form.instance.employee = employee
         except Employee.DoesNotExist:
-            messages.error(self.request, 'Your user account is not linked to an employee record.')
+            messages.error(self.request, 'Your user account is not linked to an employee record. Please contact your administrator to create an employee profile.')
             return self.form_invalid(form)
         
         response = super().form_valid(form)
