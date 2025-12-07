@@ -724,6 +724,22 @@ class EquipmentCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+class EquipmentUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
+    model = Equipment
+    form_class = EquipmentForm
+    template_name = 'manufacturing/equipment_form.html'
+    success_url = reverse_lazy('manufacturing:equipment_list')
+    
+    def get_queryset(self):
+        return super().get_queryset()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['csrf_token'] = get_token(self.request)
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
 class EquipmentDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = Equipment
@@ -731,7 +747,7 @@ class EquipmentDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('manufacturing:equipment_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(Equipment, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Dashboard View ====================

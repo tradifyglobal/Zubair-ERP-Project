@@ -61,6 +61,7 @@ urlpatterns = [
     # Equipment URLs
     path('equipment/', views.EquipmentListView.as_view(), name='equipment_list'),
     path('equipment/new/', views.EquipmentCreateView.as_view(), name='equipment_create'),
+    path('equipment/<int:pk>/edit/', views.EquipmentUpdateView.as_view(), name='equipment_update'),
     path('equipment/<int:pk>/delete/', views.EquipmentDeleteView.as_view(), name='equipment_delete'),
     
     # Distributor URLs
