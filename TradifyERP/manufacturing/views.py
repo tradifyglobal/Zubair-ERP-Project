@@ -907,8 +907,18 @@ class DistributorOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateV
     success_url = reverse_lazy('manufacturing:distributororder_list')
     
     def form_valid(self, form):
+        import uuid
+        from datetime import datetime
+        
         entity_id = self.request.session.get("selected_entity_id")
         instance = form.save(commit=False)
+        
+        # Generate order_number if not already set
+        if not instance.order_number:
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.order_number = f"ORD-{timestamp}-{unique_id}"
+        
         instance.entity_id = entity_id
         instance.save()
         return redirect(self.success_url)
@@ -962,8 +972,18 @@ class OrderShipmentCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView
     success_url = reverse_lazy('manufacturing:ordershipment_list')
     
     def form_valid(self, form):
+        import uuid
+        from datetime import datetime
+        
         entity_id = self.request.session.get("selected_entity_id")
         instance = form.save(commit=False)
+        
+        # Generate shipment_number if not already set
+        if not instance.shipment_number:
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.shipment_number = f"SHIP-{timestamp}-{unique_id}"
+        
         instance.entity_id = entity_id
         instance.save()
         return redirect(self.success_url)
@@ -1020,8 +1040,18 @@ class AfterSalesServiceCreateView(SessionEntityMixin, LoginRequiredMixin, Create
     success_url = reverse_lazy('manufacturing:aftersalesservice_list')
     
     def form_valid(self, form):
+        import uuid
+        from datetime import datetime
+        
         entity_id = self.request.session.get("selected_entity_id")
         instance = form.save(commit=False)
+        
+        # Generate service_ticket_number if not already set
+        if not instance.service_ticket_number:
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.service_ticket_number = f"TICKET-{timestamp}-{unique_id}"
+        
         instance.entity_id = entity_id
         instance.save()
         return redirect(self.success_url)
@@ -1074,8 +1104,18 @@ class WarrantyRegistrationCreateView(SessionEntityMixin, LoginRequiredMixin, Cre
     success_url = reverse_lazy('manufacturing:warrantyregistration_list')
     
     def form_valid(self, form):
+        import uuid
+        from datetime import datetime
+        
         entity_id = self.request.session.get("selected_entity_id")
         instance = form.save(commit=False)
+        
+        # Generate warranty_number if not already set
+        if not instance.warranty_number:
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.warranty_number = f"WAR-{timestamp}-{unique_id}"
+        
         instance.entity_id = entity_id
         instance.save()
         return redirect(self.success_url)
