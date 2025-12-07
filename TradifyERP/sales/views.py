@@ -674,7 +674,7 @@ class DiscountPolicyDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteVie
 class CustomerSegmentListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all customer segments."""
     model = SalesCustomerSegment
-    template_name = 'sales/segment_list.html'
+    template_name = 'sales/salescustomersegment_list.html'
     context_object_name = 'segments'
     paginate_by = 25
     

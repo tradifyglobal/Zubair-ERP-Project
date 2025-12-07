@@ -317,17 +317,33 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
             context['country_sales'] = []
             context['state_sales'] = []
         
-        # Add pending review tasks for the current user across all entities
+        # Add pending review tasks for the current user in the current entity ONLY
         from accounting.models import CapitalContribution
-        pending_reviews_1 = CapitalContribution.objects.filter(
-            assigned_reviewer_1=self.request.user,
-            workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
-        ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
         
-        pending_reviews_2 = CapitalContribution.objects.filter(
-            assigned_reviewer_2=self.request.user,
-            workflow_status='FIRST_REVIEW_COMPLETED'
-        ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+        # Get entity from session (guaranteed by SessionEntityMixin)
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            entity_filter = Entity.objects.filter(id=entity_id, is_active=True).first()
+        else:
+            entity_filter = None
+        
+        # Filter pending reviews by current entity
+        if entity_filter:
+            pending_reviews_1 = CapitalContribution.objects.filter(
+                entity=entity_filter,
+                assigned_reviewer_1=self.request.user,
+                workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
+            ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+            
+            pending_reviews_2 = CapitalContribution.objects.filter(
+                entity=entity_filter,
+                assigned_reviewer_2=self.request.user,
+                workflow_status='FIRST_REVIEW_COMPLETED'
+            ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+        else:
+            # No entity selected - return empty
+            pending_reviews_1 = CapitalContribution.objects.none()
+            pending_reviews_2 = CapitalContribution.objects.none()
         
         # Combine and count pending reviews
         context['pending_reviews_1'] = pending_reviews_1
@@ -1066,6 +1082,31 @@ class AuditLogListView(SessionEntityMixin, LoginRequiredMixin, ListView):
         context['search_model'] = self.request.GET.get('model', '')
         context['search_user'] = self.request.GET.get('user', '')
         context['filter_action'] = self.request.GET.get('action', '')
+        return context
+
+
+class AuditLogDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
+    """View details of a specific audit log entry."""
+    model = AuditLog
+    template_name = 'accounting/audit_log_detail.html'
+    context_object_name = 'log'
+
+    def get_queryset(self):
+        entity_id = self.request.session.get('selected_entity_id')
+        if not entity_id:
+            return AuditLog.objects.none()
+        return AuditLog.objects.filter(entity_id=entity_id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        log = context['log']
+        # Get related logs for the same object (up to 10 most recent)
+        related_logs = AuditLog.objects.filter(
+            entity_id=self.request.session.get('selected_entity_id'),
+            model_name=log.model_name,
+            object_id=log.object_id
+        ).order_by('-timestamp')[:10]
+        context['related_logs'] = related_logs
         return context
 
 

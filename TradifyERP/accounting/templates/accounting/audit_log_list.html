@@ -5,9 +5,11 @@
 {% block title %}Audit Logs{% endblock %}
 
 {% block content %}
-<div class="page-content">
-    <!-- Breadcrumb -->
-    <div class="page-breadcrumb d-print-none">
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Breadcrumb -->
+            <div class="page-breadcrumb d-print-none">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <nav aria-label="breadcrumb">
@@ -203,7 +205,9 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-light text-dark">Read-only</span>
+                                    <a href="{% url 'accounting:audit_log_detail' log.pk %}" class="btn btn-sm btn-primary">
+                                        <i class="mdi mdi-eye"></i> View
+                                    </a>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -270,6 +274,9 @@
             </ul>
         </nav>
     {% endif %}
+        </div>
+    </div>
+    </div>
 </div>
 
 <script>

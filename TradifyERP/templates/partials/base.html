@@ -922,12 +922,59 @@
         body:not([data-layout="horizontal"]) .vertical-layout-sidebar {
             display: block !important;
         }
+
+        /* ===== ENTITY AND USER BUTTON DYNAMIC STYLING ===== */
+        /* Light theme - entity and user buttons */
+        body[data-bs-theme="light"] .entity-button,
+        body[data-bs-theme="light"] .user-button {
+            background-color: #f3f4f7 !important;
+            color: #545a6d !important;
+        }
+
+        body[data-bs-theme="light"] .entity-text,
+        body[data-bs-theme="light"] .user-text {
+            color: #545a6d !important;
+        }
+
+        /* Dark theme - entity and user buttons */
+        body[data-bs-theme="dark"] .entity-button,
+        body[data-bs-theme="dark"] .user-button {
+            background-color: #2f3447 !important;
+            color: #ffffff !important;
+        }
+
+        body[data-bs-theme="dark"] .entity-text,
+        body[data-bs-theme="dark"] .user-text {
+            color: #ffffff !important;
+        }
+
+        /* Dropdown menu styling for dark theme */
+        body[data-bs-theme="dark"] .entity-button ~ .dropdown-menu,
+        body[data-bs-theme="dark"] .user-button ~ .dropdown-menu {
+            background-color: #2f3447 !important;
+            border-color: #3d4454 !important;
+        }
+
+        body[data-bs-theme="dark"] .entity-button ~ .dropdown-menu .dropdown-item,
+        body[data-bs-theme="dark"] .user-button ~ .dropdown-menu .dropdown-item {
+            color: #ffffff !important;
+            background-color: transparent !important;
+        }
+
+        body[data-bs-theme="dark"] .entity-button ~ .dropdown-menu .dropdown-item:hover,
+        body[data-bs-theme="dark"] .user-button ~ .dropdown-menu .dropdown-item:hover {
+            background-color: #3d4454 !important;
+        }
+
+        body[data-bs-theme="dark"] .dropdown-header {
+            color: #ffffff !important;
+        }
     </style>
     <script>
         // CRITICAL: Initialize layout and theme mode from localStorage
         (function() {
             // 1. Read saved preferences
-            const savedLayout = localStorage.getItem('minia-layout') || 'horizontal';
+            const savedLayout = localStorage.getItem('minia-layout') || 'vertical';
             const savedTheme = localStorage.getItem('minia-theme-mode') || 'light';
             const savedSidebarSize = localStorage.getItem('minia-sidebar-size') || 'lg';
             const savedLayoutPosition = localStorage.getItem('minia-layout-position') || 'fixed';
@@ -947,13 +994,10 @@
                 direction: savedDirection
             });
             
-            // Force horizontal layout
-            localStorage.setItem('minia-layout', 'horizontal');
-            
             // 2. Set the body data-layout attribute BEFORE app.js reads it
-            // Force horizontal layout only
-            document.body.setAttribute('data-layout', 'horizontal');
-            console.log('[Layout Init] Forced horizontal layout');
+            // Use the saved layout preference (don't force it)
+            document.body.setAttribute('data-layout', savedLayout);
+            console.log('[Layout Init] Applied saved layout:', savedLayout);
             
             // 3. Set the body data-bs-theme attribute for dark/light mode
             if (savedTheme === 'dark') {
@@ -1522,36 +1566,125 @@
                             console.log('[LayoutFix] Applied light theme');
                         }
                         
+                        // Force reflow to apply CSS changes
+                        setTimeout(function() {
+                            document.body.offsetHeight;
+                        }, 10);
+                        
                         return false;
                     });
                     
                     // ===== MODE BUTTON CLICK HANDLER (Header Button) =====
-                    // Override the original mode button click handler
-                    $(document).off('click', '#mode-setting-btn').on('click', '#mode-setting-btn', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
+                    // Intercept ALL clicks on mode button (capture phase)
+                    var modeBtn = document.getElementById('mode-setting-btn');
+                    if (modeBtn) {
+                        modeBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            
+                            var body = document.body;
+                            var currentTheme = body.hasAttribute("data-bs-theme") ? body.getAttribute("data-bs-theme") : 'light';
+                            var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                            
+                            console.log('[LayoutFix] Mode button clicked, changing from', currentTheme, 'to', newTheme);
+                            
+                            // Apply theme
+                            document.body.setAttribute('data-bs-theme', newTheme);
+                            document.body.setAttribute('data-topbar', newTheme);
+                            document.body.setAttribute('data-sidebar', newTheme);
+                            
+                            // Update the radio button in theme customizer
+                            $("input[name='layout-mode'][value='" + newTheme + "']").prop('checked', true);
+                            
+                            // Save to localStorage
+                            localStorage.setItem('minia-theme-mode', newTheme);
+                            
+                            // Force reflow to apply CSS changes
+                            setTimeout(function() {
+                                document.body.offsetHeight;
+                            }, 10);
+                            
+                            // Save to database via AJAX
+                            var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+                            $.ajax({
+                                url: '/accounting/api/save-layout-preference/',
+                                type: 'POST',
+                                data: {
+                                    layout: $("input[name='layout']:checked").val() || 'vertical',
+                                    csrfmiddlewaretoken: csrftoken
+                                },
+                                success: function(response) {
+                                    console.log('[LayoutFix] Theme preference saved to server');
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('[LayoutFix] Error saving theme preference:', error);
+                                }
+                            });
+                            
+                            console.log('[LayoutFix] Applied', newTheme, 'theme via button');
+                            
+                            return false;
+                        }, true); // Use capture phase to intercept before app.js
+                    } else {
+                        console.warn('[LayoutFix] Mode setting button not found');
+                    }
+                    
+                    // FALLBACK: Also listen for clicks on any element containing moon/sun icon
+                    document.addEventListener('click', function(e) {
+                        var target = e.target;
                         
-                        var body = document.body;
-                        var currentTheme = body.hasAttribute("data-bs-theme") ? body.getAttribute("data-bs-theme") : 'light';
-                        var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                        
-                        console.log('[LayoutFix] Mode button clicked, changing from', currentTheme, 'to', newTheme);
-                        
-                        // Apply theme
-                        document.body.setAttribute('data-bs-theme', newTheme);
-                        document.body.setAttribute('data-topbar', newTheme);
-                        document.body.setAttribute('data-sidebar', newTheme);
-                        
-                        // Update the radio button in theme customizer
-                        $("input[name='layout-mode'][value='" + newTheme + "']").prop('checked', true);
-                        
-                        // Save to localStorage
-                        localStorage.setItem('minia-theme-mode', newTheme);
-                        
-                        console.log('[LayoutFix] Applied', newTheme, 'theme via button');
-                        
-                        return false;
-                    });
+                        // Check if click is on mode button or inside it
+                        var modeButton = target.closest('#mode-setting-btn');
+                        if (modeButton) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            
+                            var body = document.body;
+                            var currentTheme = body.hasAttribute("data-bs-theme") ? body.getAttribute("data-bs-theme") : 'light';
+                            var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                            
+                            console.log('[LayoutFix] Mode button clicked (fallback), changing from', currentTheme, 'to', newTheme);
+                            
+                            // Apply theme
+                            document.body.setAttribute('data-bs-theme', newTheme);
+                            document.body.setAttribute('data-topbar', newTheme);
+                            document.body.setAttribute('data-sidebar', newTheme);
+                            
+                            // Update the radio button in theme customizer
+                            $("input[name='layout-mode'][value='" + newTheme + "']").prop('checked', true);
+                            
+                            // Save to localStorage
+                            localStorage.setItem('minia-theme-mode', newTheme);
+                            
+                            // Force reflow to apply CSS changes
+                            setTimeout(function() {
+                                document.body.offsetHeight;
+                            }, 10);
+                            
+                            // Save to database via AJAX
+                            var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+                            $.ajax({
+                                url: '/accounting/api/save-layout-preference/',
+                                type: 'POST',
+                                data: {
+                                    layout: $("input[name='layout']:checked").val() || 'vertical',
+                                    csrfmiddlewaretoken: csrftoken
+                                },
+                                success: function(response) {
+                                    console.log('[LayoutFix] Theme preference saved to server');
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('[LayoutFix] Error saving theme preference:', error);
+                                }
+                            });
+                            
+                            console.log('[LayoutFix] Applied', newTheme, 'theme via button (fallback)');
+                            
+                            return false;
+                        }
+                    }, true); // Use capture phase
                     
                     // ===== TOPNAV DROPDOWN CLICK HANDLER =====
                     $(document).off('click', 'body[data-layout="horizontal"] .nav-item.dropdown > .nav-link').on('click', 'body[data-layout="horizontal"] .nav-item.dropdown > .nav-link', function(e) {

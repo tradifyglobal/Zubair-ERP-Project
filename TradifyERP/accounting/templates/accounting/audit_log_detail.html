@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Audit Log Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .audit-field-name {
+        font-weight: 600;
+        color: #333;
+        min-width: 150px;
+    }
+    
+    .audit-old-value {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        word-break: break-all;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .audit-new-value {
+        background-color: #d4edda;
+        border-left: 4px solid #28a745;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        word-break: break-all;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .audit-no-change {
+        background-color: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        padding: 10px;
+        border-radius: 4px;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .change-section {
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    
+    .change-section-header {
+        background-color: #f8f9fa;
+        padding: 12px 15px;
+        border-bottom: 1px solid #dee2e6;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .change-section-body {
+        padding: 15px;
+    }
+    
+    .json-display {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Audit Log Detail</h4>
+                        <div class="page-title-right">
+                            <a href="{% url 'accounting:audit_log_list' %}" class="btn btn-secondary">
+                                <i class="mdi mdi-arrow-left"></i> Back to Logs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Card -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Log Entry Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label audit-field-name">Timestamp</label>
+                                        <p class="form-control-plaintext">
+                                            {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label audit-field-name">Action</label>
+                                        <p class="form-control-plaintext">
+                                            <span class="badge bg-info text-white">{{ log.get_action_display }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label audit-field-name">Model</label>
+                                        <p class="form-control-plaintext text-monospace">{{ log.model_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label audit-field-name">Object ID</label>
+                                        <p class="form-control-plaintext text-monospace">{{ log.object_id }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label audit-field-name">User</label>
+                                        <p class="form-control-plaintext">
+                                            {% if log.user %}
+                                                <span class="badge bg-secondary">{{ log.user }}</span>
+                                            {% else %}
+                                                <span class="text-muted">System</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label audit-field-name">Entity</label>
+                                        <p class="form-control-plaintext">
+                                            <span class="badge bg-primary">{{ log.entity.name }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label audit-field-name">Description</label>
+                                        <p class="form-control-plaintext">{{ log.description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Changes Section -->
+            {% if log.old_values or log.new_values %}
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Changes Made</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if log.old_values and log.new_values %}
+                                    <!-- Side-by-side comparison -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="mb-3">
+                                                <i class="mdi mdi-minus-circle text-warning"></i> Previous Values
+                                            </h6>
+                                            <div class="json-display">{{ log.old_values|safe }}</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="mb-3">
+                                                <i class="mdi mdi-plus-circle text-success"></i> New Values
+                                            </h6>
+                                            <div class="json-display">{{ log.new_values|safe }}</div>
+                                        </div>
+                                    </div>
+                                {% elif log.new_values %}
+                                    <!-- Only new values (e.g., CREATE action) -->
+                                    <h6 class="mb-3">
+                                        <i class="mdi mdi-plus-circle text-success"></i> Created Values
+                                    </h6>
+                                    <div class="json-display">{{ log.new_values|safe }}</div>
+                                {% elif log.old_values %}
+                                    <!-- Only old values (e.g., DELETE action) -->
+                                    <h6 class="mb-3">
+                                        <i class="mdi mdi-minus-circle text-danger"></i> Deleted Values
+                                    </h6>
+                                    <div class="json-display">{{ log.old_values|safe }}</div>
+                                {% else %}
+                                    <p class="text-muted">No detailed changes recorded.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Related Logs Section -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Recent Changes to {{ log.model_name }} ID: {{ log.object_id }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 15%;">Timestamp</th>
+                                            <th style="width: 12%;">Action</th>
+                                            <th style="width: 15%;">User</th>
+                                            <th style="width: 35%;">Description</th>
+                                            <th style="width: 15%;">Options</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if related_logs %}
+                                            {% for related_log in related_logs %}
+                                                <tr {% if related_log.id == log.id %}class="table-active"{% endif %}>
+                                                    <td>{{ related_log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                                    <td>
+                                                        <span class="badge bg-info text-white">
+                                                            {{ related_log.get_action_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {% if related_log.user %}
+                                                            <span class="badge bg-secondary">{{ related_log.user }}</span>
+                                                        {% else %}
+                                                            <span class="text-muted">System</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-muted text-truncate d-inline-block" style="max-width: 250px;" title="{{ related_log.description }}">
+                                                            {{ related_log.description }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        {% if related_log.id == log.id %}
+                                                            <span class="badge bg-success">Current</span>
+                                                        {% else %}
+                                                            <a href="{% url 'accounting:audit_log_detail' related_log.pk %}" class="btn btn-sm btn-outline-primary">
+                                                                View
+                                                            </a>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4">
+                                                    <i class="mdi mdi-inbox-outline" style="font-size: 2rem; color: #ccc;"></i>
+                                                    <p class="text-muted mt-2">No other changes found for this object.</p>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- container-fluid -->
+    </div> <!-- page-content -->
+</div> <!-- main-content -->
+{% endblock %}
