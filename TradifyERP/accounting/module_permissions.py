@@ -26,6 +26,7 @@ class ModulePermission(models.Model):
         ('crm', 'Customer Relationship Management'),
         ('projects', 'Project Management'),
         ('cash_management', 'Cash Management'),
+        ('expenses', 'Expense Management'),
         ('shareholder', 'Shareholder Management'),
         ('maintenance', 'Site Maintenance'),
         ('reviewer', 'Workflow Reviewer'),
