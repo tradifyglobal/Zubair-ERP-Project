@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Expense Category{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-0">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Expense Category</h4>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" novalidate>
+                                {% csrf_token %}
+
+                                <!-- Display Form Errors -->
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <h6 class="mb-2">Please correct the following errors:</h6>
+                                        {% for error in form.non_field_errors %}
+                                            <p class="mb-0">{{ error }}</p>
+                                        {% endfor %}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Category Name -->
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                                        Category Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                                           id="{{ form.name.id_for_label }}" name="name" 
+                                           value="{{ form.name.value|default:'' }}" placeholder="e.g., Office Supplies">
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.name.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- GL Account -->
+                                <div class="mb-3">
+                                    <label for="{{ form.gl_account.id_for_label }}" class="form-label">
+                                        GL Account <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select {% if form.gl_account.errors %}is-invalid{% endif %}"
+                                            id="{{ form.gl_account.id_for_label }}" name="gl_account">
+                                        <option value="">-- Select GL Account --</option>
+                                        {% for pk, label in form.gl_account.field.choices %}
+                                            <option value="{{ pk }}" {% if form.gl_account.value == pk|stringformat:"s" %}selected{% endif %}>
+                                                {{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted d-block mt-2">
+                                        Select the general ledger account for recording expenses in this category
+                                    </small>
+                                    {% if form.gl_account.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.gl_account.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Daily Limit -->
+                                <div class="mb-3">
+                                    <label for="{{ form.daily_limit.id_for_label }}" class="form-label">
+                                        Daily Limit (Optional)
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" class="form-control {% if form.daily_limit.errors %}is-invalid{% endif %}"
+                                               id="{{ form.daily_limit.id_for_label }}" name="daily_limit"
+                                               value="{{ form.daily_limit.value|default:'' }}" placeholder="0.00">
+                                    </div>
+                                    <small class="form-text text-muted d-block mt-2">
+                                        Leave blank for unlimited daily expenses
+                                    </small>
+                                    {% if form.daily_limit.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.daily_limit.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Monthly Limit -->
+                                <div class="mb-3">
+                                    <label for="{{ form.monthly_limit.id_for_label }}" class="form-label">
+                                        Monthly Limit (Optional)
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" class="form-control {% if form.monthly_limit.errors %}is-invalid{% endif %}"
+                                               id="{{ form.monthly_limit.id_for_label }}" name="monthly_limit"
+                                               value="{{ form.monthly_limit.value|default:'' }}" placeholder="0.00">
+                                    </div>
+                                    <small class="form-text text-muted d-block mt-2">
+                                        Leave blank for unlimited monthly expenses
+                                    </small>
+                                    {% if form.monthly_limit.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.monthly_limit.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Active Status -->
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="{{ form.is_active.id_for_label }}" name="is_active"
+                                               {% if form.is_active.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                            Active Category
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted d-block mt-2">
+                                        Inactive categories cannot be used for new expenses
+                                    </small>
+                                </div>
+
+                                <!-- Form Actions -->
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-feather="save"></i> Save Category
+                                    </button>
+                                    <a href="{% url 'expenses:category_list' %}" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Panel -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i data-feather="info"></i> About Categories
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">
+                                <strong>What are categories?</strong><br>
+                                Categories help organize and track different types of business expenses. Each category is mapped to a GL account for proper accounting.
+                            </p>
+                            
+                            <p class="mb-3">
+                                <strong>Limits</strong><br>
+                                Set optional daily and monthly limits to control spending in each category. Leave blank for unlimited expenses.
+                            </p>
+                            
+                            <p class="mb-0">
+                                <strong>GL Account Mapping</strong><br>
+                                The selected GL account determines where expenses in this category are recorded in the general ledger.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

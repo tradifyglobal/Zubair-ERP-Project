@@ -10,6 +10,7 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator
 from accounting.models import Entity, Account, LedgerEntry, AuditLog
 from hr.models import Employee
+import os
 
 
 class ExpenseCategory(models.Model):
@@ -377,6 +378,80 @@ class EmployeeExpense(models.Model):
         except Exception as e:
             print(f"Error posting expense to GL: {e}")
             return False
+
+
+class ExpenseAttachment(models.Model):
+    """Attachments (receipts, bills, invoices) for expense reports or items"""
+    
+    ATTACHMENT_TYPES = [
+        ('RECEIPT', 'Receipt'),
+        ('INVOICE', 'Invoice'),
+        ('BILL', 'Bill'),
+        ('PROOF_OF_PAYMENT', 'Proof of Payment'),
+        ('OTHER', 'Other Supporting Document'),
+    ]
+    
+    # Attachments can be linked to either report or individual item
+    report = models.ForeignKey(
+        EmployeeExpenseReport,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        null=True,
+        blank=True
+    )
+    expense_item = models.ForeignKey(
+        EmployeeExpense,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        null=True,
+        blank=True
+    )
+    
+    # Attachment Details
+    attachment_type = models.CharField(
+        max_length=20,
+        choices=ATTACHMENT_TYPES,
+        default='RECEIPT'
+    )
+    file = models.FileField(
+        upload_to='expense_attachments/%Y/%m/',
+        help_text="Upload receipt, invoice, or supporting document"
+    )
+    file_name = models.CharField(max_length=255)
+    file_size = models.BigIntegerField(default=0)
+    file_type = models.CharField(max_length=100, blank=True)
+    
+    description = models.TextField(blank=True, help_text="Description of the attachment")
+    
+    # Metadata
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='uploaded_expense_attachments'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.get_attachment_type_display()} - {self.file_name}"
+    
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.file_name = self.file.name
+            self.file_size = self.file.size
+            self.file_type = os.path.splitext(self.file.name)[1].lstrip('.')
+        super().save(*args, **kwargs)
+    
+    def get_file_url(self):
+        """Get the URL for the file"""
+        if self.file:
+            return self.file.url
+        return None
+
 
 
 class ExpenseBudget(models.Model):
