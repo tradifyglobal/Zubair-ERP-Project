@@ -48,6 +48,15 @@
                                                 <textarea name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}" rows="3">{{ field.value|default:'' }}</textarea>
                                             {% elif field.field.widget.input_type == 'file' %}
                                                 <input type="file" name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}">
+                                            {% elif field.field.widget.input_type == 'select' %}
+                                                <select name="{{ field.name }}" class="form-select {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}">
+                                                    <option value="">-- Select {{ field.label }} --</option>
+                                                    {% for value, label in field.field.choices %}
+                                                        {% if value %}
+                                                            <option value="{{ value }}" {% if field.value == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </select>
                                             {% else %}
                                                 <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}" value="{{ field.value|default:'' }}">
                                             {% endif %}
