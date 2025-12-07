@@ -6,6 +6,7 @@ Complete CRUD operations with RBAC and multi-entity support.
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from accounting.permission_utils import module_permission_required
+from accounting.mixins import SessionEntityMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -17,7 +18,6 @@ from django.utils import timezone
 from django.middleware.csrf import get_token
 from decimal import Decimal
 
-from accounting.role_models import UserRole
 from accounting.models import Entity
 from .models import (
     ProductCategory, Product, RawMaterial,
@@ -39,36 +39,17 @@ from .forms import (
 )
 
 
-# ==================== Utility Functions ====================
-
-def get_user_entities(user):
-    """Get entities accessible to user based on UserRole."""
-    return UserRole.objects.filter(
-        user=user,
-        is_active=True
-    ).values_list('entity_id', flat=True)
-
-
-def get_filtered_queryset(model, user, base_queryset=None):
-    """Filter queryset by user's accessible entities."""
-    if base_queryset is None:
-        base_queryset = model.objects.all()
-    
-    user_entities = get_user_entities(user)
-    return base_queryset.filter(entity_id__in=user_entities)
-
-
 # ==================== Product Category Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class ProductCategoryListView(LoginRequiredMixin, ListView):
+class ProductCategoryListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = ProductCategory
     template_name = 'manufacturing/productcategory_list.html'
     context_object_name = 'categories'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(ProductCategory, self.request.user)
+        qs = super().get_queryset()
         
         # Search filter
         search = self.request.GET.get('search', '')
@@ -86,7 +67,7 @@ class ProductCategoryListView(LoginRequiredMixin, ListView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class ProductCategoryDeleteView(LoginRequiredMixin, DeleteView):
+class ProductCategoryDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = ProductCategory
     template_name = 'manufacturing/productcategory_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:productcategory_list')
@@ -96,7 +77,7 @@ class ProductCategoryDeleteView(LoginRequiredMixin, DeleteView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class ProductCategoryCreateView(LoginRequiredMixin, CreateView):
+class ProductCategoryCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = ProductCategory
     form_class = ProductCategoryForm
     template_name = 'manufacturing/productcategory_form.html'
@@ -104,22 +85,19 @@ class ProductCategoryCreateView(LoginRequiredMixin, CreateView):
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        user_entities = get_user_entities(self.request.user)
+        entity_id = self.request.session.get('selected_entity_id')
         
-        # Auto-set entity for single-entity users
-        if user_entities.count() == 1:
-            kwargs['initial'] = {'entity': user_entities.first()}
+        # Auto-set entity from session
+        if entity_id:
+            kwargs['initial'] = {'entity_id': entity_id}
         
         return kwargs
     
     def form_valid(self, form):
-        # Set entity based on user's accessible entities
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:productcategory_list')
+        entity_id = self.request.session.get("selected_entity_id")
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.save()
         
         return redirect(self.success_url)
@@ -133,14 +111,14 @@ class ProductCategoryCreateView(LoginRequiredMixin, CreateView):
 # ==================== Product Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class ProductListView(LoginRequiredMixin, ListView):
+class ProductListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = Product
     template_name = 'manufacturing/product_list.html'
     context_object_name = 'products'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(Product, self.request.user)
+        qs = super().get_queryset()
         
         # Search and filter
         search = self.request.GET.get('search', '')
@@ -164,19 +142,18 @@ class ProductListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class ProductCreateView(LoginRequiredMixin, CreateView):
+class ProductCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = Product
     form_class = ProductForm
     template_name = 'manufacturing/product_form.html'
     success_url = reverse_lazy('manufacturing:product_list')
     
     def form_valid(self, form):
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:product_list')
+        entity_id = self.request.session.get("selected_entity_id")
+        # Entity set by SessionEntityMixin
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.created_by = self.request.user
         instance.save()
         
@@ -189,7 +166,7 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class ProductUpdateView(LoginRequiredMixin, UpdateView):
+class ProductUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
     template_name = 'manufacturing/product_form.html'
@@ -206,7 +183,7 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class ProductDeleteView(LoginRequiredMixin, DeleteView):
+class ProductDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = Product
     template_name = 'manufacturing/product_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:product_list')
@@ -218,14 +195,14 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Raw Material Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class RawMaterialListView(LoginRequiredMixin, ListView):
+class RawMaterialListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = RawMaterial
     template_name = 'manufacturing/rawmaterial_list.html'
     context_object_name = 'materials'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(RawMaterial, self.request.user)
+        qs = super().get_queryset()
         
         search = self.request.GET.get('search', '')
         if search:
@@ -249,19 +226,18 @@ class RawMaterialListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class RawMaterialCreateView(LoginRequiredMixin, CreateView):
+class RawMaterialCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = RawMaterial
     form_class = RawMaterialForm
     template_name = 'manufacturing/rawmaterial_form.html'
     success_url = reverse_lazy('manufacturing:rawmaterial_list')
     
     def form_valid(self, form):
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:rawmaterial_list')
+        entity_id = self.request.session.get("selected_entity_id")
+        # Entity set by SessionEntityMixin
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.save()
         
         return redirect(self.success_url)
@@ -274,7 +250,7 @@ class RawMaterialCreateView(LoginRequiredMixin, CreateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class RawMaterialDeleteView(LoginRequiredMixin, DeleteView):
+class RawMaterialDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = RawMaterial
     template_name = 'manufacturing/rawmaterial_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:rawmaterial_list')
@@ -286,14 +262,14 @@ class RawMaterialDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Bill of Materials Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class BOMListView(LoginRequiredMixin, ListView):
+class BOMListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = BillOfMaterials
     template_name = 'manufacturing/bom_list.html'
     context_object_name = 'boms'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(BillOfMaterials, self.request.user)
+        qs = super().get_queryset()
         
         search = self.request.GET.get('search', '')
         if search:
@@ -312,19 +288,18 @@ class BOMListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class BOMCreateView(LoginRequiredMixin, CreateView):
+class BOMCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = BillOfMaterials
     form_class = BillOfMaterialsForm
     template_name = 'manufacturing/bom_form.html'
     success_url = reverse_lazy('manufacturing:bom_list')
     
     def form_valid(self, form):
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:bom_list')
+        entity_id = self.request.session.get("selected_entity_id")
+        # Entity set by SessionEntityMixin
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.created_by = self.request.user
         instance.save()
         
@@ -337,7 +312,7 @@ class BOMCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class BOMUpdateView(LoginRequiredMixin, UpdateView):
+class BOMUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = BillOfMaterials
     form_class = BillOfMaterialsForm
     template_name = 'manufacturing/bom_form.html'
@@ -354,7 +329,7 @@ class BOMUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class BOMDeleteView(LoginRequiredMixin, DeleteView):
+class BOMDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = BillOfMaterials
     template_name = 'manufacturing/bom_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:bom_list')
@@ -366,14 +341,14 @@ class BOMDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Routing Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class RoutingListView(LoginRequiredMixin, ListView):
+class RoutingListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = Routing
     template_name = 'manufacturing/routing_list.html'
     context_object_name = 'routings'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(Routing, self.request.user)
+        qs = super().get_queryset()
         
         search = self.request.GET.get('search', '')
         if search:
@@ -389,19 +364,18 @@ class RoutingListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class RoutingCreateView(LoginRequiredMixin, CreateView):
+class RoutingCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = Routing
     form_class = RoutingForm
     template_name = 'manufacturing/routing_form.html'
     success_url = reverse_lazy('manufacturing:routing_list')
     
     def form_valid(self, form):
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:routing_list')
+        entity_id = self.request.session.get("selected_entity_id")
+        # Entity set by SessionEntityMixin
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.created_by = self.request.user
         instance.save()
         
@@ -414,7 +388,7 @@ class RoutingCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class RoutingUpdateView(LoginRequiredMixin, UpdateView):
+class RoutingUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = Routing
     form_class = RoutingForm
     template_name = 'manufacturing/routing_form.html'
@@ -431,7 +405,7 @@ class RoutingUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class RoutingDeleteView(LoginRequiredMixin, DeleteView):
+class RoutingDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = Routing
     template_name = 'manufacturing/routing_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:routing_list')
@@ -443,14 +417,14 @@ class RoutingDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Work Center Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class WorkCenterListView(LoginRequiredMixin, ListView):
+class WorkCenterListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = WorkCenter
     template_name = 'manufacturing/workcenter_list.html'
     context_object_name = 'work_centers'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(WorkCenter, self.request.user)
+        qs = super().get_queryset()
         
         search = self.request.GET.get('search', '')
         if search:
@@ -469,19 +443,18 @@ class WorkCenterListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class WorkCenterCreateView(LoginRequiredMixin, CreateView):
+class WorkCenterCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = WorkCenter
     form_class = WorkCenterForm
     template_name = 'manufacturing/workcenter_form.html'
     success_url = reverse_lazy('manufacturing:workcenter_list')
     
     def form_valid(self, form):
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:workcenter_list')
+        entity_id = self.request.session.get("selected_entity_id")
+        # Entity set by SessionEntityMixin
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.save()
         
         return redirect(self.success_url)
@@ -493,8 +466,24 @@ class WorkCenterCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+class WorkCenterUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
+    model = WorkCenter
+    form_class = WorkCenterForm
+    template_name = 'manufacturing/workcenter_form.html'
+    success_url = reverse_lazy('manufacturing:workcenter_list')
+    
+    def get_queryset(self):
+        return super().get_queryset()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['csrf_token'] = get_token(self.request)
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class WorkCenterDeleteView(LoginRequiredMixin, DeleteView):
+class WorkCenterDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = WorkCenter
     template_name = 'manufacturing/workcenter_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:workcenter_list')
@@ -506,14 +495,14 @@ class WorkCenterDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Production Order Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class ProductionOrderListView(LoginRequiredMixin, ListView):
+class ProductionOrderListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = ProductionOrder
     template_name = 'manufacturing/productionorder_list.html'
     context_object_name = 'production_orders'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(ProductionOrder, self.request.user)
+        qs = super().get_queryset()
         
         search = self.request.GET.get('search', '')
         if search:
@@ -537,19 +526,18 @@ class ProductionOrderListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class ProductionOrderCreateView(LoginRequiredMixin, CreateView):
+class ProductionOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = ProductionOrder
     form_class = ProductionOrderForm
     template_name = 'manufacturing/productionorder_form.html'
     success_url = reverse_lazy('manufacturing:productionorder_list')
     
     def form_valid(self, form):
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:productionorder_list')
+        entity_id = self.request.session.get("selected_entity_id")
+        # Entity set by SessionEntityMixin
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.created_by = self.request.user
         
         # Auto-calculate costs from BOM and Routing
@@ -577,7 +565,7 @@ class ProductionOrderCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class ProductionOrderUpdateView(LoginRequiredMixin, UpdateView):
+class ProductionOrderUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = ProductionOrder
     form_class = ProductionOrderForm
     template_name = 'manufacturing/productionorder_form.html'
@@ -594,7 +582,7 @@ class ProductionOrderUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class ProductionOrderDeleteView(LoginRequiredMixin, DeleteView):
+class ProductionOrderDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = ProductionOrder
     template_name = 'manufacturing/productionorder_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:productionorder_list')
@@ -606,14 +594,14 @@ class ProductionOrderDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Quality Inspection Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class QualityInspectionListView(LoginRequiredMixin, ListView):
+class QualityInspectionListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = QualityInspection
     template_name = 'manufacturing/qualityinspection_list.html'
     context_object_name = 'inspections'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(QualityInspection, self.request.user)
+        qs = super().get_queryset()
         
         status = self.request.GET.get('status')
         if status:
@@ -629,19 +617,18 @@ class QualityInspectionListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class QualityInspectionCreateView(LoginRequiredMixin, CreateView):
+class QualityInspectionCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = QualityInspection
     form_class = QualityInspectionForm
     template_name = 'manufacturing/qualityinspection_form.html'
     success_url = reverse_lazy('manufacturing:qualityinspection_list')
     
     def form_valid(self, form):
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:qualityinspection_list')
+        entity_id = self.request.session.get("selected_entity_id")
+        # Entity set by SessionEntityMixin
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.inspected_by = self.request.user
         instance.save()
         
@@ -654,7 +641,7 @@ class QualityInspectionCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class QualityInspectionUpdateView(LoginRequiredMixin, UpdateView):
+class QualityInspectionUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = QualityInspection
     form_class = QualityInspectionForm
     template_name = 'manufacturing/qualityinspection_form.html'
@@ -671,7 +658,7 @@ class QualityInspectionUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class QualityInspectionDeleteView(LoginRequiredMixin, DeleteView):
+class QualityInspectionDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = QualityInspection
     template_name = 'manufacturing/qualityinspection_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:qualityinspection_list')
@@ -683,14 +670,14 @@ class QualityInspectionDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Equipment Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class EquipmentListView(LoginRequiredMixin, ListView):
+class EquipmentListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = Equipment
     template_name = 'manufacturing/equipment_list.html'
     context_object_name = 'equipment'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(Equipment, self.request.user)
+        qs = super().get_queryset()
         
         search = self.request.GET.get('search', '')
         if search:
@@ -714,19 +701,18 @@ class EquipmentListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class EquipmentCreateView(LoginRequiredMixin, CreateView):
+class EquipmentCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = Equipment
     form_class = EquipmentForm
     template_name = 'manufacturing/equipment_form.html'
     success_url = reverse_lazy('manufacturing:equipment_list')
     
     def form_valid(self, form):
-        user_entities = list(get_user_entities(self.request.user))
-        if not user_entities:
-            return redirect('manufacturing:equipment_list')
+        entity_id = self.request.session.get("selected_entity_id")
+        # Entity set by SessionEntityMixin
         
         instance = form.save(commit=False)
-        instance.entity_id = user_entities[0]
+        instance.entity_id = entity_id
         instance.save()
         
         return redirect(self.success_url)
@@ -738,59 +724,77 @@ class EquipmentCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+class EquipmentUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
+    model = Equipment
+    form_class = EquipmentForm
+    template_name = 'manufacturing/equipment_form.html'
+    success_url = reverse_lazy('manufacturing:equipment_list')
+    
+    def get_queryset(self):
+        return super().get_queryset()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['csrf_token'] = get_token(self.request)
+        return context
+
+
+@method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class EquipmentDeleteView(LoginRequiredMixin, DeleteView):
+class EquipmentDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = Equipment
     template_name = 'manufacturing/equipment_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:equipment_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(Equipment, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Dashboard View ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class ManufacturingDashboardView(LoginRequiredMixin, TemplateView):
+class ManufacturingDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """Manufacturing dashboard with KPIs and metrics."""
     template_name = 'manufacturing/dashboard.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_entities = get_user_entities(self.request.user)
         
-        # Production metrics
-        total_orders = ProductionOrder.objects.filter(entity_id__in=user_entities).count()
+        # Get the current entity from session (set by SessionEntityMixin)
+        entity_id = self.request.session.get('selected_entity_id')
+        
+        # Production metrics - filtered by entity only
+        total_orders = ProductionOrder.objects.filter(entity_id=entity_id).count()
         open_orders = ProductionOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status__in=['RELEASED', 'IN_PROGRESS']
         ).count()
         completed_orders = ProductionOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status='COMPLETE'
         ).count()
         
         # Quality metrics
         failed_inspections = QualityInspection.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status='FAIL'
         ).count()
         
         # Inventory metrics
         low_stock_materials = RawMaterial.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             current_stock__lte=F('reorder_point')
         ).count()
         
         # Cost metrics - For pending orders use estimated, for completed use actual OR estimated if actual is 0
         pending_po_cost = ProductionOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status__in=['DRAFT', 'PLANNED', 'RELEASED', 'IN_PROGRESS']
         ).aggregate(total=Sum('estimated_material_cost') + Sum('estimated_labor_cost'))['total'] or Decimal('0.00')
         
         # For completed orders: use actual costs if > 0, otherwise use estimated
         completed_orders_qs = ProductionOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status='COMPLETE'
         )
         
@@ -805,7 +809,7 @@ class ManufacturingDashboardView(LoginRequiredMixin, TemplateView):
         
         total_po_cost = pending_po_cost + completed_po_cost
         
-        context = {
+        context.update({
             'total_orders': total_orders,
             'open_orders': open_orders,
             'completed_orders': completed_orders,
@@ -815,7 +819,7 @@ class ManufacturingDashboardView(LoginRequiredMixin, TemplateView):
             'pending_po_cost': pending_po_cost,
             'completed_po_cost': completed_po_cost,
             'csrf_token': get_token(self.request),
-        }
+        })
         
         return context
 
@@ -823,14 +827,14 @@ class ManufacturingDashboardView(LoginRequiredMixin, TemplateView):
 # ==================== Distributor Management Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorListView(LoginRequiredMixin, ListView):
+class DistributorListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = Distributor
     template_name = 'manufacturing/distributor_list.html'
     context_object_name = 'distributors'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(Distributor, self.request.user)
+        qs = super().get_queryset()
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(name__icontains=search) | Q(code__icontains=search))
@@ -843,7 +847,7 @@ class DistributorListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorCreateView(LoginRequiredMixin, CreateView):
+class DistributorCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = Distributor
     form_class = DistributorForm
     template_name = 'manufacturing/distributor_form.html'
@@ -851,7 +855,7 @@ class DistributorCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorUpdateView(LoginRequiredMixin, UpdateView):
+class DistributorUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = Distributor
     form_class = DistributorForm
     template_name = 'manufacturing/distributor_form.html'
@@ -860,7 +864,7 @@ class DistributorUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class DistributorDeleteView(LoginRequiredMixin, DeleteView):
+class DistributorDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = Distributor
     template_name = 'manufacturing/distributor_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:distributor_list')
@@ -869,14 +873,14 @@ class DistributorDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Distributor Order Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorOrderListView(LoginRequiredMixin, ListView):
+class DistributorOrderListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = DistributorOrder
     template_name = 'manufacturing/distributororder_list.html'
     context_object_name = 'orders'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(DistributorOrder, self.request.user)
+        qs = super().get_queryset()
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(distributor__name__icontains=search) | Q(order_number__icontains=search))
@@ -889,7 +893,7 @@ class DistributorOrderListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorOrderCreateView(LoginRequiredMixin, CreateView):
+class DistributorOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = DistributorOrder
     form_class = DistributorOrderForm
     template_name = 'manufacturing/distributororder_form.html'
@@ -897,7 +901,7 @@ class DistributorOrderCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorOrderUpdateView(LoginRequiredMixin, UpdateView):
+class DistributorOrderUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = DistributorOrder
     form_class = DistributorOrderForm
     template_name = 'manufacturing/distributororder_form.html'
@@ -906,7 +910,7 @@ class DistributorOrderUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class DistributorOrderDeleteView(LoginRequiredMixin, DeleteView):
+class DistributorOrderDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = DistributorOrder
     template_name = 'manufacturing/distributororder_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:distributororder_list')
@@ -915,7 +919,7 @@ class DistributorOrderDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Order Shipment Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class OrderShipmentListView(LoginRequiredMixin, ListView):
+class OrderShipmentListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = OrderShipment
     template_name = 'manufacturing/ordershipment_list.html'
     context_object_name = 'shipments'
@@ -923,7 +927,7 @@ class OrderShipmentListView(LoginRequiredMixin, ListView):
     
     def get_queryset(self):
         # Filter through order relationship to entity
-        user_entities = get_user_entities(self.request.user)
+        entity_id = self.request.session.get("selected_entity_id")
         qs = OrderShipment.objects.filter(order__distributor__entity_id__in=user_entities)
         search = self.request.GET.get('search', '')
         if search:
@@ -937,7 +941,7 @@ class OrderShipmentListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class OrderShipmentCreateView(LoginRequiredMixin, CreateView):
+class OrderShipmentCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = OrderShipment
     form_class = OrderShipmentForm
     template_name = 'manufacturing/ordershipment_form.html'
@@ -945,7 +949,7 @@ class OrderShipmentCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class OrderShipmentUpdateView(LoginRequiredMixin, UpdateView):
+class OrderShipmentUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = OrderShipment
     form_class = OrderShipmentForm
     template_name = 'manufacturing/ordershipment_form.html'
@@ -954,7 +958,7 @@ class OrderShipmentUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class OrderShipmentDeleteView(LoginRequiredMixin, DeleteView):
+class OrderShipmentDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = OrderShipment
     template_name = 'manufacturing/ordershipment_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:ordershipment_list')
@@ -963,14 +967,14 @@ class OrderShipmentDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== After-Sales Service Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class AfterSalesServiceListView(LoginRequiredMixin, ListView):
+class AfterSalesServiceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = AfterSalesService
     template_name = 'manufacturing/aftersalesservice_list.html'
     context_object_name = 'services'
     paginate_by = 25
     
     def get_queryset(self):
-        qs = get_filtered_queryset(AfterSalesService, self.request.user)
+        qs = super().get_queryset()
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(service_ticket_number__icontains=search) | Q(subject__icontains=search))
@@ -988,7 +992,7 @@ class AfterSalesServiceListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class AfterSalesServiceCreateView(LoginRequiredMixin, CreateView):
+class AfterSalesServiceCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = AfterSalesService
     form_class = AfterSalesServiceForm
     template_name = 'manufacturing/aftersalesservice_form.html'
@@ -996,7 +1000,7 @@ class AfterSalesServiceCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class AfterSalesServiceUpdateView(LoginRequiredMixin, UpdateView):
+class AfterSalesServiceUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = AfterSalesService
     form_class = AfterSalesServiceForm
     template_name = 'manufacturing/aftersalesservice_form.html'
@@ -1005,7 +1009,7 @@ class AfterSalesServiceUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class AfterSalesServiceDeleteView(LoginRequiredMixin, DeleteView):
+class AfterSalesServiceDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = AfterSalesService
     template_name = 'manufacturing/aftersalesservice_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:aftersalesservice_list')
@@ -1014,7 +1018,7 @@ class AfterSalesServiceDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Warranty Registration Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class WarrantyRegistrationListView(LoginRequiredMixin, ListView):
+class WarrantyRegistrationListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = WarrantyRegistration
     template_name = 'manufacturing/warrantyregistration_list.html'
     context_object_name = 'warranties'
@@ -1022,7 +1026,7 @@ class WarrantyRegistrationListView(LoginRequiredMixin, ListView):
     
     def get_queryset(self):
         # Filter through distributor relationship to entity
-        user_entities = get_user_entities(self.request.user)
+        entity_id = self.request.session.get("selected_entity_id")
         qs = WarrantyRegistration.objects.filter(distributor__entity_id__in=user_entities)
         search = self.request.GET.get('search', '')
         if search:
@@ -1041,7 +1045,7 @@ class WarrantyRegistrationListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class WarrantyRegistrationCreateView(LoginRequiredMixin, CreateView):
+class WarrantyRegistrationCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = WarrantyRegistration
     form_class = WarrantyRegistrationForm
     template_name = 'manufacturing/warrantyregistration_form.html'
@@ -1049,7 +1053,7 @@ class WarrantyRegistrationCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class WarrantyRegistrationUpdateView(LoginRequiredMixin, UpdateView):
+class WarrantyRegistrationUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = WarrantyRegistration
     form_class = WarrantyRegistrationForm
     template_name = 'manufacturing/warrantyregistration_form.html'
@@ -1058,7 +1062,7 @@ class WarrantyRegistrationUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class WarrantyRegistrationDeleteView(LoginRequiredMixin, DeleteView):
+class WarrantyRegistrationDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = WarrantyRegistration
     template_name = 'manufacturing/warrantyregistration_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:warrantyregistration_list')
@@ -1067,7 +1071,7 @@ class WarrantyRegistrationDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Distributor Performance Views ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorPerformanceListView(LoginRequiredMixin, ListView):
+class DistributorPerformanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     model = DistributorPerformance
     template_name = 'manufacturing/distributorperformance_list.html'
     context_object_name = 'performances'
@@ -1075,7 +1079,7 @@ class DistributorPerformanceListView(LoginRequiredMixin, ListView):
     
     def get_queryset(self):
         # Filter through distributor relationship to entity
-        user_entities = get_user_entities(self.request.user)
+        entity_id = self.request.session.get("selected_entity_id")
         qs = DistributorPerformance.objects.filter(distributor__entity_id__in=user_entities)
         search = self.request.GET.get('search', '')
         if search:
@@ -1094,7 +1098,7 @@ class DistributorPerformanceListView(LoginRequiredMixin, ListView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorPerformanceCreateView(LoginRequiredMixin, CreateView):
+class DistributorPerformanceCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     model = DistributorPerformance
     form_class = DistributorPerformanceForm
     template_name = 'manufacturing/distributorperformance_form.html'
@@ -1102,7 +1106,7 @@ class DistributorPerformanceCreateView(LoginRequiredMixin, CreateView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class DistributorPerformanceUpdateView(LoginRequiredMixin, UpdateView):
+class DistributorPerformanceUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     model = DistributorPerformance
     form_class = DistributorPerformanceForm
     template_name = 'manufacturing/distributorperformance_form.html'
@@ -1111,7 +1115,7 @@ class DistributorPerformanceUpdateView(LoginRequiredMixin, UpdateView):
 
 @method_decorator(csrf_protect, name='dispatch')
 @method_decorator(module_permission_required("manufacturing", "delete"), name='dispatch')
-class DistributorPerformanceDeleteView(LoginRequiredMixin, DeleteView):
+class DistributorPerformanceDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     model = DistributorPerformance
     template_name = 'manufacturing/distributorperformance_confirm_delete.html'
     success_url = reverse_lazy('manufacturing:distributorperformance_list')

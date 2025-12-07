@@ -37,6 +37,7 @@ urlpatterns = [
     # Work Center URLs
     path('work-centers/', views.WorkCenterListView.as_view(), name='workcenter_list'),
     path('work-centers/new/', views.WorkCenterCreateView.as_view(), name='workcenter_create'),
+    path('work-centers/<int:pk>/edit/', views.WorkCenterUpdateView.as_view(), name='workcenter_update'),
     path('work-centers/<int:pk>/delete/', views.WorkCenterDeleteView.as_view(), name='workcenter_delete'),
     
     # Routing URLs
@@ -60,6 +61,7 @@ urlpatterns = [
     # Equipment URLs
     path('equipment/', views.EquipmentListView.as_view(), name='equipment_list'),
     path('equipment/new/', views.EquipmentCreateView.as_view(), name='equipment_create'),
+    path('equipment/<int:pk>/edit/', views.EquipmentUpdateView.as_view(), name='equipment_update'),
     path('equipment/<int:pk>/delete/', views.EquipmentDeleteView.as_view(), name='equipment_delete'),
     
     # Distributor URLs

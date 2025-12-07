@@ -62,9 +62,6 @@
                                             <td>{{ item.coverage_end_date|date:"d M Y" }}</td>
                                             <td>
                                                 <div class="btn-group btn-group-sm">
-                                                    <a href="{% url 'manufacturing:warrantyregistration_detail' item.pk %}" class="btn btn-info btn-sm" title="View">
-                                                        <i class="mdi mdi-eye"></i>
-                                                    </a>
                                                     <a href="{% url 'manufacturing:warrantyregistration_update' item.pk %}" class="btn btn-warning btn-sm" title="Edit">
                                                         <i class="mdi mdi-pencil"></i>
                                                     </a>

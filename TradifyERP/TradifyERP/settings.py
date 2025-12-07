@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '0.0.0.0',
     '192.168.2.55',
+    '192.168.2.185',
     'www.tradifyglobal.com',
     'tradifyglobal.com',
 ]
@@ -48,6 +49,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://0.0.0.0:8000',
     'http://192.168.2.55:8000',
+    'http://192.168.2.185',
+    'http://192.168.2.185:80',
     'https://www.tradifyglobal.com',
     'https://tradifyglobal.com',
     'http://www.tradifyglobal.com',
@@ -146,15 +149,12 @@ WSGI_APPLICATION = 'TradifyERP.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Default to SQLite3 for maximum compatibility
+# Can be overridden in local_settings.py for PostgreSQL setup
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.tradifydb',
-        'NAME': 'tradify',
-        'USER' : 'zubair',
-        'PASSWORD' : 'zubair@0862',
-        'HOST' : 'localhost',
-        'PORT' : '5432',
-        'NAME': BASE_DIR / 'db.tradifydb',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -183,7 +183,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'US/Eastern'
+TIME_ZONE = 'America/New_York'
 
 USE_I18N = True
 

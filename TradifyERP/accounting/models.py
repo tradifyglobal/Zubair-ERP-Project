@@ -622,10 +622,24 @@ class AuditLog(models.Model):
         ('DELETE', 'Delete'),
         ('POST', 'Post'),
         ('RECONCILE', 'Reconcile'),
+        ('create_bank_receipt', 'Create Bank Receipt'),
+        ('approve_cash_payment', 'Approve Cash Payment'),
+        ('approve_cash_receipt', 'Approve Cash Receipt'),
+        ('authorize_bank_payment', 'Authorize Bank Payment'),
+        ('reject_bank_receipt', 'Reject Bank Receipt'),
+        ('approve_bank_payment', 'Approve Bank Payment'),
+        ('authorize_bank_receipt', 'Authorize Bank Receipt'),
+        ('reject_cash_receipt', 'Reject Cash Receipt'),
+        ('create_cash_payment', 'Create Cash Payment'),
+        ('create_bank_payment', 'Create Bank Payment'),
+        ('authorize_cash_payment', 'Authorize Cash Payment'),
+        ('approve_bank_receipt', 'Approve Bank Receipt'),
+        ('create_cash_receipt', 'Create Cash Receipt'),
+        ('authorize_cash_receipt', 'Authorize Cash Receipt'),
     ]
 
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='audit_logs')
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES)
     model_name = models.CharField(max_length=100)  # e.g., "LedgerEntry", "VendorInvoice"
     object_id = models.CharField(max_length=100)
     user = models.CharField(max_length=255, blank=True, null=True)
@@ -705,7 +719,7 @@ class Stakeholder(models.Model):
     state_province = models.CharField(max_length=100, blank=True, null=True)
     postal_code = models.CharField(max_length=20)
     country = models.CharField(max_length=100)
-    same_as_permanent = models.BooleanField(default=False, help_text="Check if current address is same as permanent address")
+    same_as_permanent = models.BooleanField(default=False, null=True, blank=True, help_text="Check if current address is same as permanent address")
     
     # Identity Documents
     passport_number = models.CharField(max_length=50, blank=True, null=True)
