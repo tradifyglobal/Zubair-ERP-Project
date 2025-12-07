@@ -296,6 +296,63 @@
                             </li>
                             {% endif %}
 
+                            {% if user|has_module_permission:'expenses' %}
+                            <li class="menu-title" data-key="t-expenses-app">Expenses</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="receipt"></i>
+                                    <span data-key="t-expenses">Expenses</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Dashboard -->
+                                    <li class="menu-title">Dashboard</li>
+                                    <li>
+                                        <a href="{% url 'expenses:dashboard' %}">
+                                            <span>Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Reports -->
+                                    <li class="menu-title">Expense Reports</li>
+                                    <li>
+                                        <a href="{% url 'expenses:report_list' %}">
+                                            <span>All Reports</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'expenses:report_create' %}">
+                                            <span>Create Report</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Budgets -->
+                                    <li class="menu-title">Budgets</li>
+                                    <li>
+                                        <a href="{% url 'expenses:budget_list' %}">
+                                            <span>All Budgets</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Reimbursements -->
+                                    <li class="menu-title">Reimbursements</li>
+                                    <li>
+                                        <a href="{% url 'expenses:reimbursement_list' %}">
+                                            <span>All Reimbursements</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Categories -->
+                                    <li class="menu-title">Categories</li>
+                                    <li>
+                                        <a href="{% url 'expenses:category_list' %}">
+                                            <span>Categories</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            {% endif %}
+
                             {% if user|has_module_permission:'shareholder' %}
                             <li class="menu-title" data-key="t-shareholder-app">Shareholder Management</li>
 

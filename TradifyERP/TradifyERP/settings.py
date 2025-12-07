@@ -100,6 +100,7 @@ INSTALLED_APPS = [
     'projects.apps.ProjectsConfig',  # Project Management Module
     'crm.apps.CrmConfig',  # CRM Module
     'ar.apps.ArConfig',  # Accounts Receivable Module
+    'expenses.apps.ExpensesConfig',  # Employee Expense Tracking Module
     'maintenance.apps.MaintenanceConfig',  # Site Maintenance Module
 ]
 

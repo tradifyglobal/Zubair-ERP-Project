@@ -56,6 +56,8 @@ urlpatterns = [
     path('crm/', include('crm.urls')),
     # Accounts Receivable module
     path('ar/', include('ar.urls')),
+    # Employee Expense Tracking module
+    path('expenses/', include('expenses.urls')),
     # Site Maintenance module
     path('maintenance/', include('maintenance.urls')),
 

@@ -122,6 +122,31 @@
                                 </li>
                                 {% endif %}
 
+                                {% if user|has_module_permission:'expenses' %}
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-expenses" role="button">
+                                        <i data-feather="receipt"></i><span data-key="t-expenses">Expenses</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-expenses">
+                                        <div class="dropdown-header">Dashboard</div>
+                                        <a href="{% url 'expenses:dashboard' %}" class="dropdown-item">Expenses Dashboard</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Expense Reports</div>
+                                        <a href="{% url 'expenses:report_list' %}" class="dropdown-item">All Reports</a>
+                                        <a href="{% url 'expenses:report_create' %}" class="dropdown-item">Create Report</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Budgets</div>
+                                        <a href="{% url 'expenses:budget_list' %}" class="dropdown-item">All Budgets</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Reimbursements</div>
+                                        <a href="{% url 'expenses:reimbursement_list' %}" class="dropdown-item">All Reimbursements</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Categories</div>
+                                        <a href="{% url 'expenses:category_list' %}" class="dropdown-item">Expense Categories</a>
+                                    </div>
+                                </li>
+                                {% endif %}
+
                                 {% if user|has_module_permission:'hr' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-hr" role="button">
