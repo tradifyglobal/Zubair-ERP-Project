@@ -12,6 +12,7 @@ from .views import (
     ExpenseReimbursementListView, ExpenseReimbursementCreateView,
     ExpenseReimbursementDetailView, ExpenseReimbursementProcessView,
     ExpenseCategoryListView, ExpenseCategoryCreateView,
+    ExpenseAttachmentUploadView, ExpenseAttachmentDeleteView,
 )
 
 app_name = 'expenses'
@@ -42,4 +43,8 @@ urlpatterns = [
     # Categories
     path('categories/', ExpenseCategoryListView.as_view(), name='category_list'),
     path('categories/create/', ExpenseCategoryCreateView.as_view(), name='category_create'),
+    
+    # Attachments
+    path('reports/<int:report_id>/attachment/add/', ExpenseAttachmentUploadView.as_view(), name='attachment_upload'),
+    path('attachments/<int:pk>/delete/', ExpenseAttachmentDeleteView.as_view(), name='attachment_delete'),
 ]
