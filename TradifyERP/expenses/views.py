@@ -19,11 +19,13 @@ from accounting.models import AuditLog
 from hr.models import Employee
 from .models import (
     EmployeeExpenseReport, EmployeeExpense, ExpenseCategory,
-    ExpenseBudget, ExpenseApprovalWorkflow, ExpenseReimbursement
+    ExpenseBudget, ExpenseApprovalWorkflow, ExpenseReimbursement,
+    ExpenseAttachment
 )
 from .forms import (
     EmployeeExpenseReportForm, EmployeeExpenseForm,
-    ExpenseCategoryForm, ExpenseBudgetForm, ExpenseReimbursementForm
+    ExpenseCategoryForm, ExpenseBudgetForm, ExpenseReimbursementForm,
+    ExpenseAttachmentForm
 )
 
 
@@ -127,18 +129,42 @@ class EmployeeExpenseReportDetailView(SessionEntityMixin, LoginRequiredMixin, De
 
 
 class EmployeeExpenseReportCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
-    """Create new expense report"""
+    """Create new expense report - employee auto-populated from logged-in user"""
     model = EmployeeExpenseReport
     form_class = EmployeeExpenseReportForm
     template_name = 'expenses/report_form.html'
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
     def form_valid(self, form):
         form.instance.entity = self.request.entity
+        
+        # Auto-populate employee from logged-in user
+        try:
+            form.instance.employee = self.request.user.employee
+        except Employee.DoesNotExist:
+            messages.error(self.request, 'Your user account is not linked to an employee record.')
+            return self.form_invalid(form)
+        
         response = super().form_valid(form)
         
         # Create approval workflow
         ExpenseApprovalWorkflow.objects.create(
             report=form.instance
+        )
+        
+        # Create audit log
+        AuditLog.objects.create(
+            entity=self.request.entity,
+            action='CREATE',
+            model_name='EmployeeExpenseReport',
+            object_id=str(form.instance.id),
+            user=self.request.user.username,
+            description=f"Created new expense report",
+            new_values={'status': 'DRAFT'}
         )
         
         messages.success(self.request, 'Expense report created successfully!')
@@ -178,7 +204,7 @@ class EmployeeExpenseCreateView(SessionEntityMixin, LoginRequiredMixin, CreateVi
 
 
 class EmployeeExpenseSubmitView(SessionEntityMixin, LoginRequiredMixin, View):
-    """Submit expense report for review"""
+    """Submit expense report for manager review"""
     
     def post(self, request, pk):
         report = get_object_or_404(
@@ -188,55 +214,272 @@ class EmployeeExpenseSubmitView(SessionEntityMixin, LoginRequiredMixin, View):
             status='DRAFT'
         )
         
+        # Check if user is the employee who submitted the report or has permission
+        if report.employee.user != request.user and not request.user.is_staff:
+            messages.error(request, 'You do not have permission to submit this report.')
+            return redirect('expenses:report_detail', pk=pk)
+        
         # Check if report has items
         if not report.items.exists():
             messages.error(request, 'Cannot submit empty expense report!')
             return redirect('expenses:report_detail', pk=pk)
         
+        # Check if all required receipts are attached
+        for item in report.items.all():
+            if item.category.requires_receipt and not item.receipt and not item.attachments.exists():
+                messages.warning(
+                    request,
+                    f'Receipt required for {item.category.name} - {item.description}. Please attach a receipt.'
+                )
+                return redirect('expenses:report_detail', pk=pk)
+        
         # Submit report
-        report.submit(request.user)
+        report.status = 'PENDING_REVIEW'
+        report.submitted_by = request.user
+        report.submitted_at = timezone.now()
+        report.save()
         
         # Update workflow
         workflow = report.approval_workflow
-        workflow.submit_for_manager_review()
+        workflow.status = 'PENDING_MANAGER_REVIEW'
+        workflow.save()
         
+        # Create audit log
         AuditLog.objects.create(
             entity=request.entity,
             action='SUBMIT',
             model_name='EmployeeExpenseReport',
             object_id=str(report.id),
             user=request.user.username,
-            description=f"Submitted expense report: {report}",
+            description=f"Submitted expense report for manager review",
             old_values={'status': 'DRAFT'},
-            new_values={'status': 'SUBMITTED'}
+            new_values={'status': 'PENDING_REVIEW'}
         )
         
-        messages.success(request, 'Expense report submitted for review!')
+        messages.success(request, 'Expense report submitted for manager review!')
         return redirect('expenses:report_detail', pk=pk)
 
 
 class EmployeeExpenseApproveView(SessionEntityMixin, LoginRequiredMixin, View):
-    """Approve expense report"""
+    """Manager reviews and approves expense report"""
+    
+    def get(self, request, pk):
+        report = get_object_or_404(
+            EmployeeExpenseReport,
+            pk=pk,
+            entity=request.entity,
+            status='PENDING_REVIEW'
+        )
+        
+        # Check if user is manager or finance staff
+        if not request.user.is_staff and not request.user.groups.filter(name__in=['Manager', 'Finance']).exists():
+            messages.error(request, 'You do not have permission to approve this report.')
+            return redirect('expenses:report_detail', pk=pk)
+        
+        context = {
+            'report': report,
+            'items': report.items.all(),
+            'attachments': report.attachments.all(),
+            'workflow': report.approval_workflow,
+            'total_amount': sum(item.amount for item in report.items.all()),
+        }
+        return render(request, 'expenses/report_approve.html', context)
     
     def post(self, request, pk):
         report = get_object_or_404(
             EmployeeExpenseReport,
             pk=pk,
             entity=request.entity,
-            status__in=['PENDING_REVIEW', 'PENDING_APPROVAL']
+            status='PENDING_REVIEW'
         )
         
+        # Check if user is manager or finance staff
+        if not request.user.is_staff and not request.user.groups.filter(name__in=['Manager', 'Finance']).exists():
+            messages.error(request, 'You do not have permission to approve this report.')
+            return redirect('expenses:report_detail', pk=pk)
+        
+        action = request.POST.get('action', 'reject')
         notes = request.POST.get('notes', '')
-        report.approve(request.user, notes)
         
-        # Update workflow
-        workflow = report.approval_workflow
-        workflow.finance_approve(request.user, notes)
+        if action == 'approve':
+            # Manager approves - move to finance approval
+            report.status = 'PENDING_APPROVAL'
+            report.reviewed_by = request.user
+            report.reviewed_at = timezone.now()
+            report.review_notes = notes
+            report.save()
+            
+            workflow = report.approval_workflow
+            workflow.manager = request.user.employee if hasattr(request.user, 'employee') else None
+            workflow.manager_approved = True
+            workflow.manager_notes = notes
+            workflow.manager_review_at = timezone.now()
+            workflow.status = 'PENDING_FINANCE_APPROVAL'
+            workflow.save()
+            
+            AuditLog.objects.create(
+                entity=request.entity,
+                action='MANAGER_APPROVED',
+                model_name='EmployeeExpenseReport',
+                object_id=str(report.id),
+                user=request.user.username,
+                description='Manager approved expense report',
+                old_values={'status': 'PENDING_REVIEW'},
+                new_values={'status': 'PENDING_APPROVAL', 'notes': notes}
+            )
+            
+            messages.success(request, 'Report approved for finance review!')
+        else:
+            # Manager rejects
+            report.status = 'REJECTED'
+            report.rejection_reason = notes
+            report.rejected_at = timezone.now()
+            report.reviewed_by = request.user
+            report.reviewed_at = timezone.now()
+            report.save()
+            
+            workflow = report.approval_workflow
+            workflow.status = 'REJECTED'
+            workflow.save()
+            
+            AuditLog.objects.create(
+                entity=request.entity,
+                action='MANAGER_REJECTED',
+                model_name='EmployeeExpenseReport',
+                object_id=str(report.id),
+                user=request.user.username,
+                description='Manager rejected expense report',
+                old_values={'status': 'PENDING_REVIEW'},
+                new_values={'status': 'REJECTED', 'reason': notes}
+            )
+            
+            messages.warning(request, 'Report rejected. Employee has been notified.')
         
-        # Post to GL
-        report.post_to_gl()
+        return redirect('expenses:report_detail', pk=pk)
+
+
+class EmployeeExpenseFinanceApprovalView(SessionEntityMixin, LoginRequiredMixin, View):
+    """Finance manager approves and finalizes expense report"""
+    
+    def get(self, request, pk):
+        report = get_object_or_404(
+            EmployeeExpenseReport,
+            pk=pk,
+            entity=request.entity,
+            status='PENDING_APPROVAL'
+        )
         
-        messages.success(request, 'Expense report approved and posted to GL!')
+        # Check if user is finance staff
+        if not request.user.is_staff and not request.user.groups.filter(name='Finance').exists():
+            messages.error(request, 'You do not have permission to approve this report.')
+            return redirect('expenses:report_detail', pk=pk)
+        
+        context = {
+            'report': report,
+            'items': report.items.all(),
+            'attachments': report.attachments.all(),
+            'workflow': report.approval_workflow,
+            'total_amount': sum(item.amount for item in report.items.all()),
+        }
+        return render(request, 'expenses/report_finance_approve.html', context)
+    
+    def post(self, request, pk):
+        report = get_object_or_404(
+            EmployeeExpenseReport,
+            pk=pk,
+            entity=request.entity,
+            status='PENDING_APPROVAL'
+        )
+        
+        # Check if user is finance staff
+        if not request.user.is_staff and not request.user.groups.filter(name='Finance').exists():
+            messages.error(request, 'You do not have permission to approve this report.')
+            return redirect('expenses:report_detail', pk=pk)
+        
+        action = request.POST.get('action', 'reject')
+        notes = request.POST.get('notes', '')
+        
+        if action == 'approve':
+            # Finance approves and posts to GL
+            report.status = 'APPROVED'
+            report.approved_by = request.user
+            report.approved_at = timezone.now()
+            report.approval_notes = notes
+            report.save()
+            
+            workflow = report.approval_workflow
+            workflow.finance_approver = request.user
+            workflow.finance_approved = True
+            workflow.finance_notes = notes
+            workflow.finance_approved_at = timezone.now()
+            workflow.status = 'APPROVED'
+            workflow.save()
+            
+            # Create reimbursement record
+            from .models import ExpenseReimbursement
+            total_approved = sum(
+                item.amount for item in report.items.filter(status='APPROVED')
+            )
+            
+            if total_approved > 0:
+                reimbursement = ExpenseReimbursement.objects.create(
+                    report=report,
+                    amount=total_approved
+                )
+            
+            # Post to GL
+            try:
+                for item in report.items.filter(status='APPROVED'):
+                    item.post_to_gl()
+                report.is_posted = True
+                report.posted_at = timezone.now()
+                report.status = 'POSTED'
+                report.save()
+                
+                AuditLog.objects.create(
+                    entity=request.entity,
+                    action='FINANCE_APPROVED',
+                    model_name='EmployeeExpenseReport',
+                    object_id=str(report.id),
+                    user=request.user.username,
+                    description='Finance approved and posted expense report to GL',
+                    old_values={'status': 'PENDING_APPROVAL'},
+                    new_values={'status': 'APPROVED', 'is_posted': True}
+                )
+                
+                messages.success(request, 'Report approved, posted to GL, and scheduled for reimbursement!')
+            except Exception as e:
+                messages.error(request, f'Error posting to GL: {str(e)}')
+                return redirect('expenses:report_detail', pk=pk)
+        else:
+            # Finance rejects
+            report.status = 'REJECTED'
+            report.rejection_reason = notes
+            report.rejected_at = timezone.now()
+            report.approved_by = request.user
+            report.approved_at = timezone.now()
+            report.save()
+            
+            workflow = report.approval_workflow
+            workflow.status = 'REJECTED'
+            workflow.finance_approver = request.user
+            workflow.finance_approved_at = timezone.now()
+            workflow.finance_notes = notes
+            workflow.save()
+            
+            AuditLog.objects.create(
+                entity=request.entity,
+                action='FINANCE_REJECTED',
+                model_name='EmployeeExpenseReport',
+                object_id=str(report.id),
+                user=request.user.username,
+                description='Finance rejected expense report',
+                old_values={'status': 'PENDING_APPROVAL'},
+                new_values={'status': 'REJECTED', 'reason': notes}
+            )
+            
+            messages.warning(request, 'Report rejected. Employee has been notified.')
+        
         return redirect('expenses:report_detail', pk=pk)
 
 
@@ -395,6 +638,84 @@ class ExpenseCategoryListView(SessionEntityMixin, LoginRequiredMixin, ListView):
             entity=self.request.entity,
             is_active=True
         ).order_by('name')
+
+
+class ExpenseAttachmentUploadView(SessionEntityMixin, LoginRequiredMixin, CreateView):
+    """Upload attachment to expense report or item"""
+    model = ExpenseAttachment
+    form_class = ExpenseAttachmentForm
+    template_name = 'expenses/attachment_form.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Determine if attaching to report or item
+        report_id = self.kwargs.get('report_id')
+        expense_id = self.kwargs.get('expense_id')
+        
+        if report_id:
+            report = get_object_or_404(EmployeeExpenseReport, id=report_id, entity=self.request.entity)
+            context['report'] = report
+        elif expense_id:
+            expense = get_object_or_404(EmployeeExpense, id=expense_id)
+            context['expense'] = expense
+            context['report'] = expense.report
+        
+        return context
+    
+    def form_valid(self, form):
+        form.instance.uploaded_by = self.request.user
+        
+        report_id = self.kwargs.get('report_id')
+        expense_id = self.kwargs.get('expense_id')
+        
+        if report_id:
+            form.instance.report_id = report_id
+        elif expense_id:
+            form.instance.expense_item_id = expense_id
+        
+        response = super().form_valid(form)
+        messages.success(self.request, 'Attachment uploaded successfully!')
+        return response
+    
+    def get_success_url(self):
+        report_id = self.kwargs.get('report_id')
+        expense_id = self.kwargs.get('expense_id')
+        
+        if expense_id:
+            expense = EmployeeExpense.objects.get(id=expense_id)
+            return reverse_lazy('expenses:report_detail', kwargs={'pk': expense.report_id})
+        else:
+            return reverse_lazy('expenses:report_detail', kwargs={'pk': report_id})
+
+
+class ExpenseAttachmentDeleteView(SessionEntityMixin, LoginRequiredMixin, View):
+    """Delete an attachment"""
+    
+    def post(self, request, pk):
+        attachment = get_object_or_404(ExpenseAttachment, pk=pk)
+        
+        # Check permissions - can only delete own attachments or if staff
+        if attachment.uploaded_by != request.user and not request.user.is_staff:
+            messages.error(request, 'You do not have permission to delete this attachment.')
+            return redirect('expenses:report_detail', pk=attachment.report_id)
+        
+        report_id = attachment.report_id
+        file_path = attachment.file.path if attachment.file else None
+        
+        # Delete file from storage
+        if file_path and attachment.file:
+            try:
+                import os
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                print(f"Error deleting file: {e}")
+        
+        attachment.delete()
+        messages.success(request, 'Attachment deleted successfully!')
+        
+        return redirect('expenses:report_detail', pk=report_id)
 
 
 class ExpenseCategoryCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):

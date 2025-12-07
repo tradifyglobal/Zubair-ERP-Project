@@ -5,18 +5,18 @@ Employee Expense Module Forms
 from django import forms
 from .models import (
     EmployeeExpenseReport, EmployeeExpense, ExpenseCategory,
-    ExpenseBudget, ExpenseReimbursement
+    ExpenseBudget, ExpenseReimbursement, ExpenseAttachment
 )
+from hr.models import Employee
 
 
 class EmployeeExpenseReportForm(forms.ModelForm):
-    """Form for creating/editing expense reports"""
+    """Form for creating/editing expense reports - employee field is auto-populated"""
     
     class Meta:
         model = EmployeeExpenseReport
-        fields = ['employee', 'period_start', 'period_end', 'description']
+        fields = ['period_start', 'period_end', 'description']
         widgets = {
-            'employee': forms.Select(attrs={'class': 'form-select'}),
             'period_start': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'period_end': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'description': forms.Textarea(attrs={
@@ -25,10 +25,36 @@ class EmployeeExpenseReportForm(forms.ModelForm):
                 'placeholder': 'Additional notes about this expense report'
             }),
         }
+    
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Auto-populate employee from logged-in user
+        if self.user and hasattr(self.user, 'employee'):
+            instance.employee = self.user.employee
+        
+        if commit:
+            instance.save()
+        return instance
 
 
 class EmployeeExpenseForm(forms.ModelForm):
-    """Form for adding expense items to a report"""
+    """Form for adding expense items to a report with attachment support"""
+    
+    # Multiple file upload field
+    attachments = forms.FileField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'form-control',
+            'accept': '.pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx',
+            'multiple': True
+        }),
+        help_text='Upload receipts, invoices, or supporting documents (PDF, JPG, PNG, DOC, DOCX, XLSX)'
+    )
     
     class Meta:
         model = EmployeeExpense
@@ -54,6 +80,26 @@ class EmployeeExpenseForm(forms.ModelForm):
             'receipt_number': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Invoice/Receipt number (optional)'
+            }),
+        }
+
+
+class ExpenseAttachmentForm(forms.ModelForm):
+    """Form for uploading attachments to expenses"""
+    
+    class Meta:
+        model = ExpenseAttachment
+        fields = ['attachment_type', 'file', 'description']
+        widgets = {
+            'attachment_type': forms.Select(attrs={'class': 'form-select'}),
+            'file': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx,.xls'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Brief description of this attachment'
             }),
         }
 

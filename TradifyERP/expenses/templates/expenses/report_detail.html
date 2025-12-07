@@ -11,86 +11,107 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">Expense Report #{{ report.id }}</h4>
-                        <a href="{% url 'expenses:report_list' %}" class="btn btn-secondary">Back to Reports</a>
+                        <div>
+                            <h4 class="mb-0">Expense Report #{{ report.id }}</h4>
+                            <small class="text-muted">{{ report.employee.user.get_full_name }}</small>
+                        </div>
+                        <a href="{% url 'expenses:report_list' %}" class="btn btn-outline-secondary">
+                            <i data-feather="arrow-left"></i> Back to Reports
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Report Summary -->
+            <!-- Status & Workflow -->
             <div class="row mb-4">
-                <div class="col-lg-8">
+                <div class="col-12">
                     <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Report Details</h5>
-                        </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted">Date</label>
-                                    <p class="mb-0">{{ report.submission_date|date:"F d, Y" }}</p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted">Status</label>
-                                    <p class="mb-0">
+                                <div class="col-md-4">
+                                    <h6 class="text-muted mb-2">Current Status</h6>
+                                    <div>
                                         {% if report.status == 'DRAFT' %}
-                                            <span class="badge bg-secondary">Draft</span>
-                                        {% elif report.status == 'SUBMITTED' %}
-                                            <span class="badge bg-info">Submitted</span>
+                                            <span class="badge bg-secondary" style="font-size: 1rem; padding: 0.5rem 1rem;">Draft</span>
+                                        {% elif report.status == 'PENDING_REVIEW' %}
+                                            <span class="badge bg-warning" style="font-size: 1rem; padding: 0.5rem 1rem;">Pending Manager Review</span>
+                                        {% elif report.status == 'PENDING_APPROVAL' %}
+                                            <span class="badge bg-info" style="font-size: 1rem; padding: 0.5rem 1rem;">Pending Finance Approval</span>
                                         {% elif report.status == 'APPROVED' %}
-                                            <span class="badge bg-success">Approved</span>
-                                        {% elif report.status == 'REJECTED' %}
-                                            <span class="badge bg-danger">Rejected</span>
+                                            <span class="badge bg-success" style="font-size: 1rem; padding: 0.5rem 1rem;">Approved</span>
                                         {% elif report.status == 'POSTED' %}
-                                            <span class="badge bg-primary">Posted</span>
+                                            <span class="badge bg-primary" style="font-size: 1rem; padding: 0.5rem 1rem;">Posted to GL</span>
+                                        {% elif report.status == 'REJECTED' %}
+                                            <span class="badge bg-danger" style="font-size: 1rem; padding: 0.5rem 1rem;">Rejected</span>
+                                        {% elif report.status == 'REIMBURSED' %}
+                                            <span class="badge bg-dark" style="font-size: 1rem; padding: 0.5rem 1rem;">Reimbursed</span>
                                         {% endif %}
-                                    </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="text-muted mb-2">Period</h6>
+                                    <p class="mb-0">{{ report.period_start|date:"M d, Y" }} to {{ report.period_end|date:"M d, Y" }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="text-muted mb-2">Total Amount</h6>
+                                    <p class="mb-0"><strong>${{ total_amount|default:"0.00" }}</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Main Content -->
+                <div class="col-lg-8">
+                    <!-- Report Details -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Report Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Employee</label>
+                                    <p class="mb-0">{{ report.employee.user.get_full_name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Department</label>
+                                    <p class="mb-0">{{ report.employee.department|default:"N/A" }}</p>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-muted">Description</label>
-                                <p class="mb-0">{{ report.description }}</p>
+                                <p class="mb-0">{{ report.description|linebreaks }}</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Summary Stats -->
-                <div class="col-lg-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Summary</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Total Amount:</span>
-                                <strong>${{ report.total_amount|default:"0.00" }}</strong>
-                            </div>
-                            {% if report.expenses %}
-                                <div class="d-flex justify-content-between">
-                                    <span>Number of Expenses:</span>
-                                    <strong>{{ report.expenses.count }}</strong>
+                            {% if report.submitted_at %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Submitted On</label>
+                                        <p class="mb-0">{{ report.submitted_at|date:"M d, Y H:i" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Submitted By</label>
+                                        <p class="mb-0">{{ report.submitted_by.get_full_name }}</p>
+                                    </div>
                                 </div>
                             {% endif %}
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Expenses List -->
-            {% if report.expenses %}
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Expenses</h5>
-                                {% if report.status == 'DRAFT' %}
-                                    <a href="{% url 'expenses:expense_create' report.id %}" class="btn btn-sm btn-primary">
-                                        <i data-feather="plus"></i> Add Expense
-                                    </a>
-                                {% endif %}
-                            </div>
-                            <div class="card-body">
+                    <!-- Expenses List -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Expenses ({{ items.count }})</h5>
+                            {% if report.status == 'DRAFT' %}
+                                <a href="{% url 'expenses:expense_create' report.id %}" class="btn btn-sm btn-primary">
+                                    <i data-feather="plus"></i> Add Expense
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% if items %}
                                 <div class="table-responsive">
                                     <table class="table table-hover mb-0">
                                         <thead class="table-light">
@@ -99,45 +120,236 @@
                                                 <th>Category</th>
                                                 <th>Description</th>
                                                 <th>Amount</th>
-                                                <th>Actions</th>
+                                                <th>Attachments</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for expense in report.expenses.all %}
+                                            {% for item in items %}
                                                 <tr>
-                                                    <td>{{ expense.date|date:"M d, Y" }}</td>
-                                                    <td>{{ expense.category.name }}</td>
-                                                    <td>{{ expense.description }}</td>
-                                                    <td>${{ expense.amount }}</td>
+                                                    <td>{{ item.expense_date|date:"M d, Y" }}</td>
+                                                    <td>{{ item.category.name }}</td>
+                                                    <td>{{ item.description }}</td>
+                                                    <td>${{ item.amount }}</td>
                                                     <td>
-                                                        <i data-feather="check" style="color: green; width: 16px; height: 16px;"></i>
+                                                        {% if item.attachments.exists %}
+                                                            <span class="badge bg-success">
+                                                                {{ item.attachments.count }}
+                                                                <i data-feather="paperclip" style="width: 12px; height: 12px;"></i>
+                                                            </span>
+                                                        {% else %}
+                                                            <small class="text-muted">None</small>
+                                                        {% endif %}
                                                     </td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
+                            {% else %}
+                                <div class="alert alert-info mb-0">
+                                    <p class="mb-0">No expenses added yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Attachments -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Supporting Documents</h5>
+                            {% if report.status in 'DRAFT,PENDING_REVIEW,PENDING_APPROVAL' %}
+                                <a href="{% url 'expenses:attachment_upload' report.id %}" class="btn btn-sm btn-primary">
+                                    <i data-feather="upload"></i> Upload Document
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% if attachments %}
+                                <div class="row">
+                                    {% for attachment in attachments %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div>
+                                                            <h6 class="card-title mb-1">
+                                                                <i data-feather="file-text" style="width: 18px; height: 18px;"></i>
+                                                                {{ attachment.file_name }}
+                                                            </h6>
+                                                            <small class="text-muted d-block">
+                                                                {{ attachment.get_attachment_type_display }} • {{ attachment.created_at|date:"M d, Y" }}
+                                                            </small>
+                                                            {% if attachment.description %}
+                                                                <small class="d-block mt-2">{{ attachment.description }}</small>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div>
+                                                            <a href="{{ attachment.get_file_url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                                <i data-feather="download"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info mb-0">
+                                    <p class="mb-0">No supporting documents uploaded.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Approval Workflow -->
+                    {% if workflow %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Approval Workflow</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Manager Review -->
+                                <div class="mb-4">
+                                    <h6 class="mb-2">
+                                        <i data-feather="user-check" style="width: 18px; height: 18px;"></i>
+                                        Manager Review
+                                    </h6>
+                                    {% if workflow.manager_approved %}
+                                        <div class="alert alert-success p-2 mb-2">
+                                            <small>
+                                                <i class="fas fa-check-circle"></i> Approved by {{ workflow.manager.user.get_full_name }}<br>
+                                                <small>{{ workflow.manager_review_at|date:"M d, Y H:i" }}</small>
+                                            </small>
+                                        </div>
+                                        {% if workflow.manager_notes %}
+                                            <div class="alert alert-light p-2">
+                                                <small><strong>Notes:</strong><br>{{ workflow.manager_notes }}</small>
+                                            </div>
+                                        {% endif %}
+                                    {% elif report.status == 'PENDING_REVIEW' %}
+                                        <div class="alert alert-warning p-2">
+                                            <small>
+                                                <i class="fas fa-clock"></i> Pending manager review
+                                            </small>
+                                        </div>
+                                    {% elif report.status == 'REJECTED' %}
+                                        <div class="alert alert-danger p-2">
+                                            <small>
+                                                <i class="fas fa-times-circle"></i> Rejected
+                                            </small>
+                                        </div>
+                                    {% else %}
+                                        <small class="text-muted">Not yet reviewed</small>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Finance Approval -->
+                                <div>
+                                    <h6 class="mb-2">
+                                        <i data-feather="dollar-sign" style="width: 18px; height: 18px;"></i>
+                                        Finance Approval
+                                    </h6>
+                                    {% if workflow.finance_approved %}
+                                        <div class="alert alert-success p-2 mb-2">
+                                            <small>
+                                                <i class="fas fa-check-circle"></i> Approved by {{ workflow.finance_approver.get_full_name }}<br>
+                                                <small>{{ workflow.finance_approved_at|date:"M d, Y H:i" }}</small>
+                                            </small>
+                                        </div>
+                                        {% if workflow.finance_notes %}
+                                            <div class="alert alert-light p-2">
+                                                <small><strong>Notes:</strong><br>{{ workflow.finance_notes }}</small>
+                                            </div>
+                                        {% endif %}
+                                    {% elif report.status == 'PENDING_APPROVAL' %}
+                                        <div class="alert alert-warning p-2">
+                                            <small>
+                                                <i class="fas fa-clock"></i> Pending finance approval
+                                            </small>
+                                        </div>
+                                    {% else %}
+                                        <small class="text-muted">Not yet reviewed</small>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            {% endif %}
+                    {% endif %}
 
-            <!-- Action Buttons -->
-            {% if report.status == 'DRAFT' %}
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{% url 'expenses:report_list' %}" class="btn btn-outline-secondary">Back</a>
-                            <form method="post" action="{% url 'expenses:report_submit' report.id %}" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success">Submit for Approval</button>
-                            </form>
+                    <!-- Action Buttons -->
+                    {% if report.status == 'DRAFT' %}
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form method="post" action="{% url 'expenses:report_submit' report.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-block w-100">
+                                        <i data-feather="send"></i> Submit for Review
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% elif report.status == 'PENDING_REVIEW' %}
+                        {% if user.is_staff %}
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">Manager Actions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="btn-group w-100 d-grid gap-2" role="group">
+                                        <a href="{% url 'expenses:report_approve' report.id %}" class="btn btn-success">
+                                            <i data-feather="check"></i> Review & Approve
+                                        </a>
+                                        <a href="{% url 'expenses:report_reject' report.id %}" class="btn btn-danger">
+                                            <i data-feather="x"></i> Reject
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% elif report.status == 'PENDING_APPROVAL' %}
+                        {% if user.is_staff %}
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">Finance Actions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="btn-group w-100 d-grid gap-2" role="group">
+                                        <a href="{% url 'expenses:report_finance_approve' report.id %}" class="btn btn-success">
+                                            <i data-feather="check"></i> Approve & Post
+                                        </a>
+                                        <a href="{% url 'expenses:report_reject' report.id %}" class="btn btn-danger">
+                                            <i data-feather="x"></i> Reject
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <!-- Info Panel -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="card-title mb-0">
+                                <i data-feather="info"></i> Information
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2"><strong>Created:</strong> <br><small>{{ report.created_at|date:"M d, Y H:i" }}</small></p>
+                            {% if report.reviewed_at %}
+                                <p class="mb-2"><strong>Manager Review:</strong> <br><small>{{ report.reviewed_at|date:"M d, Y H:i" }}</small></p>
+                            {% endif %}
+                            {% if report.approved_at %}
+                                <p class="mb-0"><strong>Finance Approval:</strong> <br><small>{{ report.approved_at|date:"M d, Y H:i" }}</small></p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-            {% endif %}
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
