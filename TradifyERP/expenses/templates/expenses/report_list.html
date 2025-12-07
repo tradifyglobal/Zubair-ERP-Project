@@ -29,47 +29,46 @@
                                     <table class="table table-hover mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>Report ID</th>
-                                                <th>Date</th>
-                                                <th>Description</th>
-                                                <th>Status</th>
+                                                <th>Employee</th>
+                                                <th>Period</th>
                                                 <th>Total Amount</th>
-                                                <th>Actions</th>
+                                                <th>Status</th>
+                                                <th>Submitted</th>
+                                                <th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for report in reports %}
                                                 <tr>
                                                     <td>
-                                                        <a href="{% url 'expenses:report_detail' report.id %}">
-                                                            #{{ report.id }}
-                                                        </a>
+                                                        <strong>{{ report.employee.user.get_full_name|default:report.employee.employee_id }}</strong>
                                                     </td>
-                                                    <td>{{ report.submission_date|date:"M d, Y" }}</td>
-                                                    <td>{{ report.description }}</td>
+                                                    <td>{{ report.period_start|date:"M d, Y" }} - {{ report.period_end|date:"M d, Y" }}</td>
+                                                    <td>${{ report.total_amount|floatformat:2 }}</td>
                                                     <td>
                                                         {% if report.status == 'DRAFT' %}
                                                             <span class="badge bg-secondary">Draft</span>
                                                         {% elif report.status == 'SUBMITTED' %}
                                                             <span class="badge bg-info">Submitted</span>
+                                                        {% elif report.status == 'PENDING_REVIEW' %}
+                                                            <span class="badge bg-warning">Pending Review</span>
+                                                        {% elif report.status == 'PENDING_APPROVAL' %}
+                                                            <span class="badge bg-warning">Pending Approval</span>
                                                         {% elif report.status == 'APPROVED' %}
                                                             <span class="badge bg-success">Approved</span>
                                                         {% elif report.status == 'REJECTED' %}
                                                             <span class="badge bg-danger">Rejected</span>
+                                                        {% elif report.status == 'REIMBURSED' %}
+                                                            <span class="badge bg-primary">Reimbursed</span>
                                                         {% elif report.status == 'POSTED' %}
-                                                            <span class="badge bg-primary">Posted</span>
+                                                            <span class="badge bg-dark">Posted</span>
                                                         {% endif %}
                                                     </td>
-                                                    <td>{{ report.total_amount|default:"$0.00" }}</td>
+                                                    <td>{{ report.submitted_at|date:"M d, Y"|default:"Not submitted" }}</td>
                                                     <td>
-                                                        <a href="{% url 'expenses:report_detail' report.id %}" class="btn btn-sm btn-info" title="View">
-                                                            <i data-feather="eye" style="width: 16px; height: 16px;"></i>
+                                                        <a href="{% url 'expenses:report_detail' report.id %}" class="btn btn-sm btn-outline-primary">
+                                                            View
                                                         </a>
-                                                        {% if report.status == 'DRAFT' %}
-                                                            <a href="{% url 'expenses:report_create' %}" class="btn btn-sm btn-warning" title="Edit">
-                                                                <i data-feather="edit" style="width: 16px; height: 16px;"></i>
-                                                            </a>
-                                                        {% endif %}
                                                     </td>
                                                 </tr>
                                             {% endfor %}
