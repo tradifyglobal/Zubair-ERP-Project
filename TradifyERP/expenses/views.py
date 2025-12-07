@@ -916,24 +916,47 @@ class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequired
         action = request.POST.get('action', 'reject')
         finance_approver_id = request.POST.get('finance_approver_id')
         notes = request.POST.get('notes', '')
+        stage = request.POST.get('stage', 'assign')
         
-        # Get finance approver - must have expense approval permission
-        try:
-            finance_approver = User.objects.get(id=finance_approver_id, is_active=True)
-            # Check if user has expense approval permission
-            has_permission = ModulePermission.objects.filter(
-                user=finance_approver,
-                module='expenses',
-                can_approve=True
-            ).exists()
-            if not has_permission:
-                messages.error(request, 'Selected user does not have expense approval permissions.')
+        if action == 'submit_to_approver':
+            # Stage 1: Assign finance approver (not approving yet, just submitting to them)
+            try:
+                finance_approver = User.objects.get(id=finance_approver_id, is_active=True)
+                # Check if user has expense approval permission
+                has_permission = ModulePermission.objects.filter(
+                    user=finance_approver,
+                    module='expenses',
+                    can_approve=True
+                ).exists()
+                if not has_permission:
+                    messages.error(request, 'Selected user does not have expense approval permissions.')
+                    return redirect('expenses:report_detail', pk=pk)
+            except User.DoesNotExist:
+                messages.error(request, 'Invalid finance approver selected.')
                 return redirect('expenses:report_detail', pk=pk)
-        except User.DoesNotExist:
-            messages.error(request, 'Invalid finance approver selected.')
-            return redirect('expenses:report_detail', pk=pk)
-        
-        if action == 'approve':
+            
+            # Assign the finance approver but don't approve yet
+            workflow = report.approval_workflow
+            workflow.finance_approver = finance_approver
+            workflow.save()
+            
+            AuditLog.objects.create(
+                entity=request.entity,
+                action='FINANCE_ASSIGNED',
+                model_name='EmployeeExpenseReport',
+                object_id=str(report.id),
+                user=request.user.username,
+                description=f'Report submitted to {finance_approver.get_full_name()} for finance approval',
+                old_values={'finance_approver': None},
+                new_values={'finance_approver': finance_approver.username, 'notes': notes}
+            )
+            
+            messages.success(request, f'Report submitted to {finance_approver.get_full_name()} for final approval. They will receive a notification.')
+            
+        elif action == 'final_approve':
+            # Stage 2: Finance approver approves and posts to GL
+            finance_approver = request.user
+            
             # Finance approves and posts to GL
             report.status = 'APPROVED'
             report.approved_by = finance_approver
@@ -942,7 +965,6 @@ class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequired
             report.save()
             
             workflow = report.approval_workflow
-            workflow.finance_approver = finance_approver
             workflow.finance_approved = True
             workflow.finance_notes = notes
             workflow.finance_approved_at = timezone.now()
@@ -980,13 +1002,16 @@ class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequired
                     new_values={'status': 'APPROVED', 'is_posted': True, 'approver': finance_approver.username}
                 )
                 
-                messages.success(request, f'Report approved by {finance_approver.get_full_name()}, posted to GL, and scheduled for reimbursement!')
+                messages.success(request, f'Report approved and posted to GL! Scheduled for reimbursement.')
             except Exception as e:
                 logger.error(f"Error posting to GL: {str(e)}\n{traceback.format_exc()}")
                 messages.error(request, f'Error posting to GL: {str(e)}')
                 return redirect('expenses:report_detail', pk=pk)
-        else:
-            # Finance rejects
+        
+        elif action == 'reject':
+            # Either stage can reject
+            finance_approver = request.user
+            
             report.status = 'REJECTED'
             report.rejection_reason = notes
             report.rejected_at = timezone.now()
@@ -995,7 +1020,8 @@ class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequired
             report.save()
             
             workflow = report.approval_workflow
-            workflow.finance_approver = finance_approver
+            if not workflow.finance_approver:
+                workflow.finance_approver = finance_approver
             workflow.status = 'REJECTED'
             workflow.save()
             
