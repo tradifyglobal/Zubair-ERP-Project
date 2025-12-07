@@ -73,7 +73,7 @@ class ProductCategoryDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteVi
     success_url = reverse_lazy('manufacturing:productcategory_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(ProductCategory, self.request.user)
+        return super().get_queryset()
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -173,7 +173,7 @@ class ProductUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('manufacturing:product_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(Product, self.request.user)
+        return super().get_queryset()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -189,7 +189,7 @@ class ProductDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('manufacturing:product_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(Product, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Raw Material Views ====================
@@ -256,7 +256,7 @@ class RawMaterialDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('manufacturing:rawmaterial_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(RawMaterial, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Bill of Materials Views ====================
@@ -319,7 +319,7 @@ class BOMUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('manufacturing:bom_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(BillOfMaterials, self.request.user)
+        return super().get_queryset()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -335,7 +335,7 @@ class BOMDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('manufacturing:bom_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(BillOfMaterials, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Routing Views ====================
@@ -395,7 +395,7 @@ class RoutingUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('manufacturing:routing_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(Routing, self.request.user)
+        return super().get_queryset()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -411,7 +411,7 @@ class RoutingDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('manufacturing:routing_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(Routing, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Work Center Views ====================
@@ -489,7 +489,7 @@ class WorkCenterDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('manufacturing:workcenter_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(WorkCenter, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Production Order Views ====================
@@ -572,7 +572,7 @@ class ProductionOrderUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateVi
     success_url = reverse_lazy('manufacturing:productionorder_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(ProductionOrder, self.request.user)
+        return super().get_queryset()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -588,7 +588,7 @@ class ProductionOrderDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteVi
     success_url = reverse_lazy('manufacturing:productionorder_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(ProductionOrder, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Quality Inspection Views ====================
@@ -648,7 +648,7 @@ class QualityInspectionUpdateView(SessionEntityMixin, LoginRequiredMixin, Update
     success_url = reverse_lazy('manufacturing:qualityinspection_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(QualityInspection, self.request.user)
+        return super().get_queryset()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -664,7 +664,7 @@ class QualityInspectionDeleteView(SessionEntityMixin, LoginRequiredMixin, Delete
     success_url = reverse_lazy('manufacturing:qualityinspection_list')
     
     def get_queryset(self):
-        return get_filtered_queryset(QualityInspection, self.request.user)
+        return super().get_queryset()
 
 
 # ==================== Equipment Views ====================
@@ -928,7 +928,7 @@ class OrderShipmentListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     def get_queryset(self):
         # Filter through order relationship to entity
         entity_id = self.request.session.get("selected_entity_id")
-        qs = OrderShipment.objects.filter(order__distributor__entity_id__in=user_entities)
+        qs = OrderShipment.objects.filter(order__entity_id=entity_id)
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(tracking_number__icontains=search))
@@ -1025,18 +1025,12 @@ class WarrantyRegistrationListView(SessionEntityMixin, LoginRequiredMixin, ListV
     paginate_by = 25
     
     def get_queryset(self):
-        # Filter through distributor relationship to entity
         entity_id = self.request.session.get("selected_entity_id")
-        qs = WarrantyRegistration.objects.filter(distributor__entity_id__in=user_entities)
+        qs = WarrantyRegistration.objects.filter(entity_id=entity_id)
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(warranty_number__icontains=search) | Q(product_code__icontains=search))
         return qs.order_by('-created_at')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search'] = self.request.GET.get('search', '')
-        return context
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1078,18 +1072,12 @@ class DistributorPerformanceListView(SessionEntityMixin, LoginRequiredMixin, Lis
     paginate_by = 25
     
     def get_queryset(self):
-        # Filter through distributor relationship to entity
         entity_id = self.request.session.get("selected_entity_id")
-        qs = DistributorPerformance.objects.filter(distributor__entity_id__in=user_entities)
+        qs = DistributorPerformance.objects.filter(entity_id=entity_id)
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(distributor__distributor_name__icontains=search))
         return qs.order_by('-created_at')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search'] = self.request.GET.get('search', '')
-        return context
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
