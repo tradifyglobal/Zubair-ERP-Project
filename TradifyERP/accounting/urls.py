@@ -8,7 +8,7 @@ from .views import (
     CustomerListView, CustomerDetailView, CustomerUpdateView, VendorListView, VendorDetailView, VendorUpdateView,
     VendorInvoiceListView, VendorInvoiceDetailView, VendorInvoiceUpdateView, VendorInvoiceStatusUpdateView, RecordVendorPaymentView, VendorPaymentListView, VendorPaymentDetailView, VendorPaymentUpdateView, VendorPaymentCreateView,
     FixedAssetListView, FixedAssetCreateView, FixedAssetUpdateView, FixedAssetDeleteView,
-    AuditLogListView,
+    AuditLogListView, AuditLogDetailView,
     BankProfileListView, BankProfileCreateView, BankProfileUpdateView, BankProfileDeleteView, BankStatementListView,
     CashFlowForecastListView, CashTransactionListView,
     ReconciliationEntryListView, ReconciliationRecordListView, ReconciliationMatchListView,
@@ -198,6 +198,7 @@ urlpatterns = [
     
     # Audit Logs
     path('audit-logs/', AuditLogListView.as_view(), name='audit_log_list'),
+    path('audit-logs/<int:pk>/', AuditLogDetailView.as_view(), name='audit_log_detail'),
     
     # Stakeholder Management
     path('stakeholders/', StakeholderListView.as_view(), name='stakeholder_list'),

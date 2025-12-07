@@ -852,6 +852,13 @@ class DistributorCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     form_class = DistributorForm
     template_name = 'manufacturing/distributor_form.html'
     success_url = reverse_lazy('manufacturing:distributor_list')
+    
+    def form_valid(self, form):
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -898,6 +905,23 @@ class DistributorOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateV
     form_class = DistributorOrderForm
     template_name = 'manufacturing/distributororder_form.html'
     success_url = reverse_lazy('manufacturing:distributororder_list')
+    
+    def form_valid(self, form):
+        import uuid
+        from datetime import datetime
+        
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        
+        # Generate order_number if not already set
+        if not instance.order_number:
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.order_number = f"ORD-{timestamp}-{unique_id}"
+        
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -946,6 +970,23 @@ class OrderShipmentCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView
     form_class = OrderShipmentForm
     template_name = 'manufacturing/ordershipment_form.html'
     success_url = reverse_lazy('manufacturing:ordershipment_list')
+    
+    def form_valid(self, form):
+        import uuid
+        from datetime import datetime
+        
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        
+        # Generate shipment_number if not already set
+        if not instance.shipment_number:
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.shipment_number = f"SHIP-{timestamp}-{unique_id}"
+        
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -997,6 +1038,23 @@ class AfterSalesServiceCreateView(SessionEntityMixin, LoginRequiredMixin, Create
     form_class = AfterSalesServiceForm
     template_name = 'manufacturing/aftersalesservice_form.html'
     success_url = reverse_lazy('manufacturing:aftersalesservice_list')
+    
+    def form_valid(self, form):
+        import uuid
+        from datetime import datetime
+        
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        
+        # Generate service_ticket_number if not already set
+        if not instance.service_ticket_number:
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.service_ticket_number = f"TICKET-{timestamp}-{unique_id}"
+        
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -1044,6 +1102,23 @@ class WarrantyRegistrationCreateView(SessionEntityMixin, LoginRequiredMixin, Cre
     form_class = WarrantyRegistrationForm
     template_name = 'manufacturing/warrantyregistration_form.html'
     success_url = reverse_lazy('manufacturing:warrantyregistration_list')
+    
+    def form_valid(self, form):
+        import uuid
+        from datetime import datetime
+        
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        
+        # Generate warranty_number if not already set
+        if not instance.warranty_number:
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.warranty_number = f"WAR-{timestamp}-{unique_id}"
+        
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -1091,6 +1166,35 @@ class DistributorPerformanceCreateView(SessionEntityMixin, LoginRequiredMixin, C
     form_class = DistributorPerformanceForm
     template_name = 'manufacturing/distributorperformance_form.html'
     success_url = reverse_lazy('manufacturing:distributorperformance_list')
+    
+    def form_valid(self, form):
+        # Get instance and set entity from session
+        instance = form.save(commit=False)
+        entity_id = self.request.session.get("selected_entity_id")
+        instance.entity_id = entity_id
+        
+        # Handle update_or_create for unique constraint (distributor, month, year)
+        if instance.performance_date:
+            obj, created = DistributorPerformance.objects.update_or_create(
+                distributor=instance.distributor,
+                performance_month=instance.performance_month,
+                performance_year=instance.performance_year,
+                defaults={
+                    'entity_id': instance.entity_id,
+                    'performance_date': instance.performance_date,
+                    'orders_count': instance.orders_count,
+                    'total_sales': instance.total_sales,
+                    'average_order_value': instance.average_order_value,
+                    'on_time_delivery_percentage': instance.on_time_delivery_percentage,
+                    'order_accuracy_percentage': instance.order_accuracy_percentage,
+                    'return_rate_percentage': instance.return_rate_percentage,
+                    'complaint_count': instance.complaint_count,
+                    'payment_on_time_percentage': instance.payment_on_time_percentage,
+                    'overall_rating': instance.overall_rating,
+                }
+            )
+        
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')

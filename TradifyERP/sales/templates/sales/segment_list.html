@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load static %}
+{% load permission_tags %}
+
+{% block title %}Customer Segments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Customer Segments</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'sales:dashboard' %}">Sales</a></li>
+                        <li class="breadcrumb-item active">Customer Segments</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <form method="get" class="d-flex gap-2">
+                                <input type="text" name="search" class="form-control" placeholder="Search by code or name..." value="{{ request.GET.search }}">
+                                <button type="submit" class="btn btn-primary">Search</button>
+                            </form>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="segment_type" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Types</option>
+                                {% for value, label in segment_types %}
+                                <option value="{{ value }}" {% if request.GET.segment_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            {% if user|has_action_permission:'sales:add' %}
+                            <a href="{% url 'sales:customer_segment_create' %}" class="btn btn-success">
+                                <i data-feather="plus"></i> Add Segment
+                            </a>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled title="You do not have permission to add records">
+                                <i class="mdi mdi-plus"></i> Add (No Permission)
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segments Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">All Customer Segments</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Segment Code</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for segment in segments %}
+                            <tr>
+                                <td><strong>{{ segment.segment_code }}</strong></td>
+                                <td>{{ segment.segment_name }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ segment.get_segment_type_display }}</span>
+                                </td>
+                                <td>{{ segment.description|truncatewords:10|default:"N/A" }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ segment.priority }}</span>
+                                </td>
+                                <td>
+                                    {% if segment.status == 'ACTIVE' %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% elif segment.status == 'INACTIVE' %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">{{ segment.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'sales:customer_segment_update' segment.id %}" class="btn btn-sm btn-primary">
+                                        <i data-feather="edit-2"></i>
+                                    </a>
+                                    <a href="{% url 'sales:customer_segment_delete' segment.id %}" class="btn btn-sm btn-danger">
+                                        <i data-feather="trash-2"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">No customer segments found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if is_paginated %}
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

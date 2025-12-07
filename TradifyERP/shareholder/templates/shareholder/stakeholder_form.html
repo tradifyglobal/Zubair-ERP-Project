@@ -5,69 +5,70 @@
 {% block title %}{% if form.instance.pk %}Edit{% else %}Add New{% endif %} Shareholder{% endblock %}
 
 {% block content %}
-<div class="page-content">
-    <div class="container-fluid">
-        <!-- Page Title -->
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">{% if form.instance.pk %}Edit Shareholder{% else %}Add New Shareholder{% endif %}</h4>
-                    <div class="page-title-right">
-                        <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-secondary waves-effect waves-light">
-                            Back to List
-                        </a>
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">{% if form.instance.pk %}Edit Shareholder{% else %}Add New Shareholder{% endif %}</h4>
+                        <div class="page-title-right">
+                            <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-secondary waves-effect waves-light">
+                                Back to List
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Error Messages -->
-        {% if form.non_field_errors %}
+            <!-- Error Messages -->
+            {% if form.non_field_errors %}
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Error:</strong>
+                            {{ form.non_field_errors }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if form.errors %}
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <strong>Form Errors:</strong>
+                            <ul class="mb-0 mt-2">
+                            {% for field, errors in form.errors.items %}
+                                <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                            {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Form Card -->
             <div class="row">
                 <div class="col-lg-8">
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong>Error:</strong>
-                        {{ form.non_field_errors }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-
-        {% if form.errors %}
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <strong>Form Errors:</strong>
-                        <ul class="mb-0 mt-2">
-                        {% for field, errors in form.errors.items %}
-                            <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
-                        {% endfor %}
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-
-        <!-- Form Card -->
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Shareholder Information</h4>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" enctype="multipart/form-data" id="shareholder-form">
-                            {% csrf_token %}
-                            {% crispy form %}
-                        </form>
-                        
-                        <!-- Submit buttons OUTSIDE the crispy form to ensure they work -->
-                        <div class="row mt-4">
-                            <div class="col-sm-6">
-                                <button form="shareholder-form" type="submit" class="btn btn-primary waves-effect waves-light w-100">
-                                    <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Add Shareholder{% endif %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Shareholder Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data" id="shareholder-form">
+                                {% csrf_token %}
+                                {% crispy form %}
+                            </form>
+                            
+                            <!-- Submit buttons OUTSIDE the crispy form to ensure they work -->
+                            <div class="row mt-4">
+                                <div class="col-sm-6">
+                                    <button form="shareholder-form" type="submit" class="btn btn-primary waves-effect waves-light w-100">
+                                        <i class="feather-save"></i> {% if form.instance.pk %}Update{% else %}Add Shareholder{% endif %}
                                 </button>
                             </div>
                             <div class="col-sm-6">
@@ -79,6 +80,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </div>

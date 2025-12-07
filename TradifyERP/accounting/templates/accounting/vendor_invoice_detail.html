@@ -270,16 +270,17 @@
 {% endblock %}
 
 {% block content %}
-<div class="invoice-wrapper">
-    <!-- Print Header with Logo -->
-    <div class="print-header">
-        <img src="{% static 'images/logo.png' %}" alt="TradifyERP" class="print-logo">
-        <h2>VENDOR INVOICE</h2>
-        <p>Invoice #{{ invoice.invoice_number }} | Date: {{ invoice.invoice_date|date:"F j, Y" }}</p>
-        <p style="margin-top: 5px;">TradifyERP - Enterprise Resource Planning System</p>
-    </div>
-
-<div class="py-3 px-2">
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="invoice-wrapper">
+                <!-- Print Header with Logo -->
+                <div class="print-header">
+                    <img src="{% static 'images/logo.png' %}" alt="TradifyERP" class="print-logo">
+                    <h2>VENDOR INVOICE</h2>
+                    <p>Invoice #{{ invoice.invoice_number }} | Date: {{ invoice.invoice_date|date:"F j, Y" }}</p>
+                    <p style="margin-top: 5px;">TradifyERP - Enterprise Resource Planning System</p>
+                </div>
     <div class="row mb-3">
         <div class="col-md-8">
             <h1 class="h3 mb-0">Vendor Invoice #{{ invoice.invoice_number }}</h1>
@@ -501,6 +502,9 @@
         <p><strong>TradifyERP</strong> - Enterprise Resource Planning System</p>
         <p>This is a computer-generated document. No signature required.</p>
         <p>Printed on: {% now "F j, Y \a\\t H:i" %}</p>
+    </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
