@@ -779,11 +779,15 @@ class DistributorPerformanceForm(forms.ModelForm):
     
     class Meta:
         model = __import__('manufacturing.models', fromlist=['DistributorPerformance']).DistributorPerformance
-        fields = ['distributor', 'performance_date', 'orders_count', 'total_sales',
+        fields = ['entity', 'distributor', 'performance_date', 'orders_count', 'total_sales',
                   'on_time_delivery_percentage', 'order_accuracy_percentage',
                   'return_rate_percentage', 'complaint_count',
                   'payment_on_time_percentage', 'overall_rating']
         widgets = {
+            'entity': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
             'distributor': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
