@@ -852,6 +852,13 @@ class DistributorCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     form_class = DistributorForm
     template_name = 'manufacturing/distributor_form.html'
     success_url = reverse_lazy('manufacturing:distributor_list')
+    
+    def form_valid(self, form):
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -898,6 +905,13 @@ class DistributorOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateV
     form_class = DistributorOrderForm
     template_name = 'manufacturing/distributororder_form.html'
     success_url = reverse_lazy('manufacturing:distributororder_list')
+    
+    def form_valid(self, form):
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -946,6 +960,13 @@ class OrderShipmentCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView
     form_class = OrderShipmentForm
     template_name = 'manufacturing/ordershipment_form.html'
     success_url = reverse_lazy('manufacturing:ordershipment_list')
+    
+    def form_valid(self, form):
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -997,6 +1018,13 @@ class AfterSalesServiceCreateView(SessionEntityMixin, LoginRequiredMixin, Create
     form_class = AfterSalesServiceForm
     template_name = 'manufacturing/aftersalesservice_form.html'
     success_url = reverse_lazy('manufacturing:aftersalesservice_list')
+    
+    def form_valid(self, form):
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -1044,6 +1072,13 @@ class WarrantyRegistrationCreateView(SessionEntityMixin, LoginRequiredMixin, Cre
     form_class = WarrantyRegistrationForm
     template_name = 'manufacturing/warrantyregistration_form.html'
     success_url = reverse_lazy('manufacturing:warrantyregistration_list')
+    
+    def form_valid(self, form):
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -1091,6 +1126,13 @@ class DistributorPerformanceCreateView(SessionEntityMixin, LoginRequiredMixin, C
     form_class = DistributorPerformanceForm
     template_name = 'manufacturing/distributorperformance_form.html'
     success_url = reverse_lazy('manufacturing:distributorperformance_list')
+    
+    def form_valid(self, form):
+        entity_id = self.request.session.get("selected_entity_id")
+        instance = form.save(commit=False)
+        instance.entity_id = entity_id
+        instance.save()
+        return redirect(self.success_url)
 
 
 @method_decorator(csrf_protect, name='dispatch')
