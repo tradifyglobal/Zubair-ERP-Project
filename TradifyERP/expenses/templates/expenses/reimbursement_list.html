@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Reimbursements{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-0">Reimbursements</h4>
+                </div>
+            </div>
+
+            <!-- Reimbursements Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            {% if reimbursements %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Report</th>
+                                                <th>Employee</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                                <th>Payment Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for reimbursement in reimbursements %}
+                                                <tr>
+                                                    <td>
+                                                        <a href="{% url 'expenses:report_detail' reimbursement.report.id %}">
+                                                            Report #{{ reimbursement.report.id }}
+                                                        </a>
+                                                    </td>
+                                                    <td>{{ reimbursement.report.employee.user.get_full_name }}</td>
+                                                    <td>${{ reimbursement.amount }}</td>
+                                                    <td>
+                                                        {% if reimbursement.status == 'PENDING' %}
+                                                            <span class="badge bg-warning">Pending</span>
+                                                        {% elif reimbursement.status == 'PROCESSED' %}
+                                                            <span class="badge bg-success">Processed</span>
+                                                        {% elif reimbursement.status == 'PAID' %}
+                                                            <span class="badge bg-primary">Paid</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ reimbursement.payment_date|date:"M d, Y"|default:"--" }}</td>
+                                                    <td>
+                                                        <a href="{% url 'expenses:reimbursement_detail' reimbursement.id %}" class="btn btn-sm btn-info">
+                                                            <i data-feather="eye" style="width: 16px; height: 16px;"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info mb-0">
+                                    <p class="mb-0">No reimbursements found.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

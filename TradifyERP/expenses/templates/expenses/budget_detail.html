@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Budget Details{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Budget Details</h4>
+                        <a href="{% url 'expenses:budget_list' %}" class="btn btn-secondary">Back to Budgets</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Summary -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Budget Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Employee</label>
+                                    <p class="mb-0">{{ budget.employee.user.get_full_name }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Category</label>
+                                    <p class="mb-0">{{ budget.category.name }}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Period</label>
+                                    <p class="mb-0">{{ budget.get_period_display }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Fiscal Year</label>
+                                    <p class="mb-0">{{ budget.fiscal_year }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Stats -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Budget Amount:</span>
+                                <strong>${{ budget.budget_amount }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Spent Amount:</span>
+                                <strong>${{ budget.spent_amount|default:"0.00" }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Remaining:</span>
+                                <strong class="text-success">${{ budget.remaining_amount|default:budget.budget_amount }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

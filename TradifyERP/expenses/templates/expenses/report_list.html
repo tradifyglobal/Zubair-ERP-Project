@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Expense Reports{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Expense Reports</h4>
+                        <a href="{% url 'expenses:report_create' %}" class="btn btn-primary">
+                            <i data-feather="plus"></i> Create Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            {% if reports %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Report ID</th>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                                <th>Status</th>
+                                                <th>Total Amount</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for report in reports %}
+                                                <tr>
+                                                    <td>
+                                                        <a href="{% url 'expenses:report_detail' report.id %}">
+                                                            #{{ report.id }}
+                                                        </a>
+                                                    </td>
+                                                    <td>{{ report.submission_date|date:"M d, Y" }}</td>
+                                                    <td>{{ report.description }}</td>
+                                                    <td>
+                                                        {% if report.status == 'DRAFT' %}
+                                                            <span class="badge bg-secondary">Draft</span>
+                                                        {% elif report.status == 'SUBMITTED' %}
+                                                            <span class="badge bg-info">Submitted</span>
+                                                        {% elif report.status == 'APPROVED' %}
+                                                            <span class="badge bg-success">Approved</span>
+                                                        {% elif report.status == 'REJECTED' %}
+                                                            <span class="badge bg-danger">Rejected</span>
+                                                        {% elif report.status == 'POSTED' %}
+                                                            <span class="badge bg-primary">Posted</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ report.total_amount|default:"$0.00" }}</td>
+                                                    <td>
+                                                        <a href="{% url 'expenses:report_detail' report.id %}" class="btn btn-sm btn-info" title="View">
+                                                            <i data-feather="eye" style="width: 16px; height: 16px;"></i>
+                                                        </a>
+                                                        {% if report.status == 'DRAFT' %}
+                                                            <a href="{% url 'expenses:report_create' %}" class="btn btn-sm btn-warning" title="Edit">
+                                                                <i data-feather="edit" style="width: 16px; height: 16px;"></i>
+                                                            </a>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info mb-0">
+                                    <p class="mb-0">No expense reports found. <a href="{% url 'expenses:report_create' %}">Create one now</a></p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

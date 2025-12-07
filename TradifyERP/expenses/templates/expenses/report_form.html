@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.id %}Edit{% else %}Create{% endif %} Expense Report{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            {% if form.instance.id %}
+                                Edit Expense Report
+                            {% else %}
+                                Create New Expense Report
+                            {% endif %}
+                        </h4>
+                        <a href="{% url 'expenses:report_list' %}" class="btn btn-secondary">Back to Reports</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <strong>Error!</strong>
+                                    {% for error in form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endif %}
+
+                            <form method="post" novalidate>
+                                {% csrf_token %}
+                                
+                                {% for field in form %}
+                                    {% if field.field.widget.input_type != 'hidden' %}
+                                        <div class="mb-3">
+                                            <label for="{{ field.id_for_label }}" class="form-label">
+                                                {{ field.label }}
+                                                {% if field.field.required %}
+                                                    <span class="text-danger">*</span>
+                                                {% endif %}
+                                            </label>
+                                            {% if field.field.widget.input_type == 'textarea' %}
+                                                <textarea name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}" rows="3">{{ field.value|default:'' }}</textarea>
+                                            {% else %}
+                                                {{ field|add_class:"form-control" }}
+                                            {% endif %}
+                                            {% if field.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in field.errors %}
+                                                        <div>{{ error }}</div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            {% if field.help_text %}
+                                                <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{% url 'expenses:report_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">
+                                        {% if form.instance.id %}
+                                            Update Report
+                                        {% else %}
+                                            Create Report
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Instructions</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Creating an Expense Report</h6>
+                            <ul>
+                                <li>Fill in the report details below</li>
+                                <li>After creating the report, you can add individual expenses</li>
+                                <li>Submit for approval once all expenses are added</li>
+                            </ul>
+                            <hr>
+                            <h6>Required Fields</h6>
+                            <p>All fields marked with <span class="text-danger">*</span> are required</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
