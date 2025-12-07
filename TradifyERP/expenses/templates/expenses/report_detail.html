@@ -321,17 +321,39 @@
                         {% if user.is_staff %}
                             <div class="card mb-4">
                                 <div class="card-header">
-                                    <h6 class="card-title mb-0">Manager Actions</h6>
+                                    <h5 class="card-title mb-0">Manager Review</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="btn-group w-100 d-grid gap-2" role="group">
-                                        <a href="{% url 'expenses:report_approve' report.id %}" class="btn btn-success">
-                                            <i data-feather="check"></i> Review & Approve
-                                        </a>
-                                        <a href="{% url 'expenses:report_reject' report.id %}" class="btn btn-danger">
-                                            <i data-feather="x"></i> Reject
-                                        </a>
-                                    </div>
+                                    <form method="post" action="{% url 'expenses:report_inline_review' report.id %}" class="needs-validation">
+                                        {% csrf_token %}
+                                        
+                                        <div class="mb-3">
+                                            <label for="manager_select" class="form-label">Assign to Manager</label>
+                                            <select name="manager_id" id="manager_select" class="form-select" required>
+                                                <option value="">-- Select Manager --</option>
+                                                {% for manager in managers %}
+                                                    <option value="{{ manager.id }}" 
+                                                        {% if workflow.manager.id == manager.id %}selected{% endif %}>
+                                                        {{ manager.first_name }} {{ manager.last_name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="review_notes" class="form-label">Review Notes (Optional)</label>
+                                            <textarea name="notes" id="review_notes" class="form-control" rows="3" placeholder="Enter manager comments..."></textarea>
+                                        </div>
+
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                                <i data-feather="check"></i> Approve & Forward
+                                            </button>
+                                            <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this report?');">
+                                                <i data-feather="x"></i> Reject
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         {% endif %}
@@ -339,17 +361,39 @@
                         {% if user.is_staff %}
                             <div class="card mb-4">
                                 <div class="card-header">
-                                    <h6 class="card-title mb-0">Finance Actions</h6>
+                                    <h5 class="card-title mb-0">Finance Approval</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="btn-group w-100 d-grid gap-2" role="group">
-                                        <a href="{% url 'expenses:report_finance_approve' report.id %}" class="btn btn-success">
-                                            <i data-feather="check"></i> Approve & Post
-                                        </a>
-                                        <a href="{% url 'expenses:report_reject' report.id %}" class="btn btn-danger">
-                                            <i data-feather="x"></i> Reject
-                                        </a>
-                                    </div>
+                                    <form method="post" action="{% url 'expenses:report_inline_finance_approval' report.id %}" class="needs-validation">
+                                        {% csrf_token %}
+                                        
+                                        <div class="mb-3">
+                                            <label for="finance_approver_select" class="form-label">Assign to Finance Approver</label>
+                                            <select name="finance_approver_id" id="finance_approver_select" class="form-select" required>
+                                                <option value="">-- Select Finance Approver --</option>
+                                                {% for finance_user in finance_approvers %}
+                                                    <option value="{{ finance_user.id }}"
+                                                        {% if workflow.finance_approver.id == finance_user.id %}selected{% endif %}>
+                                                        {{ finance_user.first_name }} {{ finance_user.last_name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="finance_notes" class="form-label">Approval Notes (Optional)</label>
+                                            <textarea name="notes" id="finance_notes" class="form-control" rows="3" placeholder="Enter finance comments..."></textarea>
+                                        </div>
+
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                                <i data-feather="check"></i> Approve & Post to GL
+                                            </button>
+                                            <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this report?');">
+                                                <i data-feather="x"></i> Reject
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         {% endif %}

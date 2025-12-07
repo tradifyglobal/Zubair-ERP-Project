@@ -8,6 +8,7 @@ from .views import (
     EmployeeExpenseReportListView, EmployeeExpenseReportDetailView,
     EmployeeExpenseReportCreateView, EmployeeExpenseCreateView,
     EmployeeExpenseSubmitView, EmployeeExpenseApproveView, EmployeeExpenseRejectView,
+    EmployeeExpenseInlineReviewView, EmployeeExpenseInlineFinanceApprovalView,
     ExpenseBudgetListView, ExpenseBudgetDetailView,
     ExpenseReimbursementListView, ExpenseReimbursementCreateView,
     ExpenseReimbursementDetailView, ExpenseReimbursementProcessView,
@@ -28,6 +29,8 @@ urlpatterns = [
     path('reports/<int:report_id>/expense/add/', EmployeeExpenseCreateView.as_view(), name='expense_add'),
     path('reports/<int:pk>/submit/', EmployeeExpenseSubmitView.as_view(), name='report_submit'),
     path('reports/<int:pk>/approve/', EmployeeExpenseApproveView.as_view(), name='report_approve'),
+    path('reports/<int:pk>/inline-review/', EmployeeExpenseInlineReviewView.as_view(), name='report_inline_review'),
+    path('reports/<int:pk>/inline-finance-approval/', EmployeeExpenseInlineFinanceApprovalView.as_view(), name='report_inline_finance_approval'),
     path('reports/<int:pk>/reject/', EmployeeExpenseRejectView.as_view(), name='report_reject'),
     
     # Budgets

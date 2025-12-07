@@ -6,6 +6,7 @@ Handles expense report submission, approval, and reimbursement
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 from django.db.models import Q, Sum, F
 from django.utils import timezone
@@ -130,6 +131,19 @@ class EmployeeExpenseReportDetailView(SessionEntityMixin, LoginRequiredMixin, De
         context['approved_amount'] = sum(
             item.amount for item in report.items.filter(status='APPROVED')
         )
+        
+        # Get all employees to populate manager dropdown
+        context['managers'] = Employee.objects.filter(
+            entity=self.request.entity,
+            is_active=True
+        ).select_related('user').order_by('user__first_name', 'user__last_name')
+        
+        # Get all finance staff to populate approver dropdown
+        context['finance_approvers'] = User.objects.filter(
+            is_staff=True,
+            is_active=True
+        ).order_by('first_name', 'last_name')
+        
         return context
 
 
@@ -768,3 +782,198 @@ class ExpenseCategoryCreateView(SessionEntityMixin, LoginRequiredMixin, CreateVi
     
     def get_success_url(self):
         return reverse_lazy('expenses:category_list')
+
+
+class EmployeeExpenseInlineReviewView(SessionEntityMixin, LoginRequiredMixin, View):
+    """Inline manager review from detail page with dropdown selection"""
+    
+    def post(self, request, pk):
+        report = get_object_or_404(
+            EmployeeExpenseReport,
+            pk=pk,
+            entity=request.entity,
+            status='PENDING_REVIEW'
+        )
+        
+        # Check if user is manager or finance staff
+        if not request.user.is_staff and not request.user.groups.filter(name__in=['Manager', 'Finance']).exists():
+            messages.error(request, 'You do not have permission to approve this report.')
+            return redirect('expenses:report_detail', pk=pk)
+        
+        action = request.POST.get('action', 'reject')
+        manager_id = request.POST.get('manager_id')
+        notes = request.POST.get('notes', '')
+        
+        # Get manager
+        try:
+            manager = Employee.objects.get(id=manager_id, entity=request.entity)
+        except Employee.DoesNotExist:
+            messages.error(request, 'Invalid manager selected.')
+            return redirect('expenses:report_detail', pk=pk)
+        
+        if action == 'approve':
+            # Manager approves - move to finance approval
+            report.status = 'PENDING_APPROVAL'
+            report.reviewed_by = request.user
+            report.reviewed_at = timezone.now()
+            report.review_notes = notes
+            report.save()
+            
+            workflow = report.approval_workflow
+            workflow.manager = manager
+            workflow.manager_approved = True
+            workflow.manager_notes = notes
+            workflow.manager_review_at = timezone.now()
+            workflow.status = 'PENDING_FINANCE_APPROVAL'
+            workflow.save()
+            
+            AuditLog.objects.create(
+                entity=request.entity,
+                action='MANAGER_APPROVED',
+                model_name='EmployeeExpenseReport',
+                object_id=str(report.id),
+                user=request.user.username,
+                description=f'Manager {manager.user.get_full_name()} approved expense report',
+                old_values={'status': 'PENDING_REVIEW'},
+                new_values={'status': 'PENDING_APPROVAL', 'notes': notes}
+            )
+            
+            messages.success(request, f'Report assigned to {manager.user.get_full_name()} and approved for finance review!')
+        else:
+            # Manager rejects
+            report.status = 'REJECTED'
+            report.rejection_reason = notes
+            report.rejected_at = timezone.now()
+            report.reviewed_by = request.user
+            report.reviewed_at = timezone.now()
+            report.save()
+            
+            workflow = report.approval_workflow
+            workflow.manager = manager
+            workflow.status = 'REJECTED'
+            workflow.save()
+            
+            AuditLog.objects.create(
+                entity=request.entity,
+                action='MANAGER_REJECTED',
+                model_name='EmployeeExpenseReport',
+                object_id=str(report.id),
+                user=request.user.username,
+                description=f'Manager {manager.user.get_full_name()} rejected expense report',
+                old_values={'status': 'PENDING_REVIEW'},
+                new_values={'status': 'REJECTED', 'reason': notes}
+            )
+            
+            messages.warning(request, 'Report rejected. Employee has been notified.')
+        
+        return redirect('expenses:report_detail', pk=pk)
+
+
+class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequiredMixin, View):
+    """Inline finance approval from detail page with dropdown selection"""
+    
+    def post(self, request, pk):
+        report = get_object_or_404(
+            EmployeeExpenseReport,
+            pk=pk,
+            entity=request.entity,
+            status='PENDING_APPROVAL'
+        )
+        
+        # Check if user is finance staff
+        if not request.user.is_staff and not request.user.groups.filter(name='Finance').exists():
+            messages.error(request, 'You do not have permission to approve this report.')
+            return redirect('expenses:report_detail', pk=pk)
+        
+        action = request.POST.get('action', 'reject')
+        finance_approver_id = request.POST.get('finance_approver_id')
+        notes = request.POST.get('notes', '')
+        
+        # Get finance approver
+        try:
+            finance_approver = User.objects.get(id=finance_approver_id, is_staff=True, is_active=True)
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid finance approver selected.')
+            return redirect('expenses:report_detail', pk=pk)
+        
+        if action == 'approve':
+            # Finance approves and posts to GL
+            report.status = 'APPROVED'
+            report.approved_by = finance_approver
+            report.approved_at = timezone.now()
+            report.approval_notes = notes
+            report.save()
+            
+            workflow = report.approval_workflow
+            workflow.finance_approver = finance_approver
+            workflow.finance_approved = True
+            workflow.finance_notes = notes
+            workflow.finance_approved_at = timezone.now()
+            workflow.status = 'APPROVED'
+            workflow.save()
+            
+            # Create reimbursement record
+            total_approved = sum(
+                item.amount for item in report.items.filter(status='APPROVED')
+            )
+            
+            if total_approved > 0:
+                ExpenseReimbursement.objects.create(
+                    report=report,
+                    amount=total_approved
+                )
+            
+            # Post to GL
+            try:
+                for item in report.items.filter(status='APPROVED'):
+                    item.post_to_gl()
+                report.is_posted = True
+                report.posted_at = timezone.now()
+                report.status = 'POSTED'
+                report.save()
+                
+                AuditLog.objects.create(
+                    entity=request.entity,
+                    action='FINANCE_APPROVED',
+                    model_name='EmployeeExpenseReport',
+                    object_id=str(report.id),
+                    user=request.user.username,
+                    description=f'Finance {finance_approver.get_full_name()} approved and posted expense report to GL',
+                    old_values={'status': 'PENDING_APPROVAL'},
+                    new_values={'status': 'APPROVED', 'is_posted': True}
+                )
+                
+                messages.success(request, f'Report assigned to {finance_approver.get_full_name()}, approved, posted to GL, and scheduled for reimbursement!')
+            except Exception as e:
+                logger.error(f"Error posting to GL: {str(e)}\n{traceback.format_exc()}")
+                messages.error(request, f'Error posting to GL: {str(e)}')
+                return redirect('expenses:report_detail', pk=pk)
+        else:
+            # Finance rejects
+            report.status = 'REJECTED'
+            report.rejection_reason = notes
+            report.rejected_at = timezone.now()
+            report.approved_by = finance_approver
+            report.approved_at = timezone.now()
+            report.save()
+            
+            workflow = report.approval_workflow
+            workflow.finance_approver = finance_approver
+            workflow.status = 'REJECTED'
+            workflow.save()
+            
+            AuditLog.objects.create(
+                entity=request.entity,
+                action='FINANCE_REJECTED',
+                model_name='EmployeeExpenseReport',
+                object_id=str(report.id),
+                user=request.user.username,
+                description=f'Finance {finance_approver.get_full_name()} rejected expense report',
+                old_values={'status': 'PENDING_APPROVAL'},
+                new_values={'status': 'REJECTED', 'reason': notes}
+            )
+            
+            messages.warning(request, 'Report rejected by finance. Employee has been notified.')
+        
+        return redirect('expenses:report_detail', pk=pk)
+
