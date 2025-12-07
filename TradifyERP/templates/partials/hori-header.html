@@ -156,7 +156,9 @@
                             <button type="button" class="btn header-item noti-icon position-relative" id="page-header-notifications-dropdown"
                             data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i data-feather="bell" class="icon-lg"></i>
-                                <span class="badge bg-danger rounded-pill" id="notification-badge" style="display: {% if pending_notifications.total_pending %}block{% else %}none{% endif %};">{{ pending_notifications.total_pending }}</span>
+                                {% with total_count=pending_notifications.total_pending|add:expense_total_pending %}
+                                <span class="badge bg-danger rounded-pill" id="notification-badge" style="display: {% if total_count %}block{% else %}none{% endif %};">{{ total_count }}</span>
+                                {% endwith %}
                             </button>
                             <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
                                 aria-labelledby="page-header-notifications-dropdown">
@@ -167,12 +169,15 @@
                                         </div>
                                         <div class="col-auto">
                                             <a href="#!" class="small text-reset text-decoration-underline" id="notification-unread-count">
-                                                <span id="notification-total">{{ pending_notifications.total_pending }}</span> pending
+                                                {% with total_count=pending_notifications.total_pending|add:expense_total_pending %}
+                                                <span id="notification-total">{{ total_count }}</span> pending
+                                                {% endwith %}
                                             </a>
                                         </div>
                                     </div>
                                 </div>
                                 <div data-simplebar style="max-height: 400px;" id="notification-container">
+                                    <!-- Shareholder Contribution Notifications -->
                                     {% if pending_notifications.pending_reviews_count %}
                                         <div class="p-3 border-bottom">
                                             <h6 class="text-muted small text-uppercase mb-2">Awaiting Review ({{ pending_notifications.pending_reviews_count }})</h6>
@@ -223,12 +228,92 @@
                                         </div>
                                     {% endif %}
 
+                                    <!-- Expense Review Notifications -->
+                                    {% if expense_pending_reviews_count %}
+                                        <div class="p-3 border-bottom">
+                                            <h6 class="text-muted small text-uppercase mb-2">Expense Review Required ({{ expense_pending_reviews_count }})</h6>
+                                            <div id="expense-review-notifications">
+                                                {% for report in expense_pending_reviews %}
+                                                    <a href="{% url 'expenses:report-detail' report.id %}" class="text-reset notification-item">
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-sm me-3">
+                                                                <span class="avatar-title bg-info rounded-circle font-size-16">
+                                                                    <i class="bx bx-file"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-1">{{ report.report_number }}</h6>
+                                                                <div class="font-size-13 text-muted">
+                                                                    <p class="mb-0"><strong>{{ report.total_amount|floatformat:2 }}</strong> - Review required</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Expense Approval Notifications -->
+                                    {% if expense_pending_approvals_count %}
+                                        <div class="p-3 border-bottom">
+                                            <h6 class="text-muted small text-uppercase mb-2">Expense Approval Required ({{ expense_pending_approvals_count }})</h6>
+                                            <div id="expense-approval-notifications">
+                                                {% for report in expense_pending_approvals %}
+                                                    <a href="{% url 'expenses:report-detail' report.id %}" class="text-reset notification-item">
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-sm me-3">
+                                                                <span class="avatar-title bg-success rounded-circle font-size-16">
+                                                                    <i class="bx bx-check-circle"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-1">{{ report.report_number }}</h6>
+                                                                <div class="font-size-13 text-muted">
+                                                                    <p class="mb-0"><strong>{{ report.total_amount|floatformat:2 }}</strong> - Approval required</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Expense Finance Approval Notifications -->
+                                    {% if expense_pending_final_approvals_count %}
+                                        <div class="p-3 border-bottom">
+                                            <h6 class="text-muted small text-uppercase mb-2">Finance Approval Required ({{ expense_pending_final_approvals_count }})</h6>
+                                            <div id="expense-final-approval-notifications">
+                                                {% for report in expense_pending_final_approvals %}
+                                                    <a href="{% url 'expenses:report-detail' report.id %}" class="text-reset notification-item">
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0 avatar-sm me-3">
+                                                                <span class="avatar-title bg-danger rounded-circle font-size-16">
+                                                                    <i class="bx bx-check-double"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-1">{{ report.report_number }}</h6>
+                                                                <div class="font-size-13 text-muted">
+                                                                    <p class="mb-0"><strong>{{ report.total_amount|floatformat:2 }}</strong> - Finance approval required</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
                                     <!-- No notifications -->
-                                    {% if not pending_notifications.total_pending %}
+                                    {% with total_count=pending_notifications.total_pending|add:expense_total_pending %}
+                                    {% if not total_count %}
                                         <div class="p-3 text-center">
                                             <p class="text-muted mb-0">No pending notifications</p>
                                         </div>
                                     {% endif %}
+                                    {% endwith %}
                                 </div>
                                 <div class="p-2 border-top d-grid">
                                     <a class="btn btn-sm btn-info font-size-14" href="{% url 'shareholder:capital-contribution-list' %}">
