@@ -928,7 +928,7 @@ class OrderShipmentListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     def get_queryset(self):
         # Filter through order relationship to entity
         entity_id = self.request.session.get("selected_entity_id")
-        qs = OrderShipment.objects.filter(entity_id=self.request.session.get("selected_entity_id"))
+        qs = OrderShipment.objects.filter(order__entity_id=entity_id)
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(tracking_number__icontains=search))
@@ -1025,18 +1025,12 @@ class WarrantyRegistrationListView(SessionEntityMixin, LoginRequiredMixin, ListV
     paginate_by = 25
     
     def get_queryset(self):
-        # Filter through distributor relationship to entity
         entity_id = self.request.session.get("selected_entity_id")
-        qs = WarrantyRegistration.objects.filter(entity_id=self.request.session.get("selected_entity_id"))
+        qs = WarrantyRegistration.objects.filter(entity_id=entity_id)
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(warranty_number__icontains=search) | Q(product_code__icontains=search))
         return qs.order_by('-created_at')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search'] = self.request.GET.get('search', '')
-        return context
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1078,18 +1072,12 @@ class DistributorPerformanceListView(SessionEntityMixin, LoginRequiredMixin, Lis
     paginate_by = 25
     
     def get_queryset(self):
-        # Filter through distributor relationship to entity
         entity_id = self.request.session.get("selected_entity_id")
-        qs = DistributorPerformance.objects.filter(entity_id=self.request.session.get("selected_entity_id"))
+        qs = DistributorPerformance.objects.filter(entity_id=entity_id)
         search = self.request.GET.get('search', '')
         if search:
             qs = qs.filter(Q(distributor__distributor_name__icontains=search))
         return qs.order_by('-created_at')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search'] = self.request.GET.get('search', '')
-        return context
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
