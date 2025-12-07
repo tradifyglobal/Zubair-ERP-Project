@@ -777,16 +777,6 @@ class WarrantyRegistrationForm(forms.ModelForm):
 class DistributorPerformanceForm(forms.ModelForm):
     """Form for tracking distributor performance."""
     
-    entity = forms.ModelChoiceField(
-        queryset=None,
-        widget=forms.Select(attrs={
-            'class': 'form-select',
-            'required': 'required'
-        }),
-        label='Entity',
-        required=True
-    )
-    
     class Meta:
         model = __import__('manufacturing.models', fromlist=['DistributorPerformance']).DistributorPerformance
         fields = ['entity', 'distributor', 'performance_date', 'orders_count', 'total_sales',
@@ -794,6 +784,10 @@ class DistributorPerformanceForm(forms.ModelForm):
                   'return_rate_percentage', 'complaint_count',
                   'payment_on_time_percentage', 'overall_rating']
         widgets = {
+            'entity': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
             'distributor': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
