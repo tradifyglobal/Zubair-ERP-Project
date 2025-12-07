@@ -170,24 +170,50 @@
                                         <div class="col-md-6 mb-3">
                                             <div class="card border">
                                                 <div class="card-body">
+                                                    <!-- Image Preview -->
+                                                    {% if attachment.file_type in 'jpg,jpeg,png,gif' %}
+                                                        <div class="mb-3 text-center" style="max-height: 200px; overflow: hidden;">
+                                                            <img src="{{ attachment.file.url }}" alt="{{ attachment.file_name }}" style="max-width: 100%; max-height: 200px; border-radius: 5px;">
+                                                        </div>
+                                                    {% elif attachment.file_type == 'pdf' %}
+                                                        <div class="mb-3 alert alert-light text-center">
+                                                            <i data-feather="file-pdf" style="width: 48px; height: 48px; color: #dc3545;"></i>
+                                                            <p class="mt-2 text-muted small">PDF Document</p>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="mb-3 alert alert-light text-center">
+                                                            <i data-feather="file" style="width: 48px; height: 48px; color: #6c757d;"></i>
+                                                            <p class="mt-2 text-muted small">{{ attachment.file_type|upper }} File</p>
+                                                        </div>
+                                                    {% endif %}
+                                                    
                                                     <div class="d-flex justify-content-between align-items-start">
                                                         <div>
                                                             <h6 class="card-title mb-1">
-                                                                <i data-feather="file-text" style="width: 18px; height: 18px;"></i>
                                                                 {{ attachment.file_name }}
                                                             </h6>
                                                             <small class="text-muted d-block">
-                                                                {{ attachment.get_attachment_type_display }} • {{ attachment.created_at|date:"M d, Y" }}
+                                                                {{ attachment.get_attachment_type_display }} • {{ attachment.created_at|date:"M d, Y H:i" }}
                                                             </small>
                                                             {% if attachment.description %}
                                                                 <small class="d-block mt-2">{{ attachment.description }}</small>
                                                             {% endif %}
+                                                            <small class="text-muted d-block mt-2">{{ attachment.file_size|filesizeformat }}</small>
                                                         </div>
-                                                        <div>
-                                                            <a href="{{ attachment.get_file_url }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                                                                <i data-feather="download"></i>
-                                                            </a>
-                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mt-3 d-flex gap-2">
+                                                        <a href="{{ attachment.file.url }}" class="btn btn-sm btn-primary" target="_blank" download>
+                                                            <i data-feather="download" style="width: 16px; height: 16px;"></i> Download
+                                                        </a>
+                                                        {% if report.status == 'DRAFT' %}
+                                                            <form method="post" action="{% url 'expenses:attachment_delete' attachment.id %}" style="display: inline;" onsubmit="return confirm('Are you sure?');">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                                    <i data-feather="trash-2" style="width: 16px; height: 16px;"></i> Delete
+                                                                </button>
+                                                            </form>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
                                             </div>

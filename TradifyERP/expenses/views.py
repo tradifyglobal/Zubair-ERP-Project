@@ -124,6 +124,7 @@ class EmployeeExpenseReportDetailView(SessionEntityMixin, LoginRequiredMixin, De
         context = super().get_context_data(**kwargs)
         report = context['report']
         context['items'] = report.items.all()
+        context['attachments'] = report.attachments.all()
         context['workflow'] = getattr(report, 'approval_workflow', None)
         context['total_amount'] = sum(item.amount for item in report.items.all())
         context['approved_amount'] = sum(
