@@ -1167,19 +1167,31 @@ class DistributorPerformanceCreateView(SessionEntityMixin, LoginRequiredMixin, C
     template_name = 'manufacturing/distributorperformance_form.html'
     success_url = reverse_lazy('manufacturing:distributorperformance_list')
     
+    def get_initial(self):
+        """Set the initial entity from session."""
+        initial = super().get_initial()
+        entity_id = self.request.session.get("selected_entity_id")
+        if entity_id:
+            initial['entity'] = entity_id
+        return initial
+    
     def form_valid(self, form):
         # Get the instance from form.save(commit=False) to process it
         instance = form.save(commit=False)
         
-        # Use the entity selected in the form (no longer using session entity)
-        # Now call the form's update_or_create logic with the entity from form
+        # Ensure entity_id is set from either form or session
+        entity_id = self.request.session.get("selected_entity_id")
+        if not instance.entity_id or instance.entity_id == 1:
+            instance.entity_id = entity_id
+        
+        # Call the form's update_or_create logic with the entity
         from manufacturing.models import DistributorPerformance
         obj, created = DistributorPerformance.objects.update_or_create(
             distributor=instance.distributor,
             performance_month=instance.performance_month,
             performance_year=instance.performance_year,
             defaults={
-                'entity_id': instance.entity_id,  # Use entity from form selection
+                'entity_id': instance.entity_id,
                 'performance_date': instance.performance_date,
                 'orders_count': instance.orders_count,
                 'total_sales': instance.total_sales,

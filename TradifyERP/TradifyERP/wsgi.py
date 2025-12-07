@@ -9,10 +9,11 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 
 import os
 import sys
+from pathlib import Path
 
 # Add the project root to the path so Django can find settings
-# Use absolute path for production deployment
-PROJECT_ROOT = '/var/www/tradifyerp/TradifyERP'
+# Use dynamic path that works for both dev and production
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 

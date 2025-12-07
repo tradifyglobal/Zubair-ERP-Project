@@ -848,6 +848,11 @@ class DistributorPerformanceForm(forms.ModelForm):
         # Load all entities for the entity field
         from accounting.models import Entity
         self.fields['entity'].queryset = Entity.objects.all().order_by('name')
+        # Make sure entity field is properly set
+        if not self.instance.pk and not self.data:
+            # For new instances without form data, don't set initial
+            # Let the view handle it via get_initial
+            pass
 
     def save(self, commit=True):
         """Auto-populate performance_month and performance_year from performance_date.
