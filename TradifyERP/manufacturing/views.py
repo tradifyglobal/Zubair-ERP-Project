@@ -6,6 +6,7 @@ Complete CRUD operations with RBAC and multi-entity support.
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from accounting.permission_utils import module_permission_required
+from accounting.mixins import SessionEntityMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -751,46 +752,48 @@ class EquipmentDeleteView(LoginRequiredMixin, DeleteView):
 # ==================== Dashboard View ====================
 
 @method_decorator(csrf_protect, name='dispatch')
-class ManufacturingDashboardView(LoginRequiredMixin, TemplateView):
+class ManufacturingDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """Manufacturing dashboard with KPIs and metrics."""
     template_name = 'manufacturing/dashboard.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_entities = get_user_entities(self.request.user)
         
-        # Production metrics
-        total_orders = ProductionOrder.objects.filter(entity_id__in=user_entities).count()
+        # Get the current entity from session (set by SessionEntityMixin)
+        entity_id = self.request.session.get('selected_entity_id')
+        
+        # Production metrics - filtered by entity only
+        total_orders = ProductionOrder.objects.filter(entity_id=entity_id).count()
         open_orders = ProductionOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status__in=['RELEASED', 'IN_PROGRESS']
         ).count()
         completed_orders = ProductionOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status='COMPLETE'
         ).count()
         
         # Quality metrics
         failed_inspections = QualityInspection.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status='FAIL'
         ).count()
         
         # Inventory metrics
         low_stock_materials = RawMaterial.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             current_stock__lte=F('reorder_point')
         ).count()
         
         # Cost metrics - For pending orders use estimated, for completed use actual OR estimated if actual is 0
         pending_po_cost = ProductionOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status__in=['DRAFT', 'PLANNED', 'RELEASED', 'IN_PROGRESS']
         ).aggregate(total=Sum('estimated_material_cost') + Sum('estimated_labor_cost'))['total'] or Decimal('0.00')
         
         # For completed orders: use actual costs if > 0, otherwise use estimated
         completed_orders_qs = ProductionOrder.objects.filter(
-            entity_id__in=user_entities,
+            entity_id=entity_id,
             status='COMPLETE'
         )
         
@@ -805,7 +808,7 @@ class ManufacturingDashboardView(LoginRequiredMixin, TemplateView):
         
         total_po_cost = pending_po_cost + completed_po_cost
         
-        context = {
+        context.update({
             'total_orders': total_orders,
             'open_orders': open_orders,
             'completed_orders': completed_orders,
@@ -815,7 +818,7 @@ class ManufacturingDashboardView(LoginRequiredMixin, TemplateView):
             'pending_po_cost': pending_po_cost,
             'completed_po_cost': completed_po_cost,
             'csrf_token': get_token(self.request),
-        }
+        })
         
         return context
 
