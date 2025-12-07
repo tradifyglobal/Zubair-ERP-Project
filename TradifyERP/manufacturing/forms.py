@@ -779,15 +779,11 @@ class DistributorPerformanceForm(forms.ModelForm):
     
     class Meta:
         model = __import__('manufacturing.models', fromlist=['DistributorPerformance']).DistributorPerformance
-        fields = ['entity', 'distributor', 'performance_date', 'orders_count', 'total_sales',
+        fields = ['distributor', 'performance_date', 'orders_count', 'total_sales',
                   'on_time_delivery_percentage', 'order_accuracy_percentage',
                   'return_rate_percentage', 'complaint_count',
                   'payment_on_time_percentage', 'overall_rating']
         widgets = {
-            'entity': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
-            }),
             'distributor': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
@@ -845,18 +841,9 @@ class DistributorPerformanceForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Load all entities for the entity field
-        from accounting.models import Entity
-        self.fields['entity'].queryset = Entity.objects.all().order_by('name')
-        # Make sure entity field is properly set
-        if not self.instance.pk and not self.data:
-            # For new instances without form data, don't set initial
-            # Let the view handle it via get_initial
-            pass
 
     def save(self, commit=True):
-        """Auto-populate performance_month and performance_year from performance_date.
-        Uses update_or_create to handle unique constraint on (distributor, month, year)."""
+        """Auto-populate performance_month and performance_year from performance_date."""
         instance = super().save(commit=False)
         
         # Extract month and year from performance_date
@@ -865,30 +852,8 @@ class DistributorPerformanceForm(forms.ModelForm):
             instance.performance_year = instance.performance_date.year
         
         if commit:
-            # Use update_or_create to handle the unique constraint
-            # If a record exists for this distributor/month/year, update it
-            # Otherwise, create a new one
-            from manufacturing.models import DistributorPerformance
-            
-            obj, created = DistributorPerformance.objects.update_or_create(
-                distributor=instance.distributor,
-                performance_month=instance.performance_month,
-                performance_year=instance.performance_year,
-                defaults={
-                    'entity_id': instance.entity_id,
-                    'performance_date': instance.performance_date,
-                    'orders_count': instance.orders_count,
-                    'total_sales': instance.total_sales,
-                    'average_order_value': instance.average_order_value,
-                    'on_time_delivery_percentage': instance.on_time_delivery_percentage,
-                    'order_accuracy_percentage': instance.order_accuracy_percentage,
-                    'return_rate_percentage': instance.return_rate_percentage,
-                    'complaint_count': instance.complaint_count,
-                    'payment_on_time_percentage': instance.payment_on_time_percentage,
-                    'overall_rating': instance.overall_rating,
-                }
-            )
-            return obj
+            instance.save()
+        
         return instance
 
 
