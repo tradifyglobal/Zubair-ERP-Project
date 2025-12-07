@@ -490,6 +490,25 @@ class DistributorOrderForm(forms.ModelForm):
             }),
         }
 
+    def save(self, commit=True):
+        """Auto-generate unique order_number if not already set."""
+        import uuid
+        from datetime import datetime
+        
+        instance = super().save(commit=False)
+        
+        # Generate order_number if not already set
+        if not instance.order_number:
+            # Format: ORD-{YYYY}{MM}{DD}-{random 6 chars}
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.order_number = f"ORD-{timestamp}-{unique_id}"
+        
+        if commit:
+            instance.save()
+        
+        return instance
+
 
 class CourierForm(forms.ModelForm):
     """Form for courier/carrier management."""
@@ -567,6 +586,25 @@ class OrderShipmentForm(forms.ModelForm):
             }),
         }
 
+    def save(self, commit=True):
+        """Auto-generate unique shipment_number if not already set."""
+        import uuid
+        from datetime import datetime
+        
+        instance = super().save(commit=False)
+        
+        # Generate shipment_number if not already set
+        if not instance.shipment_number:
+            # Format: SHIP-{YYYY}{MM}{DD}-{random 6 chars}
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.shipment_number = f"SHIP-{timestamp}-{unique_id}"
+        
+        if commit:
+            instance.save()
+        
+        return instance
+
 
 class AfterSalesServiceForm(forms.ModelForm):
     """Form for after-sales service tickets."""
@@ -626,6 +664,25 @@ class AfterSalesServiceForm(forms.ModelForm):
                 'class': 'form-select'
             }),
         }
+
+    def save(self, commit=True):
+        """Auto-generate unique service_ticket_number if not already set."""
+        import uuid
+        from datetime import datetime
+        
+        instance = super().save(commit=False)
+        
+        # Generate service_ticket_number if not already set
+        if not instance.service_ticket_number:
+            # Format: TICKET-{YYYY}{MM}{DD}-{random 6 chars}
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.service_ticket_number = f"TICKET-{timestamp}-{unique_id}"
+        
+        if commit:
+            instance.save()
+        
+        return instance
 
 
 class WarrantyRegistrationForm(forms.ModelForm):
@@ -696,6 +753,25 @@ class WarrantyRegistrationForm(forms.ModelForm):
                 'placeholder': 'Terms and conditions'
             }),
         }
+
+    def save(self, commit=True):
+        """Auto-generate unique warranty_number if not already set."""
+        import uuid
+        from datetime import datetime
+        
+        instance = super().save(commit=False)
+        
+        # Generate warranty_number if not already set
+        if not instance.warranty_number:
+            # Format: WAR-{YYYY}{MM}{DD}-{random 6 chars}
+            timestamp = datetime.now().strftime('%Y%m%d')
+            unique_id = str(uuid.uuid4())[:6].upper()
+            instance.warranty_number = f"WAR-{timestamp}-{unique_id}"
+        
+        if commit:
+            instance.save()
+        
+        return instance
 
 
 class DistributorPerformanceForm(forms.ModelForm):
