@@ -45,17 +45,6 @@ class EmployeeExpenseReportForm(forms.ModelForm):
 class EmployeeExpenseForm(forms.ModelForm):
     """Form for adding expense items to a report with attachment support"""
     
-    # Multiple file upload field
-    attachments = forms.FileField(
-        required=False,
-        widget=forms.ClearableFileInput(attrs={
-            'class': 'form-control',
-            'accept': '.pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx',
-            'multiple': True
-        }),
-        help_text='Upload receipts, invoices, or supporting documents (PDF, JPG, PNG, DOC, DOCX, XLSX)'
-    )
-    
     class Meta:
         model = EmployeeExpense
         fields = ['category', 'expense_date', 'description', 'amount', 'receipt', 'receipt_number']
