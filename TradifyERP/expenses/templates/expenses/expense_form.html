@@ -47,7 +47,34 @@
                                             {% if field.field.widget.input_type == 'textarea' %}
                                                 <textarea name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}" rows="3">{{ field.value|default:'' }}</textarea>
                                             {% elif field.field.widget.input_type == 'file' %}
-                                                <input type="file" name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}">
+                                                <input type="file" name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                                <!-- File Preview Area -->
+                                                <div id="filePreviewArea_{{ field.name }}" class="mt-3" style="display: none;">
+                                                    <div class="card border-info">
+                                                        <div class="card-header bg-info">
+                                                            <h6 class="mb-0 text-white">File Preview</h6>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div id="fileInfo_{{ field.name }}" class="mb-3">
+                                                                <p><strong>File Name:</strong> <span id="fileName_{{ field.name }}"></span></p>
+                                                                <p><strong>File Size:</strong> <span id="fileSize_{{ field.name }}"></span></p>
+                                                                <p><strong>File Type:</strong> <span id="fileType_{{ field.name }}"></span></p>
+                                                            </div>
+                                                            <div id="imagePreview_{{ field.name }}" style="display: none;" class="text-center">
+                                                                <p><strong>Image Preview:</strong></p>
+                                                                <img id="previewImage_{{ field.name }}" src="" alt="Preview" style="max-width: 300px; max-height: 300px; border: 1px solid #ccc; border-radius: 5px;">
+                                                            </div>
+                                                            <div id="pdfPreview_{{ field.name }}" style="display: none;" class="text-center">
+                                                                <p><strong>PDF Preview:</strong></p>
+                                                                <p class="text-muted"><i data-feather="file-pdf"></i> PDF file selected</p>
+                                                            </div>
+                                                            <div id="documentPreview_{{ field.name }}" style="display: none;" class="text-center">
+                                                                <p><strong>Document Preview:</strong></p>
+                                                                <p class="text-muted"><i data-feather="file-text"></i> Document file selected</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>>
                                             {% elif field.field.widget.input_type == 'select' %}
                                                 <select name="{{ field.name }}" class="form-select {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}">
                                                     <option value="">-- Select {{ field.label }} --</option>
@@ -118,4 +145,63 @@
         font-size: 0.875rem;
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle file preview for receipt field
+    const receiptInput = document.getElementById('id_receipt');
+    if (receiptInput) {
+        setupFilePreview(receiptInput, 'receipt');
+    }
+});
+
+function setupFilePreview(fileInput, fieldName) {
+    const filePreviewArea = document.getElementById('filePreviewArea_' + fieldName);
+    const fileNameSpan = document.getElementById('fileName_' + fieldName);
+    const fileSizeSpan = document.getElementById('fileSize_' + fieldName);
+    const fileTypeSpan = document.getElementById('fileType_' + fieldName);
+    const imagePreview = document.getElementById('imagePreview_' + fieldName);
+    const previewImage = document.getElementById('previewImage_' + fieldName);
+    const pdfPreview = document.getElementById('pdfPreview_' + fieldName);
+    const documentPreview = document.getElementById('documentPreview_' + fieldName);
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            // Show preview area
+            filePreviewArea.style.display = 'block';
+            
+            // Display file info
+            fileNameSpan.textContent = file.name;
+            fileSizeSpan.textContent = (file.size / 1024).toFixed(2) + ' KB';
+            fileTypeSpan.textContent = file.type || 'Unknown';
+            
+            // Hide all previews first
+            imagePreview.style.display = 'none';
+            pdfPreview.style.display = 'none';
+            documentPreview.style.display = 'none';
+            
+            // Show appropriate preview based on file type
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewImage.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type === 'application/pdf') {
+                pdfPreview.style.display = 'block';
+            } else if (file.type.includes('word') || file.type.includes('document') || 
+                      file.type.includes('spreadsheet') || file.type.includes('sheet')) {
+                documentPreview.style.display = 'block';
+            } else {
+                documentPreview.style.display = 'block';
+            }
+        } else {
+            filePreviewArea.style.display = 'none';
+        }
+    });
+}
+</script>
 {% endblock %}
