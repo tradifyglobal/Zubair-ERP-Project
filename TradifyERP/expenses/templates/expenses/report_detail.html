@@ -368,7 +368,7 @@
 
                                             <div class="d-grid gap-2">
                                                 <button type="submit" name="action" value="approve" class="btn btn-success">
-                                                    <i data-feather="check"></i> Approve for Finance
+                                                    <i data-feather="check"></i> Submit for Approval
                                                 </button>
                                                 <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this report?');">
                                                     <i data-feather="x"></i> Reject
@@ -401,7 +401,7 @@
                         </div>
 
                         <!-- Finance Approval -->
-                        {% if approvers %}
+                        {% if is_approver and approvers %}
                             <div class="card mb-4">
                                 <div class="card-header bg-success">
                                     <h5 class="card-title mb-0 text-white">
@@ -446,6 +446,18 @@
                                             </div>
                                         </form>
                                     {% endif %}
+                                </div>
+                            </div>
+                        {% elif not is_approver %}
+                            <!-- Non-approvers see waiting message -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-success">
+                                    <h5 class="card-title mb-0 text-white">
+                                        <i data-feather="dollar-sign"></i> Finance Approval
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted">Pending approval by Finance team. You will be notified when this stage is complete.</p>
                                 </div>
                             </div>
                         {% endif %}

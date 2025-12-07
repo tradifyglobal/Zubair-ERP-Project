@@ -155,6 +155,20 @@ class EmployeeExpenseReportDetailView(SessionEntityMixin, LoginRequiredMixin, De
             is_active=True
         ).order_by('first_name', 'last_name')
         
+        # Check if current user is an approver
+        context['is_approver'] = ModulePermission.objects.filter(
+            user=self.request.user,
+            module='expenses',
+            can_approve=True
+        ).exists()
+        
+        # Check if current user is a reviewer
+        context['is_reviewer'] = ModulePermission.objects.filter(
+            user=self.request.user,
+            module='reviewer',
+            can_view=True
+        ).exists()
+        
         return context
 
 
