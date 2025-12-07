@@ -8,6 +8,15 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
+import sys
+
+# Add the project root to the path so Django can find settings
+# Use absolute path for production deployment
+PROJECT_ROOT = '/var/www/tradifyerp/TradifyERP'
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+os.chdir(PROJECT_ROOT)
 
 from django.core.wsgi import get_wsgi_application
 

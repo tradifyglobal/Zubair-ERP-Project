@@ -2,7 +2,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Local development database: SQLite (safe fallback)
+# Development database: SQLite
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
