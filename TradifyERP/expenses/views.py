@@ -13,6 +13,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from decimal import Decimal
 from datetime import datetime, timedelta
+import logging
+import traceback
 
 from accounting.mixins import SessionEntityMixin
 from accounting.models import AuditLog
@@ -27,6 +29,8 @@ from .forms import (
     ExpenseCategoryForm, ExpenseBudgetForm, ExpenseReimbursementForm,
     ExpenseAttachmentForm
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ExpenseDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
@@ -140,36 +144,62 @@ class EmployeeExpenseReportCreateView(SessionEntityMixin, LoginRequiredMixin, Cr
         return kwargs
     
     def form_valid(self, form):
+        logger.info(f"EmployeeExpenseReportCreateView.form_valid called for user {self.request.user.username}")
         form.instance.entity = self.request.entity
         
         # Auto-populate employee from logged-in user
         try:
             employee = Employee.objects.get(user=self.request.user)
             form.instance.employee = employee
+            logger.info(f"Employee found: {employee}")
         except Employee.DoesNotExist:
-            messages.error(self.request, 'Your user account is not linked to an employee record. Please contact your administrator to create an employee profile.')
+            error_msg = 'Your user account is not linked to an employee record. Please contact your administrator to create an employee profile.'
+            logger.error(f"Employee not found for user {self.request.user.username}")
+            messages.error(self.request, error_msg)
             return self.form_invalid(form)
         
-        response = super().form_valid(form)
-        
-        # Create approval workflow
-        ExpenseApprovalWorkflow.objects.create(
-            report=form.instance
-        )
-        
-        # Create audit log
-        AuditLog.objects.create(
-            entity=self.request.entity,
-            action='CREATE',
-            model_name='EmployeeExpenseReport',
-            object_id=str(form.instance.id),
-            user=self.request.user.username,
-            description=f"Created new expense report",
-            new_values={'status': 'DRAFT'}
-        )
-        
-        messages.success(self.request, 'Expense report created successfully!')
-        return response
+        try:
+            logger.info("Calling super().form_valid(form)")
+            response = super().form_valid(form)
+            logger.info(f"Form saved successfully, instance ID: {form.instance.id}")
+            
+            # Create approval workflow
+            try:
+                logger.info(f"Creating approval workflow for report {form.instance.id}")
+                ExpenseApprovalWorkflow.objects.create(
+                    report=form.instance
+                )
+                logger.info("Approval workflow created successfully")
+            except Exception as e:
+                logger.error(f"Error creating approval workflow: {str(e)}\n{traceback.format_exc()}")
+                messages.error(self.request, f"Error creating approval workflow: {str(e)}")
+                form.instance.delete()
+                return self.form_invalid(form)
+            
+            # Create audit log
+            try:
+                logger.info(f"Creating audit log for report {form.instance.id}")
+                AuditLog.objects.create(
+                    entity=self.request.entity,
+                    action='CREATE',
+                    model_name='EmployeeExpenseReport',
+                    object_id=str(form.instance.id),
+                    user=self.request.user.username,
+                    description=f"Created new expense report",
+                    new_values={'status': 'DRAFT'}
+                )
+                logger.info("Audit log created successfully")
+            except Exception as e:
+                logger.warning(f"Error creating audit log: {str(e)}\n{traceback.format_exc()}")
+                messages.warning(self.request, f"Report created but audit log failed: {str(e)}")
+            
+            messages.success(self.request, 'Expense report created successfully!')
+            logger.info(f"Form submission completed successfully for user {self.request.user.username}")
+            return response
+        except Exception as e:
+            logger.error(f"Error creating expense report: {str(e)}\n{traceback.format_exc()}")
+            messages.error(self.request, f"Error creating expense report: {str(e)}")
+            return self.form_invalid(form)
     
     def get_success_url(self):
         return reverse_lazy('expenses:report_detail', kwargs={'pk': self.object.pk})
@@ -187,6 +217,12 @@ class EmployeeExpenseCreateView(SessionEntityMixin, LoginRequiredMixin, CreateVi
         report_id = self.kwargs.get('report_id')
         report = get_object_or_404(EmployeeExpenseReport, id=report_id, entity=self.request.entity)
         return kwargs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        report_id = self.kwargs.get('report_id')
+        context['report'] = get_object_or_404(EmployeeExpenseReport, id=report_id, entity=self.request.entity)
+        return context
     
     def form_valid(self, form):
         report_id = self.kwargs.get('report_id')
