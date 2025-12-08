@@ -183,6 +183,10 @@ class EmployeeExpenseReport(models.Model):
     class Meta:
         ordering = ['-period_end']
         verbose_name_plural = "Employee Expense Reports"
+        permissions = [
+            ("review_employeeexpensereport", "Can review employee expense reports"),
+            ("approve_employeeexpensereport", "Can approve employee expense reports"),
+        ]
     
     def __str__(self):
         return f"Expense Report - {self.employee.user.get_full_name()} ({self.period_start} to {self.period_end})"

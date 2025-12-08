@@ -1,9 +1,9 @@
 """
 Notification system for expense reviews and approvals
+Based on Django permissions for granular control
 """
 import logging
 from django.db.models import Q
-from accounting.module_permissions import ModulePermission
 from .models import EmployeeExpenseReport
 
 logger = logging.getLogger(__name__)
@@ -12,18 +12,13 @@ logger = logging.getLogger(__name__)
 def get_pending_reviews_for_user(user, entity=None):
     """
     Get pending expense reports awaiting review by the user
+    
+    User must have 'expenses.review_employeeexpensereport' permission
     """
     try:
-        # If not staff, return empty
-        if not user.is_staff and not user.is_superuser:
-            # Check if user has reviewer permission
-            has_reviewer_perm = ModulePermission.objects.filter(
-                user=user,
-                module='reviewer',
-                can_view=True
-            ).exists()
-            if not has_reviewer_perm:
-                return EmployeeExpenseReport.objects.none()
+        # Check if user has review permission
+        if not user.has_perm('expenses.review_employeeexpensereport'):
+            return EmployeeExpenseReport.objects.none()
         
         # Get expense reports awaiting review (PENDING_REVIEW status)
         pending = EmployeeExpenseReport.objects.filter(
@@ -42,10 +37,12 @@ def get_pending_reviews_for_user(user, entity=None):
 def get_pending_approvals_for_user(user, entity=None):
     """
     Get pending expense reports awaiting approval by this user
+    
+    User must have 'expenses.approve_employeeexpensereport' permission
     """
     try:
-        # Staff users and superusers can see all pending approvals
-        if not (user.is_staff or user.is_superuser):
+        # Check if user has approval permission
+        if not user.has_perm('expenses.approve_employeeexpensereport'):
             return EmployeeExpenseReport.objects.none()
         
         # Get ALL expense reports in PENDING_APPROVAL status
@@ -65,10 +62,12 @@ def get_pending_approvals_for_user(user, entity=None):
 def get_pending_final_approvals_for_user(user, entity=None):
     """
     Get pending expense reports awaiting FINAL approval (assigned to this user)
+    
+    User must have 'expenses.approve_employeeexpensereport' permission
     """
     try:
-        # Staff users and superusers can see approvals
-        if not (user.is_staff or user.is_superuser):
+        # Check if user has approval permission
+        if not user.has_perm('expenses.approve_employeeexpensereport'):
             return EmployeeExpenseReport.objects.none()
         
         # Get reports where user is assigned as finance_approver
@@ -94,6 +93,7 @@ def get_all_pending_for_user(user, entity=None):
     Get all pending expense reports (reviews + approvals) for the user
     
     Returns a dictionary with counts and querysets
+    Requires appropriate permissions to see items
     """
     try:
         reviews = get_pending_reviews_for_user(user, entity)

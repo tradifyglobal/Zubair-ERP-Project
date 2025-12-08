@@ -30,9 +30,9 @@ class ModulePermissionInline(admin.TabularInline):
     def get_queryset(self, request):
         """Optimize queryset to prevent too many fields."""
         qs = super().get_queryset(request)
-        # Order by active status first, then by module name
+        # Order by active status first, then by module
         # Don't slice the queryset - Django inlines handle the limit via max_num
-        return qs.select_related('user').order_by('-is_active', 'module__name')
+        return qs.select_related('user').order_by('-is_active', 'module')
 
 
 @admin.register(ModulePermission)
@@ -76,11 +76,7 @@ admin.site.unregister(User)
 @admin.register(User)
 class CustomUserAdmin(BaseUserAdmin):
     """Extended User admin for basic user management."""
-    # Note: Module permissions are managed via the dedicated ModulePermissionAdmin
-    # (accessible from /admin/accounting/modulepermission/)
-    # This separation is necessary to avoid exceeding Django's DATA_UPLOAD_MAX_NUMBER_FIELDS
-    # when users have many module permissions
-    pass
+    inlines = [ModulePermissionInline]
 
 
 

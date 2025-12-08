@@ -234,7 +234,7 @@
                                             <h6 class="text-muted small text-uppercase mb-2">Expense Review Required ({{ expense_pending_reviews_count }})</h6>
                                             <div id="expense-review-notifications">
                                                 {% for report in expense_pending_reviews %}
-                                                    <a href="{% url 'expenses:report-detail' report.id %}" class="text-reset notification-item">
+                                                    <a href="{% url 'expenses:report_detail' report.id %}" class="text-reset notification-item">
                                                         <div class="d-flex">
                                                             <div class="flex-shrink-0 avatar-sm me-3">
                                                                 <span class="avatar-title bg-info rounded-circle font-size-16">
@@ -260,7 +260,7 @@
                                             <h6 class="text-muted small text-uppercase mb-2">Expense Approval Required ({{ expense_pending_approvals_count }})</h6>
                                             <div id="expense-approval-notifications">
                                                 {% for report in expense_pending_approvals %}
-                                                    <a href="{% url 'expenses:report-detail' report.id %}" class="text-reset notification-item">
+                                                    <a href="{% url 'expenses:report_detail' report.id %}" class="text-reset notification-item">
                                                         <div class="d-flex">
                                                             <div class="flex-shrink-0 avatar-sm me-3">
                                                                 <span class="avatar-title bg-success rounded-circle font-size-16">
@@ -286,7 +286,7 @@
                                             <h6 class="text-muted small text-uppercase mb-2">Finance Approval Required ({{ expense_pending_final_approvals_count }})</h6>
                                             <div id="expense-final-approval-notifications">
                                                 {% for report in expense_pending_final_approvals %}
-                                                    <a href="{% url 'expenses:report-detail' report.id %}" class="text-reset notification-item">
+                                                    <a href="{% url 'expenses:report_detail' report.id %}" class="text-reset notification-item">
                                                         <div class="d-flex">
                                                             <div class="flex-shrink-0 avatar-sm me-3">
                                                                 <span class="avatar-title bg-danger rounded-circle font-size-16">
