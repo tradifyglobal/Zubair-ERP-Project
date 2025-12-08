@@ -49,7 +49,11 @@ def get_pending_approvals_for_user(user, entity=None):
     Returns:
         QuerySet of EmployeeExpenseReport objects awaiting approval by this user
     """
-    # Check if user has expense approval permission
+    # Check if user is a staff member (fallback if ModulePermission not set)
+    if not user.is_staff:
+        return EmployeeExpenseReport.objects.none()
+    
+    # Check if user has expense approval permission in ModulePermission
     has_approval_perm = ModulePermission.objects.filter(
         user=user,
         module='expenses',
@@ -57,7 +61,10 @@ def get_pending_approvals_for_user(user, entity=None):
     ).exists()
     
     if not has_approval_perm:
-        return EmployeeExpenseReport.objects.none()
+        # If no explicit permission, check if user is_staff (legacy fallback)
+        # This allows staff users to see approvals even without ModulePermission
+        if not user.is_staff:
+            return EmployeeExpenseReport.objects.none()
     
     # Get expense reports assigned to this user for approval
     # Includes both awaiting assignment and awaiting final approval
@@ -82,7 +89,11 @@ def get_pending_final_approvals_for_user(user, entity=None):
     Returns:
         QuerySet of EmployeeExpenseReport objects assigned to this user for final approval
     """
-    # Check if user has expense approval permission
+    # Check if user is a staff member (fallback if ModulePermission not set)
+    if not user.is_staff:
+        return EmployeeExpenseReport.objects.none()
+    
+    # Check if user has expense approval permission in ModulePermission
     has_approval_perm = ModulePermission.objects.filter(
         user=user,
         module='expenses',
@@ -90,7 +101,9 @@ def get_pending_final_approvals_for_user(user, entity=None):
     ).exists()
     
     if not has_approval_perm:
-        return EmployeeExpenseReport.objects.none()
+        # If no explicit permission, check if user is_staff (legacy fallback)
+        if not user.is_staff:
+            return EmployeeExpenseReport.objects.none()
     
     # Get reports where user is assigned as finance_approver and not yet approved
     from .models import ExpenseApprovalWorkflow
