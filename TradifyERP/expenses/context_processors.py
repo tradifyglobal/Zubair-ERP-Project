@@ -8,40 +8,42 @@ from django.db.utils import OperationalError, ProgrammingError
 
 logger = logging.getLogger(__name__)
 
+# Default empty context
+DEFAULT_CONTEXT = {
+    'expense_notifications': {},
+    'expense_pending_reviews_count': 0,
+    'expense_pending_approvals_count': 0,
+    'expense_pending_final_approvals_count': 0,
+    'expense_pending_reviews': [],
+    'expense_pending_approvals': [],
+    'expense_pending_final_approvals': [],
+    'expense_total_pending': 0,
+}
+
 
 def pending_expense_notifications(request):
     """
     Add pending expense notifications to template context
     
-    Available in templates as:
-    - expense_notifications (dict with pending counts and querysets)
+    Provides:
     - expense_pending_reviews_count
     - expense_pending_approvals_count
     - expense_pending_final_approvals_count
+    - expense_total_pending
     - expense_pending_reviews (QuerySet)
     - expense_pending_approvals (QuerySet)
     - expense_pending_final_approvals (QuerySet)
-    - expense_total_pending
     """
-    default_context = {
-        'expense_notifications': {},
-        'expense_pending_reviews_count': 0,
-        'expense_pending_approvals_count': 0,
-        'expense_pending_final_approvals_count': 0,
-        'expense_pending_reviews': [],
-        'expense_pending_approvals': [],
-        'expense_pending_final_approvals': [],
-        'expense_total_pending': 0,
-    }
     
+    # Return defaults if user not authenticated
     if not request.user.is_authenticated:
-        return default_context
+        return DEFAULT_CONTEXT.copy()
     
     try:
-        # Check if database is accessible
+        # Check database is accessible
         connection.ensure_connection()
         
-        # Import here to avoid circular import issues
+        # Import here to avoid circular imports
         from .notifications import get_all_pending_for_user
         
         # Get entity from session if available
@@ -49,6 +51,14 @@ def pending_expense_notifications(request):
         
         # Get all pending items for this user
         notifications = get_all_pending_for_user(request.user, entity)
+        
+        # Log for debugging
+        logger.debug(
+            f"Expense notifications for {request.user.username}: "
+            f"reviews={notifications.get('pending_reviews_count', 0)}, "
+            f"approvals={notifications.get('pending_approvals_count', 0)}, "
+            f"final={notifications.get('pending_final_approvals_count', 0)}"
+        )
         
         return {
             'expense_notifications': notifications,
@@ -60,11 +70,15 @@ def pending_expense_notifications(request):
             'expense_pending_final_approvals': notifications.get('pending_final_approvals', []),
             'expense_total_pending': notifications.get('total_pending', 0),
         }
+        
     except (OperationalError, ProgrammingError) as e:
-        # Database not ready, return empty
-        logger.warning(f"Database error in expense notifications context processor: {str(e)}")
-        return default_context
+        # Database not ready
+        logger.warning(f"Database error in expense notifications: {str(e)}")
+        return DEFAULT_CONTEXT.copy()
     except Exception as e:
         # Log any other errors but don't crash
-        logger.error(f"Error in expense notifications context processor for user {request.user.username}: {str(e)}")
-        return default_context
+        logger.error(
+            f"Error in expense notifications for {request.user.username}: {str(e)}",
+            exc_info=True
+        )
+        return DEFAULT_CONTEXT.copy()
