@@ -37,28 +37,27 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
+          cache-dependency-path: 'TradifyERP/requirements.txt'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r TradifyERP/requirements.txt
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r TradifyERP/requirements.txt --no-cache-dir
 
       - name: Check code syntax
         run: |
           python -m py_compile TradifyERP/TradifyERP/settings.py
           python -m py_compile TradifyERP/TradifyERP/wsgi.py
 
+      - name: Verify Django installation
+        run: |
+          python -m pip show django
+          python -c "import django; print(f'✅ Django {django.get_version()} loaded successfully')"
+
       - name: Run Django checks (local settings)
         run: |
           cd TradifyERP
           python manage.py check --settings=TradifyERP.settings || echo "⚠️  Django check skipped (expected in CI)"
-
-      - name: Verify imports
-        env:
-          PYTHONPATH: /home/runner/work/Zubair-ERP-Project/Zubair-ERP-Project/TradifyERP
-        run: |
-          python -c "import django; print(f'Django {django.get_version()} loaded successfully')"
-          python -c "import sys; sys.path.insert(0, '/home/runner/work/Zubair-ERP-Project/Zubair-ERP-Project/TradifyERP'); from TradifyERP import settings; print('Settings module OK')" || echo "⚠️  Settings verification skipped"
 
       - name: Lint Python code
         run: |
