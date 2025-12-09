@@ -17,6 +17,10 @@ from accounting.models import LedgerEntry, Account, AuditLog
 @receiver(post_save, sender=PayrollRecord)
 def calculate_payroll_record(sender, instance, created, **kwargs):
     """Auto-calculate payroll record totals when created/updated."""
+    # Skip if flag is set to prevent recursion
+    if getattr(instance, '_skip_payroll_signal', False):
+        return
+    
     if created or not instance.id:
         return
     

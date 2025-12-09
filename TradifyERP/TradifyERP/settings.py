@@ -51,17 +51,33 @@ CSRF_TRUSTED_ORIGINS = [
     'http://192.168.2.55:8000',
     'http://192.168.2.185',
     'http://192.168.2.185:80',
+    'https://192.168.2.185',
+    'https://192.168.2.185:443',
     'https://www.tradifyglobal.com',
+    'https://www.tradifyglobal.com:443',
     'https://tradifyglobal.com',
+    'https://tradifyglobal.com:443',
     'http://www.tradifyglobal.com',
     'http://tradifyglobal.com',
 ]
 
-CSRF_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = False
-SESSION_COOKIE_SECURE = False
+# Session and CSRF cookie settings
+CSRF_COOKIE_SECURE = False  # Set to True when using HTTPS in production
+CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF token
+CSRF_COOKIE_SAMESITE = None  # Allow all cookie access (no SameSite restriction)
+CSRF_COOKIE_DOMAIN = None  # Allow cookies for current domain
+SESSION_COOKIE_SECURE = False  # Set to True when using HTTPS in production
+SESSION_COOKIE_DOMAIN = None  # Allow cookies for current domain
+SESSION_COOKIE_SAMESITE = None  # Allow all cookie access
 CSRF_COOKIE_AGE = 31449600
 SESSION_COOKIE_AGE = 31449600
+
+# Ensure Django properly detects HTTPS through Nginx proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Additional CSRF settings for admin and forms
+CSRF_USE_SESSIONS = False  # Use CSRF tokens instead of sessions
+CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'  # Use default CSRF failure view
 
 
 # Application definition
@@ -151,12 +167,17 @@ WSGI_APPLICATION = 'TradifyERP.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Default to SQLite3 for maximum compatibility
-# Can be overridden in local_settings.py for PostgreSQL setup
+# PostgreSQL Configuration for Production
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'tradifyerp_db',
+        'USER': 'tradifyerp_user',
+        'PASSWORD': 'Tradify@PostgreSQL2024',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        'ATOMIC_REQUESTS': True,
+        'CONN_MAX_AGE': 600,
     }
 }
 
