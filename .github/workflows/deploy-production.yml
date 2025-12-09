@@ -85,7 +85,7 @@ jobs:
       - name: Verify application health
         run: |
           ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
-            "curl -s -I https://192.168.2.185/ -k | head -3 || exit 1"
+            "curl -s -o /dev/null -w '%{http_code}' https://192.168.2.185/ -k | grep -E '(200|301|302)' || exit 1"
 
       - name: Check Gunicorn status
         run: |
