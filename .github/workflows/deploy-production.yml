@@ -1,11 +1,8 @@
 name: Deploy to Production Server
 
 on:
-  push:
-    branches:
-      - changes
-      - main
   workflow_dispatch:
+    # Manual trigger only - auto-push disabled due to private network
 
 env:
   DEPLOY_USER: root
