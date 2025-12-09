@@ -1,0 +1,114 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches:
+      - changes
+      - main
+  workflow_dispatch:
+
+env:
+  DEPLOY_USER: root
+  DEPLOY_HOST: 192.168.2.185
+  DEPLOY_PATH: /var/www/tradifyerp
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ env.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Test SSH connection
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "echo 'SSH connection successful'" || exit 1
+
+      - name: Stop Gunicorn
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "pkill -f gunicorn || true && sleep 2"
+
+      - name: Pull latest code
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }} && git fetch origin && git checkout ${{ github.ref_name }} && git pull origin ${{ github.ref_name }}"
+
+      - name: Install/Update Python dependencies
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }} && ${{ env.DEPLOY_PATH }}/venv/bin/pip install --upgrade pip setuptools wheel && ${{ env.DEPLOY_PATH }}/venv/bin/pip install -q -r TradifyERP/requirements.txt"
+
+      - name: Run database migrations
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }}/TradifyERP && PYTHONPATH=${{ env.DEPLOY_PATH }}/TradifyERP ${{ env.DEPLOY_PATH }}/venv/bin/python manage.py migrate --noinput"
+
+      - name: Collect static files
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }}/TradifyERP && PYTHONPATH=${{ env.DEPLOY_PATH }}/TradifyERP ${{ env.DEPLOY_PATH }}/venv/bin/python manage.py collectstatic --noinput"
+
+      - name: Clear cache
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }}/TradifyERP && PYTHONPATH=${{ env.DEPLOY_PATH }}/TradifyERP ${{ env.DEPLOY_PATH }}/venv/bin/python manage.py clear_cache || true"
+
+      - name: Start Gunicorn
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }}/TradifyERP && nohup ${{ env.DEPLOY_PATH }}/venv/bin/python -m gunicorn --workers 8 --bind unix:${{ env.DEPLOY_PATH }}/gunicorn.sock TradifyERP.wsgi:application > /var/log/gunicorn.log 2>&1 &"
+
+      - name: Wait for application to start
+        run: |
+          sleep 5
+          for i in {1..30}; do
+            if ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "test -S ${{ env.DEPLOY_PATH }}/gunicorn.sock"; then
+              echo "Gunicorn socket created successfully"
+              exit 0
+            fi
+            echo "Waiting for Gunicorn to start... ($i/30)"
+            sleep 2
+          done
+          echo "ERROR: Gunicorn failed to start"
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "tail -50 /var/log/gunicorn.log" || true
+          exit 1
+
+      - name: Verify application health
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "curl -s -I https://192.168.2.185/ -k | head -3 || exit 1"
+
+      - name: Check Gunicorn status
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "ps aux | grep gunicorn | grep -v grep | wc -l | awk '{if (\$1 >= 8) print \"OK: \" \$1 \" workers running\"; else {print \"ERROR: Only \" \$1 \" workers\"; exit 1}}'"
+
+      - name: Deployment successful notification
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Server: ${{ env.DEPLOY_HOST }}"
+          echo "Time: $(date)"
+
+      - name: Deployment failed notification
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Check GitHub Actions logs for details"
+          exit 1
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

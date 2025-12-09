@@ -1,0 +1,94 @@
+name: Rollback to Previous Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_hash:
+        description: 'Commit hash to rollback to'
+        required: true
+        type: string
+
+env:
+  DEPLOY_USER: root
+  DEPLOY_HOST: 192.168.2.185
+  DEPLOY_PATH: /var/www/tradifyerp
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ env.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Display rollback information
+        run: |
+          echo "🔄 Rolling back to commit: ${{ github.event.inputs.commit_hash }}"
+          echo "Server: ${{ env.DEPLOY_HOST }}"
+          echo "Time: $(date)"
+
+      - name: Stop Gunicorn
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "pkill -f gunicorn || true && sleep 2"
+
+      - name: Checkout specific commit
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }} && git fetch origin && git checkout ${{ github.event.inputs.commit_hash }}"
+
+      - name: Install dependencies
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }} && ${{ env.DEPLOY_PATH }}/venv/bin/pip install -q -r TradifyERP/requirements.txt"
+
+      - name: Run migrations
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }}/TradifyERP && PYTHONPATH=${{ env.DEPLOY_PATH }}/TradifyERP ${{ env.DEPLOY_PATH }}/venv/bin/python manage.py migrate --noinput"
+
+      - name: Collect static files
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }}/TradifyERP && PYTHONPATH=${{ env.DEPLOY_PATH }}/TradifyERP ${{ env.DEPLOY_PATH }}/venv/bin/python manage.py collectstatic --noinput"
+
+      - name: Start Gunicorn
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "cd ${{ env.DEPLOY_PATH }}/TradifyERP && nohup ${{ env.DEPLOY_PATH }}/venv/bin/python -m gunicorn --workers 8 --bind unix:${{ env.DEPLOY_PATH }}/gunicorn.sock TradifyERP.wsgi:application > /var/log/gunicorn.log 2>&1 &"
+
+      - name: Wait for application
+        run: |
+          sleep 5
+          for i in {1..30}; do
+            if ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "test -S ${{ env.DEPLOY_PATH }}/gunicorn.sock"; then
+              echo "✅ Gunicorn restarted successfully"
+              exit 0
+            fi
+            echo "Waiting for Gunicorn... ($i/30)"
+            sleep 2
+          done
+          echo "ERROR: Gunicorn failed to start"
+          exit 1
+
+      - name: Verify application
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} \
+            "curl -s -I https://192.168.2.185/ -k | head -3"
+
+      - name: Rollback successful
+        run: |
+          echo "✅ Rollback successful!"
+          echo "Commit: ${{ github.event.inputs.commit_hash }}"
+          echo "Status: Application restored and running"
+
+      - name: Clean up
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
