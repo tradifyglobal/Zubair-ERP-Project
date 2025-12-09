@@ -556,6 +556,9 @@ class PayrollRecord(models.Model):
     
     def calculate(self):
         """Calculate all payroll amounts."""
+        # Set flag to prevent recursion from post_save signal
+        self._skip_payroll_signal = True
+        
         # Calculate gross
         self.gross_amount = (
             self.base_salary + self.overtime_amount + self.bonus + self.allowances
@@ -574,6 +577,9 @@ class PayrollRecord(models.Model):
         self.net_amount = self.gross_amount - self.total_deductions
         
         self.save()
+        
+        # Clear flag after save
+        self._skip_payroll_signal = False
 
 
 class Benefit(models.Model):

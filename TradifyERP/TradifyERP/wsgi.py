@@ -11,13 +11,13 @@ import os
 import sys
 from pathlib import Path
 
-# Add the project root to the path so Django can find settings
-# Use dynamic path that works for both dev and production
-PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+# Add the Django project directory (parent of this file) to path
+# This allows imports like "from TradifyERP.settings import ..."
+PROJECT_DIR = str(Path(__file__).resolve().parent.parent)
+if PROJECT_DIR not in sys.path:
+    sys.path.insert(0, PROJECT_DIR)
 
-os.chdir(PROJECT_ROOT)
+os.chdir(PROJECT_DIR)
 
 from django.core.wsgi import get_wsgi_application
 
