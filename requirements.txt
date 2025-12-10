@@ -4,3 +4,4 @@ social-auth-app-django
 django-crispy-forms
 crispy-bootstrap5
 psycopg2-binary
+openpyxl

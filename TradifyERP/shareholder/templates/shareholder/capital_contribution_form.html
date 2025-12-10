@@ -5,7 +5,18 @@
 {% block title %}Capital Contribution{% endblock %}
 
 {% block content %}
-<div class="page-content">
+<style>
+    .main-content {
+        overflow-y: auto !important;
+        height: calc(100vh - 56px) !important;
+        padding-top: 0 !important;
+    }
+    .page-content {
+        padding-top: 12px !important;
+    }
+</style>
+<div class="main-content">
+    <div class="page-content">
     <div class="container-fluid">
         <!-- Page Title -->
         <div class="row">
@@ -105,6 +116,90 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Get entity's default currency symbol from template
+    const defaultCurrencySymbol = '{{ default_currency_symbol }}';
+    
+    // Currency exchange rate auto-disable logic
+    const currencyField = document.getElementById('id_currency');
+    const currencyDestinationField = document.getElementById('id_currency_destination');
+    const exchangeRateField = document.getElementById('id_exchange_rate');
+    
+    // Create or get currency symbol display element
+    let currencySymbolDisplay = document.getElementById('currency-symbol-display');
+    if (!currencySymbolDisplay) {
+        currencySymbolDisplay = document.createElement('div');
+        currencySymbolDisplay.id = 'currency-symbol-display';
+        currencySymbolDisplay.style.cssText = 'margin-top: 10px; padding: 10px; border-radius: 4px; font-weight: 500;';
+        
+        // Find the amount field and insert the symbol display after it
+        const amountField = document.getElementById('id_amount');
+        if (amountField && amountField.parentElement) {
+            amountField.parentElement.parentElement.appendChild(currencySymbolDisplay);
+        }
+    }
+    
+    function updateCurrencySymbolDisplay() {
+        if (currencyDestinationField && currencyDestinationField.value) {
+            // Get the selected currency's symbol
+            const selectedOption = currencyDestinationField.querySelector(`option[value="${currencyDestinationField.value}"]`);
+            const selectedSymbol = selectedOption ? selectedOption.textContent.match(/\([^)]+\)/)?.[0] || defaultCurrencySymbol : defaultCurrencySymbol;
+            
+            currencySymbolDisplay.innerHTML = `<strong>Currency:</strong> ${selectedSymbol}`;
+            currencySymbolDisplay.style.backgroundColor = '#e3f2fd';
+            currencySymbolDisplay.style.borderLeft = '4px solid #2196f3';
+        }
+    }
+    
+    function toggleExchangeRateField() {
+        if (currencyField && currencyDestinationField && exchangeRateField) {
+            const currencyValue = currencyField.value;
+            const destValue = currencyDestinationField.value;
+            
+            // If both currencies are selected and they're the same, disable exchange rate and lock symbol
+            if (currencyValue && destValue && currencyValue === destValue) {
+                exchangeRateField.disabled = true;
+                exchangeRateField.value = '1';
+                exchangeRateField.classList.add('is-disabled');
+                
+                // Lock to entity's default currency symbol
+                currencySymbolDisplay.innerHTML = `<strong>Currency (Locked):</strong> ${defaultCurrencySymbol}`;
+                currencySymbolDisplay.style.backgroundColor = '#fff3cd';
+                currencySymbolDisplay.style.borderLeft = '4px solid #ffc107';
+                
+                // Add visual feedback
+                if (exchangeRateField.parentElement) {
+                    exchangeRateField.parentElement.classList.add('opacity-disabled');
+                }
+            } else {
+                exchangeRateField.disabled = false;
+                exchangeRateField.classList.remove('is-disabled');
+                
+                // Show the actual selected currency
+                updateCurrencySymbolDisplay();
+                
+                // Remove visual feedback
+                if (exchangeRateField.parentElement) {
+                    exchangeRateField.parentElement.classList.remove('opacity-disabled');
+                }
+            }
+        }
+    }
+    
+    // Add event listeners to currency fields
+    if (currencyField) {
+        currencyField.addEventListener('change', toggleExchangeRateField);
+    }
+    if (currencyDestinationField) {
+        currencyDestinationField.addEventListener('change', function() {
+            updateCurrencySymbolDisplay();
+            toggleExchangeRateField();
+        });
+    }
+    
+    // Initial check and display on page load
+    updateCurrencySymbolDisplay();
+    toggleExchangeRateField();
+    
     const fileInput = document.querySelector('input[name="document_file"]');
     const previewContainer = document.getElementById('file-preview-container');
     
@@ -291,4 +386,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+    </div> <!-- end page-content -->
+</div> <!-- end main-content -->
 {% endblock %}

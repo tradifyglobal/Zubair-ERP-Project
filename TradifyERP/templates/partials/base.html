@@ -320,22 +320,87 @@
         /* Constrain navbar-brand-box and logo */
         .navbar-brand-box {
             max-height: 70px;
-            overflow: hidden;
+            overflow: visible !important;
             padding-left: 2.5rem !important;
             padding-right: 0 !important;
             display: flex !important;
             align-items: center !important;
+            width: auto !important;
+        }
+        
+        /* Vertical layout - same size as horizontal */
+        body:not([data-layout="horizontal"]) .navbar-brand-box {
+            padding-left: 1.5rem !important;
+            padding-right: 0 !important;
+            max-width: none !important;
+            min-width: auto !important;
+            flex-shrink: 0 !important;
+            margin-right: 0 !important;
+        }
+        
+        /* Horizontal layout - wider logo */
+        body[data-layout="horizontal"] .navbar-brand-box {
+            padding-left: 2.5rem !important;
+            max-width: 250px !important;
+            min-width: 200px !important;
+        }
+        
+        /* Ensure menu button doesn't overlap */
+        #vertical-menu-btn {
+            flex-shrink: 0 !important;
+            z-index: 1051 !important;
         }
         
         .navbar-brand-box .logo {
             margin-left: 0 !important;
             padding-left: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            height: 32px !important;
         }
         
-        /* Fix logo size ONLY in vertical layout */
+        /* Show logo-dark in light theme */
+        body[data-bs-theme="light"] .navbar-brand-box .logo-dark {
+            display: flex !important;
+        }
+        
+        /* Hide logo-light in light theme */
+        body[data-bs-theme="light"] .navbar-brand-box .logo-light {
+            display: none !important;
+        }
+        
+        /* Show logo-light in dark theme */
+        body[data-bs-theme="dark"] .navbar-brand-box .logo-light {
+            display: flex !important;
+        }
+        
+        /* Hide logo-dark in dark theme */
+        body[data-bs-theme="dark"] .navbar-brand-box .logo-dark {
+            display: none !important;
+        }
+        
+        /* If theme is not set, default to showing logo-dark and hiding logo-light */
+        body:not([data-bs-theme]) .navbar-brand-box .logo-dark {
+            display: flex !important;
+        }
+        
+        body:not([data-bs-theme]) .navbar-brand-box .logo-light {
+            display: none !important;
+        }
+        
+        /* Fix logo size ONLY in vertical layout - same as horizontal */
         body:not([data-layout="horizontal"]) .navbar-brand-box .logo img {
-            max-height: 24px !important;
-            max-width: 100% !important;
+            height: 32px !important;
+            width: auto !important;
+            max-width: 150px !important;
+            object-fit: contain !important;
+        }
+        
+        /* Fix logo size in horizontal layout */
+        body[data-layout="horizontal"] .navbar-brand-box .logo img {
+            height: 32px !important;
+            width: auto !important;
+            max-width: 150px !important;
             object-fit: contain !important;
         }
         
@@ -829,8 +894,16 @@
         }
 
         /* Modals and dropdowns stay on top */
-        .modal,
-        .dropdown-menu,
+        .modal {
+            z-index: 1060 !important;
+        }
+        
+        .dropdown-menu {
+            z-index: 2000 !important;
+            position: absolute !important;
+            min-width: 160px !important;
+        }
+        
         .popover,
         .tooltip {
             z-index: 1060 !important;
@@ -968,6 +1041,86 @@
 
         body[data-bs-theme="dark"] .dropdown-header {
             color: #ffffff !important;
+        }
+
+        /* CRITICAL FIX: Ensure header buttons are clickable */
+        #page-topbar .navbar-header button,
+        #page-topbar .navbar-header a {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 1051 !important;
+        }
+
+        /* Dropdown toggle buttons must be clickable */
+        .btn.header-item {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 1051 !important;
+            position: relative !important;
+        }
+
+        /* Entity and user dropdowns */
+        .entity-button,
+        .user-button {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 1051 !important;
+            position: relative !important;
+        }
+
+        /* Dropdown container position relative for proper z-index stacking */
+        .dropdown {
+            position: relative !important;
+            z-index: 1051 !important;
+        }
+
+        /* Dropdown menu always visible and clickable */
+        .dropdown-menu {
+            pointer-events: auto !important;
+            z-index: 2000 !important;
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            min-width: 160px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(0, 0, 0, 0.15) !important;
+            border-radius: 0.25rem !important;
+            background-color: #fff !important;
+        }
+
+        .dropdown-menu.show {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translate(0, 0) !important;
+        }
+
+        /* Dropdown items are clickable */
+        .dropdown-item {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 2000 !important;
+            position: relative !important;
+        }
+
+        /* Prevent layout wrapper from blocking header */
+        #layout-wrapper {
+            pointer-events: auto !important;
+        }
+
+        /* Header container must allow clicks */
+        #page-topbar {
+            z-index: 1050 !important;
+        }
+
+        #page-topbar .navbar-header {
+            pointer-events: auto !important;
+            z-index: 1050 !important;
+        }
+
+        #page-topbar .navbar-header .d-flex {
+            pointer-events: auto !important;
+            z-index: 1050 !important;
         }
     </style>
     <script>

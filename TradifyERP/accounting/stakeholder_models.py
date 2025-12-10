@@ -78,6 +78,8 @@ class Stakeholder(models.Model):
     
     # Timestamps
     joined_date = models.DateField(default=timezone.now)
+    start_date = models.DateField(blank=True, null=True, help_text="Start date for profit calculation period")
+    end_date = models.DateField(blank=True, null=True, help_text="End date for profit calculation period (leave blank for ongoing)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

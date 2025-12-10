@@ -21,9 +21,10 @@ from .models import (
     EmployeeExpenseReport, EmployeeExpense, ExpenseCategory,
     ExpenseBudget, ExpenseApprovalWorkflow, ExpenseReimbursement
 )
+
 from .forms import (
     EmployeeExpenseReportForm, EmployeeExpenseForm,
-    ExpenseCategoryForm, ExpenseBudgetForm, ExpenseReimbursementForm
+    ExpenseCategoryForm, ExpenseBudgetForm, ExpenseReimbursementForm, ExpenseApprovalForm
 )
 
 
@@ -131,6 +132,12 @@ class EmployeeExpenseReportCreateView(SessionEntityMixin, LoginRequiredMixin, Cr
     model = EmployeeExpenseReport
     form_class = EmployeeExpenseReportForm
     template_name = 'expenses/report_form.html'
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass entity to form to filter employees
+        kwargs['entity'] = self.request.entity
+        return kwargs
     
     def form_valid(self, form):
         form.instance.entity = self.request.entity
@@ -255,6 +262,96 @@ class EmployeeExpenseRejectView(SessionEntityMixin, LoginRequiredMixin, View):
         report.reject(request.user, reason)
         
         messages.success(request, 'Expense report rejected!')
+        return redirect('expenses:report_detail', pk=pk)
+
+
+# --- Inline Review View ---
+class EmployeeExpenseInlineReviewView(SessionEntityMixin, LoginRequiredMixin, View):
+    """Handle inline manager review (approve/reject/assign reviewer) via POST."""
+    def post(self, request, pk):
+        report = get_object_or_404(
+            EmployeeExpenseReport,
+            pk=pk,
+            entity=request.entity,
+            status='PENDING_REVIEW'
+        )
+        action = request.POST.get('action')
+        reviewer_id = request.POST.get('reviewer_id')
+        notes = request.POST.get('notes', '')
+        user = request.user
+
+        # Assign reviewer if provided
+        if reviewer_id and not report.reviewed_by_id:
+            from django.contrib.auth import get_user_model
+            UserModel = get_user_model()
+            reviewer = UserModel.objects.filter(id=reviewer_id).first()
+            if reviewer:
+                report.reviewed_by = reviewer
+                report.reviewed_at = timezone.now()
+                report.save()
+
+        # Approve or reject
+        if action == 'approve':
+            # Mark manager review as approved in workflow
+            workflow = report.approval_workflow
+            workflow.manager_approve(user, notes)
+            report.status = 'PENDING_APPROVAL'
+            report.review_notes = notes
+            report.save()
+            messages.success(request, 'Expense report reviewed and submitted for approval!')
+        elif action == 'reject':
+            report.reject(user, notes or 'Rejected by reviewer')
+            messages.success(request, 'Expense report rejected!')
+        else:
+            messages.error(request, 'Invalid action.')
+        return redirect('expenses:report_detail', pk=pk)
+
+
+# --- Inline Finance Approval View ---
+class EmployeeExpenseInlineFinanceApprovalView(SessionEntityMixin, LoginRequiredMixin, View):
+    """Handle inline finance approval (approve/reject/assign approver) via POST."""
+    def post(self, request, pk):
+        report = get_object_or_404(
+            EmployeeExpenseReport,
+            pk=pk,
+            entity=request.entity,
+            status='PENDING_APPROVAL'
+        )
+        action = request.POST.get('action')
+        finance_approver_id = request.POST.get('finance_approver_id')
+        notes = request.POST.get('notes', '')
+        user = request.user
+
+        workflow = report.approval_workflow
+
+        # Assign finance approver if provided
+        if finance_approver_id and (not workflow.finance_approver or str(workflow.finance_approver.id) != finance_approver_id):
+            from django.contrib.auth import get_user_model
+            UserModel = get_user_model()
+            approver = UserModel.objects.filter(id=finance_approver_id).first()
+            if approver:
+                workflow.finance_approver = approver
+                workflow.save()
+                messages.success(request, 'Finance approver assigned.')
+                return redirect('expenses:report_detail', pk=pk)
+
+        # Approve or reject
+        if action == 'final_approve':
+            workflow.finance_approve(user, notes)
+            report.status = 'APPROVED'
+            report.approval_notes = notes
+            report.save()
+            # Post to GL
+            report.post_to_gl()
+            messages.success(request, 'Expense report approved and posted to GL!')
+        elif action == 'reject':
+            report.reject(user, notes or 'Rejected by finance approver')
+            messages.success(request, 'Expense report rejected!')
+        elif action == 'submit_to_approver':
+            # Just assign finance approver, handled above
+            pass
+        else:
+            messages.error(request, 'Invalid action.')
         return redirect('expenses:report_detail', pk=pk)
 
 

@@ -2,38 +2,31 @@
 {% block  header %}
             <header id="page-topbar">
                 <div class="navbar-header">
-                    <div class="d-flex justify-content-between w-100">
-                        <!-- LEFT SIDE: LOGO AND MENU BUTTON -->
-                        <div class="d-flex align-items-center">
-                            <!-- LOGO -->
-                            <div class="navbar-brand-box" style="margin: 0; padding-left: 1.5rem;">
-                                <a href="{% url 'dashboard' %}" class="logo logo-dark">
-                                    <span class="logo-sm">
-                                        <img src="{% static 'images/logo.png' %}" alt="" height="24">
-                                    </span>
-                                    <span class="logo-lg">
-                                        <img src="{% static 'images/logo.png' %}" alt="" height="24">
-                                    </span>
-                                </a>
+                    <div class="d-flex align-items-center w-100">
+                        <!-- LEFT SIDE: LOGO -->
+                        <div class="navbar-brand-box" style="margin: 0; padding: 0 1.5rem; flex-shrink: 0;">
+                            <a href="{% url 'dashboard' %}" class="logo logo-dark">
+                                <span class="logo-sm">
+                                    <img src="{% static 'images/logo.png' %}" alt="Logo" height="32" style="width: auto; max-width: 150px;">
+                                </span>
+                                <span class="logo-lg">
+                                    <img src="{% static 'images/logo.png' %}" alt="Logo" height="32" style="width: auto; max-width: 150px;">
+                                </span>
+                            </a>
 
-                                <a href="{% url 'dashboard' %}" class="logo logo-light">
-                                    <span class="logo-sm">
-                                        <img src="{% static 'images/logo.png' %}" alt="" height="24">
-                                    </span>
-                                    <span class="logo-lg">
-                                        <img src="{% static 'images/logo.png' %}" alt="" height="24">
-                                    </span>
-                                </a>
-                            </div>
-
-                            <button type="button" class="btn btn-sm px-3 font-size-16 header-item" id="vertical-menu-btn">
-                                <i class="fa fa-fw fa-bars"></i>
-                            </button>
+                            <a href="{% url 'dashboard' %}" class="logo logo-light">
+                                <span class="logo-sm">
+                                    <img src="{% static 'images/logo.png' %}" alt="Logo" height="32" style="width: auto; max-width: 150px;">
+                                </span>
+                                <span class="logo-lg">
+                                    <img src="{% static 'images/logo.png' %}" alt="Logo" height="32" style="width: auto; max-width: 150px;">
+                                </span>
+                            </a>
                         </div>
 
                         <!-- RIGHT SIDE: SEARCH BAR -->
                         <!-- App Search-->
-                        <form class="app-search d-none d-lg-block me-3">
+                        <form class="app-search d-none d-lg-block me-3" style="margin-left: 2rem;">
                             <div class="position-relative">
                                 <input type="text" class="form-control" placeholder="Search...">
                                 <button class="btn btn-primary" type="button"><i class="bx bx-search-alt align-middle"></i></button>
@@ -251,15 +244,13 @@
                                 <span class="d-none d-xl-inline-block ms-1 fw-medium user-text">{{user.username}}</span>
                                 <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                             </button>
+                            {% if user.is_authenticated %}
                             <div class="dropdown-menu dropdown-menu-end">
                                 <!-- item-->
                                 {# <a class="dropdown-item" href="{% url 'apps:contacts.profile' %}"><i class="mdi mdi-face-man font-size-16 align-middle me-1"></i> Profile</a> #}
                                 {# <a class="dropdown-item" href="{% url 'lockscreen' %}"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i> Lock screen</a> #}
-                                {% if user.is_authenticated %}
                                 <div class="dropdown-divider"></div>
-                                {# <a class="dropdown-item" href="{% url 'account_change_password' %}"><i class="mdi mdi-lock text-muted font-size-16 align-middle me-1"></i> Change #}
-                                    Password</a>
-
+                                <a class="dropdown-item" href="{% url 'accounting:user_change_password' %}"><i class="mdi mdi-lock text-muted font-size-16 align-middle me-1"></i> Change Password</a>
                                 <a class="dropdown-item" href="{% url 'logout' %}"><i class="mdi mdi-logout font-size-16 align-middle me-1"></i> Logout</a>
                             </div>
                             {% endif %}

@@ -217,33 +217,87 @@
                                     <table class="table table-bordered align-middle">
                                         <thead class="table-light">
                                             <tr>
-                                                <th style="width: 25%;">Module</th>
+                                                <th style="width: 25%;">
+                                                    Module
+                                                    <div class="small text-muted mt-1">
+                                                        <button type="button" class="btn btn-sm btn-link p-0" onclick="toggleAllPermsForAllModules()" title="Check all">
+                                                            Check All
+                                                        </button>
+                                                    </div>
+                                                </th>
                                                 <th class="text-center" style="width: 12.5%;">
                                                     <i class="mdi mdi-eye"></i> View
+                                                    <div class="small mt-1">
+                                                        <input type="checkbox" class="form-check-input master-view-checkbox" 
+                                                               onchange="toggleAllModulePermission('view', this.checked)" 
+                                                               title="Check all View permissions">
+                                                    </div>
                                                 </th>
                                                 <th class="text-center" style="width: 12.5%;">
                                                     <i class="mdi mdi-plus"></i> Add
+                                                    <div class="small mt-1">
+                                                        <input type="checkbox" class="form-check-input master-add-checkbox" 
+                                                               onchange="toggleAllModulePermission('add', this.checked)" 
+                                                               title="Check all Add permissions">
+                                                    </div>
                                                 </th>
                                                 <th class="text-center" style="width: 12.5%;">
                                                     <i class="mdi mdi-pencil"></i> Edit
+                                                    <div class="small mt-1">
+                                                        <input type="checkbox" class="form-check-input master-edit-checkbox" 
+                                                               onchange="toggleAllModulePermission('edit', this.checked)" 
+                                                               title="Check all Edit permissions">
+                                                    </div>
                                                 </th>
                                                 <th class="text-center" style="width: 12.5%;">
                                                     <i class="mdi mdi-delete"></i> Delete
+                                                    <div class="small mt-1">
+                                                        <input type="checkbox" class="form-check-input master-delete-checkbox" 
+                                                               onchange="toggleAllModulePermission('delete', this.checked)" 
+                                                               title="Check all Delete permissions">
+                                                    </div>
+                                                </th>
+                                                <th class="text-center" style="width: 12.5%;">
+                                                    <i class="mdi mdi-clipboard-check"></i> Review
+                                                    <div class="small mt-1">
+                                                        <input type="checkbox" class="form-check-input master-review-checkbox" 
+                                                               onchange="toggleAllModulePermission('review', this.checked)" 
+                                                               title="Check all Review permissions">
+                                                    </div>
                                                 </th>
                                                 <th class="text-center" style="width: 12.5%;">
                                                     <i class="mdi mdi-check-decagram"></i> Approve
+                                                    <div class="small mt-1">
+                                                        <input type="checkbox" class="form-check-input master-approve-checkbox" 
+                                                               onchange="toggleAllModulePermission('approve', this.checked)" 
+                                                               title="Check all Approve permissions">
+                                                    </div>
                                                 </th>
                                                 <th class="text-center" style="width: 12.5%;">
                                                     <i class="mdi mdi-file-export"></i> Export
+                                                    <div class="small mt-1">
+                                                        <input type="checkbox" class="form-check-input master-export-checkbox" 
+                                                               onchange="toggleAllModulePermission('export', this.checked)" 
+                                                               title="Check all Export permissions">
+                                                    </div>
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for module_code, module_name in modules %}
-                                            <tr>
+                                            <tr data-module="{{ module_code }}">
                                                 <td>
-                                                    <strong>{{ module_name }}</strong>
-                                                    <div class="small text-muted">{{ module_code }}</div>
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div>
+                                                            <strong>{{ module_name }}</strong>
+                                                            <div class="small text-muted">{{ module_code }}</div>
+                                                        </div>
+                                                        <button type="button" class="btn btn-sm btn-link p-0 ms-2" 
+                                                                onclick="toggleModuleAllPerms('{{ module_code }}')" 
+                                                                title="Check all permissions for this module">
+                                                            All
+                                                        </button>
+                                                    </div>
                                                 </td>
                                                 <td class="text-center">
                                                     {% for field in permission_form %}
@@ -270,6 +324,13 @@
                                                 <td class="text-center">
                                                     {% for field in permission_form %}
                                                         {% if field.name == module_code|add:"_can_delete" %}
+                                                            {{ field }}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% for field in permission_form %}
+                                                        {% if field.name == module_code|add:"_can_review" %}
                                                             {{ field }}
                                                         {% endif %}
                                                     {% endfor %}
@@ -350,6 +411,90 @@
         }
     });
     
+    // Toggle all permissions for a specific module
+    function toggleModuleAllPerms(moduleCode) {
+        const row = document.querySelector(`tr[data-module="${moduleCode}"]`);
+        if (!row) return;
+        
+        const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(cb => {
+            cb.checked = !allChecked;
+        });
+        
+        updateMasterCheckboxes();
+    }
+    
+    // Toggle all modules for a specific permission type
+    function toggleAllModulePermission(permissionType, checked) {
+        const permissionMap = {
+            'view': 'can_view',
+            'add': 'can_add',
+            'edit': 'can_edit',
+            'delete': 'can_delete',
+            'review': 'can_review',
+            'approve': 'can_approve',
+            'export': 'can_export'
+        };
+        
+        const fieldSuffix = '_' + permissionMap[permissionType];
+        const checkboxes = document.querySelectorAll(`input[type="checkbox"][name$="${fieldSuffix}"]`);
+        
+        checkboxes.forEach(cb => {
+            cb.checked = checked;
+        });
+        
+        updateMasterCheckboxes();
+    }
+    
+    // Update master checkboxes state based on individual checkboxes
+    function updateMasterCheckboxes() {
+        const permissionTypes = ['view', 'add', 'edit', 'delete', 'review', 'approve', 'export'];
+        
+        permissionTypes.forEach(permType => {
+            const fieldSuffix = '_can_' + permType;
+            const checkboxes = document.querySelectorAll(`input[type="checkbox"][name$="${fieldSuffix}"]`);
+            const masterCheckbox = document.querySelector(`.master-${permType}-checkbox`);
+            
+            if (masterCheckbox && checkboxes.length > 0) {
+                const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+                const totalCount = checkboxes.length;
+                
+                // Set to indeterminate if some are checked but not all
+                if (checkedCount > 0 && checkedCount < totalCount) {
+                    masterCheckbox.indeterminate = true;
+                    masterCheckbox.checked = false;
+                } else {
+                    masterCheckbox.indeterminate = false;
+                    masterCheckbox.checked = checkedCount === totalCount;
+                }
+            }
+        });
+    }
+    
+    // Toggle all permissions for all modules
+    function toggleAllPermsForAllModules() {
+        const allCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+        const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+        
+        allCheckboxes.forEach(cb => {
+            cb.checked = !allChecked;
+        });
+        
+        updateMasterCheckboxes();
+    }
+    
+    // Initialize master checkboxes on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateMasterCheckboxes();
+        
+        // Update master checkboxes when individual checkboxes change
+        document.querySelectorAll('tbody input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateMasterCheckboxes);
+        });
+    });
+    
     function selectAllModules() {
         document.querySelectorAll('input[type="checkbox"][data-permission="view"]').forEach(cb => {
             cb.checked = true;
@@ -369,12 +514,17 @@
         document.querySelectorAll('input[type="checkbox"][data-permission="export"]').forEach(cb => {
             cb.checked = true;
         });
+        updateMasterCheckboxes();
     }
     
     function clearAllModules() {
         document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
             checkbox.checked = false;
         });
+        document.querySelectorAll('tbody input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        updateMasterCheckboxes();
     }
     
     function applyTemplate(template) {

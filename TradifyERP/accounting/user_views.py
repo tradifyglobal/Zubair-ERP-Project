@@ -17,7 +17,9 @@ from accounting.user_permission_forms import (
     UserEditFormWithPermissions,
     BulkModulePermissionForm,
     QuickAccessTemplateForm,
-    UserEntityAssignmentForm
+    UserEntityAssignmentForm,
+    UserChangePasswordForm,
+    UserResetPasswordForm
 )
 from accounting.module_permissions import ModulePermission, UserModuleAccessLog
 from accounting.mixins import SessionEntityMixin
@@ -394,3 +396,104 @@ class UserToggleStatusView(AdminRequiredMixin, UpdateView):
         messages.success(request, f'User "{user.username}" has been {status}.')
         
         return redirect('accounting:user_list')
+
+
+class UserChangePasswordView(LoginRequiredMixin, UpdateView):
+    """Allow users to change their own password."""
+    model = User
+    fields = []
+    template_name = 'accounting/user_management/user_change_password.html'
+    success_url = reverse_lazy('accounting:dashboard')
+    
+    def get_object(self):
+        """Always return the current user."""
+        return self.request.user
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['form'] = UserChangePasswordForm(self.object, self.request.POST)
+        else:
+            context['form'] = UserChangePasswordForm(self.object)
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = UserChangePasswordForm(self.object, request.POST)
+        
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, 'Your password has been changed successfully.')
+            return redirect(self.success_url)
+        
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class UserResetPasswordView(AdminRequiredMixin, UpdateView):
+    """Allow admins to reset a user's password."""
+    model = User
+    fields = []
+    template_name = 'accounting/user_management/user_reset_password.html'
+    success_url = reverse_lazy('accounting:user_list')
+    context_object_name = 'reset_user'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['form'] = UserResetPasswordForm(self.object, self.request.POST)
+        else:
+            context['form'] = UserResetPasswordForm(self.object)
+        context['page_title'] = f'Reset Password: {self.object.username}'
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = UserResetPasswordForm(self.object, request.POST)
+        
+        if form.is_valid():
+            user, new_password = form.save()
+            
+            # Send email if requested
+            if form.cleaned_data.get('send_email') and user.email:
+                from django.core.mail import send_mail
+                from django.template.loader import render_to_string
+                
+                try:
+                    subject = 'Password Reset Notification'
+                    html_message = f'''
+                    <html>
+                        <body>
+                            <p>Hello {user.get_full_name() or user.username},</p>
+                            <p>Your password has been reset by an administrator.</p>
+                            <p><strong>New Password:</strong> {new_password}</p>
+                            <p>Please log in and change your password immediately after your first login.</p>
+                            <p>Best regards,<br>TradifyERP Admin</p>
+                        </body>
+                    </html>
+                    '''
+                    send_mail(
+                        subject,
+                        f'Your password has been reset. New password: {new_password}',
+                        'noreply@tradifyerp.com',
+                        [user.email],
+                        html_message=html_message,
+                        fail_silently=True
+                    )
+                    messages.success(
+                        request,
+                        f'Password reset for "{user.username}" and email sent to {user.email}.'
+                    )
+                except Exception as e:
+                    messages.warning(
+                        request,
+                        f'Password reset for "{user.username}" but email could not be sent. New password: {new_password}'
+                    )
+            else:
+                messages.success(
+                    request,
+                    f'Password reset for "{user.username}". New password: {new_password}'
+                )
+            
+            return redirect(self.success_url)
+        
+        return self.render_to_response(self.get_context_data(form=form))

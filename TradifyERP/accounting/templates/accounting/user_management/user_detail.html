@@ -84,6 +84,9 @@
                                 <a href="{% url 'accounting:user_edit' viewed_user.pk %}" class="btn btn-primary">
                                     <i class="mdi mdi-pencil me-1"></i> Edit User
                                 </a>
+                                <a href="{% url 'accounting:user_reset_password' viewed_user.pk %}" class="btn btn-warning">
+                                    <i class="mdi mdi-lock-reset me-1"></i> Reset Password
+                                </a>
                             </div>
                         </div>
                     </div>

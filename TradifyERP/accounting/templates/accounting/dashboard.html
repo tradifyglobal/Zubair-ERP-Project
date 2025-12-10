@@ -10,6 +10,16 @@
     <link href="{% static 'libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css' %}" rel="stylesheet" type="text/css" />
 {% endblock %}
 {% block content %}
+<style>
+    .main-content {
+        overflow-y: auto !important;
+        height: calc(100vh - 56px) !important;
+        padding-top: 0 !important;
+    }
+    .page-content {
+        padding-top: 12px !important;
+    }
+</style>
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
@@ -1042,4 +1052,6 @@
             }
         });
     </script>
+    </div> <!-- end page-content -->
+</div> <!-- end main-content -->
 {% endblock %}

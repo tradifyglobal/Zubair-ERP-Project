@@ -483,3 +483,131 @@ class UserEntityAssignmentForm(forms.Form):
                     can_switch=can_switch,
                     assigned_by=granted_by
                 )
+
+
+class UserChangePasswordForm(forms.Form):
+    """Form for users to change their own password."""
+    
+    current_password = forms.CharField(
+        label='Current Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your current password'
+        })
+    )
+    
+    new_password1 = forms.CharField(
+        label='New Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter new password'
+        }),
+        help_text='Password must be at least 8 characters long and contain a mix of letters, numbers, and special characters.'
+    )
+    
+    new_password2 = forms.CharField(
+        label='Confirm New Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm new password'
+        })
+    )
+    
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+    
+    def clean_current_password(self):
+        """Validate that current password is correct."""
+        current_password = self.cleaned_data.get('current_password')
+        if not self.user.check_password(current_password):
+            raise forms.ValidationError('Current password is incorrect.')
+        return current_password
+    
+    def clean_new_password2(self):
+        """Validate that new passwords match and are different from current."""
+        new_password1 = self.cleaned_data.get('new_password1')
+        new_password2 = self.cleaned_data.get('new_password2')
+        
+        if new_password1 and new_password2:
+            if new_password1 != new_password2:
+                raise forms.ValidationError('New passwords do not match.')
+            
+            # Check if new password is different from current
+            if self.user.check_password(new_password1):
+                raise forms.ValidationError('New password must be different from your current password.')
+        
+        return new_password2
+    
+    def save(self):
+        """Set the new password."""
+        password = self.cleaned_data['new_password1']
+        self.user.set_password(password)
+        self.user.save()
+        return self.user
+
+
+class UserResetPasswordForm(forms.Form):
+    """Form for admins to reset a user's password."""
+    
+    new_password1 = forms.CharField(
+        label='New Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter new password'
+        }),
+        help_text='Leave blank to generate a random password.',
+        required=False
+    )
+    
+    new_password2 = forms.CharField(
+        label='Confirm New Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm new password'
+        }),
+        required=False
+    )
+    
+    send_email = forms.BooleanField(
+        label='Send new password to user email',
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+    
+    def clean(self):
+        """Validate password fields."""
+        cleaned_data = super().clean()
+        new_password1 = cleaned_data.get('new_password1')
+        new_password2 = cleaned_data.get('new_password2')
+        
+        # If passwords are provided, they must match
+        if new_password1 or new_password2:
+            if new_password1 != new_password2:
+                raise forms.ValidationError('Passwords do not match.')
+            if len(new_password1) < 8:
+                raise forms.ValidationError('Password must be at least 8 characters long.')
+        
+        return cleaned_data
+    
+    def save(self):
+        """Set the new password or generate random one."""
+        import secrets
+        import string
+        
+        new_password = self.cleaned_data.get('new_password1')
+        
+        # Generate random password if not provided
+        if not new_password:
+            alphabet = string.ascii_letters + string.digits + string.punctuation.replace('"', '').replace("'", '')
+            new_password = ''.join(secrets.choice(alphabet) for _ in range(16))
+        
+        self.user.set_password(new_password)
+        self.user.save()
+        
+        return self.user, new_password

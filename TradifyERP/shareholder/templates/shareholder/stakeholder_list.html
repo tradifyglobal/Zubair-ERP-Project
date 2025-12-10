@@ -169,6 +169,8 @@
                                             <th>Email</th>
                                             <th>Phone</th>
                                             <th>Status</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
                                             <th>Total Invested</th>
                                             <th>Shares</th>
                                             <th>Actions</th>
@@ -199,6 +201,8 @@
                                                     <span class="badge bg-secondary">{{ stakeholder.get_status_display }}</span>
                                                 {% endif %}
                                             </td>
+                                            <td>{{ stakeholder.start_date|date:"M d, Y"|default:"—" }}</td>
+                                            <td>{{ stakeholder.end_date|date:"M d, Y"|default:"—" }}</td>
                                             <td>
                                                 {% if entity.company_currency %}
                                                     {{ entity.company_currency.symbol }}{{ stakeholder.total_invested|floatformat:2 }}

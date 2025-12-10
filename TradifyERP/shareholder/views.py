@@ -322,6 +322,13 @@ class CapitalContributionListView(SessionEntityMixin, LoginRequiredMixin, Permis
     permission_required = 'accounting.view_capitalcontribution'
 
     def get_queryset(self):
+        # Touch a file to prove this view is being called
+        import os
+        try:
+            open('/tmp/shareholder_view_called.txt', 'w').write('GET_QUERYSET CALLED\n')
+        except:
+            pass
+        
         queryset = super().get_queryset()
         
         # Check for filter parameter
@@ -344,27 +351,100 @@ class CapitalContributionListView(SessionEntityMixin, LoginRequiredMixin, Permis
         return queryset.order_by('-submitted_at')
 
     def get_context_data(self, **kwargs):
+        # Touch a file FIRST to prove this method is called
+        import os
+        try:
+            with open('/tmp/shareholder_view_called.txt', 'a') as f:
+                f.write('GET_CONTEXT_DATA CALLED\n')
+        except:
+            pass
+        
         context = super().get_context_data(**kwargs)
         
         # Get the base queryset filtered by entity (from mixin)
-        base_queryset = CapitalContribution.objects.filter(entity_id=self.request.session.get('selected_entity_id'))
-        
-        # Display queryset (with view filters applied)
-        display_queryset = self.get_queryset()
-        context['total_contributions'] = display_queryset.count()
-        
-        # Calculate totals from FULL entity queryset (not filtered by review/approval status)
-        context['pending_total'] = base_queryset.filter(status='PENDING').aggregate(total=Sum('amount_company_currency'))['total'] or 0
-        context['completed_total'] = base_queryset.filter(status='COMPLETED').aggregate(total=Sum('amount_company_currency'))['total'] or 0
-        
-        # Get entity for currency display
         entity_id = self.request.session.get('selected_entity_id')
+        
+        # If entity_id is not in session, try to get it from request object set by mixin
+        if not entity_id and hasattr(self.request, 'entity'):
+            entity_id = self.request.entity.id
+        
+        # Initialize defaults
+        context['pending_total'] = 0
+        context['completed_total'] = 0
+        context['total_contributions'] = 0
+        
         if entity_id:
-            entity = Entity.objects.filter(id=entity_id).first()
+            base_queryset = CapitalContribution.objects.filter(entity_id=entity_id)
+            
+            # Display queryset (with view filters applied)
+            display_queryset = self.get_queryset()
+            context['total_contributions'] = display_queryset.count()
+            
+            # Calculate totals from FULL entity queryset (not filtered by review/approval status)
+            # Use Decimal for accurate financial calculations
+            from decimal import Decimal
+            
+            pending_qs = base_queryset.filter(status='PENDING')
+            completed_qs = base_queryset.filter(status='COMPLETED')
+            
+            # Group pending contributions by currency (original amounts)
+            pending_by_currency = {}
+            for contribution in pending_qs.select_related('currency'):
+                currency_code = contribution.currency.code
+                currency_symbol = contribution.currency.symbol
+                if currency_code not in pending_by_currency:
+                    pending_by_currency[currency_code] = {
+                        'code': currency_code,
+                        'symbol': currency_symbol,
+                        'total': Decimal('0')
+                    }
+                if contribution.amount:
+                    pending_by_currency[currency_code]['total'] += Decimal(str(contribution.amount))
+            
+            # Convert totals to float and sort by currency code
+            for key in pending_by_currency:
+                pending_by_currency[key]['total'] = float(pending_by_currency[key]['total'])
+            
+            context['pending_by_currency'] = sorted(pending_by_currency.values(), key=lambda x: x['code'])
+            
+            # Calculate pending total (original amount) - for reference/backup
+            pending_list_original = list(pending_qs.values_list('amount', flat=True))
+            pending_total_original = Decimal('0')
+            for amount in pending_list_original:
+                if amount is not None:
+                    pending_total_original += Decimal(str(amount))
+            context['pending_total_original'] = float(pending_total_original)
+            
+            # Calculate pending total (converted amount)
+            pending_list = list(pending_qs.values_list('amount_company_currency', flat=True))
+            
+            pending_total = Decimal('0')
+            for amount in pending_list:
+                if amount is not None:
+                    pending_total += Decimal(str(amount))
+            context['pending_total'] = float(pending_total)
+            
+            # Calculate completed total  
+            completed_list = list(completed_qs.values_list('amount_company_currency', flat=True))
+            completed_total = Decimal('0')
+            for amount in completed_list:
+                if amount is not None:
+                    completed_total += Decimal(str(amount))
+            context['completed_total'] = float(completed_total)
+            
+            # Get entity for currency display
+            entity = Entity.objects.select_related('company_currency').filter(id=entity_id).first()
             context['entity'] = entity
         
         # Add filter type to context for template display
         context['filter_type'] = self.request.GET.get('filter', None)
+        
+        # Write the final pending_total to a file for verification
+        try:
+            with open('/tmp/shareholder_view_called.txt', 'a') as f:
+                f.write(f'pending_total calculated: {context.get("pending_total")}\n')
+        except:
+            pass
         
         return context
 
@@ -424,6 +504,20 @@ class CapitalContributionCreateView(SessionEntityMixin, LoginRequiredMixin, Perm
                 form.instance.contribution_date = timezone.now().date()
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            from accounting.models import Entity
+            try:
+                entity = Entity.objects.get(id=entity_id)
+                context['entity'] = entity
+                context['default_currency_symbol'] = entity.company_currency.symbol if entity.company_currency else ''
+            except:
+                pass
+        return context
+
+
 
 class CapitalContributionUpdateView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = CapitalContribution
@@ -444,6 +538,18 @@ class CapitalContributionUpdateView(SessionEntityMixin, LoginRequiredMixin, Perm
             kwargs['instance'].entity_id = entity_id
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            from accounting.models import Entity
+            try:
+                entity = Entity.objects.get(id=entity_id)
+                context['entity'] = entity
+                context['default_currency_symbol'] = entity.company_currency.symbol if entity.company_currency else ''
+            except:
+                pass
+        return context
 
 # ==================== Capital Contribution Workflow Views ====================
 

@@ -153,17 +153,20 @@ class CapitalContributionListView(LoginRequiredMixin, ListView):
         )
     
     def get_context_data(self, **kwargs):
+        # Write debug info to a file
+        with open('/tmp/pending_debug.log', 'a') as f:
+            f.write(f"\n===== ACCOUNTING CAPITAL CONTRIBUTION LIST VIEW CALLED at {__import__('datetime').datetime.now()} =====\n")
+        
         context = super().get_context_data(**kwargs)
         entity = Entity.objects.filter(is_active=True).first()
         if entity:
             contributions = CapitalContribution.objects.filter(entity=entity)
             context['total_contributions'] = contributions.count()
-            context['total_amount'] = contributions.filter(
-                status='COMPLETED'
-            ).aggregate(Sum('amount_company_currency'))['amount_company_currency__sum'] or 0
-            context['pending_amount'] = contributions.filter(
-                status='PENDING'
-            ).aggregate(Sum('amount_company_currency'))['amount_company_currency__sum'] or 0
+            context['total_amount'] = sum(float(c.amount_company_currency or 0) for c in contributions.filter(status='COMPLETED'))
+            context['pending_amount'] = sum(float(c.amount_company_currency or 0) for c in contributions.filter(status='PENDING'))
+            
+            with open('/tmp/pending_debug.log', 'a') as f:
+                f.write(f"Entity: {entity.name}, pending_amount = {context['pending_amount']}\n")
         return context
 
 

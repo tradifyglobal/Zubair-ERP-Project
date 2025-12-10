@@ -56,7 +56,7 @@ from .stakeholder_views import (
 )
 from .user_views import (
     UserListView, UserCreateView, UserEditView, UserDetailView,
-    UserApplyTemplateView, UserToggleStatusView
+    UserApplyTemplateView, UserToggleStatusView, UserChangePasswordView, UserResetPasswordView
 )
 from .import_export_views import (
     BaseImportView, BaseExportView, ImportTemplateDownloadView,
@@ -235,6 +235,8 @@ urlpatterns = [
     path('users/<int:pk>/edit/', UserEditView.as_view(), name='user_edit'),
     path('users/<int:pk>/apply-template/', UserApplyTemplateView.as_view(), name='user_apply_template'),
     path('users/<int:pk>/toggle-status/', UserToggleStatusView.as_view(), name='user_toggle_status'),
+    path('users/<int:pk>/reset-password/', UserResetPasswordView.as_view(), name='user_reset_password'),
+    path('change-password/', UserChangePasswordView.as_view(), name='user_change_password'),
     
     # Import/Export Dashboard
     path('import-export/', ImportExportDashboardView.as_view(), name='import_export_dashboard'),

@@ -1017,11 +1017,17 @@ class CapitalContribution(models.Model):
     
     def save(self, *args, **kwargs):
         """Auto-calculate amounts and create ledger entry."""
+        from decimal import Decimal
+        
         # Calculate converted amounts
         if self.currency == self.currency_destination:
-            self.exchange_rate = 1.0
+            self.exchange_rate = Decimal('1.0')
         
-        self.amount_company_currency = self.amount * self.exchange_rate
+        # Ensure proper type conversion for decimal operations
+        amount = Decimal(str(self.amount)) if self.amount else Decimal('0')
+        exchange_rate = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal('1.0')
+        
+        self.amount_company_currency = amount * exchange_rate
         
         # Calculate USD equivalent
         # currency_destination.exchange_rate is the rate from that currency to USD
@@ -1032,7 +1038,8 @@ class CapitalContribution(models.Model):
                 self.amount_usd = self.amount_company_currency
             else:
                 # Multiply by the exchange rate to get USD amount
-                self.amount_usd = self.amount_company_currency * self.currency_destination.exchange_rate
+                dest_rate = Decimal(str(self.currency_destination.exchange_rate)) if self.currency_destination.exchange_rate else Decimal('1.0')
+                self.amount_usd = self.amount_company_currency * dest_rate
         except:
             self.amount_usd = self.amount_company_currency
         
