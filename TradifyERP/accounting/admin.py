@@ -320,6 +320,11 @@ class StakeholderAdmin(admin.ModelAdmin):
             'fields': ('joined_date', 'notes'),
             'classes': ('collapse',)
         }),
+        ('Profit Calculation Dates', {
+            'fields': ('start_date', 'end_date'),
+            'description': 'Set the date range for profit calculation purposes (leave blank for ongoing)',
+            'classes': ('collapse',)
+        }),
         ('System', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
