@@ -201,8 +201,20 @@
                                                     <span class="badge bg-secondary">{{ stakeholder.get_status_display }}</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ stakeholder.start_date|date:"M d, Y"|default:"—" }}</td>
-                                            <td>{{ stakeholder.end_date|date:"M d, Y"|default:"—" }}</td>
+                                            <td>
+                                                {% if stakeholder.start_date %}
+                                                    {{ stakeholder.start_date|date:"M d, Y" }}
+                                                {% else %}
+                                                    <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if stakeholder.end_date %}
+                                                    {{ stakeholder.end_date|date:"M d, Y" }}
+                                                {% else %}
+                                                    <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
                                             <td>
                                                 {% if entity.company_currency %}
                                                     {{ entity.company_currency.symbol }}{{ stakeholder.total_invested|floatformat:2 }}
