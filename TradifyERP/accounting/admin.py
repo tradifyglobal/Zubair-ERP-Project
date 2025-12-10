@@ -317,7 +317,7 @@ class StakeholderAdmin(admin.ModelAdmin):
             'fields': ('tax_identification_number', 'tax_id_type')
         }),
         ('Additional', {
-            'fields': ('joined_date', 'notes'),
+            'fields': ('joined_date', 'start_date', 'end_date', 'notes'),
             'classes': ('collapse',)
         }),
         ('System', {
