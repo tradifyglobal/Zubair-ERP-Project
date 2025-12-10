@@ -181,6 +181,9 @@ class CapitalContributionForm(forms.ModelForm):
             'paying_bank_name', 'paying_account_number', 'paying_account_holder',
             'document_file', 'notes'
         ]
+        labels = {
+            'stakeholder': 'Shareholder',
+        }
         widgets = {
             'stakeholder': forms.Select(attrs={'class': 'form-select'}),
             'contribution_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -208,10 +211,11 @@ class CapitalContributionForm(forms.ModelForm):
             # Check if instance has entity_id (might be set but not loaded yet)
             entity_id = getattr(self.instance, 'entity_id', None) or (self.instance.entity_id if hasattr(self.instance, 'entity_id') else None)
             if entity_id:
-                # Filter stakeholders to only show those from the current entity
+                # Filter stakeholders to only show active stakeholders from the current entity
                 if 'stakeholder' in self.fields:
                     self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
-                        entity_id=entity_id
+                        entity_id=entity_id,
+                        status='ACTIVE'
                     ).order_by('first_name', 'last_name')
                 
                 # Filter bank profiles to only show those from the current entity
@@ -227,6 +231,17 @@ class CapitalContributionForm(forms.ModelForm):
             self.fields['contribution_date'].initial = timezone.now().date()
             # Make the field not required since we have a default
             self.fields['contribution_date'].required = False
+        
+        # Add data attributes for currency matching
+        if 'currency' in self.fields:
+            self.fields['currency'].widget.attrs['data-toggle-field'] = 'exchange_rate'
+        if 'currency_destination' in self.fields:
+            self.fields['currency_destination'].widget.attrs['data-toggle-field'] = 'exchange_rate'
+        if 'exchange_rate' in self.fields:
+            self.fields['exchange_rate'].widget.attrs['id'] = 'id_exchange_rate'
+            # Make exchange_rate not required since we handle it in clean()
+            self.fields['exchange_rate'].required = False
+            
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
@@ -285,6 +300,26 @@ class CapitalContributionForm(forms.ModelForm):
                 )
             ),
         )
+    
+    def clean(self):
+        """Validate and set exchange_rate based on currency matching."""
+        cleaned_data = super().clean()
+        currency = cleaned_data.get('currency')
+        currency_destination = cleaned_data.get('currency_destination')
+        exchange_rate = cleaned_data.get('exchange_rate')
+        
+        # If currencies are the same, set exchange_rate to 1.0
+        if currency and currency_destination and currency == currency_destination:
+            cleaned_data['exchange_rate'] = 1.0
+        else:
+            # If currencies are different, exchange_rate is required
+            if not exchange_rate:
+                raise forms.ValidationError(
+                    "Exchange rate is required when currencies are different."
+                )
+        
+        return cleaned_data
+
 
 
 class ShareholdingForm(forms.ModelForm):
