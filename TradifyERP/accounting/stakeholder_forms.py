@@ -18,18 +18,32 @@ class StakeholderForm(forms.ModelForm):
             'permanent_address_line_1', 'permanent_address_line_2', 'permanent_city', 'permanent_state_province', 'permanent_postal_code', 'permanent_country',
             'address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country', 'same_as_permanent',
             'tax_identification_number', 'tax_id_type',
-            'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date', 'start_date', 'end_date'
+            'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date'
         ]
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
             'joined_date': forms.DateInput(attrs={'type': 'date'}),
-            'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'end_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Dynamically add start_date and end_date fields if they exist on the model
+        model_field_names = [f.name for f in self.Meta.model._meta.get_fields()]
+        if 'start_date' in model_field_names:
+            self.fields['start_date'] = forms.DateField(
+                required=False,
+                widget=forms.DateInput(attrs={'type': 'date'}),
+                label='Start Date'
+            )
+        if 'end_date' in model_field_names:
+            self.fields['end_date'] = forms.DateField(
+                required=False,
+                widget=forms.DateInput(attrs={'type': 'date'}),
+                label='End Date'
+            )
+        
         # Set default joined_date if not editing an existing instance
         if not self.instance.pk and 'joined_date' in self.fields:
             from django.utils import timezone
@@ -62,14 +76,6 @@ class StakeholderForm(forms.ModelForm):
                 Row(
                     Column('joined_date', css_class='col-md-4'),
                 )
-            ),
-            Fieldset(
-                'Profit Calculation Period (Optional)',
-                Row(
-                    Column('start_date', css_class='col-md-6'),
-                    Column('end_date', css_class='col-md-6'),
-                ),
-                HTML('<p class="text-muted small">Set the date range for profit calculation purposes. Leave blank for ongoing.</p>')
             ),
             Fieldset(
                 'Individual Details (if applicable)',
@@ -169,6 +175,19 @@ class StakeholderForm(forms.ModelForm):
                 )
             ),
         )
+        
+        # Dynamically add Profit Calculation Period section if fields were added
+        if 'start_date' in self.fields or 'end_date' in self.fields:
+            profit_fieldset = Fieldset(
+                'Profit Calculation Period (Optional)',
+                Row(
+                    Column('start_date', css_class='col-md-6') if 'start_date' in self.fields else None,
+                    Column('end_date', css_class='col-md-6') if 'end_date' in self.fields else None,
+                ),
+                HTML('<p class="text-muted small">Set the date range for profit calculation purposes. Leave blank for ongoing.</p>')
+            )
+            # Insert before Additional Information
+            self.helper.layout.fields.insert(-1, profit_fieldset)
     
     def clean(self):
         """Validate that current address is filled when not using same as permanent."""
