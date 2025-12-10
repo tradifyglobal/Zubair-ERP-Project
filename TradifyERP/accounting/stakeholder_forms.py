@@ -178,12 +178,15 @@ class StakeholderForm(forms.ModelForm):
         
         # Dynamically add Profit Calculation Period section if fields were added
         if 'start_date' in self.fields or 'end_date' in self.fields:
+            row_columns = []
+            if 'start_date' in self.fields:
+                row_columns.append(Column('start_date', css_class='col-md-6'))
+            if 'end_date' in self.fields:
+                row_columns.append(Column('end_date', css_class='col-md-6'))
+            
             profit_fieldset = Fieldset(
                 'Profit Calculation Period (Optional)',
-                Row(
-                    Column('start_date', css_class='col-md-6') if 'start_date' in self.fields else None,
-                    Column('end_date', css_class='col-md-6') if 'end_date' in self.fields else None,
-                ),
+                Row(*row_columns) if row_columns else None,
                 HTML('<p class="text-muted small">Set the date range for profit calculation purposes. Leave blank for ongoing.</p>')
             )
             # Insert before Additional Information
