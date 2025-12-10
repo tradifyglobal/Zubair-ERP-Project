@@ -18,11 +18,13 @@ class StakeholderForm(forms.ModelForm):
             'permanent_address_line_1', 'permanent_address_line_2', 'permanent_city', 'permanent_state_province', 'permanent_postal_code', 'permanent_country',
             'address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country', 'same_as_permanent',
             'tax_identification_number', 'tax_id_type',
-            'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date'
+            'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date', 'start_date', 'end_date'
         ]
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
             'joined_date': forms.DateInput(attrs={'type': 'date'}),
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
     
@@ -34,6 +36,12 @@ class StakeholderForm(forms.ModelForm):
             self.fields['joined_date'].initial = timezone.now().date()
             # Make the field not required since we have a default
             self.fields['joined_date'].required = False
+        
+        # Make start_date and end_date optional
+        if 'start_date' in self.fields:
+            self.fields['start_date'].required = False
+        if 'end_date' in self.fields:
+            self.fields['end_date'].required = False
         
         # Make current address fields optional - they'll be validated in clean() based on checkbox
         current_address_fields = ['address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country']
@@ -54,6 +62,14 @@ class StakeholderForm(forms.ModelForm):
                 Row(
                     Column('joined_date', css_class='col-md-4'),
                 )
+            ),
+            Fieldset(
+                'Profit Calculation Period (Optional)',
+                Row(
+                    Column('start_date', css_class='col-md-6'),
+                    Column('end_date', css_class='col-md-6'),
+                ),
+                HTML('<p class="text-muted small">Set the date range for profit calculation purposes. Leave blank for ongoing.</p>')
             ),
             Fieldset(
                 'Individual Details (if applicable)',
