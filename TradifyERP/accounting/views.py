@@ -71,7 +71,7 @@ class PermissionRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """General Ledger Dashboard - overview of accounting data."""
-    template_name = 'accounting/dashboard_new.html'
+    template_name = 'accounting/dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

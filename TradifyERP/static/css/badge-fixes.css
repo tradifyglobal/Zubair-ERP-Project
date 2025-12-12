@@ -1,0 +1,48 @@
+/* Badge Text Color Fixes - Override Bootstrap Theme */
+
+/* LIGHT MODE - Priority: Force dark text on warning/info badges */
+.badge.bg-warning,
+.badge-warning {
+    color: #222 !important;
+    background-color: #ffc107 !important;
+}
+
+.badge.bg-info,
+.badge-info {
+    color: #222 !important;
+    background-color: #17a2b8 !important;
+}
+
+/* Additional specificity for text-dark class */
+.badge.text-dark {
+    color: #222 !important;
+}
+
+.text-dark {
+    color: #222 !important;
+}
+
+/* DARK MODE - Use CSS attribute selector with highest specificity */
+body[data-bs-theme="dark"] .badge.bg-warning,
+[data-bs-theme="dark"] .badge.bg-warning {
+    color: #fff !important;
+    background-color: #ff9800 !important;
+}
+
+body[data-bs-theme="dark"] .badge-warning,
+[data-bs-theme="dark"] .badge-warning {
+    color: #fff !important;
+    background-color: #ff9800 !important;
+}
+
+body[data-bs-theme="dark"] .badge.bg-info,
+[data-bs-theme="dark"] .badge.bg-info {
+    color: #fff !important;
+    background-color: #2196f3 !important;
+}
+
+body[data-bs-theme="dark"] .badge-info,
+[data-bs-theme="dark"] .badge-info {
+    color: #fff !important;
+    background-color: #2196f3 !important;
+}

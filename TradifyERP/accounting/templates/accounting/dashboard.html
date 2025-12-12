@@ -19,6 +19,18 @@
     .page-content {
         padding-top: 12px !important;
     }
+    /* Chart container sizing */
+    #debit_credit_chart,
+    #account_type_chart,
+    #customer_vendor_chart {
+        max-height: 300px !important;
+        height: 300px !important;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 10px;
+    }
 </style>
 <div class="main-content">
     <div class="page-content">
@@ -40,6 +52,56 @@
             <!-- end page title -->
 
             {% if entity %}
+            <!-- Charts Row -->
+            <div class="row mt-4">
+                <div class="col-xl-6">
+                    <!-- Debit vs Credit Chart -->
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Debit vs Credit (6 Months)</h4>
+                        </div>
+                        <div class="card-body" style="padding: 12px;">
+                            <div class="chart-container">
+                                <canvas id="debit_credit_chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-6">
+                    <!-- Account Type Distribution -->
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Account Type Distribution</h4>
+                        </div>
+                        <div class="card-body" style="padding: 12px;">
+                            <div class="chart-container">
+                                <canvas id="account_type_chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <!-- Customer & Vendor Chart Row -->
+            <div class="row mt-4">
+                <div class="col-xl-12">
+                    <!-- Customer & Vendor Growth -->
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Customer & Vendor Growth (6 Months)</h4>
+                        </div>
+                        <div class="card-body" style="padding: 12px;">
+                            <div class="chart-container" style="height: 280px;">
+                                <canvas id="customer_vendor_chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
             <!-- Key Metrics Row -->
             <div class="row">
                 <div class="col-xl-3 col-md-6">
@@ -406,53 +468,9 @@
             </div>
             <!-- end row -->
 
-            <!-- Charts Row -->
-            <div class="row mt-4">
-                <div class="col-xl-6">
-                    <!-- Debit vs Credit Chart -->
-                    <div class="card">
-                        <div class="card-header align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Debit vs Credit (6 Months)</h4>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="debit_credit_chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-6">
-                    <!-- Account Type Distribution -->
-                    <div class="card">
-                        <div class="card-header align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Account Type Distribution</h4>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="account_type_chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
-
-            <!-- Customer & Vendor Chart Row -->
-            <div class="row mt-4">
-                <div class="col-xl-12">
-                    <!-- Customer & Vendor Growth -->
-                    <div class="card">
-                        <div class="card-header align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Customer & Vendor Growth (6 Months)</h4>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="customer_vendor_chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
-
             <!-- Main Content Row -->
             <div class="row mt-4">
-                <div class="col-xl-8">
+                <div class="col-12">
                     <!-- card -->
                     <div class="card">
                         <!-- card body -->
@@ -508,246 +526,6 @@
                             {% else %}
                             <div class="alert alert-info m-3" role="alert">
                                 <i class="mdi mdi-information-outline"></i> No ledger entries found.
-                            </div>
-                            {% endif %}
-                        </div>
-                        <!-- end card body -->
-                    </div>
-                    <!-- end card -->
-                </div>
-                <!-- end col -->
-
-                <div class="col-xl-4">
-                    <!-- card -->
-                    <div class="card">
-                        <!-- card body -->
-                        <div class="card-header align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Quick Links</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <a href="{% url 'accounting:account_list' %}" class="btn btn-light btn-block w-100 text-truncate">
-                                        <i class="mdi mdi-book"></i> Chart of Accounts
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="{% url 'accounting:gl_dashboard' %}" class="btn btn-light btn-block w-100 text-truncate">
-                                        <i class="mdi mdi-chart-line"></i> GL Dashboard
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="{% url 'accounting:trial_balance_list' %}" class="btn btn-light btn-block w-100 text-truncate">
-                                        <i class="mdi mdi-calculator"></i> Trial Balance
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="{% url 'accounting:profit_loss_list' %}" class="btn btn-light btn-block w-100 text-truncate">
-                                        <i class="mdi mdi-currency-usd"></i> P&L Report
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="{% url 'accounting:balance_sheet_list' %}" class="btn btn-light btn-block w-100 text-truncate">
-                                        <i class="mdi mdi-file-document"></i> Balance Sheet
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="{% url 'accounting:vendor_invoice_list' %}" class="btn btn-light btn-block w-100 text-truncate">
-                                        <i class="mdi mdi-file-invoice"></i> Invoices
-                                    </a>
-                                </div>
-                                <div class="col-12">
-                                    {% if perms.accounting.add_ledgerentry %}
-                                        <a href="{% url 'accounting:quick_add_entry' %}" class="btn btn-success btn-block w-100">
-                                            <i class="mdi mdi-plus-circle-outline"></i> Quick Add Entry
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-success btn-block w-100 disabled" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-plus-circle-outline"></i> Quick Add Entry
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_customer %}
-                                        <a href="{% url 'accounting:quick_add_customer' %}" class="btn btn-info btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-account-plus"></i> Add Customer
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-info btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-account-plus"></i> Add Customer
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_vendor %}
-                                        <a href="{% url 'accounting:quick_add_vendor' %}" class="btn btn-info btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-briefcase-plus"></i> Add Vendor
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-info btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-briefcase-plus"></i> Add Vendor
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_account %}
-                                        <a href="{% url 'accounting:quick_add_account' %}" class="btn btn-warning btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-plus-box"></i> Add Account
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-warning btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-plus-box"></i> Add Account
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_vendorinvoice %}
-                                        <a href="{% url 'accounting:quick_add_vendor_invoice' %}" class="btn btn-danger btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-file-plus"></i> Add Invoice
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-danger btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-file-plus"></i> Add Invoice
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_vendorpayment %}
-                                        <a href="{% url 'accounting:quick_add_vendor_payment' %}" class="btn btn-secondary btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-cash-multiple"></i> Add Payment
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-secondary btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-cash-multiple"></i> Add Payment
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_fixedasset %}
-                                        <a href="{% url 'accounting:quick_add_fixed_asset' %}" class="btn btn-secondary btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-home"></i> Add Asset
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-secondary btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-home"></i> Add Asset
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_cashtransaction %}
-                                        <a href="{% url 'accounting:quick_add_cash_transaction' %}" class="btn btn-secondary btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-cash"></i> Cash Trans.
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-secondary btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-cash"></i> Cash Trans.
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_bankprofile %}
-                                        <a href="{% url 'accounting:quick_add_bank_profile' %}" class="btn btn-secondary btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-bank"></i> Bank Account
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-secondary btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-bank"></i> Bank Account
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_taxrate %}
-                                        <a href="{% url 'accounting:quick_add_tax_rate' %}" class="btn btn-secondary btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-percent"></i> Tax Rate
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-secondary btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-percent"></i> Tax Rate
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_deferredexpense %}
-                                        <a href="{% url 'accounting:quick_add_deferred_expense' %}" class="btn btn-secondary btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-file-document"></i> Deferred Exp.
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-secondary btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-file-document"></i> Deferred Exp.
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_deferredrevenue %}
-                                        <a href="{% url 'accounting:quick_add_deferred_revenue' %}" class="btn btn-secondary btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-file-document"></i> Deferred Rev.
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-secondary btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-file-document"></i> Deferred Rev.
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="col-6">
-                                    {% if perms.accounting.add_reconciliationrecord %}
-                                        <a href="{% url 'accounting:quick_add_reconciliation_record' %}" class="btn btn-secondary btn-block w-100 text-truncate">
-                                            <i class="mdi mdi-sync"></i> Reconciliation
-                                        </a>
-                                    {% else %}
-                                        <button type="button" class="btn btn-secondary btn-block w-100 disabled text-truncate" onclick="showNoPermissionAlert()">
-                                            <i class="mdi mdi-sync"></i> Reconciliation
-                                        </button>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end card body -->
-                    </div>
-                    <!-- end card -->
-
-                    <!-- card -->
-                    <div class="card mt-3">
-                        <!-- card body -->
-                        <div class="card-header align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Recent Audit Log</h4>
-                            <div class="flex-shrink-0">
-                                <a href="{% url 'accounting:audit_log_list' %}" class="btn btn-sm btn-primary">View All</a>
-                            </div>
-                        </div>
-                        <div class="card-body px-0">
-                            {% if recent_audit_logs %}
-                            <div class="px-3" data-simplebar style="max-height: 250px;">
-                                <ul class="list-unstyled mb-0">
-                                    {% for log in recent_audit_logs %}
-                                    <li class="mb-2 pb-2 border-bottom">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1 font-size-13">
-                                                    <strong>{{ log.action }}</strong>
-                                                </h6>
-                                                <p class="text-muted mb-0 font-size-12">
-                                                    {{ log.entity_type }} - {{ log.timestamp|date:"d M Y H:i" }}
-                                                </p>
-                                            </div>
-                                            <div class="flex-shrink-0">
-                                                {% if log.action == 'CREATE' %}
-                                                    <span class="badge bg-success-subtle text-success font-size-10">NEW</span>
-                                                {% elif log.action == 'UPDATE' %}
-                                                    <span class="badge bg-info-subtle text-info font-size-10">UPD</span>
-                                                {% elif log.action == 'DELETE' %}
-                                                    <span class="badge bg-danger-subtle text-danger font-size-10">DEL</span>
-                                                {% else %}
-                                                    <span class="badge bg-warning-subtle text-warning font-size-10">{{ log.action|truncatechars:4 }}</span>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-info m-3" role="alert">
-                                <i class="mdi mdi-information-outline"></i> No audit logs found.
                             </div>
                             {% endif %}
                         </div>
@@ -881,19 +659,24 @@
 {% endblock %}
 
 {% block extra_js %}
+    <!-- Chart.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <!-- apexcharts -->
-    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}" onerror="console.log('apexcharts not found')"></script>
     <!-- jquery.counterup -->
-    <script src="{% static 'libs/jquery.counterup/jquery.counterup.min.js' %}"></script>
-    <script src="{% static 'libs/jquery-waypoints/jquery.waypoints.min.js' %}"></script>
+    <script src="{% static 'libs/jquery.counterup/jquery.counterup.min.js' %}" onerror="console.log('counterup not found')"></script>
+    <script src="{% static 'libs/jquery-waypoints/jquery.waypoints.min.js' %}" onerror="console.log('waypoints not found')"></script>
     <script>
-        // Counter animation
-        if ($(".counter-value").length) {
+        // Counter animation - fallback if counterup not available
+        if (typeof $.fn.counterUp === 'function' && $(".counter-value").length) {
             $(".counter-value").counterUp({
                 delay: 100,
                 time: 1000
+            });
+        } else {
+            // Simple fallback counter
+            $(".counter-value").each(function() {
+                $(this).text($(this).data('target'));
             });
         }
 
@@ -902,8 +685,14 @@
             alert('You do not have permission to add this item.');
         }
 
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts after Chart.js is loaded
+        function initCharts() {
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js not loaded yet, retrying...');
+                setTimeout(initCharts, 500);
+                return;
+            }
+
             // Set default data if empty
             var chartMonths = {{ chart_months|safe }} || ['2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11'];
             var chartDebits = {{ chart_debits|safe }} || [1000, 1500, 2000, 1800, 2200, 2500];
@@ -915,7 +704,7 @@
             
             // Debit vs Credit Chart
             var ctx1 = document.getElementById('debit_credit_chart');
-            if (ctx1) {
+            if (ctx1 && typeof Chart !== 'undefined') {
                 try {
                     new Chart(ctx1, {
                         type: 'line',
@@ -942,7 +731,7 @@
                         },
                         options: {
                             responsive: true,
-                            maintainAspectRatio: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: {
                                     position: 'top'
@@ -960,15 +749,15 @@
                             }
                         }
                     });
-                    console.log('Debit/Credit chart created');
+                    console.log('✓ Debit/Credit chart created');
                 } catch(e) {
-                    console.error('Chart 1 error:', e);
+                    console.error('❌ Debit/Credit chart error:', e);
                 }
             }
 
             // Account Type Distribution Chart
             var ctx2 = document.getElementById('account_type_chart');
-            if (ctx2) {
+            if (ctx2 && typeof Chart !== 'undefined') {
                 try {
                     new Chart(ctx2, {
                         type: 'doughnut',
@@ -990,7 +779,7 @@
                         },
                         options: {
                             responsive: true,
-                            maintainAspectRatio: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: {
                                     position: 'bottom'
@@ -998,15 +787,15 @@
                             }
                         }
                     });
-                    console.log('Account type chart created');
+                    console.log('✓ Account type chart created');
                 } catch(e) {
-                    console.error('Chart 2 error:', e);
+                    console.error('❌ Account type chart error:', e);
                 }
             }
 
             // Customer & Vendor Growth Chart
             var ctx3 = document.getElementById('customer_vendor_chart');
-            if (ctx3) {
+            if (ctx3 && typeof Chart !== 'undefined') {
                 try {
                     new Chart(ctx3, {
                         type: 'bar',
@@ -1027,7 +816,7 @@
                         },
                         options: {
                             responsive: true,
-                            maintainAspectRatio: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: {
                                     position: 'top'
@@ -1045,11 +834,17 @@
                             }
                         }
                     });
-                    console.log('Customer/Vendor chart created');
+                    console.log('✓ Customer/Vendor chart created');
                 } catch(e) {
-                    console.error('Chart 3 error:', e);
+                    console.error('❌ Customer/Vendor chart error:', e);
                 }
             }
+        }
+
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Try to initialize charts with a slight delay to ensure Chart.js is loaded
+            setTimeout(initCharts, 100);
         });
     </script>
     </div> <!-- end page-content -->

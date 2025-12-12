@@ -1,0 +1,109 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block head_title%}
+    <title>Review Capital Contribution | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">
+                            {% if is_first_review %}First{% else %}Second{% endif %} Review - Capital Contribution
+                        </h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:capital_contribution_list' %}">Contributions</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:capital_contribution_detail' contribution.id %}">Detail</a></li>
+                                <li class="breadcrumb-item active">Review {{ review_number }}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">
+                                <i class="mdi mdi-clipboard-check"></i> 
+                                {% if is_first_review %}First{% else %}Second{% endif %} Review
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if not is_first_review %}
+                                <div class="alert alert-info">
+                                    <i class="mdi mdi-information"></i>
+                                    <strong>First Reviewer:</strong> {{ first_reviewer.get_full_name|default:first_reviewer.username }}<br>
+                                    <strong>First Review Date:</strong> {{ contribution.reviewed_at|date:"Y-m-d H:i" }}
+                                    {% if contribution.review_notes %}
+                                        <br><strong>First Review Notes:</strong> {{ contribution.review_notes }}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <h6>Contribution Summary:</h6>
+                                <table class="table table-sm table-bordered">
+                                    <tr>
+                                        <th width="30%">Stakeholder:</th>
+                                        <td>{{ contribution.stakeholder.full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Amount:</th>
+                                        <td>{{ contribution.currency.symbol }}{{ contribution.amount|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date:</th>
+                                        <td>{{ contribution.contribution_date }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Payment Mode:</th>
+                                        <td>{{ contribution.get_payment_mode_display }}</td>
+                                    </tr>
+                                    {% if contribution.reference_number %}
+                                    <tr>
+                                        <th>Reference:</th>
+                                        <td>{{ contribution.reference_number }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if contribution.submitted_by %}
+                                    <tr>
+                                        <th>Submitted By:</th>
+                                        <td>{{ contribution.submitted_by.get_full_name|default:contribution.submitted_by.username }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+
+                            <form method="post" class="form">
+                                {% csrf_token %}
+                                {% crispy form %}
+                                
+                                <div class="mt-4 d-flex gap-2">
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="mdi mdi-check"></i> Complete {% if is_first_review %}First{% else %}Second{% endif %} Review
+                                    </button>
+                                    <a href="{% url 'accounting:capital_contribution_reject' contribution.id %}" class="btn btn-danger">
+                                        <i class="mdi mdi-close-circle"></i> Reject
+                                    </a>
+                                    <a href="{% url 'accounting:capital_contribution_detail' contribution.id %}" class="btn btn-secondary">
+                                        <i class="mdi mdi-arrow-left"></i> Back
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
