@@ -345,11 +345,17 @@ class CapitalContributionListView(SessionEntityMixin, LoginRequiredMixin, Permis
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Use filtered queryset from mixin instead of CapitalContribution.objects.all()
-        queryset = self.get_queryset()
-        context['total_contributions'] = queryset.count()
-        context['pending_total'] = queryset.filter(status='PENDING').aggregate(total=Sum('amount'))['total'] or 0
-        context['completed_total'] = queryset.filter(status='COMPLETED').aggregate(total=Sum('amount_company_currency'))['total'] or 0
+        
+        # Get the base queryset filtered by entity (from mixin)
+        base_queryset = CapitalContribution.objects.filter(entity_id=self.request.session.get('selected_entity_id'))
+        
+        # Display queryset (with view filters applied)
+        display_queryset = self.get_queryset()
+        context['total_contributions'] = display_queryset.count()
+        
+        # Calculate totals from FULL entity queryset (not filtered by review/approval status)
+        context['pending_total'] = base_queryset.filter(status='PENDING').aggregate(total=Sum('amount_company_currency'))['total'] or 0
+        context['completed_total'] = base_queryset.filter(status='COMPLETED').aggregate(total=Sum('amount_company_currency'))['total'] or 0
         
         # Get entity for currency display
         entity_id = self.request.session.get('selected_entity_id')
