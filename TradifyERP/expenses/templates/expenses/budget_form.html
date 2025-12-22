@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Budget{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Create Expense Budget</h4>
+                        <a href="{% url 'expenses:budget_list' %}" class="btn btn-secondary">
+                            <i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> Back to Budgets
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Form -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="row">
+                                    <!-- Employee -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.employee.id_for_label }}" class="form-label">
+                                            Employee <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.employee }}
+                                        {% if form.employee.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.employee.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Category -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.category.id_for_label }}" class="form-label">
+                                            Expense Category <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.category }}
+                                        {% if form.category.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.category.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Period -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.period.id_for_label }}" class="form-label">
+                                            Budget Period <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.period }}
+                                        {% if form.period.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.period.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Budget Amount -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.budget_amount.id_for_label }}" class="form-label">
+                                            Budget Amount <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            {{ form.budget_amount }}
+                                        </div>
+                                        {% if form.budget_amount.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.budget_amount.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Period Start -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.period_start.id_for_label }}" class="form-label">
+                                            Period Start Date <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.period_start }}
+                                        {% if form.period_start.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.period_start.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Period End -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.period_end.id_for_label }}" class="form-label">
+                                            Period End Date <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.period_end }}
+                                        {% if form.period_end.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.period_end.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i data-feather="save" style="width: 16px; height: 16px;"></i> Create Budget
+                                        </button>
+                                        <a href="{% url 'expenses:budget_list' %}" class="btn btn-light ms-2">Cancel</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Card -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Budget Guidelines</h5>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i data-feather="info" style="width: 16px; height: 16px;" class="text-primary"></i>
+                                    <strong>Employee:</strong> Select the employee for this budget
+                                </li>
+                                <li class="mb-2">
+                                    <i data-feather="info" style="width: 16px; height: 16px;" class="text-primary"></i>
+                                    <strong>Category:</strong> Choose the expense category to budget for
+                                </li>
+                                <li class="mb-2">
+                                    <i data-feather="info" style="width: 16px; height: 16px;" class="text-primary"></i>
+                                    <strong>Period:</strong> Select Daily, Weekly, Monthly, Quarterly, or Annual
+                                </li>
+                                <li class="mb-2">
+                                    <i data-feather="info" style="width: 16px; height: 16px;" class="text-primary"></i>
+                                    <strong>Amount:</strong> Enter the maximum allowed expense amount
+                                </li>
+                                <li class="mb-2">
+                                    <i data-feather="info" style="width: 16px; height: 16px;" class="text-primary"></i>
+                                    <strong>Dates:</strong> Set the start and end dates for the budget period
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

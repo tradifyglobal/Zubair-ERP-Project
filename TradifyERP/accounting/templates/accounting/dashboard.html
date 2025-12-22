@@ -8,30 +8,16 @@
     <link href="{% static 'libs/apexcharts/dist/apexcharts.min.css' %}" rel="stylesheet" type="text/css" />
     <!-- plugin css -->
     <link href="{% static 'libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css' %}" rel="stylesheet" type="text/css" />
+    <style>
+        .page-content {
+            padding-top: 1rem !important;
+        }
+        .container-fluid {
+            padding-top: 0 !important;
+        }
+    </style>
 {% endblock %}
 {% block content %}
-<style>
-    .main-content {
-        overflow-y: auto !important;
-        height: calc(100vh - 56px) !important;
-        padding-top: 0 !important;
-    }
-    .page-content {
-        padding-top: 12px !important;
-    }
-    /* Chart container sizing */
-    #debit_credit_chart,
-    #account_type_chart,
-    #customer_vendor_chart {
-        max-height: 300px !important;
-        height: 300px !important;
-    }
-    .chart-container {
-        position: relative;
-        height: 300px;
-        margin-bottom: 10px;
-    }
-</style>
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
@@ -475,6 +461,91 @@
                     <div class="card">
                         <!-- card body -->
                         <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Chart of Accounts</h4>
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'accounting:account_list' %}" class="btn btn-sm btn-primary">View All</a>
+                            </div>
+                        </div>
+                        <div class="card-body px-0">
+                            {% if dashboard_accounts %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Account #</th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in dashboard_accounts %}
+                                        <tr {% if item.level > 0 %}style="background-color: #f8f9fa;"{% endif %}>
+                                            <td>
+                                                {% if item.level > 0 %}
+                                                    <div style="padding-left: {{ item.level }}rem;">
+                                                        <i class="mdi mdi-arrow-right"></i> <strong>{{ item.account.account_number }}</strong>
+                                                    </div>
+                                                {% else %}
+                                                    <strong>{{ item.account.account_number }}</strong>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.level > 0 %}
+                                                    <div style="padding-left: {{ item.level }}rem;">
+                                                        {{ item.account.name }}
+                                                    </div>
+                                                {% else %}
+                                                    {{ item.account.name }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.account.account_type == 'ASSET' %}
+                                                    <span class="badge bg-primary-subtle text-primary">Asset</span>
+                                                {% elif item.account.account_type == 'LIABILITY' %}
+                                                    <span class="badge bg-warning-subtle text-warning">Liability</span>
+                                                {% elif item.account.account_type == 'EQUITY' %}
+                                                    <span class="badge bg-info-subtle text-info">Equity</span>
+                                                {% elif item.account.account_type == 'INCOME' %}
+                                                    <span class="badge bg-success-subtle text-success">Income</span>
+                                                {% elif item.account.account_type == 'EXPENSE' %}
+                                                    <span class="badge bg-danger-subtle text-danger">Expense</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary-subtle text-secondary">{{ item.account.get_account_type_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.account.is_active %}
+                                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info m-3" role="alert">
+                                <i class="mdi mdi-information-outline"></i> No accounts configured for this entity.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- end card -->
+                </div>
+                <!-- end col -->
+            </div>
+            <!-- end row -->
+
+            <!-- Main Content Row -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <!-- card -->
+                    <div class="card">
+                        <!-- card body -->
+                        <div class="card-header align-items-center d-flex">
                             <h4 class="card-title mb-0 flex-grow-1">Recent Ledger Entries</h4>
                             <div class="flex-shrink-0">
                                 <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-sm btn-primary">View All</a>
@@ -602,7 +673,7 @@
                         <div class="card-header align-items-center d-flex">
                             <h4 class="card-title mb-0 flex-grow-1">Recent Trial Balances</h4>
                             <div class="flex-shrink-0">
-                                <a href="{% url 'accounting:trial_balance_list' %}" class="btn btn-sm btn-primary">View All</a>
+                                <a href="{% url 'accounting:trial-balance-list' %}" class="btn btn-sm btn-primary">View All</a>
                             </div>
                         </div>
                         <div class="card-body px-0">

@@ -153,7 +153,8 @@
                         </div>
                     </div>
 
-                    <!-- Attachments -->
+                    <!-- Attachments - Temporarily disabled -->
+                    {% comment %}
                     <div class="card mb-4">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">Supporting Documents</h5>
@@ -227,6 +228,7 @@
                             {% endif %}
                         </div>
                     </div>
+                    {% endcomment %}
                 </div>
 
                 <!-- Sidebar -->
@@ -317,19 +319,36 @@
                                 </form>
                             </div>
                         </div>
-                    {% elif report.status == 'SUBMITTED' %}
-                        <!-- Waiting for reviewer assignment -->
+                    {% elif report.status == 'SUBMITTED' or report.status == 'PENDING_REVIEW' %}
+                        <!-- Waiting for reviewer assignment / Under Review -->
                         <div class="card mb-4">
                             <div class="card-header bg-warning">
                                 <h5 class="card-title mb-0 text-white">
-                                    <i class="fas fa-clock"></i> Pending Reviewer Assignment
+                                    <i class="fas fa-clock"></i> Pending Review
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <p class="text-muted">This report is awaiting assignment to a reviewer.</p>
+                                <p class="text-muted mb-3">This report is awaiting review and approval.</p>
+                                
+                                <!-- Simple Approve/Reject Buttons -->
+                                <div class="d-grid gap-2">
+                                    <form method="post" action="{% url 'expenses:report_approve' report.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i data-feather="check"></i> Approve Report
+                                        </button>
+                                    </form>
+                                    
+                                    <form method="post" action="{% url 'expenses:report_reject' report.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to reject this expense report?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger w-100">
+                                            <i data-feather="x"></i> Reject Report
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    {% elif report.status == 'PENDING_REVIEW' %}
+                    {% elif report.status == 'PENDING_REVIEW_OLD' %}
                         <!-- Review stage - only reviewers can act -->
                         {% if reviewers %}
                             <div class="card mb-4">

@@ -82,10 +82,17 @@ class SessionEntityMixin:
         queryset = super().get_queryset()
         
         # Check if model has 'entity' field
-        if hasattr(self, 'model') and hasattr(self.model, 'entity'):
-            entity_id = self.request.session.get('selected_entity_id')
-            if entity_id:
-                queryset = queryset.filter(entity_id=entity_id)
+        if hasattr(self, 'model') and self.model:
+            # Check if the model has an 'entity' field
+            try:
+                self.model._meta.get_field('entity')
+                # Model has entity field, filter by session entity
+                entity_id = self.request.session.get('selected_entity_id')
+                if entity_id:
+                    queryset = queryset.filter(entity_id=entity_id)
+            except Exception:
+                # Model doesn't have entity field, don't filter
+                pass
         
         return queryset
     

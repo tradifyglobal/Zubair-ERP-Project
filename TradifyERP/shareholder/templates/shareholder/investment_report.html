@@ -38,6 +38,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Shareholder</th>
+                                    <th>Currency Info</th>
                                     <th>Target Investment</th>
                                     <th>Invested Amount</th>
                                     <th>Balance to Invest</th>
@@ -54,17 +55,50 @@
                                         <strong>{{ investment.stakeholder.full_name }}</strong>
                                     </td>
                                     <td>
-                                        {{ investment.currency.symbol }} {{ investment.target_amount|floatformat:2 }}
+                                        {% if investment.currency %}
+                                            <div class="small">
+                                                <strong>Investment:</strong> {{ investment.currency.code }}<br>
+                                                <strong>Exchange Rate:</strong> 
+                                                {% if investment.currency.exchange_rate %}
+                                                    {{ investment.currency.exchange_rate }}
+                                                {% else %}
+                                                    <span class="text-muted">1.0</span>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted small">No Currency Set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if investment.target_amount %}
+                                            {{ investment.currency.symbol }} {{ investment.target_amount|floatformat:2 }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <span class="badge bg-success">
-                                            {{ investment.currency.symbol }} {{ investment.invested_amount|floatformat:2 }}
+                                            {% if investment.currency %}
+                                                {{ investment.currency.symbol }}
+                                            {% else %}
+                                                ₹
+                                            {% endif %}
+                                            {{ investment.invested_amount|floatformat:2 }}
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-warning">
-                                            {{ investment.currency.symbol }} {{ investment.balance_to_invest|floatformat:2 }}
-                                        </span>
+                                        {% if investment.balance_to_invest %}
+                                            <span class="badge bg-warning">
+                                                {% if investment.currency %}
+                                                    {{ investment.currency.symbol }}
+                                                {% else %}
+                                                    ₹
+                                                {% endif %}
+                                                {{ investment.balance_to_invest|floatformat:2 }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <div class="progress" style="height: 20px;">
@@ -94,7 +128,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if investment.balance_to_invest <= 0 %}
+                                        {% if investment.is_completed or investment.balance_to_invest <= 0 %}
                                         <span class="badge bg-success">Completed</span>
                                         {% elif investment.is_overdue %}
                                         <span class="badge bg-danger">Overdue</span>
@@ -125,8 +159,9 @@
                     </div>
                     {% else %}
                     <div class="alert alert-info">
-                        <i class="ri-information-line"></i> No investment limits configured yet. 
-                        <a href="{% url 'shareholder:investment_limit_create' %}" class="alert-link">Set up investment limits</a>
+                        <i class="ri-information-line"></i> No investment data available. 
+                        <a href="{% url 'shareholder:investment_limit_create' %}" class="alert-link">Set up investment limits</a> or 
+                        <a href="{% url 'shareholder:capital-contribution-list' %}" class="alert-link">add capital contributions</a>
                     </div>
                     {% endif %}
                 </div>

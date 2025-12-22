@@ -470,11 +470,18 @@ def import_capital_contributions_csv(file_content, entity, overwrite=False):
                     errors.append(f"Row {row_num}: Company currency not found")
                     continue
                 
-                # Parse date
-                try:
-                    contrib_date = datetime.strptime(contribution_date, '%Y-%m-%d').date()
-                except ValueError:
-                    errors.append(f"Row {row_num}: Invalid date format. Use YYYY-MM-DD")
+                # Parse date - try multiple formats
+                contrib_date = None
+                date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y/%m/%d', '%m-%d-%Y', '%d-%m-%Y']
+                for date_format in date_formats:
+                    try:
+                        contrib_date = datetime.strptime(contribution_date, date_format).date()
+                        break
+                    except ValueError:
+                        continue
+                
+                if not contrib_date:
+                    errors.append(f"Row {row_num}: Invalid date format '{contribution_date}'. Supported: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY")
                     continue
                 
                 # Parse amount and exchange rate
@@ -630,14 +637,22 @@ def import_capital_contributions_excel(file_content, entity, overwrite=False):
                     errors.append(f"Row {row_num}: Company currency not found")
                     continue
                 
-                # Parse date
-                try:
-                    if isinstance(contribution_date_val, str):
-                        contrib_date = datetime.strptime(contribution_date_val, '%Y-%m-%d').date()
-                    else:
-                        contrib_date = contribution_date_val
-                except (ValueError, TypeError):
-                    errors.append(f"Row {row_num}: Invalid date format. Use YYYY-MM-DD")
+                # Parse date - try multiple formats
+                contrib_date = None
+                if isinstance(contribution_date_val, str):
+                    date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y/%m/%d', '%m-%d-%Y', '%d-%m-%Y']
+                    for date_format in date_formats:
+                        try:
+                            contrib_date = datetime.strptime(contribution_date_val, date_format).date()
+                            break
+                        except ValueError:
+                            continue
+                else:
+                    # Excel date object
+                    contrib_date = contribution_date_val
+                
+                if not contrib_date:
+                    errors.append(f"Row {row_num}: Invalid date format '{contribution_date_val}'. Supported: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY")
                     continue
                 
                 # Parse amounts

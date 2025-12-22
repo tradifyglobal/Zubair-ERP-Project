@@ -42,6 +42,13 @@
                             <form method="post" novalidate>
                                 {% csrf_token %}
                                 
+                                {# Render all hidden fields first #}
+                                {% for field in form %}
+                                    {% if field.field.widget.input_type == 'hidden' %}
+                                        {{ field }}
+                                    {% endif %}
+                                {% endfor %}
+                                
                                 {% for field in form %}
                                     {% if field.field.widget.input_type != 'hidden' %}
                                         <div class="mb-3">

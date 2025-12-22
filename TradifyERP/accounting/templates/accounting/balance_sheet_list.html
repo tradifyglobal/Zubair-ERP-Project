@@ -38,6 +38,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>As Of Date</th>
+                                            <th>Entity Currency</th>
                                             <th>Total Assets</th>
                                             <th>Total Liabilities</th>
                                             <th>Total Equity</th>
@@ -53,7 +54,20 @@
                                                 <strong>{{ bs.as_of_date|date:"d M Y" }}</strong>
                                             </td>
                                             <td>
-                                                <span class="text-primary">{{ bs.total_assets }}</span>
+                                                {% if bs.entity and bs.entity.company_currency %}
+                                                    <span class="badge bg-primary">{{ bs.entity.company_currency.code }}</span>
+                                                    <br><small class="text-muted">{{ bs.entity.company_currency.name }}</small>
+                                                {% else %}
+                                                    <span class="text-muted small">Not Set</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <span class="text-primary">{{ bs.total_assets }}</span>
+                                                    {% if bs.entity.company_currency %}
+                                                        <br><small class="text-muted">{{ bs.entity.company_currency.code }}</small>
+                                                    {% endif %}
+                                                </div>
                                             </td>
                                             <td>
                                                 <span class="text-warning">{{ bs.total_liabilities }}</span>

@@ -99,6 +99,7 @@
                                             <th>Account</th>
                                             <th>Account #</th>
                                             <th>Type</th>
+                                            <th>Currency Info</th>
                                             <th>Amount</th>
                                             <th>Reference</th>
                                             <th>Status</th>
@@ -127,7 +128,27 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <strong>{{ entry.amount }}</strong>
+                                                {% if entry.account.entity %}
+                                                    <div class="small">
+                                                        <strong>Entity:</strong> 
+                                                        {% if entry.account.entity.company_currency %}
+                                                            {{ entry.account.entity.company_currency.code }}
+                                                        {% else %}
+                                                            <span class="text-muted">Not Set</span>
+                                                        {% endif %}
+                                                        <br><span class="text-muted">Single Currency</span>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted small">No Entity</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ entry.amount }}</strong>
+                                                    {% if entry.account.entity.company_currency %}
+                                                        <br><small class="text-muted">{{ entry.account.entity.company_currency.code }}</small>
+                                                    {% endif %}
+                                                </div>
                                             </td>
                                             <td>
                                                 {{ entry.reference_number|default:"—" }}

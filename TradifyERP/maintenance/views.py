@@ -5,6 +5,7 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from accounting.permission_utils import module_permission_required
+from accounting.mixins import SessionEntityMixin
 from django.urls import reverse_lazy
 from django.db.models import Q
 from django.contrib import messages
@@ -24,7 +25,7 @@ from .forms import (
 # MAINTENANCE ASSET VIEWS
 # ============================================================================
 
-class MaintenanceAssetListView(LoginRequiredMixin, ListView):
+class MaintenanceAssetListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of maintenance assets."""
     model = MaintenanceAsset
     template_name = 'maintenance/maintenanceasset_list.html'
@@ -51,7 +52,7 @@ class MaintenanceAssetListView(LoginRequiredMixin, ListView):
         return context
 
 
-class MaintenanceAssetDetailView(LoginRequiredMixin, DetailView):
+class MaintenanceAssetDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display maintenance asset details."""
     model = MaintenanceAsset
     template_name = 'maintenance/maintenanceasset_detail.html'
@@ -61,7 +62,7 @@ class MaintenanceAssetDetailView(LoginRequiredMixin, DetailView):
         return MaintenanceAsset.objects.all()
 
 
-class MaintenanceAssetCreateView(LoginRequiredMixin, CreateView):
+class MaintenanceAssetCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new maintenance asset."""
     model = MaintenanceAsset
     form_class = MaintenanceAssetForm
@@ -69,11 +70,12 @@ class MaintenanceAssetCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:asset-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Asset created successfully!')
         return super().form_valid(form)
 
 
-class MaintenanceAssetUpdateView(LoginRequiredMixin, UpdateView):
+class MaintenanceAssetUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing maintenance asset."""
     model = MaintenanceAsset
     form_class = MaintenanceAssetForm
@@ -89,7 +91,7 @@ class MaintenanceAssetUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class MaintenanceAssetDeleteView(LoginRequiredMixin, DeleteView):
+class MaintenanceAssetDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a maintenance asset."""
     model = MaintenanceAsset
     template_name = 'maintenance/maintenanceasset_confirm_delete.html'
@@ -107,7 +109,7 @@ class MaintenanceAssetDeleteView(LoginRequiredMixin, DeleteView):
 # MAINTENANCE TASK VIEWS
 # ============================================================================
 
-class MaintenanceTaskListView(LoginRequiredMixin, ListView):
+class MaintenanceTaskListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of maintenance tasks."""
     model = MaintenanceTask
     template_name = 'maintenance/maintenancetask_list.html'
@@ -127,7 +129,7 @@ class MaintenanceTaskListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class MaintenanceTaskDetailView(LoginRequiredMixin, DetailView):
+class MaintenanceTaskDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display maintenance task details."""
     model = MaintenanceTask
     template_name = 'maintenance/maintenancetask_detail.html'
@@ -137,7 +139,7 @@ class MaintenanceTaskDetailView(LoginRequiredMixin, DetailView):
         return MaintenanceTask.objects.all()
 
 
-class MaintenanceTaskCreateView(LoginRequiredMixin, CreateView):
+class MaintenanceTaskCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new maintenance task."""
     model = MaintenanceTask
     form_class = MaintenanceTaskForm
@@ -145,11 +147,12 @@ class MaintenanceTaskCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:task-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Task created successfully!')
         return super().form_valid(form)
 
 
-class MaintenanceTaskUpdateView(LoginRequiredMixin, UpdateView):
+class MaintenanceTaskUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing maintenance task."""
     model = MaintenanceTask
     form_class = MaintenanceTaskForm
@@ -165,7 +168,7 @@ class MaintenanceTaskUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class MaintenanceTaskDeleteView(LoginRequiredMixin, DeleteView):
+class MaintenanceTaskDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a maintenance task."""
     model = MaintenanceTask
     template_name = 'maintenance/maintenancetask_confirm_delete.html'
@@ -183,7 +186,7 @@ class MaintenanceTaskDeleteView(LoginRequiredMixin, DeleteView):
 # WORK ORDER VIEWS
 # ============================================================================
 
-class WorkOrderListView(LoginRequiredMixin, ListView):
+class WorkOrderListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of work orders."""
     model = WorkOrder
     template_name = 'maintenance/workorder_list.html'
@@ -214,7 +217,7 @@ class WorkOrderListView(LoginRequiredMixin, ListView):
         return context
 
 
-class WorkOrderDetailView(LoginRequiredMixin, DetailView):
+class WorkOrderDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display work order details."""
     model = WorkOrder
     template_name = 'maintenance/workorder_detail.html'
@@ -230,7 +233,7 @@ class WorkOrderDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class WorkOrderCreateView(LoginRequiredMixin, CreateView):
+class WorkOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new work order."""
     model = WorkOrder
     form_class = WorkOrderForm
@@ -238,11 +241,12 @@ class WorkOrderCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:workorder-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Work order created successfully!')
         return super().form_valid(form)
 
 
-class WorkOrderUpdateView(LoginRequiredMixin, UpdateView):
+class WorkOrderUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing work order."""
     model = WorkOrder
     form_class = WorkOrderForm
@@ -258,7 +262,7 @@ class WorkOrderUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class WorkOrderDeleteView(LoginRequiredMixin, DeleteView):
+class WorkOrderDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a work order."""
     model = WorkOrder
     template_name = 'maintenance/workorder_confirm_delete.html'
@@ -276,7 +280,7 @@ class WorkOrderDeleteView(LoginRequiredMixin, DeleteView):
 # SPARE PART VIEWS
 # ============================================================================
 
-class SparePartListView(LoginRequiredMixin, ListView):
+class SparePartListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of spare parts."""
     model = SparePart
     template_name = 'maintenance/sparepart_list.html'
@@ -296,7 +300,7 @@ class SparePartListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class SparePartDetailView(LoginRequiredMixin, DetailView):
+class SparePartDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display spare part details."""
     model = SparePart
     template_name = 'maintenance/sparepart_detail.html'
@@ -306,7 +310,7 @@ class SparePartDetailView(LoginRequiredMixin, DetailView):
         return SparePart.objects.all()
 
 
-class SparePartCreateView(LoginRequiredMixin, CreateView):
+class SparePartCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new spare part."""
     model = SparePart
     form_class = SparePartForm
@@ -314,11 +318,12 @@ class SparePartCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:sparepart-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Spare part created successfully!')
         return super().form_valid(form)
 
 
-class SparePartUpdateView(LoginRequiredMixin, UpdateView):
+class SparePartUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing spare part."""
     model = SparePart
     form_class = SparePartForm
@@ -334,7 +339,7 @@ class SparePartUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class SparePartDeleteView(LoginRequiredMixin, DeleteView):
+class SparePartDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a spare part."""
     model = SparePart
     template_name = 'maintenance/sparepart_confirm_delete.html'
@@ -352,7 +357,7 @@ class SparePartDeleteView(LoginRequiredMixin, DeleteView):
 # MAINTENANCE VENDOR VIEWS
 # ============================================================================
 
-class MaintenanceVendorListView(LoginRequiredMixin, ListView):
+class MaintenanceVendorListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of maintenance vendors."""
     model = MaintenanceVendor
     template_name = 'maintenance/maintenancevendor_list.html'
@@ -372,7 +377,7 @@ class MaintenanceVendorListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class MaintenanceVendorDetailView(LoginRequiredMixin, DetailView):
+class MaintenanceVendorDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display maintenance vendor details."""
     model = MaintenanceVendor
     template_name = 'maintenance/maintenancevendor_detail.html'
@@ -387,7 +392,7 @@ class MaintenanceVendorDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class MaintenanceVendorCreateView(LoginRequiredMixin, CreateView):
+class MaintenanceVendorCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new maintenance vendor."""
     model = MaintenanceVendor
     form_class = MaintenanceVendorForm
@@ -395,11 +400,12 @@ class MaintenanceVendorCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:vendor-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Vendor created successfully!')
         return super().form_valid(form)
 
 
-class MaintenanceVendorUpdateView(LoginRequiredMixin, UpdateView):
+class MaintenanceVendorUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing maintenance vendor."""
     model = MaintenanceVendor
     form_class = MaintenanceVendorForm
@@ -415,7 +421,7 @@ class MaintenanceVendorUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class MaintenanceVendorDeleteView(LoginRequiredMixin, DeleteView):
+class MaintenanceVendorDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a maintenance vendor."""
     model = MaintenanceVendor
     template_name = 'maintenance/maintenancevendor_confirm_delete.html'
@@ -433,7 +439,7 @@ class MaintenanceVendorDeleteView(LoginRequiredMixin, DeleteView):
 # VENDOR CONTRACT VIEWS
 # ============================================================================
 
-class VendorContractListView(LoginRequiredMixin, ListView):
+class VendorContractListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of vendor contracts."""
     model = VendorContract
     template_name = 'maintenance/vendorcontract_list.html'
@@ -453,7 +459,7 @@ class VendorContractListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class VendorContractDetailView(LoginRequiredMixin, DetailView):
+class VendorContractDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display vendor contract details."""
     model = VendorContract
     template_name = 'maintenance/vendorcontract_detail.html'
@@ -463,7 +469,7 @@ class VendorContractDetailView(LoginRequiredMixin, DetailView):
         return VendorContract.objects.all()
 
 
-class VendorContractCreateView(LoginRequiredMixin, CreateView):
+class VendorContractCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new vendor contract."""
     model = VendorContract
     form_class = VendorContractForm
@@ -471,11 +477,12 @@ class VendorContractCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:contract-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Contract created successfully!')
         return super().form_valid(form)
 
 
-class VendorContractUpdateView(LoginRequiredMixin, UpdateView):
+class VendorContractUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing vendor contract."""
     model = VendorContract
     form_class = VendorContractForm
@@ -491,7 +498,7 @@ class VendorContractUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class VendorContractDeleteView(LoginRequiredMixin, DeleteView):
+class VendorContractDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a vendor contract."""
     model = VendorContract
     template_name = 'maintenance/vendorcontract_confirm_delete.html'
@@ -509,7 +516,7 @@ class VendorContractDeleteView(LoginRequiredMixin, DeleteView):
 # COMPLIANCE STANDARD VIEWS
 # ============================================================================
 
-class ComplianceStandardListView(LoginRequiredMixin, ListView):
+class ComplianceStandardListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of compliance standards."""
     model = ComplianceStandard
     template_name = 'maintenance/compliancestandard_list.html'
@@ -529,7 +536,7 @@ class ComplianceStandardListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class ComplianceStandardDetailView(LoginRequiredMixin, DetailView):
+class ComplianceStandardDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display compliance standard details."""
     model = ComplianceStandard
     template_name = 'maintenance/compliancestandard_detail.html'
@@ -539,7 +546,7 @@ class ComplianceStandardDetailView(LoginRequiredMixin, DetailView):
         return ComplianceStandard.objects.all()
 
 
-class ComplianceStandardCreateView(LoginRequiredMixin, CreateView):
+class ComplianceStandardCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new compliance standard."""
     model = ComplianceStandard
     form_class = ComplianceStandardForm
@@ -547,11 +554,12 @@ class ComplianceStandardCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:standard-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Standard created successfully!')
         return super().form_valid(form)
 
 
-class ComplianceStandardUpdateView(LoginRequiredMixin, UpdateView):
+class ComplianceStandardUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing compliance standard."""
     model = ComplianceStandard
     form_class = ComplianceStandardForm
@@ -567,7 +575,7 @@ class ComplianceStandardUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class ComplianceStandardDeleteView(LoginRequiredMixin, DeleteView):
+class ComplianceStandardDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a compliance standard."""
     model = ComplianceStandard
     template_name = 'maintenance/compliancestandard_confirm_delete.html'
@@ -585,7 +593,7 @@ class ComplianceStandardDeleteView(LoginRequiredMixin, DeleteView):
 # COMPLIANCE AUDIT VIEWS
 # ============================================================================
 
-class ComplianceAuditListView(LoginRequiredMixin, ListView):
+class ComplianceAuditListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of compliance audits."""
     model = ComplianceAudit
     template_name = 'maintenance/complianceaudit_list.html'
@@ -605,7 +613,7 @@ class ComplianceAuditListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class ComplianceAuditDetailView(LoginRequiredMixin, DetailView):
+class ComplianceAuditDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display compliance audit details."""
     model = ComplianceAudit
     template_name = 'maintenance/complianceaudit_detail.html'
@@ -615,7 +623,7 @@ class ComplianceAuditDetailView(LoginRequiredMixin, DetailView):
         return ComplianceAudit.objects.all()
 
 
-class ComplianceAuditCreateView(LoginRequiredMixin, CreateView):
+class ComplianceAuditCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new compliance audit."""
     model = ComplianceAudit
     form_class = MaintenanceCostForm  # Using cost form as placeholder
@@ -623,11 +631,12 @@ class ComplianceAuditCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:audit-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Audit created successfully!')
         return super().form_valid(form)
 
 
-class ComplianceAuditUpdateView(LoginRequiredMixin, UpdateView):
+class ComplianceAuditUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing compliance audit."""
     model = ComplianceAudit
     form_class = MaintenanceCostForm  # Using cost form as placeholder
@@ -643,7 +652,7 @@ class ComplianceAuditUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class ComplianceAuditDeleteView(LoginRequiredMixin, DeleteView):
+class ComplianceAuditDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a compliance audit."""
     model = ComplianceAudit
     template_name = 'maintenance/complianceaudit_confirm_delete.html'
@@ -661,7 +670,7 @@ class ComplianceAuditDeleteView(LoginRequiredMixin, DeleteView):
 # MAINTENANCE COST VIEWS
 # ============================================================================
 
-class MaintenanceCostListView(LoginRequiredMixin, ListView):
+class MaintenanceCostListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of maintenance costs."""
     model = MaintenanceCost
     template_name = 'maintenance/maintenancecost_list.html'
@@ -680,7 +689,7 @@ class MaintenanceCostListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class MaintenanceCostDetailView(LoginRequiredMixin, DetailView):
+class MaintenanceCostDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display maintenance cost details."""
     model = MaintenanceCost
     template_name = 'maintenance/maintenancecost_detail.html'
@@ -690,7 +699,7 @@ class MaintenanceCostDetailView(LoginRequiredMixin, DetailView):
         return MaintenanceCost.objects.all()
 
 
-class MaintenanceCostCreateView(LoginRequiredMixin, CreateView):
+class MaintenanceCostCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new maintenance cost."""
     model = MaintenanceCost
     form_class = MaintenanceCostForm
@@ -699,12 +708,12 @@ class MaintenanceCostCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         # Set entity from current request
-        form.instance.entity_id = 1
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Cost recorded successfully!')
         return super().form_valid(form)
 
 
-class MaintenanceCostUpdateView(LoginRequiredMixin, UpdateView):
+class MaintenanceCostUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing maintenance cost."""
     model = MaintenanceCost
     form_class = MaintenanceCostForm
@@ -720,7 +729,7 @@ class MaintenanceCostUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class MaintenanceCostDeleteView(LoginRequiredMixin, DeleteView):
+class MaintenanceCostDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a maintenance cost."""
     model = MaintenanceCost
     template_name = 'maintenance/maintenancecost_confirm_delete.html'
@@ -738,7 +747,7 @@ class MaintenanceCostDeleteView(LoginRequiredMixin, DeleteView):
 # DOWNTIME RECORD VIEWS
 # ============================================================================
 
-class DowntimeRecordListView(LoginRequiredMixin, ListView):
+class DowntimeRecordListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     """Display list of downtime records."""
     model = DowntimeRecord
     template_name = 'maintenance/downtimerecord_list.html'
@@ -758,7 +767,7 @@ class DowntimeRecordListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class DowntimeRecordDetailView(LoginRequiredMixin, DetailView):
+class DowntimeRecordDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     """Display downtime record details."""
     model = DowntimeRecord
     template_name = 'maintenance/downtimerecord_detail.html'
@@ -768,7 +777,7 @@ class DowntimeRecordDetailView(LoginRequiredMixin, DetailView):
         return DowntimeRecord.objects.all()
 
 
-class DowntimeRecordCreateView(LoginRequiredMixin, CreateView):
+class DowntimeRecordCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
     """Create a new downtime record."""
     model = DowntimeRecord
     form_class = DowntimeRecordForm
@@ -776,11 +785,12 @@ class DowntimeRecordCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('maintenance:downtime-list')
 
     def form_valid(self, form):
+        form.instance.entity = self.request.entity
         messages.success(self.request, 'Downtime record created successfully!')
         return super().form_valid(form)
 
 
-class DowntimeRecordUpdateView(LoginRequiredMixin, UpdateView):
+class DowntimeRecordUpdateView(SessionEntityMixin, LoginRequiredMixin, UpdateView):
     """Update an existing downtime record."""
     model = DowntimeRecord
     form_class = DowntimeRecordForm
@@ -796,7 +806,7 @@ class DowntimeRecordUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(module_permission_required("maintenance", "delete"), name='dispatch')
-class DowntimeRecordDeleteView(LoginRequiredMixin, DeleteView):
+class DowntimeRecordDeleteView(SessionEntityMixin, LoginRequiredMixin, DeleteView):
     """Delete a downtime record."""
     model = DowntimeRecord
     template_name = 'maintenance/downtimerecord_confirm_delete.html'
@@ -814,7 +824,7 @@ class DowntimeRecordDeleteView(LoginRequiredMixin, DeleteView):
 # DASHBOARD VIEW
 # ============================================================================
 
-class MaintenanceDashboardView(LoginRequiredMixin, TemplateView):
+class MaintenanceDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """Display maintenance module dashboard with key metrics."""
     template_name = 'maintenance/dashboard.html'
 

@@ -64,11 +64,30 @@
                                     <td><strong>Address:</strong></td>
                                     <td>{{ stakeholder.city }}, {{ stakeholder.country }}</td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                                {% if stakeholder.start_date or stakeholder.end_date %}
+                                <tr>
+                                    <td colspan="2"><strong>Profit Calculation Period</strong></td>
+                                </tr>
+                                {% if stakeholder.start_date %}
+                                <tr>
+                                    <td><strong>Start Date:</strong></td>
+                                    <td>{{ stakeholder.start_date|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if stakeholder.end_date %}
+                                <tr>
+                                    <td><strong>End Date:</strong></td>
+                                    <td>{{ stakeholder.end_date|date:"M d, Y" }}</td>
+                                </tr>
+                                {% else %}
+                                {% if stakeholder.start_date %}
+                                <tr>
+                                    <td><strong>End Date:</strong></td>
+                                    <td><span class="badge bg-info">Ongoing</span></td>
+                                </tr>
+                                {% endif %}
+                                {% endif %}
+                                {% endif %}
 
             <div class="col-lg-8">
                 <div class="row">

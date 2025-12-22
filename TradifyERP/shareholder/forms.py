@@ -54,7 +54,7 @@ class ShareholderPaymentCommitmentForm(forms.ModelForm):
     
     class Meta:
         model = ShareholderPaymentCommitment
-        fields = ['stakeholder', 'committed_amount', 'currency', 'promised_payment_date', 'status', 'actual_payment_date', 'notes']
+        fields = ['stakeholder', 'committed_amount', 'currency', 'promised_payment_date', 'due_date', 'status', 'actual_payment_date', 'notes']
         widgets = {
             'stakeholder': forms.Select(attrs={
                 'class': 'form-select',
@@ -78,6 +78,11 @@ class ShareholderPaymentCommitmentForm(forms.ModelForm):
                 'class': 'form-control',
                 'required': 'required',
                 'title': 'Date shareholder promised to make payment'
+            }),
+            'due_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'title': 'Payment due date'
             }),
             'status': forms.Select(attrs={
                 'class': 'form-select',

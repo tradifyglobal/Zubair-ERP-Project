@@ -154,6 +154,12 @@ class CapitalContributionSecondReviewView(LoginRequiredMixin, GroupRequiredMixin
     def get_success_url(self):
         return reverse('accounting:capital_contribution_detail', kwargs={'pk': self.object.pk})
     
+    def get_form_kwargs(self):
+        """Pass is_second_review=True to the form."""
+        kwargs = super().get_form_kwargs()
+        kwargs['is_second_review'] = True
+        return kwargs
+    
     def test_func(self):
         """Check group membership, workflow status, AND different reviewer."""
         if not super().test_func():

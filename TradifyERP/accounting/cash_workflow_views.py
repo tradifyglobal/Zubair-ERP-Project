@@ -26,6 +26,12 @@ class CashReceiptApprovalView(LoginRequiredMixin, SessionEntityMixin, View):
             return redirect('accounting:cash_receipt_list')
         
         with transaction.atomic():
+            # Auto-assign stakeholder if missing before approving
+            if not receipt.stakeholder_id and receipt.account:
+                stakeholder = self._find_stakeholder_for_account(receipt.account)
+                if stakeholder:
+                    receipt.stakeholder = stakeholder
+            
             receipt.workflow_status = 'APPROVED'
             receipt.status = 'DRAFT'
             receipt.save()
@@ -42,6 +48,68 @@ class CashReceiptApprovalView(LoginRequiredMixin, SessionEntityMixin, View):
             messages.success(request, 'Cash receipt approved! Ready for authorization.')
         
         return redirect('accounting:cash_receipt_list')
+    
+    def _find_stakeholder_for_account(self, account):
+        """Find stakeholder that matches the account name pattern."""
+        from accounting.models import Stakeholder
+        
+        if not account or not account.name:
+            return None
+            
+        account_name = account.name.strip()
+        
+        # Extract stakeholder name from account name patterns like:
+        # "Dr. Irfan Mohammed - Capital" -> "Dr. Irfan Mohammed"
+        # "Nasir Ali Ali Mohammed - Capital" -> "Nasir Ali Ali Mohammed"
+        if ' - Capital' in account_name:
+            stakeholder_name = account_name.replace(' - Capital', '').strip()
+        else:
+            return None
+        
+        # Try to find matching stakeholder by name
+        stakeholders = Stakeholder.objects.filter(entity=account.entity)
+        
+        # 1. First, try exact match by full name
+        for stakeholder in stakeholders:
+            if stakeholder.full_name == stakeholder_name:
+                return stakeholder
+        
+        # 2. Try fuzzy matching for name variations
+        extracted_words = set(stakeholder_name.lower().split())
+        best_match = None
+        best_score = 0
+        
+        for stakeholder in stakeholders:
+            stakeholder_words = set(stakeholder.full_name.lower().split())
+            
+            # Calculate word overlap
+            overlap = len(extracted_words.intersection(stakeholder_words))
+            total_words = max(len(extracted_words), len(stakeholder_words))
+            
+            if total_words > 0:
+                score = overlap / total_words
+                
+                # Require at least 60% word match and minimum 2 matching words
+                if score >= 0.6 and overlap >= 2 and score > best_score:
+                    best_match = stakeholder
+                    best_score = score
+        
+        if best_match:
+            return best_match
+        
+        # 3. Fallback: try partial matching by first/last name
+        name_parts = stakeholder_name.split()
+        if len(name_parts) >= 2:
+            first_part = name_parts[0]
+            last_part = name_parts[-1]
+            
+            for stakeholder in stakeholders:
+                if (stakeholder.first_name and stakeholder.last_name and 
+                    first_part.lower() in stakeholder.first_name.lower() and 
+                    last_part.lower() in stakeholder.last_name.lower()):
+                    return stakeholder
+        
+        return None
 
 
 class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View):
@@ -56,19 +124,19 @@ class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
         
         with transaction.atomic():
             try:
-                # Use provided credit_account or fallback to cash account 1000
+                # Get cash account first
                 if receipt.credit_account:
                     cash_account = receipt.credit_account
                 else:
                     cash_account = Account.objects.get(
                         entity=request.entity,
-                        account_number='1000'  # Cash account
+                        account_number='100001'  # Cash account
                     )
                 
-                # Create debit entry
+                # Create DEBIT entry to cash account (asset increases)
                 LedgerEntry.objects.create(
                     entity=request.entity,
-                    account=receipt.account,
+                    account=cash_account,
                     entry_type='DEBIT',
                     amount=receipt.debit_amount,
                     description=f"Cash Receipt: {receipt.description}",
@@ -78,10 +146,10 @@ class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                     workflow_status='AUTHORIZED'
                 )
                 
-                # Create credit entry
+                # Create CREDIT entry to the selected account (e.g., 3000-16 Shareholder Capital - equity increases)
                 LedgerEntry.objects.create(
                     entity=request.entity,
-                    account=cash_account,
+                    account=receipt.account,
                     entry_type='CREDIT',
                     amount=receipt.credit_amount,
                     description=f"Cash Receipt: {receipt.description}",
@@ -96,6 +164,8 @@ class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                 receipt.status = 'POSTED'
                 receipt.save()
                 
+                # Capital contribution will be auto-created by signal when status changes to AUTHORIZED
+                
                 AuditLog.objects.create(
                     user=request.user,
                     action='authorize_cash_receipt',
@@ -107,7 +177,7 @@ class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                 
                 messages.success(request, 'Cash receipt authorized and posted to GL!')
             except Account.DoesNotExist:
-                messages.error(request, 'Cash account (1000) not found in system!')
+                messages.error(request, 'Cash account (100001) not found in system!')
             except Exception as e:
                 messages.error(request, f'Error authorizing receipt: {str(e)}')
         
@@ -184,19 +254,19 @@ class CashPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
         
         with transaction.atomic():
             try:
-                # Use provided credit_account or fallback to cash account 1000
+                # Use provided credit_account or fallback to cash account 100001
                 if payment.credit_account:
                     cash_account = payment.credit_account
                 else:
                     cash_account = Account.objects.get(
                         entity=request.entity,
-                        account_number='1000'  # Cash account
+                        account_number='100001'  # Cash account
                     )
                 
-                # Create debit entry
+                # Create DEBIT entry to expense/capital account (expense/withdrawal increases)
                 LedgerEntry.objects.create(
                     entity=request.entity,
-                    account=cash_account,
+                    account=payment.account,
                     entry_type='DEBIT',
                     amount=payment.debit_amount,
                     description=f"Cash Payment: {payment.description}",
@@ -206,10 +276,10 @@ class CashPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                     workflow_status='AUTHORIZED'
                 )
                 
-                # Create credit entry
+                # Create CREDIT entry to cash account (asset decreases)
                 LedgerEntry.objects.create(
                     entity=request.entity,
-                    account=payment.account,
+                    account=cash_account,
                     entry_type='CREDIT',
                     amount=payment.credit_amount,
                     description=f"Cash Payment: {payment.description}",
@@ -235,7 +305,7 @@ class CashPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                 
                 messages.success(request, 'Cash payment authorized and posted to GL!')
             except Account.DoesNotExist:
-                messages.error(request, 'Cash account (1000) not found in system!')
+                messages.error(request, 'Cash account (100001) not found in system!')
             except Exception as e:
                 messages.error(request, f'Error authorizing payment: {str(e)}')
         
@@ -313,13 +383,13 @@ class BankReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
         
         with transaction.atomic():
             try:
-                # Use provided credit_account or fallback to bank account 1000
+                # Use provided credit_account or fallback to cash account 100001
                 if receipt.credit_account:
                     bank_account = receipt.credit_account
                 else:
                     bank_account = Account.objects.get(
                         entity=request.entity,
-                        account_number='1000'  # Bank account
+                        account_number='100001'  # Cash account
                     )
                 
                 # Create debit entry
@@ -441,13 +511,13 @@ class BankPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
         
         with transaction.atomic():
             try:
-                # Use provided credit_account or fallback to bank account 1000
+                # Use provided credit_account or fallback to cash account 100001
                 if payment.credit_account:
                     bank_account = payment.credit_account
                 else:
                     bank_account = Account.objects.get(
                         entity=request.entity,
-                        account_number='1000'  # Bank account
+                        account_number='100001'  # Cash account
                     )
                 
                 # Create debit entry

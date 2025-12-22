@@ -3,6 +3,7 @@ from django.views.generic import ListView, DetailView, TemplateView, CreateView,
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.contrib.auth import logout
 from django.db import models, transaction
+from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib import messages
 from decimal import Decimal
@@ -75,62 +76,130 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Get user's accessible entities (respects entity access control)
-        user_accessible_entities = get_user_accessible_entities(self.request.user)
-        # Convert to list if it's a queryset
-        if hasattr(user_accessible_entities, 'model'):  # It's a queryset
-            user_accessible_entities = list(user_accessible_entities)
-        context['all_entities'] = user_accessible_entities
         
-        # IMPORTANT: Always use the session entity if available
-        # The SessionEntityMixin.dispatch() ensures entity_id exists in session
-        entity_id = self.request.session.get('selected_entity_id')
-        
-        # Get the entity from session (will always exist due to SessionEntityMixin)
-        if entity_id:
-            entity = Entity.objects.filter(id=entity_id, is_active=True).first()
-            if not entity:
-                # Entity was deleted or deactivated - this shouldn't happen due to mixin
-                # but handle gracefully
-                # Get first from user's accessible entities
+        try:
+            # Get user's accessible entities (respects entity access control)
+            user_accessible_entities = get_user_accessible_entities(self.request.user)
+            # Convert to list if it's a queryset
+            if hasattr(user_accessible_entities, 'model'):  # It's a queryset
+                user_accessible_entities = list(user_accessible_entities)
+            context['all_entities'] = user_accessible_entities
+            
+            # IMPORTANT: Always use the session entity if available
+            # The SessionEntityMixin.dispatch() ensures entity_id exists in session
+            entity_id = self.request.session.get('selected_entity_id')
+            
+            # Get the entity from session (will always exist due to SessionEntityMixin)
+            if entity_id:
+                entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+                if not entity:
+                    # Entity was deleted or deactivated - this shouldn't happen due to mixin
+                    # but handle gracefully
+                    # Get first from user's accessible entities
+                    entity = user_accessible_entities[0] if user_accessible_entities else None
+            else:
+                # Fallback - shouldn't happen due to SessionEntityMixin redirect
                 entity = user_accessible_entities[0] if user_accessible_entities else None
-        else:
-            # Fallback - shouldn't happen due to SessionEntityMixin redirect
-            entity = user_accessible_entities[0] if user_accessible_entities else None
+        except Exception as e:
+            # If there's any error getting entity data, provide empty context
+            context['all_entities'] = []
+            entity = None
         
         if entity:
             context['entity'] = entity
-            context['total_accounts'] = entity.accounts.count()
-            context['total_customers'] = entity.customers.count()
-            context['total_vendors'] = entity.vendors.count()
-            context['recent_ledger_entries'] = entity.ledger_entries.order_by('-entry_date')[:10]
-            context['recent_invoices'] = entity.vendor_invoices.order_by('-invoice_date')[:5]
-            context['recent_trial_balances'] = entity.trial_balances.order_by('-as_of_date')[:3]
-            context['recent_audit_logs'] = entity.audit_logs.order_by('-timestamp')[:10]
+            try:
+                context['total_accounts'] = entity.accounts.count()
+                context['total_customers'] = entity.customers.count()
+                context['total_vendors'] = entity.vendors.count()
+            except Exception as e:
+                context['total_accounts'] = 0
+                context['total_customers'] = 0
+                context['total_vendors'] = 0
+            
+            # Add hierarchical accounts list for dashboard
+            try:
+                from accounting.models import Account
+                accounts = entity.accounts.all()
+                
+                # Build hierarchical structure
+                flattened_accounts = []
+                root_accounts = accounts.filter(parent_account__isnull=True).order_by('account_number')[:10]
+                
+                for root in root_accounts:
+                    flattened_accounts.append({
+                        'account': root,
+                        'level': 0
+                    })
+                    
+                    # Add children
+                    def add_descendants(parent_acc, level):
+                        children = accounts.filter(parent_account=parent_acc).order_by('account_number')
+                        for child in children:
+                            flattened_accounts.append({
+                                'account': child,
+                                'level': level
+                            })
+                            add_descendants(child, level + 1)
+                    
+                    add_descendants(root, 1)
+                
+                context['dashboard_accounts'] = flattened_accounts[:20]  # Limit to 20 for dashboard
+            except Exception as e:
+                context['dashboard_accounts'] = []
+            
+            try:
+                context['recent_ledger_entries'] = entity.ledger_entries.order_by('-entry_date')[:10]
+            except:
+                context['recent_ledger_entries'] = []
+            
+            try:
+                context['recent_invoices'] = entity.vendor_invoices.order_by('-invoice_date')[:5]
+            except:
+                context['recent_invoices'] = []
+            
+            try:
+                context['recent_trial_balances'] = entity.trial_balances.order_by('-as_of_date')[:3]
+            except:
+                context['recent_trial_balances'] = []
+            
+            try:
+                context['recent_audit_logs'] = entity.audit_logs.order_by('-timestamp')[:10]
+            except:
+                context['recent_audit_logs'] = []
             
             # Shareholder module statistics
-            from accounting.models import Stakeholder, CapitalContribution, Shareholding
-            context['total_stakeholders'] = Stakeholder.objects.filter(entity=entity).count()
-            context['total_contributions'] = CapitalContribution.objects.filter(entity=entity).count()
-            context['total_shareholdings'] = Shareholding.objects.filter(entity=entity).count()
+            try:
+                from accounting.models import Stakeholder, CapitalContribution, Shareholding
+                context['total_stakeholders'] = Stakeholder.objects.filter(entity=entity).count()
+                context['total_contributions'] = CapitalContribution.objects.filter(entity=entity).count()
+                context['total_shareholdings'] = Shareholding.objects.filter(entity=entity).count()
+            except:
+                context['total_stakeholders'] = 0
+                context['total_contributions'] = 0
+                context['total_shareholdings'] = 0
             
             # Pending review tasks for current user in this entity
-            context['entity_pending_reviews_1'] = CapitalContribution.objects.filter(
-                entity=entity,
-                assigned_reviewer_1=self.request.user,
-                workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
-            ).select_related('stakeholder', 'submitted_by').order_by('-submitted_at')
-            
-            context['entity_pending_reviews_2'] = CapitalContribution.objects.filter(
-                entity=entity,
-                assigned_reviewer_2=self.request.user,
-                workflow_status='FIRST_REVIEW_COMPLETED'
-            ).select_related('stakeholder', 'submitted_by').order_by('-submitted_at')
-            
-            context['entity_pending_reviews_count'] = (
-                context['entity_pending_reviews_1'].count() + 
-                context['entity_pending_reviews_2'].count()
-            )
+            try:
+                context['entity_pending_reviews_1'] = CapitalContribution.objects.filter(
+                    entity=entity,
+                    assigned_reviewer_1=self.request.user,
+                    workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
+                ).select_related('stakeholder', 'submitted_by').order_by('-submitted_at')
+                
+                context['entity_pending_reviews_2'] = CapitalContribution.objects.filter(
+                    entity=entity,
+                    assigned_reviewer_2=self.request.user,
+                    workflow_status='FIRST_REVIEW_COMPLETED'
+                ).select_related('stakeholder', 'submitted_by').order_by('-submitted_at')
+                
+                context['entity_pending_reviews_count'] = (
+                    context['entity_pending_reviews_1'].count() + 
+                    context['entity_pending_reviews_2'].count()
+                )
+            except:
+                context['entity_pending_reviews_1'] = []
+                context['entity_pending_reviews_2'] = []
+                context['entity_pending_reviews_count'] = 0
             
             # HR module statistics
             try:
@@ -150,9 +219,14 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
                 context['pending_leave_requests'] = 0
             
             # Chart data: Account Type Distribution
-            account_types = entity.accounts.values('account_type').annotate(count=models.Count('id'))
-            account_type_labels = [at['account_type'] for at in account_types]
-            account_type_counts = [at['count'] for at in account_types]
+            try:
+                account_types = entity.accounts.values('account_type').annotate(count=models.Count('id'))
+                account_type_labels = [at['account_type'] for at in account_types]
+                account_type_counts = [at['count'] for at in account_types]
+            except:
+                account_type_labels = []
+                account_type_counts = []
+            
             context['account_type_labels'] = account_type_labels
             context['account_type_counts'] = account_type_counts
             
@@ -162,142 +236,158 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
             import json
             from calendar import monthrange
             
-            # Get current date and calculate 6 months back
-            end_date = timezone.now().date()
-            current_year = end_date.year
-            current_month = end_date.month
-            
-            # Calculate start month (6 months ago)
-            start_month = current_month - 5
-            start_year = current_year
-            if start_month < 1:
-                start_month += 12
-                start_year -= 1
-            
-            # Create monthly entries for the last 6 months
-            monthly_data = {}
-            
-            year = start_year
-            month = start_month
-            for _ in range(6):
-                month_key = f'{year:04d}-{month:02d}'
-                monthly_data[month_key] = {'debits': 0, 'credits': 0}
-                month += 1
-                if month > 12:
-                    month = 1
-                    year += 1
-            
-            # Calculate the actual start date
-            start_date = timezone.datetime(start_year, start_month, 1).date()
-            
-            # Aggregate debit/credit amounts by month
-            entries = entity.ledger_entries.filter(entry_date__gte=start_date, entry_date__lte=end_date)
-            for entry in entries:
-                month_key = entry.entry_date.strftime('%Y-%m')
-                if month_key in monthly_data:
-                    if entry.entry_type == 'DEBIT':
-                        monthly_data[month_key]['debits'] += float(entry.amount)
-                    else:
-                        monthly_data[month_key]['credits'] += float(entry.amount)
-            
-            # Sort by month and extract data
-            sorted_months = sorted(monthly_data.keys())
-            context['chart_months'] = sorted_months
-            context['chart_debits'] = [int(monthly_data[m]['debits']) for m in sorted_months]
-            context['chart_credits'] = [int(monthly_data[m]['credits']) for m in sorted_months]
-            
-            # Chart data: Customer and Vendor counts by month (created_at)
-            monthly_customers = {}
-            monthly_vendors = {}
-            
-            for month_key in sorted_months:
-                year, month = month_key.split('-')
-                customers = entity.customers.filter(
-                    created_at__year=int(year),
-                    created_at__month=int(month)
-                ).count()
-                vendors = entity.vendors.filter(
-                    created_at__year=int(year),
-                    created_at__month=int(month)
-                ).count()
-                monthly_customers[month_key] = customers
-                monthly_vendors[month_key] = vendors
-            
-            context['chart_customers'] = [monthly_customers.get(m, 0) for m in sorted_months]
-            context['chart_vendors'] = [monthly_vendors.get(m, 0) for m in sorted_months]
-            
-            # Sales by Country data
-            from sales.models import SalesOrder, Customer
-            from django.db.models import Sum
-            
-            # Define target countries
-            target_countries = ['India', 'Oman', 'UAE', 'KSA', 'Canada']
-            country_sales = []
-            
-            # Calculate total sales to get percentages
-            total_sales = SalesOrder.objects.filter(
-                entity=entity,
-                status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
-            ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
-            
-            for country in target_countries:
-                # Get sales for this country
-                sales_amount = SalesOrder.objects.filter(
+            # Chart data: Debit vs Credit by Month (last 6 months) - wrapped in try-except
+            try:
+                # Get current date and calculate 6 months back
+                end_date = timezone.now().date()
+                current_year = end_date.year
+                current_month = end_date.month
+                
+                # Calculate start month (6 months ago)
+                start_month = current_month - 5
+                start_year = current_year
+                if start_month < 1:
+                    start_month += 12
+                    start_year -= 1
+                
+                # Create monthly entries for the last 6 months
+                monthly_data = {}
+                
+                year = start_year
+                month = start_month
+                for _ in range(6):
+                    month_key = f'{year:04d}-{month:02d}'
+                    monthly_data[month_key] = {'debits': 0, 'credits': 0}
+                    month += 1
+                    if month > 12:
+                        month = 1
+                        year += 1
+                
+                # Calculate the actual start date
+                start_date = timezone.datetime(start_year, start_month, 1).date()
+                
+                # Aggregate debit/credit amounts by month
+                entries = entity.ledger_entries.filter(entry_date__gte=start_date, entry_date__lte=end_date)
+                for entry in entries:
+                    month_key = entry.entry_date.strftime('%Y-%m')
+                    if month_key in monthly_data:
+                        if entry.entry_type == 'DEBIT':
+                            monthly_data[month_key]['debits'] += float(entry.amount)
+                        else:
+                            monthly_data[month_key]['credits'] += float(entry.amount)
+                
+                # Sort by month and extract data
+                sorted_months = sorted(monthly_data.keys())
+                context['chart_months'] = sorted_months
+                context['chart_debits'] = [int(monthly_data[m]['debits']) for m in sorted_months]
+                context['chart_credits'] = [int(monthly_data[m]['credits']) for m in sorted_months]
+                
+                # Chart data: Customer and Vendor counts by month (created_at)
+                monthly_customers = {}
+                monthly_vendors = {}
+                
+                for month_key in sorted_months:
+                    year, month = month_key.split('-')
+                    customers = entity.customers.filter(
+                        created_at__year=int(year),
+                        created_at__month=int(month)
+                    ).count()
+                    vendors = entity.vendors.filter(
+                        created_at__year=int(year),
+                        created_at__month=int(month)
+                    ).count()
+                    monthly_customers[month_key] = customers
+                    monthly_vendors[month_key] = vendors
+                
+                context['chart_customers'] = [monthly_customers.get(m, 0) for m in sorted_months]
+                context['chart_vendors'] = [monthly_vendors.get(m, 0) for m in sorted_months]
+                
+                # Sales by Country data
+                from sales.models import SalesOrder, Customer
+                from django.db.models import Sum
+                
+                # Define target countries
+                target_countries = ['India', 'Oman', 'UAE', 'KSA', 'Canada']
+                country_sales = []
+                
+                # Calculate total sales to get percentages
+                total_sales = SalesOrder.objects.filter(
                     entity=entity,
-                    customer__country__iexact=country,
                     status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
                 ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
                 
-                # Calculate percentage
-                if total_sales > 0:
-                    percentage = int((sales_amount / total_sales) * 100)
-                else:
-                    percentage = 0
+                for country in target_countries:
+                    # Get sales for this country
+                    sales_amount = SalesOrder.objects.filter(
+                        entity=entity,
+                        customer__country__iexact=country,
+                        status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
+                    ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+                    
+                    # Calculate percentage
+                    if total_sales > 0:
+                        percentage = int((sales_amount / total_sales) * 100)
+                    else:
+                        percentage = 0
+                    
+                    country_sales.append({
+                        'country': country,
+                        'percentage': percentage,
+                        'amount': float(sales_amount)
+                    })
                 
-                country_sales.append({
-                    'country': country,
-                    'percentage': percentage,
-                    'amount': float(sales_amount)
-                })
+                context['country_sales'] = country_sales
+            except:
+                # Gracefully handle chart data errors
+                context['chart_months'] = []
+                context['chart_debits'] = []
+                context['chart_credits'] = []
+                context['chart_customers'] = []
+                context['chart_vendors'] = []
+                context['country_sales'] = []
             
-            context['country_sales'] = country_sales
-            
-            # Sales by India State data
-            india_states = [
-                'Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Gujarat',
-                'Uttar Pradesh', 'West Bengal', 'Rajasthan', 'Kerala', 'Punjab'
-            ]
-            state_sales = []
-            
-            # Calculate total India sales to get percentages
-            total_india_sales = SalesOrder.objects.filter(
-                entity=entity,
-                customer__country__iexact='India',
-                status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
-            ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
-            
-            for state in india_states:
-                # Get sales for this state
-                sales_amount = SalesOrder.objects.filter(
+            # Sales by India State data - wrapped in try-except
+            try:
+                from sales.models import SalesOrder
+                from django.db.models import Sum
+                
+                india_states = [
+                    'Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Gujarat',
+                    'Uttar Pradesh', 'West Bengal', 'Rajasthan', 'Kerala', 'Punjab'
+                ]
+                state_sales = []
+                
+                # Calculate total India sales to get percentages
+                total_india_sales = SalesOrder.objects.filter(
                     entity=entity,
                     customer__country__iexact='India',
-                    customer__state__iexact=state,
                     status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
                 ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
                 
-                # Calculate percentage
-                if total_india_sales > 0:
-                    percentage = int((sales_amount / total_india_sales) * 100)
-                else:
-                    percentage = 0
+                for state in india_states:
+                    # Get sales for this state
+                    sales_amount = SalesOrder.objects.filter(
+                        entity=entity,
+                        customer__country__iexact='India',
+                        customer__state__iexact=state,
+                        status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'INVOICED']
+                    ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+                    
+                    # Calculate percentage
+                    if total_india_sales > 0:
+                        percentage = int((sales_amount / total_india_sales) * 100)
+                    else:
+                        percentage = 0
+                    
+                    state_sales.append({
+                        'state': state,
+                        'percentage': percentage,
+                        'amount': float(sales_amount)
+                    })
                 
-                state_sales.append({
-                    'state': state,
-                    'percentage': percentage,
-                    'amount': float(sales_amount)
-                })
-            
-            context['state_sales'] = state_sales
+                context['state_sales'] = state_sales
+            except:
+                context['state_sales'] = []
         else:
             # Provide default empty data if no entity
             context['total_stakeholders'] = 0
@@ -321,34 +411,41 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
         from accounting.models import CapitalContribution
         
         # Get entity from session (guaranteed by SessionEntityMixin)
-        entity_id = self.request.session.get('selected_entity_id')
-        if entity_id:
-            entity_filter = Entity.objects.filter(id=entity_id, is_active=True).first()
-        else:
-            entity_filter = None
-        
-        # Filter pending reviews by current entity
-        if entity_filter:
-            pending_reviews_1 = CapitalContribution.objects.filter(
-                entity=entity_filter,
-                assigned_reviewer_1=self.request.user,
-                workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
-            ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+        # Wrap in try-except to handle any transaction issues
+        try:
+            entity_id = self.request.session.get('selected_entity_id')
+            if entity_id:
+                entity_filter = Entity.objects.filter(id=entity_id, is_active=True).first()
+            else:
+                entity_filter = None
             
-            pending_reviews_2 = CapitalContribution.objects.filter(
-                entity=entity_filter,
-                assigned_reviewer_2=self.request.user,
-                workflow_status='FIRST_REVIEW_COMPLETED'
-            ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
-        else:
-            # No entity selected - return empty
-            pending_reviews_1 = CapitalContribution.objects.none()
-            pending_reviews_2 = CapitalContribution.objects.none()
-        
-        # Combine and count pending reviews
-        context['pending_reviews_1'] = pending_reviews_1
-        context['pending_reviews_2'] = pending_reviews_2
-        context['total_pending_reviews'] = pending_reviews_1.count() + pending_reviews_2.count()
+            # Filter pending reviews by current entity
+            if entity_filter:
+                pending_reviews_1 = CapitalContribution.objects.filter(
+                    entity=entity_filter,
+                    assigned_reviewer_1=self.request.user,
+                    workflow_status__in=['SUBMITTED', 'FIRST_REVIEW_COMPLETED']
+                ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+                
+                pending_reviews_2 = CapitalContribution.objects.filter(
+                    entity=entity_filter,
+                    assigned_reviewer_2=self.request.user,
+                    workflow_status='FIRST_REVIEW_COMPLETED'
+                ).select_related('entity', 'stakeholder', 'submitted_by').order_by('-submitted_at')
+            else:
+                # No entity selected - return empty
+                pending_reviews_1 = CapitalContribution.objects.none()
+                pending_reviews_2 = CapitalContribution.objects.none()
+            
+            # Combine and count pending reviews
+            context['pending_reviews_1'] = pending_reviews_1
+            context['pending_reviews_2'] = pending_reviews_2
+            context['total_pending_reviews'] = pending_reviews_1.count() + pending_reviews_2.count()
+        except:
+            # Handle any database errors gracefully
+            context['pending_reviews_1'] = []
+            context['pending_reviews_2'] = []
+            context['total_pending_reviews'] = 0
         
         return context
 
@@ -411,21 +508,158 @@ class GLDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
                     'credits': credits
                 })
             
+            # Sort to show accounts with activity (non-zero debits or credits) first
+            accounts_with_balances = sorted(
+                accounts_with_balances,
+                key=lambda x: (abs(x['debits'] + x['credits']), x['account'].account_number),
+                reverse=True
+            )
+            
             context['accounts'] = accounts_with_balances
         
         return context
 
 
 class AccountListView(SessionEntityMixin, LoginRequiredMixin, ListView):
-    """List all accounts."""
+    """List all accounts with hierarchical display."""
     model = Account
     template_name = 'accounting/account_list.html'
     context_object_name = 'accounts'
-    paginate_by = 50
+    paginate_by = None
 
     def get_queryset(self):
-        # SessionEntityMixin.get_queryset() handles filtering by entity
+        # Use the mixin's filtering which applies entity filter automatically
         return super().get_queryset()
+    
+    def build_account_tree(self, entity_id):
+        """Build a hierarchical tree of accounts for a specific entity."""
+        flattened = []
+        
+        # Get ALL accounts for this entity
+        all_accounts = Account.objects.filter(entity_id=entity_id)
+        
+        # Get all root accounts (no parent)
+        root_accounts = all_accounts.filter(parent_account__isnull=True).order_by('account_number')
+        
+        for root in root_accounts:
+            # Add the root account
+            flattened.append({
+                'account': root,
+                'level': 0
+            })
+            
+            # Get all descendants of this root
+            def get_all_descendants(parent_acc):
+                children = all_accounts.filter(parent_account=parent_acc).order_by('account_number')
+                for child in children:
+                    flattened.append({
+                        'account': child,
+                        'level': 1
+                    })
+                    # Get grandchildren
+                    grandchildren = all_accounts.filter(parent_account=child).order_by('account_number')
+                    for grandchild in grandchildren:
+                        flattened.append({
+                            'account': grandchild,
+                            'level': 2
+                        })
+            
+            get_all_descendants(root)
+        
+        return flattened
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get the entity from request (set by SessionEntityMixin)
+        if hasattr(self.request, 'entity') and self.request.entity:
+            entity_id = self.request.entity.id
+        else:
+            # Fallback to session
+            entity_id = self.request.session.get('selected_entity_id')
+        
+        if not entity_id:
+            context['accounts'] = []
+            context['is_paginated'] = False
+            return context
+        
+        # Build hierarchical structure
+        flattened_accounts = self.build_account_tree(entity_id)
+        
+        # Calculate balances for each account
+        from django.db.models import Sum
+        from decimal import Decimal
+        
+        # First pass: Calculate direct balances for all accounts
+        for item in flattened_accounts:
+            account = item['account']
+            
+            # Get all ledger entries for this account
+            entries = LedgerEntry.objects.filter(account=account, is_posted=True)
+            
+            # Calculate total debits and credits
+            debits = entries.filter(entry_type='DEBIT').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            credits = entries.filter(entry_type='CREDIT').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            
+            # Calculate current balance based on account type
+            # Assets and Expenses have normal debit balance (DR - CR)
+            # Liabilities, Equity, and Income have normal credit balance (CR - DR)
+            if account.account_type in ['ASSET', 'EXPENSE']:
+                balance = debits - credits + account.opening_balance
+            else:  # LIABILITY, EQUITY, INCOME
+                balance = credits - debits + account.opening_balance
+            
+            item['total_debits'] = debits
+            item['total_credits'] = credits
+            item['current_balance'] = balance
+        
+        # Second pass: Roll up child account balances to parent accounts
+        for item in flattened_accounts:
+            if item['level'] == 0:  # Parent account
+                account = item['account']
+                
+                # Get all child accounts (direct children and grandchildren)
+                child_debits = Decimal('0')
+                child_credits = Decimal('0')
+                
+                for child_item in flattened_accounts:
+                    child_account = child_item['account']
+                    # Check if this is a child or grandchild of current parent
+                    if child_account.parent_account == account or \
+                       (child_account.parent_account and child_account.parent_account.parent_account == account):
+                        child_debits += child_item['total_debits']
+                        child_credits += child_item['total_credits']
+                
+                # Add child balances to parent
+                item['total_debits'] += child_debits
+                item['total_credits'] += child_credits
+                
+                # Recalculate parent balance including children
+                if account.account_type in ['ASSET', 'EXPENSE']:
+                    item['current_balance'] = item['total_debits'] - item['total_credits'] + account.opening_balance
+                else:  # LIABILITY, EQUITY, INCOME
+                    item['current_balance'] = item['total_credits'] - item['total_debits'] + account.opening_balance
+        
+        # Apply search filter if provided
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            flattened_accounts = [
+                item for item in flattened_accounts
+                if search.lower() in item['account'].account_number.lower() or 
+                   search.lower() in item['account'].name.lower()
+            ]
+        
+        # Apply account type filter if provided
+        account_type = self.request.GET.get('account_type', '').strip()
+        if account_type:
+            flattened_accounts = [
+                item for item in flattened_accounts
+                if item['account'].account_type == account_type
+            ]
+        
+        context['accounts'] = flattened_accounts
+        context['is_paginated'] = False
+        return context
 
 
 class AccountDetailView(LoginRequiredMixin, DetailView):
@@ -440,8 +674,23 @@ class AccountDetailView(LoginRequiredMixin, DetailView):
         # Add entity to context for currency display
         context['entity'] = self.object.entity
         
-        # Get all ledger entries for this account, ordered by date
-        entries = self.object.ledger_entries.order_by('entry_date', 'created_at')
+        # Check if this is a parent account (has sub-accounts)
+        sub_accounts = self.object.sub_accounts.filter(is_active=True)
+        has_sub_accounts = sub_accounts.exists()
+        
+        # Get all ledger entries for this account
+        # If parent account, include entries from all child accounts
+        if has_sub_accounts:
+            # Get all account IDs (parent + all children)
+            account_ids = [self.object.id] + list(sub_accounts.values_list('id', flat=True))
+            entries = LedgerEntry.objects.filter(
+                account_id__in=account_ids
+            ).select_related('account').order_by('entry_date', 'created_at')
+            context['is_parent_account'] = True
+            context['sub_accounts'] = sub_accounts
+        else:
+            entries = self.object.ledger_entries.order_by('entry_date', 'created_at')
+            context['is_parent_account'] = False
         
         # Calculate running balance based on account type
         # For ASSET accounts: Debit increases, Credit decreases
@@ -561,6 +810,37 @@ class LedgerEntryDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView):
     model = LedgerEntry
     template_name = 'accounting/ledger_entry_detail.html'
     context_object_name = 'entry'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entry = self.get_object()
+        account = entry.account
+        
+        # Calculate current balance for the account
+        entries = account.ledger_entries.filter(is_posted=True)
+        debits = entries.filter(entry_type='DEBIT').aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+        credits = entries.filter(entry_type='CREDIT').aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+        
+        # Determine if this is a debit-based or credit-based account
+        is_debit_based = account.account_type in ['ASSET', 'EXPENSE']
+        
+        if is_debit_based:
+            current_balance = debits - credits
+        else:
+            current_balance = credits - debits
+        
+        # Determine sub account type
+        sub_account_type = "Sub Account" if account.parent_account else "Main Account"
+        
+        # Add calculated fields to context
+        context['current_balance'] = current_balance
+        context['sub_account_type'] = sub_account_type
+        
+        return context
 
 
 class LedgerEntryPrintView(SessionEntityMixin, LoginRequiredMixin, DetailView):
@@ -656,28 +936,49 @@ class TrialBalanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # SessionEntityMixin automatically filters by session entity
+        queryset = super().get_queryset()  # This applies entity filtering from SessionEntityMixin
         return queryset.order_by('-as_of_date')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        entity = self.request.entity
+        entity = self.request.entity  # From SessionEntityMixin
         
-        # Generate trial balance for today
+        # Add difference calculation to trial balance records
+        trial_balances = context.get('trial_balances', [])
+        for tb in trial_balances:
+            tb.difference = abs(tb.total_debits - tb.total_credits)
+        
+        # Generate trial balance for today (or latest available date)
         if entity:
-            from datetime import date
-            today = date.today()
+            from datetime import date, timedelta
+            from .trial_balance import calculate_trial_balance, save_trial_balance
+            from .models import LedgerEntry
             
-            # Calculate trial balance from GL entries
-            # TODO: trial_balance module needs to be implemented
-            # tb_data = calculate_trial_balance(entity, today)
+            # Find the latest entry date or use today
+            latest_entry = LedgerEntry.objects.filter(entity=entity).order_by('-entry_date').first()
+            if latest_entry:
+                # Use the latest entry date or today, whichever is later
+                calc_date = max(latest_entry.entry_date, date.today())
+            else:
+                calc_date = date.today()
             
-            # if tb_data:
-            #     context['trial_balance'] = tb_data.get('trial_balance')
-            #     context['account_balances'] = tb_data.get('account_balances', [])
-            #     context['total_debits'] = tb_data.get('total_debits', 0)
-            #     context['total_credits'] = tb_data.get('total_credits', 0)
-            #     context['is_balanced'] = tb_data.get('is_balanced', False)
+            try:
+                # Calculate trial balance from GL entries
+                tb_data = calculate_trial_balance(entity, calc_date)
+                
+                if tb_data:
+                    # Save trial balance to database
+                    trial_balance = save_trial_balance(entity, calc_date, force_update=True)
+                    
+                    context['current_trial_balance'] = trial_balance
+                    context['account_balances'] = tb_data.get('account_balances', [])
+                    context['total_debits'] = tb_data.get('total_debits', 0)
+                    context['total_credits'] = tb_data.get('total_credits', 0)
+                    context['is_balanced'] = tb_data.get('is_balanced', False)
+            except Exception as e:
+                # Log error but don't break the page
+                context['trial_balance_error'] = str(e)
         
         return context
 
@@ -690,8 +991,124 @@ class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
+        # SessionEntityMixin automatically filters by session entity
         queryset = super().get_queryset()
         return queryset.order_by('-period_end')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity = self.request.entity  # From SessionEntityMixin
+        
+        # Generate current period P&L if entity has income/expense data
+        if entity:
+            from datetime import date, timedelta
+            from .models import LedgerEntry
+            from decimal import Decimal
+            
+            # Current month period
+            today = date.today()
+            period_start = today.replace(day=1)
+            period_end = today
+            
+            try:
+                # Check if entity has income/expense transactions
+                income_expense_entries = LedgerEntry.objects.filter(
+                    entity=entity,
+                    account__account_type__in=['INCOME', 'EXPENSE']
+                )
+                
+                if income_expense_entries.exists():
+                    # Generate current P&L
+                    pl_data = self.calculate_profit_loss(entity, period_start, period_end)
+                    
+                    if pl_data:
+                        # Save P&L to database
+                        pl_report, created = ProfitLossReport.objects.update_or_create(
+                            entity=entity,
+                            period_start=period_start,
+                            period_end=period_end,
+                            defaults={
+                                'total_income': pl_data['total_income'],
+                                'total_expenses': pl_data['total_expenses'],
+                                'net_profit': pl_data['net_profit']
+                            }
+                        )
+                        
+                        context['current_pl_report'] = pl_report
+                        context['income_details'] = pl_data.get('income_details', [])
+                        context['expense_details'] = pl_data.get('expense_details', [])
+                else:
+                    # No income/expense accounts - explain why no P&L
+                    context['no_pl_reason'] = 'No income or expense transactions found. P&L reports require revenue and expense account activity.'
+                    
+            except Exception as e:
+                context['pl_error'] = str(e)
+        
+        return context
+    
+    def calculate_profit_loss(self, entity, period_start, period_end):
+        """Calculate P&L from ledger entries."""
+        from decimal import Decimal
+        
+        # Get entries in the period for income/expense accounts only
+        entries = LedgerEntry.objects.filter(
+            entity=entity,
+            entry_date__gte=period_start,
+            entry_date__lte=period_end,
+            account__account_type__in=['INCOME', 'EXPENSE']
+        )
+        
+        if entries.count() == 0:
+            return None
+        
+        # Calculate by account
+        accounts = {}
+        for entry in entries:
+            acc_key = entry.account.id
+            if acc_key not in accounts:
+                accounts[acc_key] = {
+                    'account': entry.account,
+                    'debit_total': Decimal('0'),
+                    'credit_total': Decimal('0')
+                }
+            
+            if entry.entry_type == 'DEBIT':
+                accounts[acc_key]['debit_total'] += entry.amount
+            else:
+                accounts[acc_key]['credit_total'] += entry.amount
+        
+        total_income = Decimal('0')
+        total_expenses = Decimal('0')
+        income_details = []
+        expense_details = []
+        
+        for acc_data in accounts.values():
+            account = acc_data['account']
+            net_balance = acc_data['debit_total'] - acc_data['credit_total']
+            
+            if account.account_type == 'INCOME' and net_balance < 0:
+                income_amount = abs(net_balance)
+                total_income += income_amount
+                income_details.append({
+                    'name': account.name,
+                    'number': account.account_number,
+                    'amount': income_amount
+                })
+            elif account.account_type == 'EXPENSE' and net_balance > 0:
+                total_expenses += net_balance
+                expense_details.append({
+                    'name': account.name,
+                    'number': account.account_number,
+                    'amount': net_balance
+                })
+        
+        return {
+            'total_income': total_income,
+            'total_expenses': total_expenses,
+            'net_profit': total_income - total_expenses,
+            'income_details': income_details,
+            'expense_details': expense_details
+        }
 
 
 class BalanceSheetListView(SessionEntityMixin, LoginRequiredMixin, ListView):
@@ -702,8 +1119,124 @@ class BalanceSheetListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
+        # SessionEntityMixin automatically filters by session entity
         queryset = super().get_queryset()
         return queryset.order_by('-as_of_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity = self.request.entity  # From SessionEntityMixin
+        
+        # Generate balance sheet for current date if entity has data
+        if entity:
+            from datetime import date, timedelta
+            from .models import LedgerEntry
+            from decimal import Decimal
+            
+            # Find the latest entry date or use today
+            latest_entry = LedgerEntry.objects.filter(entity=entity).order_by('-entry_date').first()
+            if latest_entry:
+                calc_date = max(latest_entry.entry_date, date.today())
+            else:
+                calc_date = date.today()
+            
+            try:
+                # Generate current balance sheet
+                balance_sheet_data = self.calculate_balance_sheet(entity, calc_date)
+                
+                if balance_sheet_data:
+                    # Save balance sheet to database
+                    balance_sheet, created = BalanceSheet.objects.update_or_create(
+                        entity=entity,
+                        as_of_date=calc_date,
+                        defaults={
+                            'total_assets': balance_sheet_data['total_assets'],
+                            'total_liabilities': balance_sheet_data['total_liabilities'],
+                            'total_equity': balance_sheet_data['total_equity']
+                        }
+                    )
+                    
+                    context['current_balance_sheet'] = balance_sheet
+                    context['account_details'] = balance_sheet_data.get('account_details', {})
+                    
+            except Exception as e:
+                context['balance_sheet_error'] = str(e)
+        
+        return context
+    
+    def calculate_balance_sheet(self, entity, as_of_date):
+        """Calculate balance sheet from ledger entries."""
+        from decimal import Decimal
+        
+        # Get all ledger entries up to the date
+        entries = LedgerEntry.objects.filter(
+            entity=entity,
+            entry_date__lte=as_of_date
+        )
+        
+        if entries.count() == 0:
+            return None
+        
+        # Calculate balances by account
+        accounts = {}
+        for entry in entries:
+            acc_key = entry.account.id
+            if acc_key not in accounts:
+                accounts[acc_key] = {
+                    'account': entry.account,
+                    'debit_total': Decimal('0'),
+                    'credit_total': Decimal('0')
+                }
+            
+            if entry.entry_type == 'DEBIT':
+                accounts[acc_key]['debit_total'] += entry.amount
+            else:
+                accounts[acc_key]['credit_total'] += entry.amount
+        
+        # Calculate totals by account type
+        total_assets = Decimal('0')
+        total_liabilities = Decimal('0') 
+        total_equity = Decimal('0')
+        
+        account_details = {
+            'assets': [],
+            'liabilities': [],
+            'equity': []
+        }
+        
+        for acc_data in accounts.values():
+            account = acc_data['account']
+            net_balance = acc_data['debit_total'] - acc_data['credit_total']
+            
+            if account.account_type == 'ASSET' and net_balance > 0:
+                total_assets += net_balance
+                account_details['assets'].append({
+                    'name': account.name,
+                    'number': account.account_number,
+                    'balance': net_balance
+                })
+            elif account.account_type == 'LIABILITY' and net_balance < 0:
+                total_liabilities += abs(net_balance)
+                account_details['liabilities'].append({
+                    'name': account.name,
+                    'number': account.account_number,
+                    'balance': abs(net_balance)
+                })
+            elif account.account_type == 'EQUITY' and net_balance < 0:
+                total_equity += abs(net_balance)
+                account_details['equity'].append({
+                    'name': account.name,
+                    'number': account.account_number,
+                    'balance': abs(net_balance)
+                })
+        
+        return {
+            'total_assets': total_assets,
+            'total_liabilities': total_liabilities,
+            'total_equity': total_equity,
+            'account_details': account_details,
+            'is_balanced': abs(total_assets - (total_liabilities + total_equity)) < Decimal('0.01')
+        }
 
 
 class CustomerListView(SessionEntityMixin, LoginRequiredMixin, ListView):
@@ -1652,7 +2185,7 @@ class EntityCreateView(LoginRequiredMixin, CreateView):
     """Create a new entity."""
     model = Entity
     template_name = 'accounting/entity_form.html'
-    fields = ['code', 'name', 'description', 'is_active']
+    fields = ['code', 'name', 'description', 'company_currency', 'is_active']
     success_url = reverse_lazy('accounting:entities_list')
     
     def form_valid(self, form):
@@ -1664,7 +2197,7 @@ class EntityUpdateView(LoginRequiredMixin, UpdateView):
     """Update an entity."""
     model = Entity
     template_name = 'accounting/entity_form.html'
-    fields = ['code', 'name', 'description', 'is_active']
+    fields = ['code', 'name', 'description', 'company_currency', 'is_active']
     success_url = reverse_lazy('accounting:entities_list')
     
     def form_valid(self, form):
@@ -2665,3 +3198,45 @@ def save_layout_preference(request):
             'success': False,
             'error': str(e)
         }, status=400)
+
+
+# ============================================================================
+# DOCUMENTATION VIEWS
+# ============================================================================
+
+from django.http import FileResponse, HttpResponse
+from django.conf import settings
+import os
+
+class UserGuideView(LoginRequiredMixin, View):
+    """Serves the HTML user guide directly."""
+    
+    def get(self, request):
+        # Path to the user guide HTML file
+        file_path = os.path.join(settings.BASE_DIR, 'TRADIFY_ERP_USER_GUIDE.html')
+        
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            return HttpResponse(html_content, content_type='text/html')
+        else:
+            messages.error(request, 'User guide file not found.')
+            return redirect('accounting:dashboard')
+
+
+def user_guide_download(request):
+    """Download the user guide as HTML file."""
+    if not request.user.is_authenticated:
+        return redirect('account_login')
+    
+    # Path to the user guide HTML file
+    file_path = os.path.join(settings.BASE_DIR, 'TRADIFY_ERP_USER_GUIDE.html')
+    
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='text/html')
+            response['Content-Disposition'] = 'attachment; filename="TradifyERP_User_Guide.html"'
+            return response
+    else:
+        messages.error(request, 'User guide file not found.')
+        return redirect('accounting:dashboard')

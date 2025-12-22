@@ -163,10 +163,17 @@ class EmployeeExpenseCreateView(SessionEntityMixin, LoginRequiredMixin, CreateVi
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        # Filter categories by entity
+        # Pass entity to form to filter categories
+        kwargs['entity'] = self.request.entity
         report_id = self.kwargs.get('report_id')
         report = get_object_or_404(EmployeeExpenseReport, id=report_id, entity=self.request.entity)
         return kwargs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        report_id = self.kwargs.get('report_id')
+        context['report'] = get_object_or_404(EmployeeExpenseReport, id=report_id, entity=self.request.entity)
+        return context
     
     def form_valid(self, form):
         report_id = self.kwargs.get('report_id')
@@ -230,7 +237,7 @@ class EmployeeExpenseApproveView(SessionEntityMixin, LoginRequiredMixin, View):
             EmployeeExpenseReport,
             pk=pk,
             entity=request.entity,
-            status__in=['PENDING_REVIEW', 'PENDING_APPROVAL']
+            status__in=['SUBMITTED', 'PENDING_REVIEW', 'PENDING_APPROVAL']
         )
         
         notes = request.POST.get('notes', '')
@@ -240,10 +247,12 @@ class EmployeeExpenseApproveView(SessionEntityMixin, LoginRequiredMixin, View):
         workflow = report.approval_workflow
         workflow.finance_approve(request.user, notes)
         
-        # Post to GL
-        report.post_to_gl()
+        # Post to GL (DEBIT Expense, CREDIT AP)
+        if report.post_to_gl():
+            messages.success(request, 'Expense report approved and posted to GL!')
+        else:
+            messages.warning(request, 'Expense report approved but GL posting failed. Please verify expense category accounts are configured.')
         
-        messages.success(request, 'Expense report approved and posted to GL!')
         return redirect('expenses:report_detail', pk=pk)
 
 
@@ -255,7 +264,7 @@ class EmployeeExpenseRejectView(SessionEntityMixin, LoginRequiredMixin, View):
             EmployeeExpenseReport,
             pk=pk,
             entity=request.entity,
-            status__in=['PENDING_REVIEW', 'PENDING_APPROVAL']
+            status__in=['SUBMITTED', 'PENDING_REVIEW', 'PENDING_APPROVAL']
         )
         
         reason = request.POST.get('reason', '')
@@ -385,7 +394,7 @@ class ExpenseBudgetDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        budget = context['budget']
+        budget = self.object  # Use self.object instead of context['budget']
         
         # Get expenses in this budget period
         expenses = EmployeeExpense.objects.filter(
@@ -399,6 +408,26 @@ class ExpenseBudgetDetailView(SessionEntityMixin, LoginRequiredMixin, DetailView
         context['expenses'] = expenses
         context['spent'] = sum(e.amount for e in expenses)
         context['remaining'] = budget.get_remaining_budget()
+        
+        return context
+
+
+class ExpenseBudgetCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
+    """Create a new expense budget"""
+    model = ExpenseBudget
+    form_class = ExpenseBudgetForm
+    template_name = 'expenses/budget_form.html'
+    success_url = '/expenses/budgets/'
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['entity'] = self.request.entity
+        return kwargs
+    
+    def form_valid(self, form):
+        form.instance.entity = self.request.entity
+        messages.success(self.request, 'Budget created successfully!')
+        return super().form_valid(form)
         context['variance_percent'] = budget.get_variance_percent()
         
         return context
@@ -476,7 +505,12 @@ class ExpenseReimbursementProcessView(SessionEntityMixin, LoginRequiredMixin, Vi
         transaction_id = request.POST.get('transaction_id', '')
         reimbursement.complete_payment(transaction_id)
         
-        messages.success(request, 'Reimbursement processed successfully!')
+        # Post to General Ledger (DEBIT AP, CREDIT Cash/Bank)
+        if reimbursement.post_to_gl():
+            messages.success(request, 'Reimbursement processed and posted to GL successfully!')
+        else:
+            messages.warning(request, 'Reimbursement processed but GL posting failed. Please check account configuration.')
+        
         return redirect('expenses:reimbursement_detail', pk=pk)
 
 

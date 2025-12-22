@@ -166,6 +166,22 @@
                                 </div>
                             </div>
                             {% endif %}
+                            
+                            {% if is_parent_account %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="mdi mdi-information-outline me-2"></i>
+                                        <strong>Parent Account:</strong> This account includes entries from {{ sub_accounts.count }} sub-account(s):
+                                        <ul class="mb-0 mt-2">
+                                            {% for sub in sub_accounts %}
+                                            <li><a href="{% url 'accounting:account_detail' sub.pk %}" class="text-info">{{ sub.account_number }} - {{ sub.name }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -177,7 +193,7 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Ledger Entries ({{ entry_count }} total)</h4>
+                            <h4 class="card-title mb-0 flex-grow-1">Ledger Entries ({{ entry_count }} total){% if is_parent_account %} - Including Sub-Accounts{% endif %}</h4>
                             <div class="flex-shrink-0">
                                 <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-sm btn-primary">View All GL Entries</a>
                             </div>
@@ -189,6 +205,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Date</th>
+                                            {% if is_parent_account %}<th>Sub-Account</th>{% endif %}
                                             <th>Description</th>
                                             <th>Type</th>
                                             <th>Amount</th>
@@ -200,6 +217,9 @@
                                         {% for item in ledger_entries %}
                                         <tr>
                                             <td><small>{{ item.entry.entry_date|date:"d M Y" }}</small></td>
+                                            {% if is_parent_account %}
+                                            <td><small><span class="badge bg-secondary-subtle text-secondary">{{ item.entry.account.account_number }}</span></small></td>
+                                            {% endif %}
                                             <td>
                                                 <small>
                                                     {% if item.entry.reference_number %}

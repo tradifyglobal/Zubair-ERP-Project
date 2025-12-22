@@ -63,6 +63,9 @@
                                         <td><strong>Amount:</strong></td>
                                         <td>
                                             <strong>{{ entry.amount }}</strong>
+                                            {% if entry.entity.company_currency %}
+                                                <br><small class="text-muted">{{ entry.entity.company_currency.code }}</small>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     <tr>
@@ -141,13 +144,13 @@
                                     </tr>
                                     <tr>
                                         <td><strong>Sub Account Type:</strong></td>
-                                        <td>{{ entry.account.subtype|default:"—" }}</td>
+                                        <td>{{ sub_account_type|default:"—" }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Current Balance:</strong></td>
                                         <td>
-                                            {% if entry.account.current_balance %}
-                                                <strong>{{ entry.account.current_balance }}</strong>
+                                            {% if current_balance %}
+                                                <strong>{{ current_balance }}</strong>
                                             {% else %}
                                                 <span class="text-muted">—</span>
                                             {% endif %}

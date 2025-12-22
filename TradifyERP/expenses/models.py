@@ -229,6 +229,9 @@ class EmployeeExpenseReport(models.Model):
         self.approval_notes = notes
         self.save()
         
+        # Approve all expense items
+        self.items.all().update(status='APPROVED')
+        
         # Create audit log
         AuditLog.objects.create(
             entity=self.entity,
@@ -355,24 +358,64 @@ class EmployeeExpense(models.Model):
         self.save()
     
     def post_to_gl(self):
-        """Post approved expense to general ledger"""
+        """Post approved expense to general ledger with proper double-entry"""
         if self.is_posted or self.status != 'APPROVED':
             return False
         
+        # Validate expense account is configured
+        if not self.category.expense_account:
+            print(f"Error: Expense category '{self.category.name}' has no GL account configured")
+            return False
+        
+        # Validate amount is positive
+        if self.amount <= 0:
+            print(f"Error: Invalid expense amount: {self.amount}")
+            return False
+        
         try:
-            # Create debit entry for expense account
-            ledger_entry = LedgerEntry.objects.create(
+            # Find or create Accounts Payable account for employee expenses
+            ap_account, created = Account.objects.get_or_create(
+                entity=self.report.entity,
+                account_number='2100',
+                defaults={
+                    'name': 'Accounts Payable - Employee Expenses',
+                    'account_type': 'LIABILITY',
+                    'is_active': True,
+                    'description': 'Liability for approved employee expenses pending reimbursement',
+                    'currency': self.report.entity.company_currency
+                }
+            )
+            
+            reference = f"EXP-{self.report.id}-{self.id}"
+            
+            # PHASE 1: Record expense with liability
+            # DEBIT: Expense Account (increases expense)
+            debit_entry = LedgerEntry.objects.create(
                 account=self.category.expense_account,
                 entity=self.report.entity,
                 entry_date=self.expense_date,
                 entry_type='DEBIT',
                 amount=self.amount,
                 description=f"Employee Expense - {self.description}",
-                reference_number=f"EXP-{self.report.id}-{self.id}",
-                is_posted=True
+                reference_number=reference,
+                is_posted=True,
+                workflow_status='AUTHORIZED'
             )
             
-            self.ledger_entry = ledger_entry
+            # CREDIT: Accounts Payable (increases liability)
+            credit_entry = LedgerEntry.objects.create(
+                account=ap_account,
+                entity=self.report.entity,
+                entry_date=self.expense_date,
+                entry_type='CREDIT',
+                amount=self.amount,
+                description=f"AP for Employee Expense - {self.description}",
+                reference_number=reference,
+                is_posted=True,
+                workflow_status='AUTHORIZED'
+            )
+            
+            self.ledger_entry = debit_entry  # Store primary entry
             self.is_posted = True
             self.posted_at = timezone.now()
             self.status = 'POSTED'
@@ -661,3 +704,109 @@ class ExpenseReimbursement(models.Model):
         self.status = 'FAILED'
         self.notes = notes
         self.save()
+    
+    def post_to_gl(self):
+        """Post reimbursement payment to GL - clears AP liability"""
+        if self.is_posted or self.status != 'COMPLETED':
+            return False
+        
+        # Validate amount is positive
+        if self.amount <= 0:
+            print(f"Error: Invalid reimbursement amount: {self.amount}")
+            return False
+        
+        # Validate amount doesn't exceed approved/posted expenses
+        approved_total = self.report.items.filter(
+            status__in=['APPROVED', 'POSTED']
+        ).aggregate(
+            total=models.Sum('amount')
+        )['total'] or 0
+        if self.amount > approved_total:
+            print(f"Error: Reimbursement amount ({self.amount}) exceeds approved expenses ({approved_total})")
+            return False
+        
+        try:
+            # Find Accounts Payable account
+            ap_account = Account.objects.get(
+                entity=self.report.entity,
+                account_number='2100',
+                account_type='LIABILITY'
+            )
+            
+            # Find Cash or Bank account based on payment method
+            if self.method == 'CASH':
+                # Try multiple common cash account names
+                cash_account = Account.objects.filter(
+                    entity=self.report.entity,
+                    account_type='ASSET',
+                    is_active=True
+                ).filter(
+                    models.Q(name__icontains='Cash') | 
+                    models.Q(account_number__startswith='1000')
+                ).exclude(
+                    name__icontains='Bank'
+                ).first()
+                
+                if not cash_account:
+                    raise Account.DoesNotExist("No active Cash account found")
+            else:
+                # Bank transfer, check, or payroll
+                cash_account = Account.objects.filter(
+                    entity=self.report.entity,
+                    account_type='ASSET',
+                    is_active=True
+                ).filter(
+                    models.Q(name__icontains='Bank') | 
+                    models.Q(account_number__startswith='1100')
+                ).exclude(
+                    models.Q(name__icontains='Loan') | 
+                    models.Q(account_type='LIABILITY')
+                ).first()
+                
+                if not cash_account:
+                    raise Account.DoesNotExist("No active Bank account found")
+        
+            
+            reference = self.transaction_id or f"REIMB-{self.report.id}"
+            payment_date = self.completion_date or timezone.now().date()
+            
+            # PHASE 2: Record payment clearing liability
+            # DEBIT: Accounts Payable (reduces liability)
+            debit_ap = LedgerEntry.objects.create(
+                account=ap_account,
+                entity=self.report.entity,
+                entry_date=payment_date,
+                entry_type='DEBIT',
+                amount=self.amount,
+                description=f"Reimbursement Payment - {self.report.employee.user.get_full_name()}",
+                reference_number=reference,
+                is_posted=True,
+                workflow_status='AUTHORIZED'
+            )
+            
+            # CREDIT: Cash/Bank (reduces asset)
+            credit_cash = LedgerEntry.objects.create(
+                account=cash_account,
+                entity=self.report.entity,
+                entry_date=payment_date,
+                entry_type='CREDIT',
+                amount=self.amount,
+                description=f"Reimbursement Payment via {self.get_method_display()} - {self.report.employee.user.get_full_name()}",
+                reference_number=reference,
+                is_posted=True,
+                workflow_status='AUTHORIZED'
+            )
+            
+            # Link both entries
+            self.ledger_entries.add(debit_ap, credit_cash)
+            self.is_posted = True
+            self.posted_at = timezone.now()
+            self.save()
+            
+            return True
+        except Account.DoesNotExist as e:
+            print(f"Error: Required GL account not found - {e}")
+            return False
+        except Exception as e:
+            print(f"Error posting reimbursement to GL: {e}")
+            return False

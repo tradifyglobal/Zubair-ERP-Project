@@ -19,15 +19,15 @@ html {
 }
 
 body {
-    /* Ensure body allows scrolling in both directions */
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    -ms-overflow-style: scrollbar !important;
-    scrollbar-width: auto !important;
-    scrollbar-color: #888 #f1f1f1 !important;
+    /* Prevent body scrolling - let page-content handle it */
+    overflow: hidden !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
     width: 100vw;
     height: 100vh;
     margin: 0;
+    padding: 0;
+}
     padding: 0;
 }
 
@@ -59,10 +59,16 @@ body {
    ============================================ */
 
 .main-content,
-.page-content,
 .container-fluid {
     overflow-x: auto !important;
     overflow-y: visible !important;
+    -ms-overflow-style: scrollbar !important;
+}
+
+.page-content {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-height: 80vh !important;
     -ms-overflow-style: scrollbar !important;
 }
 
@@ -230,8 +236,9 @@ select {
 
     /* Ensure page content scrolls on mobile */
     .page-content {
-        overflow-x: auto !important;
-        overflow-y: visible !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        max-height: 80vh !important;
     }
 
     /* Mobile table scrolling */

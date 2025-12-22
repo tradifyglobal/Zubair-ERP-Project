@@ -156,7 +156,7 @@ class AccountingDashboardView(SessionEntityMixin, LoginRequiredMixin, Permission
 
 
 class CashPositionView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
-    """Detailed view of company's cash position from investor contributions."""
+    """Detailed view of company's cash position from all cash transactions."""
     template_name = 'accounting/cash_position.html'
     permission_required = 'accounting.view_account'
 
@@ -199,6 +199,47 @@ class CashPositionView(SessionEntityMixin, LoginRequiredMixin, PermissionRequire
                 
                 # Detailed timeline
                 context['contributions_timeline'] = all_contributions.order_by('-contribution_date')
+                
+                # Get cash accounts and their recent transactions
+                cash_accounts = Account.objects.filter(
+                    entity_id=entity_id,
+                    account_type='ASSET'
+                ).filter(
+                    Q(name__icontains='cash') | 
+                    Q(name__icontains='bank') | 
+                    Q(account_number__startswith='100')
+                )
+                
+                # Calculate cash balances and get recent transactions
+                cash_details = []
+                total_cash_balance = 0
+                
+                for account in cash_accounts:
+                    # Get balance
+                    debits = LedgerEntry.objects.filter(
+                        account=account, entry_type='DEBIT'
+                    ).aggregate(total=Sum('amount'))['total'] or 0
+                    
+                    credits = LedgerEntry.objects.filter(
+                        account=account, entry_type='CREDIT'
+                    ).aggregate(total=Sum('amount'))['total'] or 0
+                    
+                    balance = float(debits) - float(credits)
+                    total_cash_balance += balance
+                    
+                    # Get recent transactions
+                    recent_entries = LedgerEntry.objects.filter(
+                        account=account
+                    ).order_by('-entry_date', '-created_at')[:10]
+                    
+                    cash_details.append({
+                        'account': account,
+                        'balance': balance,
+                        'recent_entries': recent_entries
+                    })
+                
+                context['cash_accounts'] = cash_details
+                context['total_cash_balance'] = total_cash_balance
                 
                 # By entity - ONLY for current entity (not all entities)
                 entities_with_contributions = (

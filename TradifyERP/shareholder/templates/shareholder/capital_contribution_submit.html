@@ -62,49 +62,61 @@
                         <!-- Submit Form -->
                         <form method="post" class="form-horizontal">
                             {% csrf_token %}
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="id_reviewer">Assign First Reviewer <span class="text-danger">*</span></label>
-                                        <select name="reviewer" id="id_reviewer" class="form-select" required>
-                                            <option value="">-- Select Reviewer --</option>
-                                            {% for user in form.reviewer.field.queryset %}
-                                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <small class="form-text text-muted">First reviewer to review this contribution</small>
-                                        {% if form.reviewer.errors %}
-                                            <div class="alert alert-danger mt-2">{{ form.reviewer.errors }}</div>
+                            
+                            <!-- Auto-Assignment Info -->
+                            {% if available_reviewers %}
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="alert alert-info" role="alert">
+                                        <i class="mdi mdi-information"></i> <strong>Automatic Reviewer Assignment:</strong>
+                                        <br>This contribution will be automatically assigned to the following reviewers:
+                                        {% if available_reviewers|length >= 2 %}
+                                            <ul class="mb-0 mt-2">
+                                                <li><strong>First Reviewer:</strong> {{ available_reviewers.0.get_full_name|default:available_reviewers.0.username }}</li>
+                                                <li><strong>Second Reviewer:</strong> {{ available_reviewers.1.get_full_name|default:available_reviewers.1.username }}</li>
+                                            </ul>
+                                        {% elif available_reviewers|length == 1 %}
+                                            <ul class="mb-0 mt-2">
+                                                <li><strong>Reviewer:</strong> {{ available_reviewers.0.get_full_name|default:available_reviewers.0.username }}</li>
+                                                <li><span class="badge bg-warning">Warning: Only 1 reviewer available (2 required)</span></li>
+                                            </ul>
+                                        {% else %}
+                                            <span class="badge bg-danger">No reviewers configured</span>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="id_reviewer_2">Assign Second Reviewer <span class="text-danger">*</span></label>
-                                        <select name="reviewer_2" id="id_reviewer_2" class="form-select" required>
-                                            <option value="">-- Select Reviewer --</option>
-                                            {% for user in form.reviewer_2.field.queryset %}
-                                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <small class="form-text text-muted">Second reviewer (must be different from first)</small>
-                                        {% if form.reviewer_2.errors %}
-                                            <div class="alert alert-danger mt-2">{{ form.reviewer_2.errors }}</div>
+                            </div>
+                            {% else %}
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="alert alert-danger" role="alert">
+                                        <i class="mdi mdi-alert-circle"></i> <strong>Error:</strong> No reviewers are configured. Please contact administrator.
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Hidden reviewer fields for automatic assignment -->
+                            <input type="hidden" name="reviewer" value="{{ available_reviewers.0.id|default:'' }}" />
+                            <input type="hidden" name="reviewer_2" value="{{ available_reviewers.1.id|default:'' }}" />
+                            
+                            <!-- Notes Section (Optional) -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="id_review_notes">Notes for Reviewers (Optional)</label>
+                                        <textarea name="review_notes" id="id_review_notes" class="form-control" rows="3" placeholder="Add any notes or context for the reviewers...">{{ form.review_notes.value }}</textarea>
+                                        <small class="form-text text-muted">These notes will help reviewers understand your submission</small>
+                                        {% if form.review_notes.errors %}
+                                            <div class="alert alert-danger mt-2">{{ form.review_notes.errors }}</div>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="form-group mb-3">
-                                <label for="id_review_notes">Notes for Reviewers</label>
-                                <textarea name="review_notes" id="id_review_notes" class="form-control" rows="3" placeholder="Optional notes for the reviewers...">{{ form.review_notes.value }}</textarea>
-                                {% if form.review_notes.errors %}
-                                    <div class="alert alert-danger mt-2">{{ form.review_notes.errors }}</div>
-                                {% endif %}
-                            </div>
-
+                            <!-- Submit Buttons -->
                             <div class="form-group">
-                                <button type="submit" class="btn btn-info waves-effect waves-light">
+                                <button type="submit" class="btn btn-info waves-effect waves-light" {% if reviewer_count < 1 %}disabled{% endif %}>
                                     <i class="feather-send"></i> Submit for Review
                                 </button>
                                 <a href="{% url 'shareholder:capital-contribution-detail' object.pk %}" class="btn btn-secondary waves-effect waves-light">

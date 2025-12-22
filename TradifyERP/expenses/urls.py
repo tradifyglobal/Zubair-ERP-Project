@@ -8,7 +8,7 @@ from .views import (
     EmployeeExpenseReportListView, EmployeeExpenseReportDetailView,
     EmployeeExpenseReportCreateView, EmployeeExpenseCreateView,
     EmployeeExpenseSubmitView, EmployeeExpenseApproveView, EmployeeExpenseRejectView,
-    ExpenseBudgetListView, ExpenseBudgetDetailView,
+    ExpenseBudgetListView, ExpenseBudgetDetailView, ExpenseBudgetCreateView,
     ExpenseReimbursementListView, ExpenseReimbursementCreateView,
     ExpenseReimbursementDetailView, ExpenseReimbursementProcessView,
     ExpenseCategoryListView, ExpenseCategoryCreateView,
@@ -31,6 +31,7 @@ urlpatterns = [
     
     # Budgets
     path('budgets/', ExpenseBudgetListView.as_view(), name='budget_list'),
+    path('budgets/create/', ExpenseBudgetCreateView.as_view(), name='budget_create'),
     path('budgets/<int:pk>/', ExpenseBudgetDetailView.as_view(), name='budget_detail'),
     
     # Reimbursements

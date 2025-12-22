@@ -14,16 +14,17 @@ from .models import ProductionOrder, QualityInspection, DistributorOrder
 def production_order_post_save(sender, instance, created, **kwargs):
     """
     Handle GL posting when production order status changes.
-    Posts manufacturing costs to GL.
+    Posts manufacturing costs to GL using LedgerEntry.
     """
     try:
-        from accounting.models import JournalEntry, JournalEntryLine, Account
+        from accounting.models import LedgerEntry, Account
         
         # Only post GL entries for specific status transitions
         if instance.status == 'COMPLETE' and instance.completion_date:
             # Check if GL entry already exists for this PO
-            if JournalEntry.objects.filter(
-                reference=f"MFG-{instance.po_number}"
+            reference = f"MFG-{instance.po_number}"
+            if LedgerEntry.objects.filter(
+                reference_number=reference
             ).exists():
                 return
             
@@ -39,32 +40,44 @@ def production_order_post_save(sender, instance, created, **kwargs):
             ).first()
             
             if not wip_account:
+                # Try alternative names
+                wip_account = Account.objects.filter(
+                    entity=instance.entity,
+                    account_type='CURRENT_ASSET',
+                    name__icontains='Work in Process'
+                ).first()
+            
+            if not wip_account:
                 return
             
-            # Create GL entry for completed production
-            je = JournalEntry.objects.create(
-                entity=instance.entity,
-                date=timezone.now().date(),
-                reference=f"MFG-{instance.po_number}",
-                description=f"Manufacturing Cost for {instance.product.name}",
-                status='POSTED',
-                created_by=instance.created_by or None
-            )
+            # Calculate total cost
+            total_cost = instance.total_actual_cost or instance.total_estimated_cost
             
-            # Debit inventory account (finished goods)
-            JournalEntryLine.objects.create(
-                journal_entry=je,
+            # Create GL entries (double-entry: DR Finished Goods, CR WIP)
+            # DEBIT: Finished Goods Inventory
+            LedgerEntry.objects.create(
                 account=inventory_account,
-                debit=instance.total_actual_cost or instance.total_estimated_cost,
-                credit=Decimal('0.00')
+                entity=instance.entity,
+                entry_date=instance.completion_date or timezone.now().date(),
+                entry_type='DEBIT',
+                amount=total_cost,
+                description=f"Manufacturing Cost - {instance.product.name} ({instance.po_number})",
+                reference_number=reference,
+                is_posted=True,
+                workflow_status='AUTHORIZED'
             )
             
-            # Credit WIP account
-            JournalEntryLine.objects.create(
-                journal_entry=je,
+            # CREDIT: Work-in-Process
+            LedgerEntry.objects.create(
                 account=wip_account,
-                debit=Decimal('0.00'),
-                credit=instance.total_actual_cost or instance.total_estimated_cost
+                entity=instance.entity,
+                entry_date=instance.completion_date or timezone.now().date(),
+                entry_type='CREDIT',
+                amount=total_cost,
+                description=f"WIP Transfer - {instance.product.name} ({instance.po_number})",
+                reference_number=reference,
+                is_posted=True,
+                workflow_status='AUTHORIZED'
             )
             
     except ImportError:

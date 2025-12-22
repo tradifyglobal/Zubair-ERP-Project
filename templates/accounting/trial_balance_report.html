@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Trial Balance - Report{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-1">
+                <i class="fas fa-file-pdf text-danger"></i> Trial Balance Report
+            </h1>
+            <p class="text-muted">Financial Statement Format</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a href="{% url 'trial-balance-list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    <div class="card shadow-sm print-area">
+        <div class="card-body p-5">
+            <!-- Title -->
+            <div class="text-center mb-4 print-title">
+                <h2 class="mb-0">{{ entity.name }}</h2>
+                <p class="text-muted mb-1">TRIAL BALANCE</p>
+                <p class="text-muted">As of {{ report_date|date:"F d, Y" }}</p>
+            </div>
+
+            <!-- Report Table -->
+            <table class="table table-borderless" style="font-size: 0.95rem;">
+                <thead class="print-header" style="border-top: 2px solid #000; border-bottom: 2px solid #000;">
+                    <tr>
+                        <th style="width: 50%;">Account</th>
+                        <th class="text-end" style="width: 25%;">Debit (₹)</th>
+                        <th class="text-end" style="width: 25%;">Credit (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <!-- ASSETS Section -->
+                    {% if assets_lines %}
+                    <tr class="section-header">
+                        <td colspan="3" class="pt-3 pb-2">
+                            <strong>ASSETS</strong>
+                        </td>
+                    </tr>
+                    {% for line in assets_lines %}
+                    <tr>
+                        <td class="ps-4">{{ line.account.name }}</td>
+                        <td class="text-end">
+                            {% if line.debit_amount > 0 %}
+                                {{ line.debit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if line.credit_amount > 0 %}
+                                {{ line.credit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td class="ps-4"><strong>Total Assets</strong></td>
+                        <td class="text-end"><strong>{{ assets_debit|floatformat:2 }}</strong></td>
+                        <td class="text-end"><strong>{{ assets_credit|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% endif %}
+
+                    <!-- LIABILITIES Section -->
+                    {% if liabilities_lines %}
+                    <tr class="section-header">
+                        <td colspan="3" class="pt-3 pb-2">
+                            <strong>LIABILITIES</strong>
+                        </td>
+                    </tr>
+                    {% for line in liabilities_lines %}
+                    <tr>
+                        <td class="ps-4">{{ line.account.name }}</td>
+                        <td class="text-end">
+                            {% if line.debit_amount > 0 %}
+                                {{ line.debit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if line.credit_amount > 0 %}
+                                {{ line.credit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td class="ps-4"><strong>Total Liabilities</strong></td>
+                        <td class="text-end"><strong>{{ liabilities_debit|floatformat:2 }}</strong></td>
+                        <td class="text-end"><strong>{{ liabilities_credit|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% endif %}
+
+                    <!-- EQUITY Section -->
+                    {% if equity_lines %}
+                    <tr class="section-header">
+                        <td colspan="3" class="pt-3 pb-2">
+                            <strong>EQUITY</strong>
+                        </td>
+                    </tr>
+                    {% for line in equity_lines %}
+                    <tr>
+                        <td class="ps-4">{{ line.account.name }}</td>
+                        <td class="text-end">
+                            {% if line.debit_amount > 0 %}
+                                {{ line.debit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if line.credit_amount > 0 %}
+                                {{ line.credit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td class="ps-4"><strong>Total Equity</strong></td>
+                        <td class="text-end"><strong>{{ equity_debit|floatformat:2 }}</strong></td>
+                        <td class="text-end"><strong>{{ equity_credit|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% endif %}
+
+                    <!-- INCOME Section -->
+                    {% if income_lines %}
+                    <tr class="section-header">
+                        <td colspan="3" class="pt-3 pb-2">
+                            <strong>INCOME</strong>
+                        </td>
+                    </tr>
+                    {% for line in income_lines %}
+                    <tr>
+                        <td class="ps-4">{{ line.account.name }}</td>
+                        <td class="text-end">
+                            {% if line.debit_amount > 0 %}
+                                {{ line.debit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if line.credit_amount > 0 %}
+                                {{ line.credit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td class="ps-4"><strong>Total Income</strong></td>
+                        <td class="text-end"><strong>{{ income_debit|floatformat:2 }}</strong></td>
+                        <td class="text-end"><strong>{{ income_credit|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% endif %}
+
+                    <!-- EXPENSES Section -->
+                    {% if expenses_lines %}
+                    <tr class="section-header">
+                        <td colspan="3" class="pt-3 pb-2">
+                            <strong>EXPENSES</strong>
+                        </td>
+                    </tr>
+                    {% for line in expenses_lines %}
+                    <tr>
+                        <td class="ps-4">{{ line.account.name }}</td>
+                        <td class="text-end">
+                            {% if line.debit_amount > 0 %}
+                                {{ line.debit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if line.credit_amount > 0 %}
+                                {{ line.credit_amount|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td class="ps-4"><strong>Total Expenses</strong></td>
+                        <td class="text-end"><strong>{{ expenses_debit|floatformat:2 }}</strong></td>
+                        <td class="text-end"><strong>{{ expenses_credit|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% endif %}
+
+                    <!-- Grand Total Row -->
+                    <tr style="border-top: 2px solid #000; border-bottom: 2px solid #000; font-weight: bold;">
+                        <td><strong>GRAND TOTAL</strong></td>
+                        <td class="text-end">
+                            <strong>{{ total_debit|floatformat:2 }}</strong>
+                        </td>
+                        <td class="text-end">
+                            <strong>{{ total_credit|floatformat:2 }}</strong>
+                        </td>
+                    </tr>
+
+                    <!-- Verification Row -->
+                    <tr>
+                        <td colspan="3" class="pt-3 pb-2">
+                            <div class="alert {% if is_balanced %}alert-success{% else %}alert-danger{% endif %} mb-0">
+                                {% if is_balanced %}
+                                    <i class="fas fa-check-circle"></i> <strong>Trial Balance is BALANCED</strong>
+                                    <br>
+                                    <small>Total Debit = Total Credit = ₹{{ total_debit|floatformat:2 }}</small>
+                                {% else %}
+                                    <i class="fas fa-exclamation-circle"></i> <strong>Trial Balance is UNBALANCED</strong>
+                                    <br>
+                                    <small>Difference: ₹{{ balance_difference|floatformat:2 }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+
+            <!-- Footer -->
+            <div class="row mt-5 pt-4 print-footer" style="border-top: 1px solid #ddd;">
+                <div class="col-md-4">
+                    <p class="mb-4">Generated By:</p>
+                    <p class="text-muted" style="margin-top: 3rem;">________________________</p>
+                    <p class="text-muted">{{ generated_by }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p class="mb-4">Verified By:</p>
+                    <p class="text-muted" style="margin-top: 3rem;">________________________</p>
+                    <p class="text-muted">Finance Manager</p>
+                </div>
+                <div class="col-md-4">
+                    <p class="mb-4">Approved By:</p>
+                    <p class="text-muted" style="margin-top: 3rem;">________________________</p>
+                    <p class="text-muted">Authorized Signatory</p>
+                </div>
+            </div>
+
+            <div class="text-center text-muted mt-4" style="font-size: 0.85rem;">
+                <p>Printed on: {{ now|date:"F d, Y H:i:s" }}</p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+    @media print {
+        body {
+            background: white;
+        }
+        
+        .card {
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        .card-body {
+            padding: 0 !important;
+        }
+        
+        .btn, .container-fluid > .row:first-child {
+            display: none !important;
+        }
+        
+        .print-area {
+            page-break-inside: avoid;
+        }
+    }
+    
+    .print-header {
+        background-color: #f8f9fa;
+    }
+    
+    .section-header {
+        background-color: #f0f0f0;
+    }
+    
+    table {
+        width: 100%;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+    }
+</style>
+{% endblock %}

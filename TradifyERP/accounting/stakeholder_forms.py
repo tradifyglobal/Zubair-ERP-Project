@@ -18,11 +18,13 @@ class StakeholderForm(forms.ModelForm):
             'permanent_address_line_1', 'permanent_address_line_2', 'permanent_city', 'permanent_state_province', 'permanent_postal_code', 'permanent_country',
             'address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country', 'same_as_permanent',
             'tax_identification_number', 'tax_id_type',
-            'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date'
+            'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date', 'start_date', 'end_date'
         ]
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
             'joined_date': forms.DateInput(attrs={'type': 'date'}),
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
     
@@ -221,6 +223,7 @@ class CapitalContributionForm(forms.ModelForm):
         ]
         labels = {
             'stakeholder': 'Shareholder',
+            'approver_group': 'Approver Group',
         }
         widgets = {
             'stakeholder': forms.Select(attrs={'class': 'form-select'}),
@@ -466,123 +469,14 @@ class ShareholdingForm(forms.ModelForm):
         )
 
 
-class CapitalContributionSubmitForm(forms.ModelForm):
-    """Form for submitting a contribution and assigning two reviewers."""
-    reviewer = forms.ModelChoiceField(
-        queryset=None,
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Assign First Reviewer',
-        help_text='Select the first user who will review this contribution'
-    )
-    
-    reviewer_2 = forms.ModelChoiceField(
-        queryset=None,
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Assign Second Reviewer',
-        help_text='Select the second user who will review this contribution'
-    )
-    
-    class Meta:
-        model = CapitalContribution
-        fields = ['review_notes']
-        widgets = {
-            'review_notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Optional notes for the reviewers'
-            }),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        from django.contrib.auth.models import User
-        # Show all active users as potential reviewers
-        active_users = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
-        self.fields['reviewer'].queryset = active_users
-        self.fields['reviewer_2'].queryset = active_users
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        reviewer = cleaned_data.get('reviewer')
-        reviewer_2 = cleaned_data.get('reviewer_2')
-        
-        if reviewer and reviewer_2 and reviewer == reviewer_2:
-            raise forms.ValidationError("First and second reviewers must be different users.")
-        
-        return cleaned_data
-    
-    def save(self, commit=True):
-        """Save the form and assign reviewers to the contribution."""
-        instance = super().save(commit=False)
-        
-        # Save assigned reviewers
-        instance.assigned_reviewer_1 = self.cleaned_data.get('reviewer')
-        instance.assigned_reviewer_2 = self.cleaned_data.get('reviewer_2')
-        
-        if commit:
-            instance.save()
-        
-        return instance
-
-
-class CapitalContributionReviewForm(forms.ModelForm):
-    """Form for completing review and moving to approval when both reviewers have reviewed."""
-    approver = forms.ModelChoiceField(
-        queryset=None,
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Assign Approver',
-        help_text='Select the user who will approve this contribution'
-    )
-    
-    class Meta:
-        model = CapitalContribution
-        fields = ['review_notes_2', 'approval_notes']
-        widgets = {
-            'review_notes_2': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Your review notes as second reviewer'
-            }),
-            'approval_notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Optional notes for the approver'
-            }),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        from django.contrib.auth.models import User
-        # Show all active users as potential approvers
-        self.fields['approver'].queryset = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
-    
-    def save(self, commit=True):
-        """Save the form and assign approver to the contribution."""
-        instance = super().save(commit=False)
-        
-        # Save assigned approver
-        instance.assigned_approver = self.cleaned_data.get('approver')
-        
-        if commit:
-            instance.save()
-        
-        return instance
-
-
-class CapitalContributionApprovalForm(forms.ModelForm):
-    """Form for approving a contribution."""
-    
-    class Meta:
-        model = CapitalContribution
-        fields = ['status', 'approval_notes']
-        widgets = {
-            'status': forms.Select(attrs={'class': 'form-select'}),
-            'approval_notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Your approval notes'
-            }),
-        }
+# ==================== Capital Contribution Workflow Forms ====================
+# DEPRECATED: Workflow moved to transaction level (CashReceiptLine/BankReceiptLine)
+#
+# The following form classes have been removed:
+# - CapitalContributionSubmitForm (line ~472)
+# - CapitalContributionReviewForm (line ~549)
+# - CapitalContributionApprovalForm (line ~644)
+#
+# Capital contributions are now auto-created and posted when source transaction is approved.
+# No manual submission/review/approval needed at contribution level.
+# See REFACTORING_PLAN.md for complete migration information.

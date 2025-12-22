@@ -11,7 +11,7 @@ from django.utils import timezone
 from datetime import datetime, date
 from decimal import Decimal
 from accounting.models import Entity, TrialBalance
-from accounting.trial_balance import calculate_trial_balance, save_trial_balance, verify_gl_balance
+from accounting.trial_balance import calculate_trial_balance, save_trial_balance
 
 
 class Command(BaseCommand):

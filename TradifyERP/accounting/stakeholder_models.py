@@ -270,24 +270,32 @@ class CapitalContribution(models.Model):
         from .models import Account, LedgerEntry
         
         try:
-            # Find or create equity account
+            # DISABLED: Auto-creation of equity accounts to prevent duplicates
+            # Find existing equity account only, don't create
             if not self.equity_account:
+                # Try to find existing equity account for this stakeholder
                 equity_account = Account.objects.filter(
                     entity=self.entity,
                     account_type='EQUITY',
-                    name__icontains='capital'
+                    name__icontains=self.stakeholder.full_name
                 ).first()
                 
                 if not equity_account:
-                    # Create default equity account
-                    equity_account = Account.objects.create(
+                    # Try to find the main Capital account (3100)
+                    main_capital = Account.objects.filter(
                         entity=self.entity,
-                        account_number='3100',
-                        name=f'Capital - {self.stakeholder.full_name}',
                         account_type='EQUITY',
-                        currency=self.currency_destination,
-                        description=f'Capital contribution from {self.stakeholder.full_name}'
-                    )
+                        account_number='3100'
+                    ).first()
+                    
+                    # Use main capital account if no specific stakeholder account exists
+                    if main_capital:
+                        equity_account = main_capital
+                
+                # DISABLED: No auto sub-account creation
+                # if equity_account:
+                #     equity_account = equity_account.get_shareholder_subaccount(self.stakeholder)
+                
                 self.equity_account = equity_account
             
             # Find or create cash account

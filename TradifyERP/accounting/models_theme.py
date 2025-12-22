@@ -102,6 +102,22 @@ class UserThemePreference(models.Model):
         ],
         help_text="Container width mode"
     )
+    # Chart color preferences
+    chart_color_1 = models.CharField(
+        max_length=20,
+        default='rgba(54, 162, 235, 0.8)',
+        help_text="Chart color for dataset 1 (Target Investment)"
+    )
+    chart_color_2 = models.CharField(
+        max_length=20,
+        default='rgba(255, 159, 64, 0.8)',
+        help_text="Chart color for dataset 2 (Invested Amount)"
+    )
+    chart_color_3 = models.CharField(
+        max_length=20,
+        default='rgba(153, 102, 255, 0.8)',
+        help_text="Chart color for dataset 3 (Balance to Invest)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

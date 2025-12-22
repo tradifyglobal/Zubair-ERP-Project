@@ -1,0 +1,355 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Trading & Manufacturing Account - {{ entity.name }}{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+        
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Trading & Manufacturing Account</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Accounting</a></li>
+                            <li class="breadcrumb-item active">Trading & Manufacturing Account</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Range Selector -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Select Period</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" class="row g-3">
+                            {% csrf_token %}
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.period_start.label }}</label>
+                                {{ form.period_start }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.period_end.label }}</label>
+                                {{ form.period_end }}
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter me-1"></i> Generate Report
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if tm_data %}
+        <!-- Trading & Manufacturing Account Report -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title text-white mb-0">
+                            Trading & Manufacturing Account
+                            <small class="float-end">
+                                {{ period_start|date:"M d, Y" }} to {{ period_end|date:"M d, Y" }}
+                            </small>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        
+                        <!-- Summary Metrics -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card bg-success-subtle border-success">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-2">Total Sales</h6>
+                                        <h3 class="text-success mb-0">₹{{ tm_data.total_sales|floatformat:2 }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-danger-subtle border-danger">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-2">Total Costs</h6>
+                                        <h3 class="text-danger mb-0">₹{{ tm_data.total_costs|floatformat:2 }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card {% if tm_data.gross_profit >= 0 %}bg-primary-subtle border-primary{% else %}bg-warning-subtle border-warning{% endif %}">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-2">Gross Profit</h6>
+                                        <h3 class="{% if tm_data.gross_profit >= 0 %}text-primary{% else %}text-warning{% endif %} mb-0">
+                                            ₹{{ tm_data.gross_profit|floatformat:2 }}
+                                        </h3>
+                                        <small class="text-muted">
+                                            ({{ tm_data.gross_profit_percentage|floatformat:1 }}% margin)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Revenue Section -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th colspan="3" class="text-center">SALES / REVENUE</th>
+                                    </tr>
+                                    <tr>
+                                        <th width="20%">GL Code</th>
+                                        <th width="60%">Account Name</th>
+                                        <th width="20%" class="text-end">Amount (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if tm_data.revenue_section %}
+                                        {% for item in tm_data.revenue_section %}
+                                        <tr>
+                                            <td><strong>{{ item.account_number }}</strong></td>
+                                            <td>{{ item.account_name }}</td>
+                                            <td class="text-end">{{ item.amount|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                        <tr class="table-info">
+                                            <td colspan="2" class="text-end fw-bold">Total Sales</td>
+                                            <td class="text-end fw-bold">{{ tm_data.total_sales|floatformat:2 }}</td>
+                                        </tr>
+                                        {% if tm_data.sales_returns > 0 %}
+                                        <tr class="table-warning">
+                                            <td colspan="2" class="text-end">Less: Sales Returns</td>
+                                            <td class="text-end text-danger">({{ tm_data.sales_returns|floatformat:2 }})</td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr class="table-success fw-bold">
+                                            <td colspan="2" class="text-end">Net Sales Revenue</td>
+                                            <td class="text-end">{{ tm_data.net_sales|floatformat:2 }}</td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">
+                                                No sales transactions found for this period
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Cost of Sales Section -->
+                        <div class="table-responsive mt-4">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-danger">
+                                    <tr>
+                                        <th colspan="4" class="text-center">LESS: COST OF SALES</th>
+                                    </tr>
+                                    <tr>
+                                        <th width="15%">GL Code</th>
+                                        <th width="45%">Account Name</th>
+                                        <th width="20%">Category</th>
+                                        <th width="20%" class="text-end">Amount (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if tm_data.cost_section or tm_data.total_purchases > 0 %}
+                                        <!-- Purchases Section -->
+                                        {% if tm_data.total_purchases > 0 %}
+                                            <tr class="table-light">
+                                                <td colspan="4" class="fw-bold">
+                                                    <i class="fas fa-shopping-cart me-2"></i>Purchases
+                                                </td>
+                                            </tr>
+                                            {% for item in tm_data.cost_section %}
+                                                {% if item.category == 'Purchases' %}
+                                                <tr>
+                                                    <td><strong>{{ item.account_number }}</strong></td>
+                                                    <td class="ps-4">{{ item.account_name }}</td>
+                                                    <td><span class="badge bg-secondary">{{ item.category }}</span></td>
+                                                    <td class="text-end">{{ item.amount|floatformat:2 }}</td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <tr class="table-info">
+                                                <td colspan="3" class="text-end fw-bold">Total Purchases</td>
+                                                <td class="text-end fw-bold">{{ tm_data.total_purchases|floatformat:2 }}</td>
+                                            </tr>
+                                            {% if tm_data.purchase_returns > 0 %}
+                                            <tr class="table-warning">
+                                                <td colspan="3" class="text-end">Less: Purchase Returns</td>
+                                                <td class="text-end text-success">({{ tm_data.purchase_returns|floatformat:2 }})</td>
+                                            </tr>
+                                            {% endif %}
+                                            <tr class="table-success">
+                                                <td colspan="3" class="text-end fw-bold">Net Purchases</td>
+                                                <td class="text-end fw-bold">{{ tm_data.net_purchases|floatformat:2 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="4"></td>
+                                            </tr>
+                                        {% endif %}
+                                        
+                                        <!-- Other Cost Categories -->
+                                        {% regroup tm_data.cost_section by category as cost_categories %}
+                                        {% for category_group in cost_categories %}
+                                            {% if category_group.grouper != 'Purchases' %}
+                                            <!-- Category Header -->
+                                            <tr class="table-light">
+                                                <td colspan="4" class="fw-bold">
+                                                    <i class="fas fa-folder-open me-2"></i>{{ category_group.grouper }}
+                                                </td>
+                                            </tr>
+                                            <!-- Category Items -->
+                                            {% for item in category_group.list %}
+                                            <tr>
+                                                <td><strong>{{ item.account_number }}</strong></td>
+                                                <td class="ps-4">{{ item.account_name }}</td>
+                                                <td><span class="badge bg-secondary">{{ item.category }}</span></td>
+                                                <td class="text-end">{{ item.amount|floatformat:2 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        <tr class="table-danger fw-bold">
+                                            <td colspan="3" class="text-end">Total Cost of Sales</td>
+                                            <td class="text-end">{{ tm_data.total_costs|floatformat:2 }}</td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">
+                                                No cost transactions found for this period
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Gross Profit Calculation -->
+                        <div class="card border-primary mt-4">
+                            <div class="card-body bg-primary text-white">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <h5 class="text-white mb-0">
+                                            <i class="fas fa-calculator me-2"></i>
+                                            GROSS PROFIT
+                                        </h5>
+                                        <small class="text-white-50">Sales - Cost of Sales</small>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <h3 class="text-white mb-0">₹{{ tm_data.gross_profit|floatformat:2 }}</h3>
+                                        <small class="text-white-75">
+                                            Margin: {{ tm_data.gross_profit_percentage|floatformat:2 }}%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calculation Breakdown -->
+                        <div class="alert alert-info mt-4">
+                            <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Calculation Details</h6>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <p class="mb-2">
+                                        <strong>Gross Profit</strong> = Sales Revenue - Cost of Sales
+                                    </p>
+                                    <p class="mb-2">
+                                        = ₹{{ tm_data.total_sales|floatformat:2 }} - ₹{{ tm_data.total_costs|floatformat:2 }}
+                                    </p>
+                                    <p class="mb-0">
+                                        = <strong>₹{{ tm_data.gross_profit|floatformat:2 }}</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Cards -->
+        {% if metrics %}
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Financial Metrics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-2">Gross Profit Margin</h6>
+                                        <h4 class="text-primary mb-0">{{ metrics.gross_profit_margin|floatformat:2 }}%</h4>
+                                        <small class="text-muted">Higher is better</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-2">Cost of Sales Ratio</h6>
+                                        <h4 class="text-warning mb-0">{{ metrics.cost_of_sales_ratio|floatformat:2 }}%</h4>
+                                        <small class="text-muted">Lower is better</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cost Breakdown by Category -->
+                        {% if metrics.revenue_per_category %}
+                        <div class="mt-4">
+                            <h6 class="mb-3">Cost Breakdown by Category</h6>
+                            <div class="row">
+                                {% for category, amount in metrics.revenue_per_category.items %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="text-muted mb-1">{{ category }}</h6>
+                                            <h5 class="mb-0">₹{{ amount|floatformat:2 }}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- No Data Message -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No data available for selected period</h5>
+                        <p class="text-muted">Please select a period and click "Generate Report"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
