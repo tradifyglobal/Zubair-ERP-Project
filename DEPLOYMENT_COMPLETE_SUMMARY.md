@@ -1,8 +1,8 @@
 # 🎉 PHASE 2 DEPLOYMENT - COMPLETE
 **Date**: December 17, 2025  
 **Status**: ✅ **FULLY DEPLOYED TO PRODUCTION**  
-**Production Server**: 192.168.2.69  
-**Database**: PostgreSQL (192.168.2.59)
+**Production Server**: 192.168.20.10  
+**Database**: PostgreSQL (192.168.20.11)
 
 ---
 
@@ -147,13 +147,13 @@ path('shareholder-investment/<int:pk>/audit/', ...)
 ### Access the Reports
 
 **Via Web Browser:**
-1. Login to TradifyERP: `http://192.168.2.69:8000`
+1. Login to TradifyERP: `http://192.168.20.10:8000`
 2. Navigate to Accounting Module
 3. Click "Shareholder Investment Report"
 4. Or use direct URLs:
-   - List: `http://192.168.2.69:8000/accounting/shareholder-investments/`
-   - Report: `http://192.168.2.69:8000/accounting/shareholder-investment-report/`
-   - Capital: `http://192.168.2.69:8000/accounting/shareholder-capital-status/`
+   - List: `http://192.168.20.10:8000/accounting/shareholder-investments/`
+   - Report: `http://192.168.20.10:8000/accounting/shareholder-investment-report/`
+   - Capital: `http://192.168.20.10:8000/accounting/shareholder-capital-status/`
 
 ### Test the Workflow
 
@@ -421,8 +421,8 @@ Complete implementation guides available in workspace:
 ║  Templates:       DEPLOYED (1 template)                            ║
 ║  Services:        RUNNING (Gunicorn active)                        ║
 ║                                                                    ║
-║  Production:      192.168.2.69                                     ║
-║  Database:        192.168.2.59                                     ║
+║  Production:      192.168.20.10                                     ║
+║  Database:        192.168.20.11                                     ║
 ║  Django Version:  5.2.9                                            ║
 ║  Python Version:  3.12                                             ║
 ║                                                                    ║
@@ -457,4 +457,4 @@ Complete implementation guides available in workspace:
 **Duration**: ~13 minutes  
 **Status**: ✅ **PRODUCTION READY**
 
-Access the system now at: **http://192.168.2.69:8000/accounting/shareholder-investment-report/**
+Access the system now at: **http://192.168.20.10:8000/accounting/shareholder-investment-report/**

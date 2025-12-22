@@ -9,7 +9,7 @@ import sys
 
 # PostgreSQL superuser connection 
 DB_CONFIG = {
-    'host': '192.168.2.59',
+    'host': '192.168.20.11',
     'database': 'tradifyerp_db',
     'user': 'postgres',  # PostgreSQL superuser
     'password': 'zubair123',  # Update if different

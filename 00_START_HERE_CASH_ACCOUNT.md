@@ -84,7 +84,7 @@ Done! Script handles everything.
 ### Option 2: Manual Commands
 ```bash
 # SSH to app server
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 cd /home/zubair/tradifyerp
 source venv/bin/activate
 
@@ -140,7 +140,7 @@ After deployment, verify in database:
 
 ```bash
 # SSH to database server
-ssh zubair@192.168.2.59
+ssh zubair@192.168.20.11
 
 # Connect to database
 psql -U zubair -d tradifyerp_db
@@ -185,10 +185,10 @@ Should see:
 
 | Item | Value |
 |------|-------|
-| App Server | 192.168.2.69 |
+| App Server | 192.168.20.10 |
 | App User | zubair |
 | App Password | erp |
-| DB Server | 192.168.2.59 |
+| DB Server | 192.168.20.11 |
 | DB User | zubair |
 | DB Password | sql |
 | DB Name | tradifyerp_db |
@@ -213,7 +213,7 @@ Should see:
 | Issue | Fix |
 |-------|-----|
 | Command not found | Run: `pip install django` |
-| Database connection error | Check 192.168.2.59 is reachable |
+| Database connection error | Check 192.168.20.11 is reachable |
 | GL entries not showing | Make sure receipt is AUTHORIZED |
 | Gunicorn won't restart | Check permissions: `sudo -l` |
 | Form validation error | Ensure debit amount = credit amount |

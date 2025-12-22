@@ -5,7 +5,7 @@
 
 set -e  # Exit on error
 
-PROD_SERVER="192.168.2.69"
+PROD_SERVER="192.168.20.10"
 PROD_USER="zubair"
 PROD_PASSWORD="erp"
 SUDO_PASSWORD="erp"

@@ -8,7 +8,7 @@
 ## Server Infrastructure
 
 ### Application Server
-- **IP:** 192.168.2.69
+- **IP:** 192.168.20.10
 - **User:** zubair
 - **Password:** erp
 - **Root Password:** erp
@@ -20,7 +20,7 @@
   - Nginx 1.24.0
 
 ### Database Server
-- **IP:** 192.168.2.59
+- **IP:** 192.168.20.11
 - **User:** zubair
 - **Password:** sql
 - **Root Password:** sql
@@ -60,7 +60,7 @@
 ### Configuration Files
 1. **settings_production.py**
    - Django settings for PostgreSQL
-   - Remote database configuration (192.168.2.59)
+   - Remote database configuration (192.168.20.11)
    - Security settings for production
    - Email, caching, and logging configs
    - Location: BACKUPS/postgres_checkpoint_2025-11-16_09-14-23/
@@ -182,23 +182,23 @@ After deployment, verify:
 ## Access After Deployment
 
 ### Web Application
-- URL: http://192.168.2.69/
+- URL: http://192.168.20.10/
 - Domain: tradifyglobal.com (after DNS update)
-- Admin: http://192.168.2.69/admin/
+- Admin: http://192.168.20.10/admin/
 
 ### SSH Access
 ```bash
 # App server
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 
 # Database server
-ssh zubair@192.168.2.59
+ssh zubair@192.168.20.11
 ```
 
 ### Database Access
 ```bash
 # From app server or local machine
-psql -h 192.168.2.59 -U zubair -d tradify
+psql -h 192.168.20.11 -U zubair -d tradify
 ```
 
 ---
@@ -230,7 +230,7 @@ psql -h 192.168.2.59 -U zubair -d tradify
    - Redirect HTTP to HTTPS
 
 5. **Domain DNS Update (Optional):**
-   - Update DNS records to point to 192.168.2.69
+   - Update DNS records to point to 192.168.20.10
    - Allow time for DNS propagation
 
 6. **Monitoring Setup (Optional):**
@@ -250,10 +250,10 @@ psql -h 192.168.2.59 -U zubair -d tradify
 ### Common Issues
 
 **Database Connection Refused**
-- Verify PostgreSQL is running on 192.168.2.59
+- Verify PostgreSQL is running on 192.168.20.11
 - Check PostgreSQL is listening on 5432
 - Verify firewall allows port 5432
-- Test: `psql -h 192.168.2.59 -U zubair -d tradify`
+- Test: `psql -h 192.168.20.11 -U zubair -d tradify`
 
 **Gunicorn Won't Start**
 - Check virtual environment is activated
@@ -273,7 +273,7 @@ psql -h 192.168.2.59 -U zubair -d tradify
 - Check Nginx error log: `/var/log/nginx/tradifyerp_error.log`
 
 **Connection Between Servers**
-- From app server: `psql -h 192.168.2.59 -U zubair -d tradify -c "SELECT 1"`
+- From app server: `psql -h 192.168.20.11 -U zubair -d tradify -c "SELECT 1"`
 - Check firewall on DB server: `sudo ufw status`
 - Verify pg_hba.conf allows app server IP
 
@@ -340,7 +340,7 @@ If deployment fails:
 └── prod_data_complete_backup.json      # Data for import
 ```
 
-### On App Server (192.168.2.69)
+### On App Server (192.168.20.10)
 ```
 /var/www/tradifyerp/
 ├── venv/                               # Virtual environment
@@ -353,7 +353,7 @@ If deployment fails:
 └── requirements.txt
 ```
 
-### On Database Server (192.168.2.59)
+### On Database Server (192.168.20.11)
 ```
 /etc/postgresql/16/main/
 ├── postgresql.conf                     # PostgreSQL config

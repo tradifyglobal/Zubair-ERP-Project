@@ -61,7 +61,7 @@
 
 ### Database
 - **Connection**: ✅ Active
-- **Host**: 192.168.2.59
+- **Host**: 192.168.20.11
 - **Database**: tradifyerp_db
 
 ### Django

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Orchestrated deployment to new servers (192.168.2.69 + 192.168.2.59)
+Orchestrated deployment to new servers (192.168.20.10 + 192.168.20.11)
 Handles PostgreSQL setup, Django deployment, and data import
 """
 
@@ -10,8 +10,8 @@ import os
 from pathlib import Path
 
 # Configuration
-DB_SERVER = "192.168.2.59"
-APP_SERVER = "192.168.2.69"
+DB_SERVER = "192.168.20.11"
+APP_SERVER = "192.168.20.10"
 DB_USER = "zubair"
 DB_PASSWORD = "zubair@0862"
 DB_NAME = "tradify"
@@ -66,7 +66,7 @@ def scp_file(local_path, remote_host, remote_user, remote_path):
 def setup_postgres():
     """Setup PostgreSQL on DB server"""
     print("\n" + "="*60)
-    print("PHASE 1: Setting up PostgreSQL on 192.168.2.59")
+    print("PHASE 1: Setting up PostgreSQL on 192.168.20.11")
     print("="*60)
     
     commands = [
@@ -121,7 +121,7 @@ systemctl status postgresql
 def setup_django():
     """Setup Django on App server"""
     print("\n" + "="*60)
-    print("PHASE 2: Setting up Django on 192.168.2.69")
+    print("PHASE 2: Setting up Django on 192.168.20.10")
     print("="*60)
     
     # Update and install dependencies
@@ -156,7 +156,7 @@ def main():
     print("""
 ╔════════════════════════════════════════════════════════════╗
 ║  TradifyERP New Server Deployment Orchestrator            ║
-║  App: 192.168.2.69 | DB: 192.168.2.59                    ║
+║  App: 192.168.20.10 | DB: 192.168.20.11                    ║
 ╚════════════════════════════════════════════════════════════╝
     """)
     

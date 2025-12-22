@@ -7,7 +7,7 @@
 # 
 # Prerequisites:
 # - PostgreSQL client (psql) installed
-# - Access to database server 192.168.2.59
+# - Access to database server 192.168.20.11
 # - Database credentials ready
 # ============================================================================
 
@@ -15,11 +15,11 @@ set -e
 
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║       CASH ACCOUNT DIRECT SETUP VIA SQL                       ║"
-echo "║              Database: 192.168.2.59                           ║"
+echo "║              Database: 192.168.20.11                           ║"
 echo "║              Database: tradifyerp_db                          ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 
-DB_HOST="192.168.2.59"
+DB_HOST="192.168.20.11"
 DB_USER="zubair"
 DB_NAME="tradifyerp_db"
 
@@ -118,6 +118,6 @@ echo "  ✓ Stakeholder accounts ready"
 echo ""
 echo "Next steps:"
 echo "  1. Restart Django app: sudo systemctl restart gunicorn-tradifyerp"
-echo "  2. Navigate to: https://192.168.2.69/accounting/cash-receipts/create/"
+echo "  2. Navigate to: https://192.168.20.10/accounting/cash-receipts/create/"
 echo "  3. Create a test cash receipt"
 echo ""

@@ -9,7 +9,7 @@ Write-Host "══════════════════════�
 Write-Host ""
 
 # Database Configuration
-$dbHost = "192.168.2.59"
+$dbHost = "192.168.20.11"
 $dbUser = "zubair"
 $dbPass = "sql"
 $dbName = "tradifyerp_db"
@@ -152,7 +152,7 @@ Write-Host "  OK Stakeholder Accounts Ready" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "Next Steps:" -ForegroundColor Cyan
-Write-Host "  1. Access app at: https://192.168.2.69/accounting/dashboard/" -ForegroundColor Yellow
+Write-Host "  1. Access app at: https://192.168.20.10/accounting/dashboard/" -ForegroundColor Yellow
 Write-Host "  2. Navigate to: /accounting/cash-receipts/create/" -ForegroundColor Yellow
 Write-Host "  3. Create a test cash receipt" -ForegroundColor Yellow
 Write-Host "  4. Verify GL entries in General Ledger" -ForegroundColor Yellow

@@ -112,7 +112,7 @@ Logic:
 ### Issue: Capital contribution not created
 1. Check if stakeholder was selected
 2. Check stakeholder is active
-3. Check Django logs: `ssh zubair@192.168.2.69 "sudo tail -50 /var/log/gunicorn/error.log"`
+3. Check Django logs: `ssh zubair@192.168.20.10 "sudo tail -50 /var/log/gunicorn/error.log"`
 
 ### Issue: GL entries not showing
 1. Check receipt status is POSTED
@@ -191,5 +191,5 @@ GL Entries → Capital Contributions → Shareholder Reports
 ---
 
 *Last Updated: 2025-01-XX*  
-*Production System: 192.168.2.69*  
+*Production System: 192.168.20.10*  
 *Application: TradifyERP v2.0*

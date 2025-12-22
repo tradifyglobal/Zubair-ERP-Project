@@ -6,8 +6,8 @@ import subprocess
 import sys
 
 servers = [
-    {"host": "192.168.2.59", "user": "zubair", "name": "DB"},
-    {"host": "192.168.2.69", "user": "zubair", "name": "APP"},
+    {"host": "192.168.20.11", "user": "zubair", "name": "DB"},
+    {"host": "192.168.20.10", "user": "zubair", "name": "APP"},
 ]
 
 def setup_server(host, user, name):

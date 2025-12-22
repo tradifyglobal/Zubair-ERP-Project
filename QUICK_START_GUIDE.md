@@ -2,11 +2,11 @@
 
 ## 🚀 ACCESS THE REPORTS NOW
 
-**Production Server**: 192.168.2.69  
+**Production Server**: 192.168.20.10  
 **Web URLs**:
-- Report Dashboard: http://192.168.2.69:8000/accounting/shareholder-investment-report/
-- List View: http://192.168.2.69:8000/accounting/shareholder-investments/
-- Capital Status: http://192.168.2.69:8000/accounting/shareholder-capital-status/
+- Report Dashboard: http://192.168.20.10:8000/accounting/shareholder-investment-report/
+- List View: http://192.168.20.10:8000/accounting/shareholder-investments/
+- Capital Status: http://192.168.20.10:8000/accounting/shareholder-capital-status/
 
 **Login Credentials**: Use your existing TradifyERP account
 
@@ -101,7 +101,7 @@ When you create a Cash/Bank Receipt and authorize it, the system automatically:
 - ✅ Service: Gunicorn running and active
 
 ### Database Location
-- **Host**: 192.168.2.59
+- **Host**: 192.168.20.11
 - **Database**: tradifyerp_db
 - **Tables**: 
   - `accounting_shareholderinvestmentregister` (new)
@@ -110,10 +110,10 @@ When you create a Cash/Bank Receipt and authorize it, the system automatically:
 ### Service Status
 ```bash
 # Check status
-ssh zubair@192.168.2.69 "sudo systemctl status gunicorn"
+ssh zubair@192.168.20.10 "sudo systemctl status gunicorn"
 
 # Restart if needed
-ssh zubair@192.168.2.69 "sudo systemctl restart gunicorn"
+ssh zubair@192.168.20.10 "sudo systemctl restart gunicorn"
 ```
 
 ---
@@ -199,14 +199,14 @@ A: Yes! Multiple reports available:
 ## 📞 SUPPORT
 
 **Deployment Status**: ✅ Complete and Verified  
-**Production Server**: 192.168.2.69  
+**Production Server**: 192.168.20.10  
 **Service**: Gunicorn (Active)  
-**Database**: PostgreSQL (192.168.2.59)  
+**Database**: PostgreSQL (192.168.20.11)  
 **Last Updated**: December 17, 2025
 
 For assistance, check logs:
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 tail -50 /var/www/tradifyerp/gunicorn.log
 ```
 

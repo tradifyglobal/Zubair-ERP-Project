@@ -6,7 +6,7 @@
 - **Database Name**: `tradifyerp_db`
 - **User**: `tradifyerp_user`
 - **Password**: `Tradify@PostgreSQL2024`
-- **Host**: `192.168.2.59`
+- **Host**: `192.168.20.11`
 - **Port**: `5432`
 - **Django Settings**: `TradifyERP/settings.py` ✅ CONFIGURED
 
@@ -68,7 +68,7 @@ DATABASES = {
         'NAME': 'tradifyerp_db',  # ← ACTIVE DATABASE
         'USER': 'tradifyerp_user',
         'PASSWORD': 'Tradify@PostgreSQL2024',
-        'HOST': '192.168.2.59',
+        'HOST': '192.168.20.11',
         'PORT': '5432',
     }
 }
@@ -84,6 +84,6 @@ DATABASES = {
 ## Support
 
 For database-related issues, refer to:
-- Active Database: `tradifyerp_db` on `192.168.2.59`
+- Active Database: `tradifyerp_db` on `192.168.20.11`
 - Backup Database: `tradify_backup_inactive` (read-only)
 - Database User: `tradifyerp_user` with appropriate permissions

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Setup Passwordless SSH for Both Servers
-Configures public key authentication for zubair@192.168.2.69 and zubair@192.168.2.59
+Configures public key authentication for zubair@192.168.20.10 and zubair@192.168.20.11
 """
 
 import subprocess
@@ -11,8 +11,8 @@ from pathlib import Path
 SSH_KEY_PATH = Path.home() / ".ssh" / "id_rsa"
 SSH_PUB_KEY_PATH = Path.home() / ".ssh" / "id_rsa.pub"
 
-APP_SERVER = "192.168.2.69"
-DB_SERVER = "192.168.2.59"
+APP_SERVER = "192.168.20.10"
+DB_SERVER = "192.168.20.11"
 APP_USER = "zubair"
 DB_USER = "zubair"
 
@@ -119,7 +119,7 @@ def main():
     print("""
 ╔════════════════════════════════════════════════════════════╗
 ║  Setup Passwordless SSH for TradifyERP Servers            ║
-║  App: 192.168.2.69 | DB: 192.168.2.59                    ║
+║  App: 192.168.20.10 | DB: 192.168.20.11                    ║
 ╚════════════════════════════════════════════════════════════╝
     """)
     

@@ -6,8 +6,8 @@ Configure UFW firewall on DB server to allow PostgreSQL connections from app ser
 import subprocess
 import sys
 
-DB_SERVER = "192.168.2.59"
-APP_SERVER = "192.168.2.69"
+DB_SERVER = "192.168.20.11"
+APP_SERVER = "192.168.20.10"
 SSH_USER = "zubair"
 
 def run_remote_command(host, cmd):
@@ -60,8 +60,8 @@ if __name__ == "__main__":
         print("⚠️  MANUAL FIREWALL CONFIGURATION REQUIRED")
         print("=" * 70)
         print("\nTo fix this, log in to the DB server and run:")
-        print(f"  ssh {SSH_USER}@192.168.2.59")
-        print(f"  sudo ufw allow from 192.168.2.69/32 to any port 5432 proto tcp")
+        print(f"  ssh {SSH_USER}@192.168.20.11")
+        print(f"  sudo ufw allow from 192.168.20.10/32 to any port 5432 proto tcp")
         print(f"  sudo ufw status")
         print("\nThen try the migration again.")
         sys.exit(1)

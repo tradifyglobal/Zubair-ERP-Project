@@ -6,7 +6,7 @@ echo "=========================================="
 echo ""
 
 export PGPASSWORD='sql'
-DB_HOST='192.168.2.59'
+DB_HOST='192.168.20.11'
 DB_USER='zubair'
 DB_NAME='tradifyerp_db'
 

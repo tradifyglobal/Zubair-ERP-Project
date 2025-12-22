@@ -444,8 +444,8 @@ Phase 3: Trial Balance ←→ Financial Statements
 
 ## 📊 Production Environment
 
-**Server**: 192.168.2.69 (Ubuntu, Django 5.2.9, Python 3.12)  
-**Database**: 192.168.2.59 (PostgreSQL, tradifyerp_db)  
+**Server**: 192.168.20.10 (Ubuntu, Django 5.2.9, Python 3.12)  
+**Database**: 192.168.20.11 (PostgreSQL, tradifyerp_db)  
 **Process Manager**: Gunicorn  
 **Web Server**: Nginx  
 **Virtual Environment**: /var/www/tradifyerp/venv/  
@@ -660,8 +660,8 @@ Refer to: TRIAL_BALANCE_COMPLETE_GUIDE.md
 - **Phase 1 Documentation**: CASH_RECEIPT_DEPLOYMENT_REPORT.md
 - **Phase 2 Documentation**: PAYMENT_DEPLOYMENT_GUIDE.md
 - **Phase 3 Documentation**: TRIAL_BALANCE_COMPLETE_GUIDE.md
-- **Production Server**: 192.168.2.69
-- **Database Server**: 192.168.2.59
+- **Production Server**: 192.168.20.10
+- **Database Server**: 192.168.20.11
 
 ---
 

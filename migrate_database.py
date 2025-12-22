@@ -26,7 +26,7 @@ if not settings.configured:
                 'NAME': 'tradify',
                 'USER': 'zubair',
                 'PASSWORD': 'zubair@0862',
-                'HOST': '192.168.2.59',
+                'HOST': '192.168.20.11',
                 'PORT': '5432',
             }
         },

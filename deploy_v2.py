@@ -6,8 +6,8 @@ import subprocess
 import sys
 
 SERVERS = {
-    "db": {"host": "192.168.2.59", "user": "zubair", "sudo_pass": "sql", "name": "PostgreSQL-ERP"},
-    "app": {"host": "192.168.2.69", "user": "zubair", "sudo_pass": "erp", "name": "APP-ERP"},
+    "db": {"host": "192.168.20.11", "user": "zubair", "sudo_pass": "sql", "name": "PostgreSQL-ERP"},
+    "app": {"host": "192.168.20.10", "user": "zubair", "sudo_pass": "erp", "name": "APP-ERP"},
 }
 
 def run_commands(server_key, commands_list):

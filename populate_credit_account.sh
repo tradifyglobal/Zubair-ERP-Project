@@ -6,11 +6,11 @@ echo "  Cash Receipt - Auto-populate Credit Account"
 echo "=========================================="
 echo ""
 echo "Connecting to PostgreSQL database..."
-echo "Host: 192.168.2.59"
+echo "Host: 192.168.20.11"
 echo "Database: tradifyerp_db"
 echo ""
 
-PGPASSWORD="Tradify@PostgreSQL2024" psql -h 192.168.2.59 -U tradifyerp_user -d tradifyerp_db << EOF
+PGPASSWORD="Tradify@PostgreSQL2024" psql -h 192.168.20.11 -U tradifyerp_user -d tradifyerp_db << EOF
 
 -- Check current status
 SELECT 

@@ -5,7 +5,7 @@ import sys
 import os
 
 # SSH connection details
-SERVER = "192.168.2.69"
+SERVER = "192.168.20.10"
 USER = "zubair"
 DJANGO_PATH = "/var/www/tradifyerp"
 

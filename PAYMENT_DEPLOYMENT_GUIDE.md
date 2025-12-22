@@ -3,7 +3,7 @@
 **Document Version**: 1.0  
 **Date**: December 17, 2025  
 **Status**: Ready for Implementation  
-**Target Environment**: Production (192.168.2.69)
+**Target Environment**: Production (192.168.20.10)
 
 ---
 
@@ -106,7 +106,7 @@ From file: `MODELS_PAYMENT_VOUCHERS.py` (lines 1-450)
 **Verification**:
 ```bash
 # Login to production server
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 
 # Test model imports
 source /var/www/tradifyerp/venv/bin/activate
@@ -195,7 +195,7 @@ python manage.py shell
 ```bash
 # From Windows machine
 $content = Get-Content "f:\ERP-Production\Zubair-ERP-Project\VIEWS_PAYMENT_VOUCHERS.py" -Raw
-echo $content | plink -ssh -l zubair -pw erp -batch 192.168.2.69 "cat > /tmp/views_payment.py"
+echo $content | plink -ssh -l zubair -pw erp -batch 192.168.20.10 "cat > /tmp/views_payment.py"
 ```
 
 **Production**:
@@ -211,7 +211,7 @@ sudo chmod 644 /var/www/tradifyerp/accounting/views_payment.py
 **Local**:
 ```bash
 $content = Get-Content "f:\ERP-Production\Zubair-ERP-Project\SIGNALS_PAYMENT_VOUCHERS.py" -Raw
-echo $content | plink -ssh -l zubair -pw erp -batch 192.168.2.69 "cat > /tmp/signals_payment.py"
+echo $content | plink -ssh -l zubair -pw erp -batch 192.168.20.10 "cat > /tmp/signals_payment.py"
 ```
 
 **Production**:
@@ -314,7 +314,7 @@ python manage.py migrate auth
 ### Step 2: Assign Permissions to User Groups
 
 **Django Admin**:
-1. Login to http://192.168.2.69:8000/admin/
+1. Login to http://192.168.20.10:8000/admin/
 2. Go to Auth → Groups
 3. Create/Edit groups:
    - **Finance Maker**: add_cashpaymentvoucher, add_bankpaymentvoucher
@@ -413,7 +413,7 @@ print(f"View: {result.func.view_class.__name__}")  # Should print: CashPaymentLi
 
 ```bash
 # Backup database
-pg_dump -h 192.168.2.59 -U tradifyerp_user -d tradifyerp_db > backup_$(date +%Y%m%d_%H%M%S).sql
+pg_dump -h 192.168.20.11 -U tradifyerp_user -d tradifyerp_db > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Backup code
 tar -czf accounting_backup_$(date +%Y%m%d_%H%M%S).tar.gz /var/www/tradifyerp/accounting/
@@ -423,7 +423,7 @@ tar -czf accounting_backup_$(date +%Y%m%d_%H%M%S).tar.gz /var/www/tradifyerp/acc
 
 ```bash
 # SSH to production
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 
 # Activate environment
 source /var/www/tradifyerp/venv/bin/activate
@@ -487,7 +487,7 @@ python manage.py shell -c "from accounting.signals import post_cash_payment_gl_e
 
 ### Step 6: Browser Test
 
-1. Open http://192.168.2.69:8000/accounting/payment-dashboard/
+1. Open http://192.168.20.10:8000/accounting/payment-dashboard/
 2. Verify dashboard loads
 3. Click "New Cash Payment Voucher"
 4. Test form validation
@@ -537,7 +537,7 @@ python manage.py show_urls | grep shareholder
 If database needs restoration:
 ```bash
 # Restore database from backup
-psql -h 192.168.2.59 -U tradifyerp_user -d tradifyerp_db < backup_YYYYMMDD_HHMMSS.sql
+psql -h 192.168.20.11 -U tradifyerp_user -d tradifyerp_db < backup_YYYYMMDD_HHMMSS.sql
 ```
 
 ---
@@ -594,7 +594,7 @@ python manage.py check
 python manage.py show_urls | grep payment
 
 # Django admin
-http://192.168.2.69:8000/admin/auth/group/
+http://192.168.20.10:8000/admin/auth/group/
 
 # Check signals
 python manage.py shell -c "from django.core.signals import request_finished; from accounting.signals import *; print('Signals loaded')"

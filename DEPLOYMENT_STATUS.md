@@ -3,13 +3,13 @@
 ## Current Status: DEPLOYMENT READY - AWAITING DATABASE CREDENTIALS
 
 ### ✓ Completed
-1. **SSH Connectivity Verified** - Connected to database server (192.168.2.59)
+1. **SSH Connectivity Verified** - Connected to database server (192.168.20.11)
 2. **Deployment Script Ready** - deploy_now.sh copied to remote server
 3. **Account Design** - Account 100001 (Cash) configured with proper GL mapping
 4. **GL Posting Logic** - Verified existing implementation handles debit/credit posting
 
 ### ⏳ Awaiting
-- **Database Credentials** - PostgreSQL user/password for 192.168.2.59
+- **Database Credentials** - PostgreSQL user/password for 192.168.20.11
 - **Account Creation** - Deploy Cash Account 100001 once auth resolved
 - **Verification** - Confirm account exists and GL posting works
 
@@ -22,7 +22,7 @@
 
 ## Server Credentials
 
-### App Server: 192.168.2.69 (erp-prod)
+### App Server: 192.168.20.10 (erp-prod)
 ```
 SSH User: zubair
 SSH Password: erp
@@ -30,7 +30,7 @@ Sudo Password: erp
 SSH: Public key enabled ✓
 ```
 
-### DB Server: 192.168.2.59 (postgressql-erp)
+### DB Server: 192.168.20.11 (postgressql-erp)
 ```
 SSH User: zubair
 SSH Password: sql
@@ -43,7 +43,7 @@ PostgreSQL Status: RUNNING ✓
 
 ## Installation Progress
 
-### Database Server (192.168.2.59)
+### Database Server (192.168.20.11)
 - [x] System updated
 - [x] PostgreSQL 16 installed
 - [x] PostgreSQL service running
@@ -52,7 +52,7 @@ PostgreSQL Status: RUNNING ✓
 - [ ] Remote access configured
 - [ ] pg_hba.conf updated
 
-### App Server (192.168.2.69)
+### App Server (192.168.20.10)
 - [ ] System updated
 - [ ] Python 3.12 installed
 - [ ] Python venv created
@@ -72,20 +72,20 @@ PostgreSQL Status: RUNNING ✓
 1. Complete PostgreSQL setup:
    ```bash
    # Create database and user on DB server
-   ssh zubair@192.168.2.59
+   ssh zubair@192.168.20.11
    sudo -u postgres psql -c "CREATE DATABASE tradify ENCODING UTF8;"
    # etc...
    ```
 
 2. Start Django installation on app server:
    ```bash
-   ssh zubair@192.168.2.69
+   ssh zubair@192.168.20.10
    sudo apt-get install -y python3.12 python3.12-venv
    # etc...
    ```
 
 ### SHORT TERM (Next 1-2 hours)
-1. Deploy application code to 192.168.2.69
+1. Deploy application code to 192.168.20.10
 2. Run Django migrations
 3. Import production data from prod_data_complete_backup.json
 4. Configure and start Gunicorn
@@ -116,25 +116,25 @@ PostgreSQL Status: RUNNING ✓
 ### Check Server Status
 ```bash
 # App Server
-ssh zubair@192.168.2.69 'uname -a'
+ssh zubair@192.168.20.10 'uname -a'
 
 # DB Server  
-ssh zubair@192.168.2.59 'sudo systemctl status postgresql'
+ssh zubair@192.168.20.11 'sudo systemctl status postgresql'
 
 # Check PostgreSQL listening
-ssh zubair@192.168.2.59 'sudo netstat -tlnp | grep 5432'
+ssh zubair@192.168.20.11 'sudo netstat -tlnp | grep 5432'
 ```
 
 ### Troubleshooting
 ```bash
 # PostgreSQL logs
-ssh zubair@192.168.2.59 'sudo tail -50 /var/log/postgresql/postgresql-*.log'
+ssh zubair@192.168.20.11 'sudo tail -50 /var/log/postgresql/postgresql-*.log'
 
 # PostgreSQL connections
-ssh zubair@192.168.2.59 'sudo -u postgres psql -l'
+ssh zubair@192.168.20.11 'sudo -u postgres psql -l'
 
 # Django test
-ssh zubair@192.168.2.69 'cd /var/www/tradifyerp && python manage.py check'
+ssh zubair@192.168.20.10 'cd /var/www/tradifyerp && python manage.py check'
 ```
 
 ---

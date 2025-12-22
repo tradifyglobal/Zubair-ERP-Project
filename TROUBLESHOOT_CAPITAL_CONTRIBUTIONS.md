@@ -58,7 +58,7 @@ Then check Gunicorn logs to see the output.
 ## 5. Check Gunicorn Logs
 
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 sudo journalctl -u gunicorn -f  # Follow logs as they appear
 ```
 
@@ -71,7 +71,7 @@ sudo journalctl -u gunicorn -n 50  # Last 50 lines
 
 Connect to PostgreSQL and query:
 ```sql
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 psql -U tradifyerp_user -d tradifyerp_db -h localhost
 
 SELECT id, stakeholder_id, amount, currency_id, workflow_status, created_at
@@ -92,7 +92,7 @@ id | stakeholder_id | amount  | currency_id | workflow_status | created_at
 If caching is enabled, clear it:
 
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 source /var/www/tradifyerp/venv/bin/activate
 cd /var/www/tradifyerp
 python manage.py shell
@@ -106,7 +106,7 @@ cache.clear()
 If nothing else works, restart the application:
 
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 sudo systemctl restart gunicorn
 # Check status
 sudo systemctl status gunicorn

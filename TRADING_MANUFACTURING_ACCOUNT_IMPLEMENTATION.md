@@ -229,25 +229,25 @@ For the module to work properly, you need these GL accounts in your Chart of Acc
 
 ## Deployment Steps
 
-### To Production Server (192.168.2.69)
+### To Production Server (192.168.20.10)
 
 1. **Upload new files**:
 ```bash
-scp trading_manufacturing.py zubair@192.168.2.69:/var/www/tradifyerp/accounting/
-scp views_tm.py zubair@192.168.2.69:/var/www/tradifyerp/accounting/
-scp templates/accounting/trading_manufacturing_account.html zubair@192.168.2.69:/var/www/tradifyerp/templates/accounting/
+scp trading_manufacturing.py zubair@192.168.20.10:/var/www/tradifyerp/accounting/
+scp views_tm.py zubair@192.168.20.10:/var/www/tradifyerp/accounting/
+scp templates/accounting/trading_manufacturing_account.html zubair@192.168.20.10:/var/www/tradifyerp/templates/accounting/
 ```
 
 2. **Update existing files**:
 ```bash
-scp accounting/urls.py zubair@192.168.2.69:/var/www/tradifyerp/accounting/
-scp templates/partials/sidebar.html zubair@192.168.2.69:/var/www/tradifyerp/templates/partials/
-scp templates/partials/hori-sidebar.html zubair@192.168.2.69:/var/www/tradifyerp/templates/partials/
+scp accounting/urls.py zubair@192.168.20.10:/var/www/tradifyerp/accounting/
+scp templates/partials/sidebar.html zubair@192.168.20.10:/var/www/tradifyerp/templates/partials/
+scp templates/partials/hori-sidebar.html zubair@192.168.20.10:/var/www/tradifyerp/templates/partials/
 ```
 
 3. **Restart Gunicorn**:
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 sudo systemctl restart gunicorn
 ```
 

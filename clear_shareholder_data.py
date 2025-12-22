@@ -10,7 +10,7 @@ from psycopg2.extras import RealDictCursor
 
 # Production PostgreSQL connection details
 DB_CONFIG = {
-    'host': '192.168.2.59',
+    'host': '192.168.20.11',
     'database': 'tradifyerp_db',
     'user': 'tradifyerp_user',
     'password': 'Tradify@PostgreSQL2024',

@@ -4,7 +4,7 @@
 
 ### Step 1: SSH to Database Server
 ```bash
-ssh zubair@192.168.2.59
+ssh zubair@192.168.20.11
 # Password: sql
 ```
 
@@ -44,7 +44,7 @@ Should show:
 
 Your Cash Account is now configured and ready to use.
 
-Go to: https://192.168.2.69/accounting/cash-receipts/create/
+Go to: https://192.168.20.10/accounting/cash-receipts/create/
 
 Start creating cash receipts!
 

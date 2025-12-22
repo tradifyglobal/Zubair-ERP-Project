@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Load production database fixture on app server
-# This script should be run on the production app server (192.168.2.69)
+# This script should be run on the production app server (192.168.20.10)
 # It loads the prod_data_full.json into the PostgreSQL database
 #
 

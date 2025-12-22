@@ -79,7 +79,7 @@ WHERE table_name LIKE 'accounting_shareholder%';
 **Deployment Steps Required:**
 ```bash
 # Copy to production
-scp VIEWS_SHAREHOLDER_INVESTMENT_REPORTS.py zubair@192.168.2.69:/var/www/tradifyerp/accounting/views_reports.py
+scp VIEWS_SHAREHOLDER_INVESTMENT_REPORTS.py zubair@192.168.20.10:/var/www/tradifyerp/accounting/views_reports.py
 
 # Add to accounting/urls.py
 from .views_reports import (
@@ -110,7 +110,7 @@ urlpatterns += [
 **Deployment Steps Required:**
 ```bash
 # 1. Copy signals file
-scp SIGNALS_INVESTMENT_REGISTER_UPDATES.py zubair@192.168.2.69:/var/www/tradifyerp/accounting/signals_investment.py
+scp SIGNALS_INVESTMENT_REGISTER_UPDATES.py zubair@192.168.20.10:/var/www/tradifyerp/accounting/signals_investment.py
 
 # 2. Add to accounting/signals.py (append)
 cat SIGNALS_INVESTMENT_REGISTER_UPDATES.py >> accounting/signals.py
@@ -266,7 +266,7 @@ systemctl restart gunicorn
 tail -50 /var/www/tradifyerp/gunicorn.log
 
 # Test views are accessible
-curl http://192.168.2.69:8000/accounting/shareholder-investment-report/
+curl http://192.168.20.10:8000/accounting/shareholder-investment-report/
 ```
 
 ---

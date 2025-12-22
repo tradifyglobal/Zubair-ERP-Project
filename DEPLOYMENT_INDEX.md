@@ -3,7 +3,7 @@
 **Status**: ✅ **FULLY DEPLOYED TO PRODUCTION**  
 **Date**: December 17, 2025  
 **Duration**: ~13 minutes  
-**Production Server**: 192.168.2.69
+**Production Server**: 192.168.20.10
 
 ---
 
@@ -89,7 +89,7 @@
 ## 🚀 QUICK ACCESS
 
 ### For Users
-**Access Reports**: http://192.168.2.69:8000/accounting/shareholder-investment-report/  
+**Access Reports**: http://192.168.20.10:8000/accounting/shareholder-investment-report/  
 **Test Workflow**: Create CashReceiptLine → Approve → Authorize  
 **Guide**: See QUICK_START_GUIDE.md
 
@@ -248,11 +248,11 @@ Financial Reports ←────────────────── Summ
 ## 📝 CONFIGURATION
 
 ### Production Server
-**IP**: 192.168.2.69  
+**IP**: 192.168.20.10  
 **OS**: Ubuntu Linux  
 **Django Version**: 5.2.9  
 **Python Version**: 3.12  
-**Database**: PostgreSQL on 192.168.2.59
+**Database**: PostgreSQL on 192.168.20.11
 
 ### Deployment Paths
 **Code**: `/var/www/tradifyerp/`  
@@ -294,7 +294,7 @@ Financial Reports ←────────────────── Summ
 
 ### Immediate (Today)
 - [ ] Review deployment summary
-- [ ] Access reports at http://192.168.2.69:8000/accounting/shareholder-investment-report/
+- [ ] Access reports at http://192.168.20.10:8000/accounting/shareholder-investment-report/
 - [ ] Test creating a sample receipt workflow
 - [ ] Verify investment register entry is created
 

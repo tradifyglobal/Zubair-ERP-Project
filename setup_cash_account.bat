@@ -10,12 +10,12 @@ echo.
 echo ========================================
 echo CASH ACCOUNT SETUP
 echo ========================================
-echo Database: 192.168.2.59
+echo Database: 192.168.20.11
 echo User: zubair
 echo Database: tradifyerp_db
 echo.
 
-set DB_HOST=192.168.2.59
+set DB_HOST=192.168.20.11
 set DB_USER=zubair
 set DB_PASS=sql
 set DB_NAME=tradifyerp_db
@@ -47,7 +47,7 @@ echo SETUP COMPLETE
 echo ========================================
 echo.
 echo Next Steps:
-echo   1. Navigate to app: https://192.168.2.69/accounting/dashboard/
+echo   1. Navigate to app: https://192.168.20.10/accounting/dashboard/
 echo   2. Go to: /accounting/cash-receipts/create/
 echo   3. Create a test cash receipt
 echo.

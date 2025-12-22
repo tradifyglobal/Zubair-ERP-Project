@@ -204,11 +204,11 @@ Fields already exist:
 ### Verification Commands
 ```bash
 # Verify file deployed
-ssh zubair@192.168.2.69 "grep -c stakeholder /var/www/tradifyerp/accounting/cash_forms.py"
+ssh zubair@192.168.20.10 "grep -c stakeholder /var/www/tradifyerp/accounting/cash_forms.py"
 # Expected: 8
 
 # Verify gunicorn running
-ssh zubair@192.168.2.69 "ps aux | grep -i gunicorn | grep -v grep"
+ssh zubair@192.168.20.10 "ps aux | grep -i gunicorn | grep -v grep"
 # Expected: Running process
 ```
 
@@ -243,7 +243,7 @@ ssh zubair@192.168.2.69 "ps aux | grep -i gunicorn | grep -v grep"
 4. Contact development team
 
 ### Key Contacts
-- Production Server: 192.168.2.69
+- Production Server: 192.168.20.10
 - System: TradifyERP v2.0
 - Deployment: 2025-01-XX
 
@@ -347,4 +347,4 @@ Cash receipts from shareholders now automatically create capital contribution re
 
 *Generated: 2025-01-XX*  
 *System: TradifyERP v2.0 Production*  
-*Server: 192.168.2.69*
+*Server: 192.168.20.10*

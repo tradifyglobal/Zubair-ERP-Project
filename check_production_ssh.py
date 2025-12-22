@@ -3,7 +3,7 @@ import paramiko
 import sys
 
 # SSH connection details
-hostname = '192.168.2.69'
+hostname = '192.168.20.10'
 username = 'zubair'
 password = 'erp'
 

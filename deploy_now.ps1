@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
 param(
-    [string]$DBHost = "192.168.2.59",
+    [string]$DBHost = "192.168.20.11",
     [string]$DBUser = "zubair",
     [string]$DBPass = "sql",
     [string]$DBName = "tradifyerp_db"
@@ -52,7 +52,7 @@ Write-Host "  Account Type: ASSET" -ForegroundColor White
 Write-Host "  Status: ACTIVE" -ForegroundColor Green
 Write-Host ""
 Write-Host "Ready for testing:" -ForegroundColor Yellow
-Write-Host "  1. Navigate to: https://192.168.2.69/accounting/cash-receipts/create/" -ForegroundColor White
+Write-Host "  1. Navigate to: https://192.168.20.10/accounting/cash-receipts/create/" -ForegroundColor White
 Write-Host "  2. Create and authorize a cash receipt" -ForegroundColor White
 Write-Host "  3. GL entries will auto-post to:" -ForegroundColor White
 Write-Host "     - Debit: Receipt account (3100-01)" -ForegroundColor White

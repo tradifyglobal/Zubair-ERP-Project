@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Django Application Server Setup Script
-# App Server: 192.168.2.69
+# App Server: 192.168.20.10
 # Created: December 13, 2025
 
 echo "=========================================="
@@ -12,7 +12,7 @@ echo "=========================================="
 APP_USER="zubair"
 APP_DIR="/var/www/tradifyerp"
 VENV_DIR="${APP_DIR}/venv"
-DB_HOST="192.168.2.59"
+DB_HOST="192.168.20.11"
 DB_NAME="tradify"
 DB_USER="zubair"
 DB_PASSWORD="zubair@0862"
@@ -62,7 +62,7 @@ DATABASES = {
         'NAME': 'tradify',
         'USER': 'zubair',
         'PASSWORD': 'zubair@0862',
-        'HOST': '192.168.2.59',
+        'HOST': '192.168.20.11',
         'PORT': '5432',
         'ATOMIC_REQUESTS': True,
         'CONN_MAX_AGE': 600,
@@ -71,7 +71,7 @@ DATABASES = {
 
 # Security Settings
 DEBUG = False
-ALLOWED_HOSTS = ['192.168.2.69', 'tradifyglobal.com', 'www.tradifyglobal.com']
+ALLOWED_HOSTS = ['192.168.20.10', 'tradifyglobal.com', 'www.tradifyglobal.com']
 
 # SSL/HTTPS
 SECURE_SSL_REDIRECT = False  # Set to True after SSL setup

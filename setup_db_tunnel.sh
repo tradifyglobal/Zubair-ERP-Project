@@ -4,7 +4,7 @@
 
 # Create SSH tunnel in background (forward local port 5432 to remote PostgreSQL)
 echo "Creating SSH tunnel to database server..."
-ssh -L 127.0.0.1:5432:127.0.0.1:5432 zubair@192.168.2.59 -N -f
+ssh -L 127.0.0.1:5432:127.0.0.1:5432 zubair@192.168.20.11 -N -f
 
 # Wait for tunnel to establish
 sleep 2

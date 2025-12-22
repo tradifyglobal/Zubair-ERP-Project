@@ -11,21 +11,21 @@ credentials = [
     {
         'user': 'root',
         'password': 'sql',
-        'host': '192.168.2.59',
+        'host': '192.168.20.11',
         'database': 'tradifyerp_db',
         'port': '5432'
     },
     {
         'user': 'postgres',
         'password': 'sql',
-        'host': '192.168.2.59',
+        'host': '192.168.20.11',
         'database': 'tradifyerp_db',
         'port': '5432'
     },
     {
         'user': 'zubair',
         'password': 'sql',
-        'host': '192.168.2.59',
+        'host': '192.168.20.11',
         'database': 'tradifyerp_db',
         'port': '5432'
     }

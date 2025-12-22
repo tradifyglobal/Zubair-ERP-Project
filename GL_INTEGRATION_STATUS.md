@@ -1,7 +1,7 @@
 # GL Integration Testing Summary
 
 **Date**: December 19, 2025  
-**Production Server**: 192.168.2.69:8000
+**Production Server**: 192.168.20.10:8000
 
 ---
 
@@ -89,7 +89,7 @@
 Since automated script testing has field name mismatches, **use the UI** for reliable testing:
 
 ### Option 1: Test Sales (Easiest)
-1. Go to http://192.168.2.69:8000
+1. Go to http://192.168.20.10:8000
 2. Login as `admin`
 3. Navigate to: **Sales → Invoices → + New Invoice**
 4. Fill in:
@@ -101,7 +101,7 @@ Since automated script testing has field name mismatches, **use the UI** for rel
 6. Check: **Accounting → Ledger Entries** → Search for `INV-`
 
 ###Option 2: Test Maintenance (Your NEW Integration!)
-1. Go to http://192.168.2.69:8000
+1. Go to http://192.168.20.10:8000
 2. Navigate to: **Maintenance → Work Orders → + New**
 3. Fill in:
    - Asset: (select or create)
@@ -147,7 +147,7 @@ Create the missing Finished Goods account:
 After creating test transactions via UI, run this to verify:
 
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 cd /var/www/tradifyerp && source venv/bin/activate
 python manage.py shell
 ```

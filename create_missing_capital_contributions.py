@@ -10,7 +10,7 @@ import sys
 
 # Database connection
 DB_CONFIG = {
-    'host': '192.168.2.59',
+    'host': '192.168.20.11',
     'port': 5432,
     'database': 'tradifyerp_db',
     'user': 'tradifyerp_user',

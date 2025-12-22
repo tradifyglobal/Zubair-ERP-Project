@@ -8,8 +8,8 @@ with open(settings_file, 'r') as f:
 
 # Find and fix the corrupted HOST line
 for i, line in enumerate(lines):
-    if "'HOST.*192.168.2.59'" in line:
-        lines[i] = "        'HOST': '192.168.2.59',\n"
+    if "'HOST.*192.168.20.11'" in line:
+        lines[i] = "        'HOST': '192.168.20.11',\n"
         print(f"✅ Fixed line {i+1}: HOST setting")
         break
 

@@ -132,4 +132,4 @@ All import errors have been resolved. The 302 response indicates proper authoriz
 
 **Final Status**: 🎉 **PRODUCTION READY** ✅
 
-The Trial Balance system is now fully deployed and operational on 192.168.2.69.
+The Trial Balance system is now fully deployed and operational on 192.168.20.10.

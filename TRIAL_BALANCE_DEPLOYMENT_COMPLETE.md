@@ -2,7 +2,7 @@
 
 **Date**: December 17, 2025  
 **Status**: ✅ **DEPLOYMENT SUCCESSFUL** - All Critical Issues Resolved  
-**Environment**: Production (192.168.2.69)  
+**Environment**: Production (192.168.20.10)  
 **Service**: Gunicorn/Django/PostgreSQL Stack  
 
 ---
@@ -261,7 +261,7 @@ Test: GET http://localhost:8000/accounting/trial-balance/1/export/
 3. Restart service: `sudo systemctl restart gunicorn`
 
 ### If database queries fail
-1. Verify connection: `psql -h 192.168.2.59 -U tradifyerp_user -d tradifyerp_db -c "SELECT 1"`
+1. Verify connection: `psql -h 192.168.20.11 -U tradifyerp_user -d tradifyerp_db -c "SELECT 1"`
 2. Check models: `python manage.py shell`
 3. Verify credentials in settings_production.py
 
@@ -330,10 +330,10 @@ systemctl status gunicorn
 
 ## 🎉 Deployment Status: **COMPLETE**
 
-The Trial Balance system is now **production-ready** and operational on 192.168.2.69. All critical issues have been resolved and the service is running cleanly.
+The Trial Balance system is now **production-ready** and operational on 192.168.20.10. All critical issues have been resolved and the service is running cleanly.
 
 **Next Steps**:
-1. Access the dashboard: http://192.168.2.69/accounting/trial-balance-dashboard/
+1. Access the dashboard: http://192.168.20.10/accounting/trial-balance-dashboard/
 2. Test list views
 3. Test detail views
 4. Verify data displays correctly

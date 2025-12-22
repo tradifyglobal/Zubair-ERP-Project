@@ -5,7 +5,7 @@ Verify all Trading & Manufacturing files on production
 import paramiko
 
 def check_files():
-    hostname = '192.168.2.69'
+    hostname = '192.168.20.10'
     username = 'zubair'
     password = 'erp'
     

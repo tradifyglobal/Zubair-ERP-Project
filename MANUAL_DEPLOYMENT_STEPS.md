@@ -2,23 +2,23 @@
 
 ## Server Information
 
-### App Server: 192.168.2.69
+### App Server: 192.168.20.10
 - User: zubair  
 - Password: erp
 - Sudo password: erp
 
-### DB Server: 192.168.2.59
+### DB Server: 192.168.20.11
 - User: zubair
 - Password: sql  
 - Sudo password: sql
 
 ---
 
-## PHASE 1: Database Server Setup (192.168.2.59)
+## PHASE 1: Database Server Setup (192.168.20.11)
 
 ### Step 1: SSH to DB Server
 ```bash
-ssh zubair@192.168.2.59
+ssh zubair@192.168.20.11
 ```
 
 ### Step 2: Update System and Install PostgreSQL
@@ -50,7 +50,7 @@ echo sql | sudo -S sed -i "s/#listen_addresses = '\''localhost'\''/listen_addres
 
 echo sql | sudo -S bash -c "
   echo '' >> /etc/postgresql/${PG_VER}/main/pg_hba.conf
-  echo 'host    tradify    zubair    192.168.2.69/32    md5' >> /etc/postgresql/${PG_VER}/main/pg_hba.conf  
+  echo 'host    tradify    zubair    192.168.20.10/32    md5' >> /etc/postgresql/${PG_VER}/main/pg_hba.conf  
   echo 'host    all        all       192.168.2.0/24     md5' >> /etc/postgresql/${PG_VER}/main/pg_hba.conf
   systemctl restart postgresql
 "
@@ -63,11 +63,11 @@ psql -h 127.0.0.1 -U zubair -d tradify
 
 ---
 
-## PHASE 2: Application Server Setup (192.168.2.69)
+## PHASE 2: Application Server Setup (192.168.20.10)
 
 ### Step 1: SSH to App Server
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 ```
 
 ### Step 2: Update System  
@@ -124,7 +124,7 @@ python -c "import psycopg2; print('psycopg2 OK')"
 From your local machine:
 
 ```bash
-scp -r TradifyERP/ zubair@192.168.2.69:/var/www/tradifyerp/
+scp -r TradifyERP/ zubair@192.168.20.10:/var/www/tradifyerp/
 ```
 
 ---
@@ -220,17 +220,17 @@ curl -s http://127.0.0.1:8000/ | head -20
 
 2. Test Nginx:
 ```bash
-curl -s http://192.168.2.69/ | head -20
+curl -s http://192.168.20.10/ | head -20
 ```
 
 3. Test database connection:
 ```bash
-psql -h 192.168.2.59 -U zubair -d tradify -c "SELECT count(*) FROM auth_user;"
+psql -h 192.168.20.11 -U zubair -d tradify -c "SELECT count(*) FROM auth_user;"
 ```
 
 4. Access via browser:
 ```
-http://192.168.2.69/
+http://192.168.20.10/
 ```
 
 ---
@@ -261,12 +261,12 @@ tail -f /var/log/nginx/error.log
 
 ```bash
 # DB Server status
-ssh zubair@192.168.2.59 'sudo systemctl status postgresql'
+ssh zubair@192.168.20.11 'sudo systemctl status postgresql'
 
 # App Server status  
-ssh zubair@192.168.2.69 'sudo systemctl status gunicorn_tradifyerp'
-ssh zubair@192.168.2.69 'sudo systemctl status nginx'
+ssh zubair@192.168.20.10 'sudo systemctl status gunicorn_tradifyerp'
+ssh zubair@192.168.20.10 'sudo systemctl status nginx'
 
 # Test connectivity
-ssh zubair@192.168.2.69 'psql -h 192.168.2.59 -U zubair -d tradify -c "SELECT 1"'
+ssh zubair@192.168.20.10 'psql -h 192.168.20.11 -U zubair -d tradify -c "SELECT 1"'
 ```

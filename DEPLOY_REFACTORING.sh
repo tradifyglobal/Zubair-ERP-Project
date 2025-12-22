@@ -1,19 +1,19 @@
 #!/bin/bash
 # Capital Contribution Workflow Refactoring - Production Deployment Script
 # Deployment Date: $(date)
-# Target Server: 192.168.2.69
+# Target Server: 192.168.20.10
 
 set -e  # Exit on any error
 
 echo "========================================"
 echo "Capital Contribution Refactoring Deploy"
 echo "========================================"
-echo "Target: 192.168.2.69 (Production)"
+echo "Target: 192.168.20.10 (Production)"
 echo "Time: $(date)"
 echo ""
 
 # Configuration
-PROD_SERVER="192.168.2.69"
+PROD_SERVER="192.168.20.10"
 PROD_USER="zubair"
 PROD_PASSWORD="erp"
 PROD_PATH="/home/zubair/ERP-Production/Zubair-ERP-Project/TradifyERP"

@@ -91,16 +91,16 @@ Documentation (with book-open icon)
 ### 1. Upload Files to Production
 ```bash
 # From local machine
-scp TradifyERP/templates/partials/hori-sidebar.html zubair@192.168.2.69:/var/www/tradifyerp/TradifyERP/templates/partials/
-scp TradifyERP/accounting/views.py zubair@192.168.2.69:/var/www/tradifyerp/TradifyERP/accounting/
-scp TradifyERP/accounting/urls.py zubair@192.168.2.69:/var/www/tradifyerp/TradifyERP/accounting/
-scp TradifyERP/accounting/templates/accounting/user_guide.html zubair@192.168.2.69:/var/www/tradifyerp/TradifyERP/accounting/templates/accounting/
-scp TradifyERP/static/docs/user_guide.html zubair@192.168.2.69:/var/www/tradifyerp/TradifyERP/static/docs/
+scp TradifyERP/templates/partials/hori-sidebar.html zubair@192.168.20.10:/var/www/tradifyerp/TradifyERP/templates/partials/
+scp TradifyERP/accounting/views.py zubair@192.168.20.10:/var/www/tradifyerp/TradifyERP/accounting/
+scp TradifyERP/accounting/urls.py zubair@192.168.20.10:/var/www/tradifyerp/TradifyERP/accounting/
+scp TradifyERP/accounting/templates/accounting/user_guide.html zubair@192.168.20.10:/var/www/tradifyerp/TradifyERP/accounting/templates/accounting/
+scp TradifyERP/static/docs/user_guide.html zubair@192.168.20.10:/var/www/tradifyerp/TradifyERP/static/docs/
 ```
 
 ### 2. Collect Static Files
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 cd /var/www/tradifyerp
 source venv/bin/activate
 python manage.py collectstatic --noinput

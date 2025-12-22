@@ -9,7 +9,7 @@ import psycopg2
 from psycopg2 import sql
 
 DB_CONFIG = {
-    'host': '192.168.2.59',
+    'host': '192.168.20.11',
     'database': 'tradify',
     'user': 'zubair',
     'password': 'zubair@0862',

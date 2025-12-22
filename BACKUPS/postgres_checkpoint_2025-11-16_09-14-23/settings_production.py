@@ -1,6 +1,6 @@
 # PostgreSQL Production Settings for TradifyERP
-# Database Server: 192.168.2.59
-# Application Server: 192.168.2.69
+# Database Server: 192.168.20.11
+# Application Server: 192.168.20.10
 
 import os
 from pathlib import Path
@@ -14,7 +14,7 @@ DATABASES = {
         'NAME': 'tradify',
         'USER': 'zubair',
         'PASSWORD': 'zubair@0862',
-        'HOST': '192.168.2.59',  # Remote PostgreSQL server
+        'HOST': '192.168.20.11',  # Remote PostgreSQL server
         'PORT': '5432',
         'ATOMIC_REQUESTS': True,
         'CONN_MAX_AGE': 600,
@@ -30,7 +30,7 @@ DATABASES = {
 # Security Settings
 DEBUG = False
 ALLOWED_HOSTS = [
-    '192.168.2.69',
+    '192.168.20.10',
     'tradifyglobal.com',
     'www.tradifyglobal.com',
     'localhost',
@@ -155,6 +155,6 @@ KEEP_ALIVE_TIMEOUT = 5
 
 print("=" * 60)
 print("PostgreSQL Production Settings Loaded")
-print("Database Host: 192.168.2.59")
+print("Database Host: 192.168.20.11")
 print("Database Name: tradify")
 print("=" * 60)

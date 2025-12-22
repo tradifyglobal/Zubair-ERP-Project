@@ -7,7 +7,7 @@ def run_ssh(command):
     """Run SSH command and return output"""
     try:
         result = subprocess.run(
-            ['ssh', 'zubair@192.168.2.69', command],
+            ['ssh', 'zubair@192.168.20.10', command],
             capture_output=True,
             text=True,
             timeout=30
@@ -20,7 +20,7 @@ def run_scp(local, remote):
     """Run SCP command"""
     try:
         result = subprocess.run(
-            ['scp', local, f'zubair@192.168.2.69:{remote}'],
+            ['scp', local, f'zubair@192.168.20.10:{remote}'],
             capture_output=True,
             text=True,
             timeout=30

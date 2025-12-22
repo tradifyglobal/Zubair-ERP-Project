@@ -14,7 +14,7 @@ Added missing columns to PostgreSQL:
 - `accounting_bankreceiptline.is_capital_contribution_posted` (BOOLEAN)
 
 **How it was fixed:**
-- Connected to PostgreSQL server (192.168.2.59) as zubair superuser (password: `zubair@0862`)
+- Connected to PostgreSQL server (192.168.20.11) as zubair superuser (password: `zubair@0862`)
 - Executed ALTER TABLE commands to add columns
 - Verified columns exist on both tables
 
@@ -69,7 +69,7 @@ The shareholder dashboard uses:
 ### Database User Permissions
 - **App User**: `tradifyerp_user` (read-only, cannot ALTER TABLE)
 - **PostgreSQL Superuser**: `zubair` (password: `zubair@0862`)
-- **Host**: 192.168.2.59 (PostgreSQL server)
+- **Host**: 192.168.20.11 (PostgreSQL server)
 
 ### Migration Status
 - Migration 0021 created to add columns
@@ -108,7 +108,7 @@ To test capital contribution auto-posting:
 ## Credentials Reference
 
 ```
-PostgreSQL Server: 192.168.2.59
+PostgreSQL Server: 192.168.20.11
 Database: tradifyerp_db
 App User: tradifyerp_user / Tradify@PostgreSQL2024 (read-only)
 Superuser: zubair / zubair@0862 (for schema changes)

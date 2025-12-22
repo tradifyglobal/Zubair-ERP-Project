@@ -58,7 +58,7 @@
 
 ## ✅ PHASE 2: DEPLOYMENT TO PRODUCTION
 
-### Server: 192.168.2.69
+### Server: 192.168.20.10
 
 **Actions Taken**:
 - ✅ Backup created: `python manage.py dumpdata accounting.CapitalContribution > /tmp/capital_contributions_backup.json`
@@ -82,7 +82,7 @@
 
 ## ⏳ PHASE 3: DATABASE MIGRATION (PENDING)
 
-### Database: PostgreSQL at 192.168.2.59
+### Database: PostgreSQL at 192.168.20.11
 
 **Fields to Create**:
 ```sql
@@ -101,8 +101,8 @@ ALTER TABLE accounting_capitalcontribution
 **How to Apply**:
 ```bash
 # Option 1: Run SQL directly
-ssh zubair@192.168.2.69
-PGPASSWORD='sql' psql -h 192.168.2.59 -U zubair -d erp_production
+ssh zubair@192.168.20.10
+PGPASSWORD='sql' psql -h 192.168.20.11 -U zubair -d erp_production
 # Then copy-paste the SQL commands above
 
 # Option 2: Use Django migration (after fixing migration chain)
@@ -220,7 +220,7 @@ Capital ledger automatically updated
 
 **How to Restore** (if needed):
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 source /var/www/tradifyerp/venv/bin/activate
 cd /var/www/tradifyerp
 python manage.py loaddata /tmp/capital_contributions_backup.json
@@ -244,7 +244,7 @@ sudo systemctl restart gunicorn
    - Verify fields exist: `\d accounting_capitalcontribution`
 
 2. **Test in Browser**:
-   - Open: `http://192.168.2.69/shareholder/capital-contributions/`
+   - Open: `http://192.168.20.10/shareholder/capital-contributions/`
    - Create, edit, view contributions
    - Verify UI matches expected changes
 
@@ -269,25 +269,25 @@ sudo systemctl restart gunicorn
 ## 📞 SUPPORT
 
 **Server Access**:
-- Host: 192.168.2.69
+- Host: 192.168.20.10
 - User: zubair
 - Password: erp
 
 **Database Access**:
-- Host: 192.168.2.59
+- Host: 192.168.20.11
 - User: zubair
 - Password: sql
 - Database: erp_production
 
 **Application**:
-- URL: `http://192.168.2.69/`
+- URL: `http://192.168.20.10/`
 - Project: `/var/www/tradifyerp`
 - Venv: `/var/www/tradifyerp/venv`
 
 **Emergency Commands**:
 ```bash
 # Check Gunicorn status
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 sudo systemctl status gunicorn
 
 # View recent errors
@@ -297,7 +297,7 @@ sudo journalctl -u gunicorn -n 50
 sudo systemctl restart gunicorn
 
 # Check if application responds
-curl http://192.168.2.69/accounting/
+curl http://192.168.20.10/accounting/
 ```
 
 ---

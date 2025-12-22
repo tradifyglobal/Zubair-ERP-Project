@@ -2,8 +2,8 @@
 import subprocess
 import sys
 
-DB_SERVER = "192.168.2.59"
-APP_SERVER = "192.168.2.69"
+DB_SERVER = "192.168.20.11"
+APP_SERVER = "192.168.20.10"
 DB_USER = "zubair"
 APP_USER = "zubair"
 DB_PASSWORD = "zubair@0862"
@@ -23,7 +23,7 @@ def ssh_exec(host, user, commands_list):
 def main():
     print("\n" + "="*70)
     print("TradifyERP Deployment Phase 1-2")
-    print("App: 192.168.2.69 | DB: 192.168.2.59")
+    print("App: 192.168.20.10 | DB: 192.168.20.11")
     print("="*70)
     
     # Test connectivity

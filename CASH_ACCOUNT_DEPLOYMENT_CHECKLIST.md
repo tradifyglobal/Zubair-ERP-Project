@@ -2,8 +2,8 @@
 
 ## Pre-Deployment Verification
 
-- [ ] Verified App Server (192.168.2.69) is reachable via SSH
-- [ ] Verified Database Server (192.168.2.59) is reachable via SSH
+- [ ] Verified App Server (192.168.20.10) is reachable via SSH
+- [ ] Verified Database Server (192.168.20.11) is reachable via SSH
 - [ ] Django project is running and accessible
 - [ ] PostgreSQL database is running and accessible
 - [ ] All required fields exist in CashReceiptLine model
@@ -20,14 +20,14 @@
 ```bash
 # Run from local machine
 scp TradifyERP/accounting/management/commands/setup_cash_account.py \
-    zubair@192.168.2.69:/home/zubair/tradifyerp/TradifyERP/accounting/management/commands/
+    zubair@192.168.20.10:/home/zubair/tradifyerp/TradifyERP/accounting/management/commands/
 ```
 
 - [ ] File copied successfully
 
 ### Step 3: Run Setup Command on App Server
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 cd /home/zubair/tradifyerp
 source venv/bin/activate
 python manage.py setup_cash_account
@@ -43,7 +43,7 @@ Expected output:
 ### Step 4: Verify Database Setup
 ```bash
 # Connect to database server
-psql -h 192.168.2.59 -U zubair -d tradifyerp_db
+psql -h 192.168.20.11 -U zubair -d tradifyerp_db
 
 # Run verification queries
 SELECT * FROM accounting_account WHERE account_number='100001';
@@ -56,7 +56,7 @@ SELECT * FROM accounting_account WHERE account_number IN ('3000', '3100');
 
 ### Step 5: Restart Application
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 sudo systemctl restart gunicorn-tradifyerp
 ```
 
@@ -65,10 +65,10 @@ sudo systemctl restart gunicorn-tradifyerp
 ### Step 6: Test Application
 ```bash
 # Navigate to app in browser
-https://192.168.2.69/accounting/dashboard/
+https://192.168.20.10/accounting/dashboard/
 
 # Try creating a cash receipt
-https://192.168.2.69/accounting/cash-receipts/create/
+https://192.168.20.10/accounting/cash-receipts/create/
 ```
 
 - [ ] Dashboard loads without errors
@@ -158,8 +158,8 @@ If issues occur:
 
 ## Support Information
 
-- **App Server**: 192.168.2.69 (zubair / erp)
-- **DB Server**: 192.168.2.59 (zubair / sql)
+- **App Server**: 192.168.20.10 (zubair / erp)
+- **DB Server**: 192.168.20.11 (zubair / sql)
 - **Documentation**: CASH_ACCOUNT_IMPLEMENTATION_GUIDE.md
 - **Management Command**: python manage.py setup_cash_account
 

@@ -5,8 +5,8 @@ TradifyERP Deployment - Phase 1-2 (with proper TTY for sudo)
 import subprocess
 import sys
 
-DB_SERVER = "192.168.2.59"
-APP_SERVER = "192.168.2.69"
+DB_SERVER = "192.168.20.11"
+APP_SERVER = "192.168.20.10"
 DB_USER = "zubair"
 APP_USER = "zubair"
 DB_PASSWORD = "zubair@0862"
@@ -31,7 +31,7 @@ def run_ssh_cmd(host, user, cmd_list, use_tty=False):
         return False
 
 def main():
-    print("\nTradifyERP Deployment Phase 1-2\nApp: 192.168.2.69 | DB: 192.168.2.59\n")
+    print("\nTradifyERP Deployment Phase 1-2\nApp: 192.168.20.10 | DB: 192.168.20.11\n")
     
     # Test connectivity
     if not run_ssh_cmd(APP_SERVER, APP_USER, ["echo 'APP: OK'$(hostname)"]):

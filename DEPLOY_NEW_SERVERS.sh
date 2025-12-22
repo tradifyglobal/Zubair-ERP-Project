@@ -13,8 +13,8 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_SERVER="192.168.2.69"
-DB_SERVER="192.168.2.59"
+APP_SERVER="192.168.20.10"
+DB_SERVER="192.168.20.11"
 APP_USER="zubair"
 APP_DIR="/var/www/tradifyerp"
 VENV_DIR="${APP_DIR}/venv"
@@ -124,7 +124,7 @@ python3 -c "
 import psycopg2
 try:
     conn = psycopg2.connect(
-        host='192.168.2.59',
+        host='192.168.20.11',
         database='tradify',
         user='zubair',
         password='zubair@0862'
