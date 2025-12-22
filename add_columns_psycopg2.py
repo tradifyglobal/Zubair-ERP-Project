@@ -8,7 +8,7 @@ import psycopg2
 import sys
 
 # Database connection details
-DB_HOST = '192.168.2.59'
+DB_HOST = '192.168.20.11'
 DB_NAME = 'tradifyerp_db'
 DB_USER = 'tradifyerp_user'
 DB_PASSWORD = 'Tradify@PostgreSQL2024'

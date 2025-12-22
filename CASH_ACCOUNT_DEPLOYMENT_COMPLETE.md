@@ -14,7 +14,7 @@ Opening Balance: 0.00
 ```
 
 ### Deployment Details
-- **Database Server:** 192.168.2.59
+- **Database Server:** 192.168.20.11
 - **Database:** tradifyerp_db
 - **Database User:** tradifyerp_user
 - **Date/Time:** 2025-12-15 (SQL timestamp: NOW())
@@ -55,7 +55,7 @@ Cash receipt workflow already supports:
 ### Next Steps
 
 #### 1. Test Cash Receipt Workflow
-Navigate to: https://192.168.2.69/accounting/cash-receipts/create/
+Navigate to: https://192.168.20.10/accounting/cash-receipts/create/
 
 **Test Steps:**
 1. Create new cash receipt
@@ -65,7 +65,7 @@ Navigate to: https://192.168.2.69/accounting/cash-receipts/create/
 5. Check General Ledger → GL should show both debit/credit entries
 
 #### 2. Verify GL Posting
-Navigate to: https://192.168.2.69/accounting/general-ledger/
+Navigate to: https://192.168.20.10/accounting/general-ledger/
 
 **Look for:**
 - DEBIT entry to receipt account
@@ -113,4 +113,4 @@ SELECT id, debit_amount, credit_amount, workflow_status FROM accounting_cashrece
 ---
 **Deployment completed by:** Automated deployment script
 **Deployment method:** SSH + PostgreSQL direct SQL execution
-**Credentials used:** tradifyerp_user@192.168.2.59
+**Credentials used:** tradifyerp_user@192.168.20.11

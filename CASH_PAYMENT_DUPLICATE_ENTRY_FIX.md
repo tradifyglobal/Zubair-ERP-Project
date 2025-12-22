@@ -125,7 +125,7 @@ As requested:
 
 ## Deployment
 - **Date:** December 19, 2025
-- **Server:** 192.168.2.69 (Production)
+- **Server:** 192.168.20.10 (Production)
 - **Status:** ✅ Deployed and Gunicorn Restarted
 
 ## Notes for Future Enhancements

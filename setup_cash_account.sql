@@ -2,7 +2,7 @@
 -- CASH ACCOUNT & GL INTEGRATION SETUP - PRODUCTION DATABASE
 -- ============================================================================
 -- Database: tradifyerp_db
--- Host: 192.168.2.59
+-- Host: 192.168.20.11
 -- User: zubair
 -- Password: sql
 -- ============================================================================

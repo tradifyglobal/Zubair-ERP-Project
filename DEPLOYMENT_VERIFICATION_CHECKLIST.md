@@ -2,16 +2,16 @@
 
 **Date:** December 13, 2025
 **Deployment Type:** Two-Server Setup (App + Database)
-**App Server:** 192.168.2.69
-**DB Server:** 192.168.2.59
+**App Server:** 192.168.20.10
+**DB Server:** 192.168.20.11
 
 ---
 
 ## Pre-Deployment Verification
 
 ### Server Connectivity
-- [ ] App server (192.168.2.69) is online and accessible
-- [ ] Database server (192.168.2.59) is online and accessible
+- [ ] App server (192.168.20.10) is online and accessible
+- [ ] Database server (192.168.20.11) is online and accessible
 - [ ] SSH access confirmed to app server (user: zubair)
 - [ ] SSH access confirmed to DB server (user: zubair)
 

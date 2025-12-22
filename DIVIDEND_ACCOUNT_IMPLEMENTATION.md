@@ -265,14 +265,14 @@ python setup_dividend_accounts.py
 
 ### 1. Upload Files
 ```bash
-pscp -pw erp stakeholder_account_helpers.py zubair@192.168.2.69:/tmp/
-pscp -pw erp signals.py zubair@192.168.2.69:/tmp/
-pscp -pw erp setup_dividend_accounts.py zubair@192.168.2.69:/tmp/
+pscp -pw erp stakeholder_account_helpers.py zubair@192.168.20.10:/tmp/
+pscp -pw erp signals.py zubair@192.168.20.10:/tmp/
+pscp -pw erp setup_dividend_accounts.py zubair@192.168.20.10:/tmp/
 ```
 
 ### 2. Deploy to Production
 ```bash
-plink zubair@192.168.2.69 -pw erp -batch "
+plink zubair@192.168.20.10 -pw erp -batch "
 sudo cp /tmp/stakeholder_account_helpers.py /var/www/tradifyerp/accounting/
 sudo cp /tmp/signals.py /var/www/tradifyerp/accounting/
 sudo cp /tmp/setup_dividend_accounts.py /var/www/tradifyerp/
@@ -284,7 +284,7 @@ sudo systemctl restart gunicorn
 ### 3. Create Parent Drawings Account (if not exists)
 ```sql
 -- Connect to database
-psql -h 192.168.2.59 -U tradifyerp_user -d tradifyerp_db
+psql -h 192.168.20.11 -U tradifyerp_user -d tradifyerp_db
 
 -- Create parent drawings account
 INSERT INTO accounting_account (
@@ -306,7 +306,7 @@ VALUES (
 
 ### 4. Run Migration Script
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 cd /var/www/tradifyerp/TradifyERP
 python setup_dividend_accounts.py
 ```

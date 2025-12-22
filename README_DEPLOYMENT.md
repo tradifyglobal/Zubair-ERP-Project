@@ -23,8 +23,8 @@ See `MANUAL_DEPLOYMENT_GUIDE.md` for step-by-step instructions.
 
 | Server | IP | Role | User | Password |
 |--------|-----|------|------|----------|
-| Server 1 | 192.168.2.69 | Django App + Nginx | zubair | erp |
-| Server 2 | 192.168.2.59 | PostgreSQL Database | zubair | sql |
+| Server 1 | 192.168.20.10 | Django App + Nginx | zubair | erp |
+| Server 2 | 192.168.20.11 | PostgreSQL Database | zubair | sql |
 
 ---
 
@@ -57,7 +57,7 @@ See `MANUAL_DEPLOYMENT_GUIDE.md` for step-by-step instructions.
 
 ```
 ┌─────────────────────────────────────┐
-│   Application Server 192.168.2.69   │
+│   Application Server 192.168.20.10   │
 │   - Django 5.2.9                    │
 │   - Gunicorn 23.0.0                 │
 │   - Nginx 1.24.0                    │
@@ -68,7 +68,7 @@ See `MANUAL_DEPLOYMENT_GUIDE.md` for step-by-step instructions.
         PostgreSQL Connection (Port 5432)
                  │
 ┌────────────────▼────────────────────┐
-│   Database Server 192.168.2.59      │
+│   Database Server 192.168.20.11      │
 │   - PostgreSQL 16.11                │
 │   - Database: tradify               │
 │   - User: zubair                    │
@@ -85,13 +85,13 @@ See `MANUAL_DEPLOYMENT_GUIDE.md` for step-by-step instructions.
 - Verify SSH access to both servers
 - Confirm network connectivity between servers
 
-### Step 2: Database Setup (192.168.2.59)
+### Step 2: Database Setup (192.168.20.11)
 - Install PostgreSQL 16
 - Create database 'tradify' and user 'zubair'
 - Configure for remote connections
 - Test connection from app server
 
-### Step 3: Application Setup (192.168.2.69)
+### Step 3: Application Setup (192.168.20.10)
 - Install Python 3.12 and dependencies
 - Create virtual environment
 - Install Python packages
@@ -129,32 +129,32 @@ See `MANUAL_DEPLOYMENT_GUIDE.md` for step-by-step instructions.
 ## Database Details
 
 **PostgreSQL Configuration:**
-- **Host:** 192.168.2.59
+- **Host:** 192.168.20.11
 - **Port:** 5432
 - **Database:** tradify
 - **User:** zubair
 - **Password:** zubair@0862
-- **Connection from:** 192.168.2.69 (app server)
+- **Connection from:** 192.168.20.10 (app server)
 
 ---
 
 ## Access After Deployment
 
 **Web Application:**
-- URL: http://192.168.2.69/
-- Dashboard: http://192.168.2.69/accounting/dashboard/
-- Admin: http://192.168.2.69/admin/
+- URL: http://192.168.20.10/
+- Dashboard: http://192.168.20.10/accounting/dashboard/
+- Admin: http://192.168.20.10/admin/
 
 **SSH Access:**
 ```bash
 # App server
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 
 # Database server
-ssh zubair@192.168.2.59
+ssh zubair@192.168.20.11
 
 # Database connection
-psql -h 192.168.2.59 -U zubair -d tradify
+psql -h 192.168.20.11 -U zubair -d tradify
 ```
 
 ---
@@ -244,10 +244,10 @@ psql -h 192.168.2.59 -U zubair -d tradify
 **Database Backups:**
 ```bash
 # Backup script (run regularly)
-pg_dump -h 192.168.2.59 -U zubair tradify | gzip > tradify_backup_$(date +%Y%m%d_%H%M%S).sql.gz
+pg_dump -h 192.168.20.11 -U zubair tradify | gzip > tradify_backup_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # Restore from backup
-gunzip < tradify_backup_20251213_000000.sql.gz | psql -h 192.168.2.59 -U zubair tradify
+gunzip < tradify_backup_20251213_000000.sql.gz | psql -h 192.168.20.11 -U zubair tradify
 ```
 
 **Application Code:**
@@ -262,7 +262,7 @@ gunzip < tradify_backup_20251213_000000.sql.gz | psql -h 192.168.2.59 -U zubair 
 ### Database Connection Issues
 ```bash
 # Test connection from app server
-psql -h 192.168.2.59 -U zubair -d tradify
+psql -h 192.168.20.11 -U zubair -d tradify
 
 # Verify PostgreSQL is listening
 sudo netstat -tlnp | grep 5432

@@ -7,7 +7,7 @@
 - `prod_data_no_users.json` - Filtered 43,908 records (removed conflicting user)
 
 ✓ **PostgreSQL Connection verified:**
-- Host: 192.168.2.59
+- Host: 192.168.20.11
 - Database: tradify
 - Current users: 2 (admin, zubair)
 - Current entities: 1 (Main Company)
@@ -24,10 +24,10 @@
 
 ### Option 1: Simple Django Command (Recommended)
 
-**When SSH is available, run on app server (192.168.2.69):**
+**When SSH is available, run on app server (192.168.20.10):**
 
 ```bash
-ssh ubuntu@192.168.2.69
+ssh ubuntu@192.168.20.10
 
 cd /var/www/tradifyerp
 
@@ -36,7 +36,7 @@ sudo -u postgres pg_dump tradify > /tmp/tradify_backup_$(date +%s).sql
 
 # Ensure the fixture file is in the Django app directory
 # If not already there, you can copy it via SCP from your local machine:
-# scp prod_data_no_users.json ubuntu@192.168.2.69:/var/www/tradifyerp/
+# scp prod_data_no_users.json ubuntu@192.168.20.10:/var/www/tradifyerp/
 
 # Load the fixture data
 python manage.py loaddata prod_data_no_users.json --settings=TradifyERP.settings_production -v 2
@@ -58,7 +58,7 @@ EOF
 
 ```bash
 # Restore directly from SQL dump
-psql -h 192.168.2.59 -U zubair -d tradify < /path/to/backup.sql
+psql -h 192.168.20.11 -U zubair -d tradify < /path/to/backup.sql
 ```
 
 ## What Gets Loaded
@@ -81,8 +81,8 @@ psql -h 192.168.2.59 -U zubair -d tradify < /path/to/backup.sql
 ## After Loading - Next Steps
 
 1. **Verify in Dashboard:**
-   - Login: http://192.168.2.69/admin/
-   - Check Dashboard: http://192.168.2.69/accounting/dashboard/
+   - Login: http://192.168.20.10/admin/
+   - Check Dashboard: http://192.168.20.10/accounting/dashboard/
    - Check new entities in Admin > Accounting > Entities
 
 2. **Assign Users to Entities:**
@@ -120,7 +120,7 @@ psql -h 192.168.2.59 -U zubair -d tradify < /path/to/backup.sql
 
 **If Django loaddata fails:**
 - Check migrations: `python manage.py migrate --settings=TradifyERP.settings_production`
-- Check database connections: `psql -h 192.168.2.59 -U zubair -d tradify -c "SELECT 1;"`
+- Check database connections: `psql -h 192.168.20.11 -U zubair -d tradify -c "SELECT 1;"`
 - Review logs: `journalctl -xeu gunicorn.service`
 
 **If you see "transaction is aborted" errors:**
@@ -134,7 +134,7 @@ When SSH becomes available:
 ```powershell
 # From Windows local machine
 $localFile = "f:\ERP-Production\Zubair-ERP-Project\TradifyERP\prod_data_no_users.json"
-$remoteServer = "ubuntu@192.168.2.69"
+$remoteServer = "ubuntu@192.168.20.10"
 $remotePath = "/var/www/tradifyerp/"
 
 scp $localFile ${remoteServer}:${remotePath}
@@ -143,7 +143,7 @@ scp $localFile ${remoteServer}:${remotePath}
 Or if SCP doesn't work, use SFTP:
 
 ```bash
-sftp ubuntu@192.168.2.69
+sftp ubuntu@192.168.20.10
 cd /var/www/tradifyerp/
 put prod_data_no_users.json
 exit
@@ -153,22 +153,22 @@ exit
 
 ```bash
 # SSH to app server
-ssh ubuntu@192.168.2.69
+ssh ubuntu@192.168.20.10
 
 # SSH to database server
-ssh ubuntu@192.168.2.59
+ssh ubuntu@192.168.20.11
 
 # Copy file via SCP
-scp prod_data_no_users.json ubuntu@192.168.2.69:/var/www/tradifyerp/
+scp prod_data_no_users.json ubuntu@192.168.20.10:/var/www/tradifyerp/
 
 # Run command remotely
-ssh ubuntu@192.168.2.69 "python manage.py loaddata prod_data_no_users.json --settings=TradifyERP.settings_production"
+ssh ubuntu@192.168.20.10 "python manage.py loaddata prod_data_no_users.json --settings=TradifyERP.settings_production"
 ```
 
 ## Current System Status
 
-**App Server:** 192.168.2.69 (Ubuntu, Django/Gunicorn/Nginx)
-**DB Server:** 192.168.2.59 (PostgreSQL 16)
+**App Server:** 192.168.20.10 (Ubuntu, Django/Gunicorn/Nginx)
+**DB Server:** 192.168.20.11 (PostgreSQL 16)
 **Database:** tradify
 **Dashboard:** Working (returns 200 OK)
 **Login:** Working with auth

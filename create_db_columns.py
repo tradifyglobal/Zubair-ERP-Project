@@ -5,7 +5,7 @@ import sys
 try:
     # Connect to PostgreSQL
     conn = psycopg2.connect(
-        host='192.168.2.59',
+        host='192.168.20.11',
         user='zubair',
         password='sql',
         database='erp_production'

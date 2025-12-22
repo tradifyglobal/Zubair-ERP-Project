@@ -77,7 +77,7 @@
 **File**: `setup_cash_account.sql`
 
 **Purpose**: Direct database setup if needed  
-**Usage**: `psql -h 192.168.2.59 -U zubair -d tradifyerp_db -f setup_cash_account.sql`
+**Usage**: `psql -h 192.168.20.11 -U zubair -d tradifyerp_db -f setup_cash_account.sql`
 
 **Features**:
 - Creates Cash Account (100001)
@@ -106,7 +106,7 @@
 
 1. **SSH to App Server**:
    ```bash
-   ssh zubair@192.168.2.69
+   ssh zubair@192.168.20.10
    cd /home/zubair/tradifyerp
    source venv/bin/activate
    ```
@@ -123,7 +123,7 @@
 
 4. **Test in Browser**:
    ```
-   https://192.168.2.69/accounting/cash-receipts/create/
+   https://192.168.20.10/accounting/cash-receipts/create/
    ```
 
 5. **Success** ✅
@@ -187,8 +187,8 @@
 ### Server Information
 | Server | IP | User | Password |
 |--------|-----|------|----------|
-| App | 192.168.2.69 | zubair | erp |
-| Database | 192.168.2.59 | zubair | sql |
+| App | 192.168.20.10 | zubair | erp |
+| Database | 192.168.20.11 | zubair | sql |
 
 ### Key URLs
 | Action | URL |
@@ -213,7 +213,7 @@ Follow [CASH_ACCOUNT_DEPLOYMENT_CHECKLIST.md](CASH_ACCOUNT_DEPLOYMENT_CHECKLIST.
 
 ### Option 3: Command Line
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 cd /home/zubair/tradifyerp
 source venv/bin/activate
 python manage.py setup_cash_account
@@ -287,9 +287,9 @@ Before deployment, verify:
 - [ ] `setup_cash_account.py` exists in `TradifyERP/accounting/management/commands/`
 - [ ] `setup_cash_account.sql` exists in project root
 - [ ] `deploy_cash_account_setup.sh` exists and is executable
-- [ ] Servers are reachable (ping 192.168.2.69 and 192.168.2.59)
-- [ ] PostgreSQL is running on 192.168.2.59
-- [ ] Django app is running on 192.168.2.69
+- [ ] Servers are reachable (ping 192.168.20.10 and 192.168.20.11)
+- [ ] PostgreSQL is running on 192.168.20.11
+- [ ] Django app is running on 192.168.20.10
 
 ---
 

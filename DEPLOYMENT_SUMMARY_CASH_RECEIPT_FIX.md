@@ -187,10 +187,10 @@ Ending Balance:        150,000.00
 
 **Remote File Check:**
 ```bash
-$ ssh zubair@192.168.2.69 "grep -c stakeholder /var/www/tradifyerp/accounting/cash_forms.py"
+$ ssh zubair@192.168.20.10 "grep -c stakeholder /var/www/tradifyerp/accounting/cash_forms.py"
 8
 
-$ ssh zubair@192.168.2.69 "ps aux | grep -i gunicorn | grep -v grep"
+$ ssh zubair@192.168.20.10 "ps aux | grep -i gunicorn | grep -v grep"
 zubair 1978371 0.0 0.0 7340 2312 ? S 18:58 0:00 bash -c ... gunicorn ...
 ```
 
@@ -324,7 +324,7 @@ Key Logic:
 
 **Deployment Date:** 2025-01-XX  
 **System:** TradifyERP v2.0 (Production)  
-**Server:** 192.168.2.69  
+**Server:** 192.168.20.10  
 **Status:** ✅ LIVE
 
 See detailed guides for testing and troubleshooting.

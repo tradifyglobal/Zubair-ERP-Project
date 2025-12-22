@@ -10,7 +10,7 @@ DATABASES = {
         'NAME': 'tradifyerp_db',
         'USER': 'tradifyerp_user',
         'PASSWORD': 'Tradify@PostgreSQL2024',
-        'HOST': '192.168.2.59',
+        'HOST': '192.168.20.11',
         'PORT': '5432',
         'ATOMIC_REQUESTS': True,
         'CONN_MAX_AGE': 600,
@@ -19,4 +19,4 @@ DATABASES = {
 
 # Production settings
 DEBUG = True  # Temporarily enabled
-ALLOWED_HOSTS = ['tradifyglobal.com', 'www.tradifyglobal.com', '192.168.2.69', '192.168.2.59', 'localhost', '127.0.0.1', '*']
+ALLOWED_HOSTS = ['tradifyglobal.com', 'www.tradifyglobal.com', '192.168.20.10', '192.168.20.11', 'localhost', '127.0.0.1', '*']

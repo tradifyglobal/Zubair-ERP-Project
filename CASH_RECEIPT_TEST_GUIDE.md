@@ -216,14 +216,14 @@ Ending Balance:       XXXXX.00 + 5000
 1. Clear browser cache (Ctrl+Shift+Delete)
 2. Hard refresh page (Ctrl+Shift+R)
 3. Check browser console (F12) for JS errors
-4. Verify file deployed: `ssh zubair@192.168.2.69 "grep -n stakeholder /var/www/tradifyerp/accounting/cash_forms.py" | head -5`
+4. Verify file deployed: `ssh zubair@192.168.20.10 "grep -n stakeholder /var/www/tradifyerp/accounting/cash_forms.py" | head -5`
 
 ### Issue: CapitalContribution not created
 1. Verify stakeholder was selected (check receipt detail)
 2. Check stakeholder is marked "Active" in system
 3. Check Django logs:
    ```bash
-   ssh zubair@192.168.2.69 "sudo tail -50 /var/log/gunicorn/error.log"
+   ssh zubair@192.168.20.10 "sudo tail -50 /var/log/gunicorn/error.log"
    ```
 
 ### Issue: GL entries not showing

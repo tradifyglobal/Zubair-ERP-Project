@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # PostgreSQL Setup Script for TradifyERP
-# Database Server: 192.168.2.59
+# Database Server: 192.168.20.11
 # Created: December 13, 2025
 
 echo "=========================================="
@@ -67,7 +67,7 @@ echo "Updating pg_hba.conf..."
 sudo bash -c "cat >> ${PG_CONFIG}/pg_hba.conf << 'PGEOF'
 
 # Allow connection from application server
-host    tradify    zubair    192.168.2.69/32    md5
+host    tradify    zubair    192.168.20.10/32    md5
 host    all        all       192.168.2.0/24     md5
 PGEOF"
 
@@ -82,7 +82,7 @@ echo "PostgreSQL Setup Complete!"
 echo "=========================================="
 echo ""
 echo "Connection Details:"
-echo "  Host: 192.168.2.59"
+echo "  Host: 192.168.20.11"
 echo "  Port: 5432"
 echo "  Database: tradify"
 echo "  User: zubair"
@@ -92,5 +92,5 @@ echo "Test local connection:"
 echo "  sudo -u postgres psql -d tradify"
 echo ""
 echo "Test remote connection from app server:"
-echo "  psql -h 192.168.2.59 -U zubair -d tradify"
+echo "  psql -h 192.168.20.11 -U zubair -d tradify"
 echo "=========================================="

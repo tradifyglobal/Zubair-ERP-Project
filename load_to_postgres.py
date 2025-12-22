@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Load fixture directly into PostgreSQL on 192.168.2.59
+Load fixture directly into PostgreSQL on 192.168.20.11
 """
 
 import os
@@ -26,7 +26,7 @@ if not settings.configured:
                 'NAME': 'tradify',
                 'USER': 'zubair',
                 'PASSWORD': 'zubair@0862',
-                'HOST': '192.168.2.59',
+                'HOST': '192.168.20.11',
                 'PORT': '5432',
                 'CONN_MAX_AGE': 600,
             }
@@ -64,7 +64,7 @@ from django.db import connection
 fixture_file = r'f:\ERP-Production\Zubair-ERP-Project\TradifyERP\prod_data_no_users.json'
 
 print("\n" + "=" * 80)
-print("LOADING FIXTURE INTO PostgreSQL (192.168.2.59)")
+print("LOADING FIXTURE INTO PostgreSQL (192.168.20.11)")
 print("=" * 80)
 
 print(f"\n[+] Database: {settings.DATABASES['default']['NAME']}")

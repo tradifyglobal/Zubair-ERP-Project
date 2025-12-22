@@ -1,5 +1,5 @@
 # Capital Contribution Workflow Refactoring - Production Deployment Script
-# Target Server: 192.168.2.69
+# Target Server: 192.168.20.10
 # Date: December 14, 2025
 
 $ErrorActionPreference = "Stop"
@@ -7,12 +7,12 @@ $ErrorActionPreference = "Stop"
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Capital Contribution Refactoring Deploy" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Target: 192.168.2.69 (Production)" -ForegroundColor Yellow
+Write-Host "Target: 192.168.20.10 (Production)" -ForegroundColor Yellow
 Write-Host "Time: $(Get-Date)" -ForegroundColor Yellow
 Write-Host ""
 
 # Configuration
-$ProdServer = "192.168.2.69"
+$ProdServer = "192.168.20.10"
 $ProdUser = "zubair"
 $ProdPath = "/home/zubair/ERP-Production/Zubair-ERP-Project/TradifyERP"
 $LocalPath = "F:\ERP-Production\Zubair-ERP-Project\TradifyERP"
@@ -95,7 +95,7 @@ Write-Host "4. Verify capital contribution auto-created with GL entries posted" 
 Write-Host "5. Monitor logs for any errors: tail -f /var/log/gunicorn/error.log" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Troubleshooting:" -ForegroundColor Cyan
-Write-Host "SSH into server: ssh zubair@192.168.2.69" -ForegroundColor Yellow
+Write-Host "SSH into server: ssh zubair@192.168.20.10" -ForegroundColor Yellow
 Write-Host "Check Gunicorn status: sudo systemctl status gunicorn" -ForegroundColor Yellow
 Write-Host "View logs: journalctl -u gunicorn -n 50 -f" -ForegroundColor Yellow
 Write-Host ""

@@ -6,7 +6,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Application Server: 192.168.2.69                        │
+│ Application Server: 192.168.20.10                        │
 │ - Ubuntu 24.04 LTS                                      │
 │ - Django 5.2.9                                          │
 │ - Gunicorn 23.0.0                                       │
@@ -17,7 +17,7 @@
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
-│ Database Server: 192.168.2.59                           │
+│ Database Server: 192.168.20.11                           │
 │ - Ubuntu 24.04 LTS                                      │
 │ - PostgreSQL 16.11                                      │
 │ - User: zubair                                          │
@@ -29,14 +29,14 @@
 
 ## Deployment Checklist
 
-### Phase 1: Database Server Setup (192.168.2.59)
+### Phase 1: Database Server Setup (192.168.20.11)
 - [ ] Install PostgreSQL 16
 - [ ] Create database 'tradify'
 - [ ] Create database user 'zubair'
 - [ ] Configure PostgreSQL for remote connections
 - [ ] Import data from prod_data_complete_backup.json
 
-### Phase 2: Application Server Setup (192.168.2.69)
+### Phase 2: Application Server Setup (192.168.20.10)
 - [ ] Install Python 3.12
 - [ ] Install system dependencies
 - [ ] Clone/copy Django application
@@ -63,7 +63,7 @@
 
 ## Server Credentials
 
-### App Server (192.168.2.69)
+### App Server (192.168.20.10)
 ```
 User: zubair
 Password: erp
@@ -71,7 +71,7 @@ Root Password: erp
 SSH: Public key enabled
 ```
 
-### Database Server (192.168.2.59)
+### Database Server (192.168.20.11)
 ```
 User: zubair
 Password: sql
@@ -111,7 +111,7 @@ Database: tradify
 
 ### PostgreSQL Connection String
 ```
-DATABASE_HOST=192.168.2.59
+DATABASE_HOST=192.168.20.11
 DATABASE_NAME=tradify
 DATABASE_USER=zubair
 DATABASE_PASSWORD=zubair@0862

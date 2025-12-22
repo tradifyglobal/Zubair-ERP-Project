@@ -125,7 +125,7 @@ Account 1000   (Credit):   10,000.00
 2. Is the stakeholder active in the system?
 3. Check Django logs for errors:
    ```bash
-   ssh zubair@192.168.2.69 "sudo tail -100 /var/log/gunicorn/access.log"
+   ssh zubair@192.168.20.10 "sudo tail -100 /var/log/gunicorn/access.log"
    ```
 
 ### Problem: GL entries not showing

@@ -24,7 +24,7 @@ for user, password, database in attempts:
     try:
         print(f"\nTrying {user}@{database} with password '{password}'...", end=' ')
         conn = psycopg2.connect(
-            host='192.168.2.59',
+            host='192.168.20.11',
             database=database,
             user=user,
             password=password,

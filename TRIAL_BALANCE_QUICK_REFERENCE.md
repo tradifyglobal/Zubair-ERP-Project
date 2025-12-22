@@ -7,20 +7,20 @@
 ## 🚀 Quick Access
 
 ### Dashboard
-- **URL**: http://192.168.2.69/accounting/trial-balance-dashboard/
+- **URL**: http://192.168.20.10/accounting/trial-balance-dashboard/
 - **Purpose**: Overview of all trial balances
 - **Auth**: Required (Django login)
 
 ### List All Trial Balances
-- **URL**: http://192.168.2.69/accounting/trial-balance/
+- **URL**: http://192.168.20.10/accounting/trial-balance/
 - **Features**: Pagination, filtering by date range
 
 ### View Specific Trial Balance
-- **URL**: http://192.168.2.69/accounting/trial-balance/[ID]/
-- **Example**: http://192.168.2.69/accounting/trial-balance/1/
+- **URL**: http://192.168.20.10/accounting/trial-balance/[ID]/
+- **Example**: http://192.168.20.10/accounting/trial-balance/1/
 
 ### Export to CSV
-- **URL**: http://192.168.2.69/accounting/trial-balance/[ID]/export/
+- **URL**: http://192.168.20.10/accounting/trial-balance/[ID]/export/
 - **Format**: CSV file download
 
 ---
@@ -112,7 +112,7 @@ grep "TrialBalanceLine\|GLAccount" /var/www/tradifyerp/accounting/views_trial_ba
 ### Issue: Database Error
 ```bash
 # Test connection
-psql -h 192.168.2.59 -U tradifyerp_user -d tradifyerp_db -c "SELECT 1"
+psql -h 192.168.20.11 -U tradifyerp_user -d tradifyerp_db -c "SELECT 1"
 
 # Check credentials in settings_production.py
 ```
@@ -155,8 +155,8 @@ python manage.py shell
 
 ## 📊 Current Configuration
 
-- **Server**: 192.168.2.69
-- **Database**: 192.168.2.59:5432 (PostgreSQL)
+- **Server**: 192.168.20.10
+- **Database**: 192.168.20.11:5432 (PostgreSQL)
 - **App**: /var/www/tradifyerp
 - **Python**: 3.12
 - **Workers**: 2 (Gunicorn)
@@ -168,7 +168,7 @@ python manage.py shell
 ## ⚠️ Important Notes
 
 1. **Login Required**: All endpoints require Django authentication
-2. **Database**: Must be connected to 192.168.2.59
+2. **Database**: Must be connected to 192.168.20.11
 3. **Credentials**: Check TradifyERP/settings_production.py
 4. **Backups**: Old files backed up with .backup extension
 5. **Logs**: Check journalctl for detailed error messages

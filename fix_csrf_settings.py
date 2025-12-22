@@ -8,7 +8,7 @@ with open("/var/www/tradifyerp/TradifyERP/settings_production.py", "r") as f:
 content = re.sub(r"CSRF_TRUSTED_ORIGINS = .*\n", "", content)
 
 # Add the correct CSRF_TRUSTED_ORIGINS after CSRF_COOKIE_SECURE
-new_line = 'CSRF_COOKIE_SECURE = False\n\nCSRF_TRUSTED_ORIGINS = ["https://tradifyglobal.com", "https://www.tradifyglobal.com", "http://192.168.2.69", "http://localhost"]'
+new_line = 'CSRF_COOKIE_SECURE = False\n\nCSRF_TRUSTED_ORIGINS = ["https://tradifyglobal.com", "https://www.tradifyglobal.com", "http://192.168.20.10", "http://localhost"]'
 content = re.sub(r"CSRF_COOKIE_SECURE = False", new_line, content)
 
 with open("/var/www/tradifyerp/TradifyERP/settings_production.py", "w") as f:

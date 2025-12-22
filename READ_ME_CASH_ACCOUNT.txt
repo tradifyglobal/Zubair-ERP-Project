@@ -79,7 +79,7 @@ STEP 1: PICK YOUR METHOD
 └─ Full Understanding (1 hour): Follow CASH_ACCOUNT_MASTER_INDEX.md
 
 STEP 2: FOLLOW SETUP INSTRUCTIONS
-├─ SSH to database: 192.168.2.59
+├─ SSH to database: 192.168.20.11
 ├─ Run SQL query
 └─ Verify with SELECT statements
 
@@ -133,16 +133,16 @@ THEN CHOOSE ONE:
 KEY URLS:
 ═════════
 
-Dashboard:     https://192.168.2.69/accounting/dashboard/
-Cash Receipts: https://192.168.2.69/accounting/cash-receipts/
-GL:            https://192.168.2.69/accounting/general-ledger/
+Dashboard:     https://192.168.20.10/accounting/dashboard/
+Cash Receipts: https://192.168.20.10/accounting/cash-receipts/
+GL:            https://192.168.20.10/accounting/general-ledger/
 
 ═══════════════════════════════════════════════════════════════════════════════
 
 DATABASE CREDENTIALS:
 ════════════════════
 
-Host:     192.168.2.59
+Host:     192.168.20.11
 Port:     5432
 User:     zubair
 Password: sql

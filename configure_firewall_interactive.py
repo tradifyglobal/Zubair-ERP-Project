@@ -23,7 +23,7 @@ manually run a couple of commands on the DB server.
 
 STEPS:
 1. Open a new terminal/PowerShell
-2. Connect to DB server: ssh zubair@192.168.2.59
+2. Connect to DB server: ssh zubair@192.168.20.11
 3. When prompted, enter the server password
 4. Run the commands shown below
 5. Return here and continue
@@ -33,7 +33,7 @@ STEPS:
     print_header("Step 1: SSH into Database Server")
     print("""
 Command to run on your local machine:
-    ssh zubair@192.168.2.59
+    ssh zubair@192.168.20.11
 
 Password: (enter the DB server password when prompted)
 """)
@@ -62,14 +62,14 @@ Run these commands on the DB server (you may be prompted for password once):
     print("""
 Now run this command on the DB server:
 
-    sudo ufw allow from 192.168.2.69/32 to any port 5432 proto tcp
+    sudo ufw allow from 192.168.20.10/32 to any port 5432 proto tcp
 
 Then verify it was added:
 
     sudo ufw status | grep 5432
 
 The output should show:
-    5432/tcp            ALLOW       192.168.2.69
+    5432/tcp            ALLOW       192.168.20.10
 
 """)
     
@@ -85,7 +85,7 @@ Now testing database connectivity from the app server...
     
     # Test connection
     result = subprocess.run(
-        'ssh zubair@192.168.2.69 "cd /var/www/tradifyerp && ./venv/bin/python /tmp/test_db_connection.py"',
+        'ssh zubair@192.168.20.10 "cd /var/www/tradifyerp && ./venv/bin/python /tmp/test_db_connection.py"',
         shell=True,
         capture_output=True,
         text=True
@@ -114,7 +114,7 @@ You can now:
 3. Continue with the deployment process
 
 To run the migration now, use:
-    ssh zubair@192.168.2.69 "cd /var/www/tradifyerp && ./venv/bin/python manage.py migrate accounting --settings=TradifyERP.settings_production"
+    ssh zubair@192.168.20.10 "cd /var/www/tradifyerp && ./venv/bin/python manage.py migrate accounting --settings=TradifyERP.settings_production"
 """)
     else:
         print_header("Configuration Incomplete")

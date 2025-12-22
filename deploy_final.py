@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 TradifyERP Deployment - Complete Setup with Proper Credentials
-App: 192.168.2.69 (zubair/erp, sudo: erp)
-DB: 192.168.2.59 (zubair/sql, sudo: sql)
+App: 192.168.20.10 (zubair/erp, sudo: erp)
+DB: 192.168.20.11 (zubair/sql, sudo: sql)
 """
 import subprocess
 import sys
@@ -10,13 +10,13 @@ import sys
 # Server Configuration
 SERVERS = {
     "db": {
-        "host": "192.168.2.59",
+        "host": "192.168.20.11",
         "user": "zubair",
         "sudo_pass": "sql",
         "name": "PostgreSQL-ERP"
     },
     "app": {
-        "host": "192.168.2.69",
+        "host": "192.168.20.10",
         "user": "zubair",
         "sudo_pass": "erp",
         "name": "APP-ERP"
@@ -64,7 +64,7 @@ def main():
     print("""
 ========================================
 TradifyERP Deployment
-App: 192.168.2.69 | DB: 192.168.2.59
+App: 192.168.20.10 | DB: 192.168.20.11
 ========================================
     """)
     
@@ -80,7 +80,7 @@ App: 192.168.2.69 | DB: 192.168.2.59
     
     # Phase 1: PostgreSQL Setup
     print("\n" + "="*70)
-    print("PHASE 1: PostgreSQL Setup (192.168.2.59)")
+    print("PHASE 1: PostgreSQL Setup (192.168.20.11)")
     print("="*70)
     
     pg_commands = [
@@ -110,7 +110,7 @@ App: 192.168.2.69 | DB: 192.168.2.59
         "sudo sed -i \"s/#listen_addresses = 'localhost'/listen_addresses = '*'/g\" /etc/postgresql/${PG_VER}/main/postgresql.conf",
         
         "echo '>>> Adding network access for app server'",
-        "sudo bash -c \"echo 'host    tradify    zubair    192.168.2.69/32    md5' >> /etc/postgresql/${PG_VER}/main/pg_hba.conf\"",
+        "sudo bash -c \"echo 'host    tradify    zubair    192.168.20.10/32    md5' >> /etc/postgresql/${PG_VER}/main/pg_hba.conf\"",
         "sudo bash -c \"echo 'host    all        all       192.168.2.0/24     md5' >> /etc/postgresql/${PG_VER}/main/pg_hba.conf\"",
         
         "echo '>>> Restarting PostgreSQL'",
@@ -129,7 +129,7 @@ App: 192.168.2.69 | DB: 192.168.2.59
     
     # Phase 2: Django Setup
     print("\n" + "="*70)
-    print("PHASE 2: Django Setup (192.168.2.69)")
+    print("PHASE 2: Django Setup (192.168.20.10)")
     print("="*70)
     
     django_commands = [

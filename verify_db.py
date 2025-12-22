@@ -3,7 +3,7 @@ import psycopg2
 
 try:
     conn = psycopg2.connect(
-        host='192.168.2.59',
+        host='192.168.20.11',
         user='tradifyerp_user',
         password='Tradify@PostgreSQL2024',
         database='tradifyerp_db'

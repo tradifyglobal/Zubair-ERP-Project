@@ -300,7 +300,7 @@ Expenses increase / Liabilities decrease
 
 ### For Finance Users
 1. Read QUICK_START_GUIDE.md
-2. Access http://192.168.2.69:8000/accounting/shareholder-investment-report/
+2. Access http://192.168.20.10:8000/accounting/shareholder-investment-report/
 3. Create sample receipt (already deployed)
 4. Follow workflow (DRAFT → APPROVED → AUTHORIZED)
 5. Check GL posting in accounts
@@ -356,9 +356,9 @@ Expenses increase / Liabilities decrease
 📖 **ERP_PAYMENT_WORKFLOWS_COMPLETE.md** - Full specification  
 
 ### General Support
-- Production Server: 192.168.2.69
-- Database Server: 192.168.2.59
-- Django Admin: http://192.168.2.69:8000/admin/
+- Production Server: 192.168.20.10
+- Database Server: 192.168.20.11
+- Django Admin: http://192.168.20.10:8000/admin/
 - Logs: `/var/www/tradifyerp/gunicorn.log`
 
 ---

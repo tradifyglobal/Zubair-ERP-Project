@@ -5,8 +5,8 @@
 # This script deploys the Cash Account setup to production
 # 
 # Prerequisites:
-# - SSH access to 192.168.2.69 (app server)
-# - SSH access to 192.168.2.59 (database server)
+# - SSH access to 192.168.20.10 (app server)
+# - SSH access to 192.168.20.11 (database server)
 # - Credentials in place
 #
 # Usage: bash deploy_cash_account_setup.sh
@@ -15,8 +15,8 @@
 set -e  # Exit on error
 
 # Configuration
-APP_SERVER="192.168.2.69"
-DB_SERVER="192.168.2.59"
+APP_SERVER="192.168.20.10"
+DB_SERVER="192.168.20.11"
 APP_USER="zubair"
 DB_USER="zubair"
 DB_NAME="tradifyerp_db"

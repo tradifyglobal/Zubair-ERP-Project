@@ -1,12 +1,12 @@
 # TradifyERP Manual Deployment Guide
-# Two-Server Setup: App (192.168.2.69) + Database (192.168.2.59)
+# Two-Server Setup: App (192.168.20.10) + Database (192.168.20.11)
 # December 13, 2025
 
 ## Overview
 
 ```
 ┌──────────────────────────────────┐
-│   App Server 192.168.2.69        │
+│   App Server 192.168.20.10        │
 │   - Django + Gunicorn + Nginx    │
 │   - User: zubair                 │
 │   - Root Password: erp           │
@@ -14,19 +14,19 @@
            │ PostgreSQL Connection
            │
 ┌──────────▼───────────────────────┐
-│   DB Server 192.168.2.59         │
+│   DB Server 192.168.20.11         │
 │   - PostgreSQL 16                │
 │   - User: zubair                 │
 │   - Root Password: sql           │
 └──────────────────────────────────┘
 ```
 
-## Phase 1: Database Server Setup (192.168.2.59)
+## Phase 1: Database Server Setup (192.168.20.11)
 
 ### Step 1.1: Connect to Database Server
 
 ```bash
-ssh zubair@192.168.2.59
+ssh zubair@192.168.20.11
 # Password: sql
 ```
 
@@ -82,7 +82,7 @@ listen_addresses = '*'
 sudo nano /etc/postgresql/16/main/pg_hba.conf
 
 # Add at the end:
-host    tradify    zubair    192.168.2.69/32    md5
+host    tradify    zubair    192.168.20.10/32    md5
 host    all        all       192.168.2.0/24     md5
 
 # Save and exit
@@ -103,12 +103,12 @@ psql -U zubair -d tradify -c "SELECT version();"
 
 ---
 
-## Phase 2: Application Server Setup (192.168.2.69)
+## Phase 2: Application Server Setup (192.168.20.10)
 
 ### Step 2.1: Connect to Application Server
 
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 # Password: erp
 ```
 
@@ -163,7 +163,7 @@ pip install pillow
 On your local machine:
 ```bash
 # Copy TradifyERP directory to server
-scp -r f:\ERP-Production\Zubair-ERP-Project\TradifyERP\* zubair@192.168.2.69:/var/www/tradifyerp/
+scp -r f:\ERP-Production\Zubair-ERP-Project\TradifyERP\* zubair@192.168.20.10:/var/www/tradifyerp/
 ```
 
 Or on the server:
@@ -186,12 +186,12 @@ DATABASES = {
         'NAME': 'tradify',
         'USER': 'zubair',
         'PASSWORD': 'zubair@0862',
-        'HOST': '192.168.2.59',
+        'HOST': '192.168.20.11',
         'PORT': '5432',
     }
 }
 
-ALLOWED_HOSTS = ['192.168.2.69', 'tradifyglobal.com', 'www.tradifyglobal.com']
+ALLOWED_HOSTS = ['192.168.20.10', 'tradifyglobal.com', 'www.tradifyglobal.com']
 DEBUG = False
 ```
 
@@ -315,7 +315,7 @@ source /var/www/tradifyerp/venv/bin/activate
 python3 -c "
 import psycopg2
 conn = psycopg2.connect(
-    host='192.168.2.59',
+    host='192.168.20.11',
     database='tradify',
     user='zubair',
     password='zubair@0862'
@@ -330,10 +330,10 @@ conn.close()
 ```bash
 curl http://localhost/
 # or
-curl http://192.168.2.69/
+curl http://192.168.20.10/
 ```
 
-Visit: `http://192.168.2.69/` in your browser
+Visit: `http://192.168.20.10/` in your browser
 
 **✓ Services running and tested**
 
@@ -346,7 +346,7 @@ Visit: `http://192.168.2.69/` in your browser
 ```bash
 # From local machine
 scp f:\ERP-Production\Zubair-ERP-Project\TradifyERP\prod_data_complete_backup.json \
-    zubair@192.168.2.69:/var/www/tradifyerp/
+    zubair@192.168.20.10:/var/www/tradifyerp/
 ```
 
 ### Step 4.2: Load Data into Database
@@ -366,20 +366,20 @@ python manage.py loaddata prod_data_complete_backup.json
 ## Phase 5: Verification
 
 ### Verify Dashboard
-- Visit: `http://192.168.2.69/accounting/dashboard/`
+- Visit: `http://192.168.20.10/accounting/dashboard/`
 - Check for Minia theme with light green colors
 - Verify Tradify logo is displayed
 
 ### Verify Modules
-- Accounting: `http://192.168.2.69/accounting/`
-- Sales: `http://192.168.2.69/sales/`
-- CRM: `http://192.168.2.69/crm/`
-- HR: `http://192.168.2.69/hr/`
-- Inventory: `http://192.168.2.69/inventory/`
+- Accounting: `http://192.168.20.10/accounting/`
+- Sales: `http://192.168.20.10/sales/`
+- CRM: `http://192.168.20.10/crm/`
+- HR: `http://192.168.20.10/hr/`
+- Inventory: `http://192.168.20.10/inventory/`
 
 ### Check Database
 ```bash
-psql -h 192.168.2.59 -U zubair -d tradify -c "SELECT COUNT(*) FROM accounting_account;"
+psql -h 192.168.20.11 -U zubair -d tradify -c "SELECT COUNT(*) FROM accounting_account;"
 ```
 
 ---
@@ -413,7 +413,7 @@ sudo nano /usr/local/bin/backup_tradify_db.sh
 #!/bin/bash
 BACKUP_DIR="/backups/tradify"
 mkdir -p $BACKUP_DIR
-pg_dump -h 192.168.2.59 -U zubair tradify | gzip > $BACKUP_DIR/tradify_$(date +%Y%m%d_%H%M%S).sql.gz
+pg_dump -h 192.168.20.11 -U zubair tradify | gzip > $BACKUP_DIR/tradify_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # Make executable
 sudo chmod +x /usr/local/bin/backup_tradify_db.sh
@@ -430,13 +430,13 @@ sudo crontab -e
 ### Database Connection Issues
 ```bash
 # Test from app server
-psql -h 192.168.2.59 -U zubair -d tradify
+psql -h 192.168.20.11 -U zubair -d tradify
 
 # Check PostgreSQL is listening
-ssh zubair@192.168.2.59 "sudo netstat -tlnp | grep 5432"
+ssh zubair@192.168.20.11 "sudo netstat -tlnp | grep 5432"
 
 # Check firewall rules
-ssh zubair@192.168.2.59 "sudo ufw status"
+ssh zubair@192.168.20.11 "sudo ufw status"
 ```
 
 ### Gunicorn Issues

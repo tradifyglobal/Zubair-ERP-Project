@@ -1,7 +1,7 @@
 # UI Testing Guide - GL Integration Verification
 
 **Date**: December 19, 2025  
-**Server**: http://192.168.2.69:8000  
+**Server**: http://192.168.20.10:8000  
 **Purpose**: Test all module GL integrations via UI
 
 ---
@@ -9,7 +9,7 @@
 ## Prerequisites
 
 1. **Login to TradifyERP**
-   - URL: http://192.168.2.69:8000
+   - URL: http://192.168.20.10:8000
    - Username: `admin` (or your admin user)
    - Password: Your admin password
 
@@ -25,7 +25,7 @@
 ### Step 1: Create a Customer (if needed)
 
 1. Navigate to: **Sales → Customers**
-   - URL: http://192.168.2.69:8000/sales/customers/
+   - URL: http://192.168.20.10:8000/sales/customers/
 
 2. Click **"+ Add Customer"** or **"New Customer"**
 
@@ -45,7 +45,7 @@
 ### Step 2: Create a Sales Order
 
 1. Navigate to: **Sales → Sales Orders**
-   - URL: http://192.168.2.69:8000/sales/sales-orders/
+   - URL: http://192.168.20.10:8000/sales/sales-orders/
 
 2. Click **"+ New Sales Order"**
 
@@ -70,10 +70,10 @@
 ### Step 3: Create Invoice from Sales Order
 
 1. Navigate to: **Sales → Invoices**
-   - URL: http://192.168.2.69:8000/sales/invoices/
+   - URL: http://192.168.20.10:8000/sales/invoices/
 
 2. Click **"+ New Invoice"**
-   - URL: http://192.168.2.69:8000/sales/invoices/new/
+   - URL: http://192.168.20.10:8000/sales/invoices/new/
 
 3. Fill in the form:
    ```
@@ -92,7 +92,7 @@
 ### Step 4: Verify GL Entries Created
 
 1. Navigate to: **Accounting → Ledger Entries**
-   - URL: http://192.168.2.69:8000/accounting/ledger-entries/
+   - URL: http://192.168.20.10:8000/accounting/ledger-entries/
 
 2. Search for: `INV-TEST-001`
 
@@ -110,7 +110,7 @@
 ### Step 1: Verify Products Exist
 
 1. Navigate to: **Manufacturing → Products**
-   - URL: http://192.168.2.69:8000/manufacturing/products/
+   - URL: http://192.168.20.10:8000/manufacturing/products/
 
 2. If no products exist, create one:
    ```
@@ -126,10 +126,10 @@
 ### Step 2: Create Production Order
 
 1. Navigate to: **Manufacturing → Production Orders**
-   - URL: http://192.168.2.69:8000/manufacturing/production-orders/
+   - URL: http://192.168.20.10:8000/manufacturing/production-orders/
 
 2. Click **"+ New Production Order"**
-   - URL: http://192.168.2.69:8000/manufacturing/production-orders/new/
+   - URL: http://192.168.20.10:8000/manufacturing/production-orders/new/
 
 3. Fill in the form:
    ```
@@ -177,7 +177,7 @@
 ### Step 1: Create Asset (if needed)
 
 1. Navigate to: **Maintenance → Assets**
-   - URL: http://192.168.2.69:8000/maintenance/assets/
+   - URL: http://192.168.20.10:8000/maintenance/assets/
 
 2. Click **"+ Add Asset"**
 
@@ -196,7 +196,7 @@
 ### Step 2: Create Maintenance Task (if needed)
 
 1. Navigate to: **Maintenance → Tasks**
-   - URL: http://192.168.2.69:8000/maintenance/tasks/
+   - URL: http://192.168.20.10:8000/maintenance/tasks/
 
 2. Click **"+ Add Task"**
 
@@ -214,10 +214,10 @@
 ### Step 3: Create Work Order
 
 1. Navigate to: **Maintenance → Work Orders**
-   - URL: http://192.168.2.69:8000/maintenance/work-orders/
+   - URL: http://192.168.20.10:8000/maintenance/work-orders/
 
 2. Click **"+ New Work Order"**
-   - URL: http://192.168.2.69:8000/maintenance/work-orders/new/
+   - URL: http://192.168.20.10:8000/maintenance/work-orders/new/
 
 3. Fill in the form:
    ```
@@ -276,7 +276,7 @@
 ### Step 2: Create Purchase Order
 
 1. Navigate to: **Procurement → Purchase Orders**
-   - URL: http://192.168.2.69:8000/procurement/purchase-orders/
+   - URL: http://192.168.20.10:8000/procurement/purchase-orders/
 
 2. Create PO with vendor, items, and status APPROVED
 
@@ -367,7 +367,7 @@ After creating test transactions, run this to check all GL entries:
 
 ```python
 # Via SSH to server
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 
 cd /var/www/tradifyerp
 source venv/bin/activate

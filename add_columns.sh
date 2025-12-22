@@ -5,7 +5,7 @@ export PGPASSWORD='Tradify@PostgreSQL2024'
 
 echo "Adding columns to cashreceiptline and bankreceiptline..."
 
-psql -h 192.168.2.59 -U tradifyerp_user -d tradifyerp_db <<'EOF'
+psql -h 192.168.20.11 -U tradifyerp_user -d tradifyerp_db <<'EOF'
 ALTER TABLE accounting_cashreceiptline
 ADD COLUMN IF NOT EXISTS is_capital_contribution_posted BOOLEAN DEFAULT FALSE;
 

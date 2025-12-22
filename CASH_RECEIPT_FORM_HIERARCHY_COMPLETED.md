@@ -67,7 +67,7 @@ Status: ✅ Already exists and working
 - User can select the saved sub-account
 
 ## URL
-https://192.168.2.69/accounting/cash-receipts/create/
+https://192.168.20.10/accounting/cash-receipts/create/
 
 Both **Debit Account** and **Credit Account** sections now have this two-level dropdown behavior.
 

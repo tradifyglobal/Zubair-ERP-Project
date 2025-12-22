@@ -47,7 +47,7 @@ def deploy_to_production():
         print(f"   Remote: {file_info['remote']}")
         
         # Copy file to production
-        cmd = f'scp "{file_info["local"]}" zubair@192.168.2.69:/tmp/deploy_{os.path.basename(file_info["remote"])}'
+        cmd = f'scp "{file_info["local"]}" zubair@192.168.20.10:/tmp/deploy_{os.path.basename(file_info["remote"])}'
         result = run_command(cmd, f"Uploading {os.path.basename(file_info['remote'])}")
         
         if result.returncode != 0:
@@ -56,7 +56,7 @@ def deploy_to_production():
         
         # Move to correct location on remote
         remote_cmd = f"sudo mv /tmp/deploy_{os.path.basename(file_info['remote'])} {file_info['remote']} && sudo chown www-data:www-data {file_info['remote']}"
-        cmd = f'ssh zubair@192.168.2.69 "{remote_cmd}"'
+        cmd = f'ssh zubair@192.168.20.10 "{remote_cmd}"'
         result = run_command(cmd, f"Moving {os.path.basename(file_info['remote'])} to production location")
         
         if result.returncode != 0:
@@ -67,7 +67,7 @@ def deploy_to_production():
     
     # Restart Django
     print("\n🔄 Restarting Django application...")
-    cmd = 'ssh zubair@192.168.2.69 "sudo systemctl restart gunicorn"'
+    cmd = 'ssh zubair@192.168.20.10 "sudo systemctl restart gunicorn"'
     result = run_command(cmd, "Restarting gunicorn")
     
     if result.returncode != 0:
@@ -78,7 +78,7 @@ def deploy_to_production():
     
     # Clear cache
     print("\n🧹 Clearing Django cache...")
-    cmd = 'ssh zubair@192.168.2.69 "cd /var/www/tradifyerp && python manage.py shell -c \\"from django.core.cache import cache; cache.clear()\\""'
+    cmd = 'ssh zubair@192.168.20.10 "cd /var/www/tradifyerp && python manage.py shell -c \\"from django.core.cache import cache; cache.clear()\\""'
     run_command(cmd, "Clearing cache (non-critical)")
     
     print("\n" + "="*60)

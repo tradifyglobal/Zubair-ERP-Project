@@ -8,7 +8,7 @@ sudo cp /var/www/tradifyerp/tradifyerp/settings.py /var/www/tradifyerp/tradifyer
 sudo sed -i 's/DEBUG = False/DEBUG = True/g' /var/www/tradifyerp/tradifyerp/settings.py
 
 # Also ensure ALLOWED_HOSTS includes the domain
-sudo sed -i "s/ALLOWED_HOSTS = \[/ALLOWED_HOSTS = ['tradifyglobal.com', '192.168.2.69', /g" /var/www/tradifyerp/tradifyerp/settings.py
+sudo sed -i "s/ALLOWED_HOSTS = \[/ALLOWED_HOSTS = ['tradifyglobal.com', '192.168.20.10', /g" /var/www/tradifyerp/tradifyerp/settings.py
 
 # Restart Gunicorn
 sudo systemctl restart gunicorn

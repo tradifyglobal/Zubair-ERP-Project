@@ -4,7 +4,7 @@
 
 ### Step 1: SSH to Database Server
 ```bash
-ssh zubair@192.168.2.59
+ssh zubair@192.168.20.11
 ```
 Password: `sql`
 
@@ -63,7 +63,7 @@ SELECT account_number, name, account_type FROM accounting_account WHERE account_
 ## Option 2: Via pgAdmin (Web Interface)
 
 ### Step 1: Open pgAdmin
-Navigate to: http://192.168.2.59:5050/ (or your pgAdmin URL)
+Navigate to: http://192.168.20.11:5050/ (or your pgAdmin URL)
 
 ### Step 2: Connect to Database
 - Server: tradifyerp_db
@@ -82,7 +82,7 @@ Click "Execute"
 ## Option 3: Via DBeaver (Desktop Tool)
 
 ### Step 1: Create Connection
-- Host: 192.168.2.59
+- Host: 192.168.20.11
 - Port: 5432
 - Database: tradifyerp_db
 - User: zubair
@@ -134,7 +134,7 @@ Once the Cash Account is created in database:
 
 ### 1. Test the Application
 
-Navigate to: `https://192.168.2.69/accounting/cash-receipts/create/`
+Navigate to: `https://192.168.20.10/accounting/cash-receipts/create/`
 
 You should see a form with:
 - Date field
@@ -172,7 +172,7 @@ System will create GL entries:
 
 ### 5. Verify GL Entries
 
-Navigate to: `https://192.168.2.69/accounting/general-ledger/`
+Navigate to: `https://192.168.20.10/accounting/general-ledger/`
 
 Filter by: `CASH-RECEIPT-`
 
@@ -212,7 +212,7 @@ You should see both entries:
 
 ## 📋 Checklist
 
-- [ ] SSH to database server (192.168.2.59)
+- [ ] SSH to database server (192.168.20.11)
 - [ ] Connect to PostgreSQL
 - [ ] Run the INSERT query from Option 1, Step 3
 - [ ] Verify Cash Account exists with SELECT queries
@@ -228,7 +228,7 @@ You should see both entries:
 
 **Database Connection:**
 ```
-Host: 192.168.2.59
+Host: 192.168.20.11
 Port: 5432
 User: zubair
 Password: sql
@@ -236,9 +236,9 @@ Database: tradifyerp_db
 ```
 
 **Application URLs:**
-- Dashboard: https://192.168.2.69/accounting/dashboard/
-- Cash Receipts: https://192.168.2.69/accounting/cash-receipts/
-- General Ledger: https://192.168.2.69/accounting/general-ledger/
+- Dashboard: https://192.168.20.10/accounting/dashboard/
+- Cash Receipts: https://192.168.20.10/accounting/cash-receipts/
+- General Ledger: https://192.168.20.10/accounting/general-ledger/
 
 ---
 

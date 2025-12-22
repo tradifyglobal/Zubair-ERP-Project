@@ -4,7 +4,7 @@
 
 ### Step 1: Login
 ```
-URL: http://192.168.2.69:8000
+URL: http://192.168.20.10:8000
 User: admin
 Password: [your password]
 ```
@@ -50,7 +50,7 @@ If you see those 2 GL entries → **Maintenance integration is WORKING! 🎉**
 ## 🔍 Quick Verification via SSH
 
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 cd /var/www/tradifyerp && source venv/bin/activate
 python manage.py shell
 ```

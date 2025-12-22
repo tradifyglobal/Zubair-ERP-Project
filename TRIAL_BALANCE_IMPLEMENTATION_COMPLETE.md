@@ -248,7 +248,7 @@ Copy content from `MODELS_TRIAL_BALANCE.py` to:
 
 ### Step 2: Create Migration
 ```bash
-ssh ubuntu@192.168.2.69
+ssh ubuntu@192.168.20.10
 cd /var/www/tradifyerp
 source venv/bin/activate
 python manage.py makemigrations accounting
@@ -524,7 +524,7 @@ tail -f /var/www/tradifyerp/gunicorn.log
 
 ## ✨ System Ready for Production
 
-All components complete and tested. Ready for immediate deployment to production server (192.168.2.69).
+All components complete and tested. Ready for immediate deployment to production server (192.168.20.10).
 
 **Questions?** Refer to TRIAL_BALANCE_COMPLETE_GUIDE.md for detailed documentation.
 

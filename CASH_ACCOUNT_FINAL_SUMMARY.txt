@@ -56,7 +56,7 @@ WHAT TO DO NOW
 1. Read: CASH_ACCOUNT_SETUP_SIMPLE.md
 
 2. SSH to database server:
-   ssh zubair@192.168.2.59
+   ssh zubair@192.168.20.11
    Password: sql
 
 3. Connect to PostgreSQL:
@@ -65,7 +65,7 @@ WHAT TO DO NOW
 4. Copy-paste the SQL from CASH_ACCOUNT_SETUP_SIMPLE.md
 
 5. Done! Test in browser at:
-   https://192.168.2.69/accounting/cash-receipts/create/
+   https://192.168.20.10/accounting/cash-receipts/create/
 
 ─────────────────────────────────────────────────────────────────────────────
 COMPLETE WORKFLOW
@@ -105,22 +105,22 @@ KEY CREDENTIALS
 ─────────────────────────────────────────────────────────────────────────────
 
 APP SERVER
-  Host: 192.168.2.69
+  Host: 192.168.20.10
   User: zubair
   Password: erp
   Path: /home/zubair/tradifyerp
 
 DATABASE SERVER
-  Host: 192.168.2.59
+  Host: 192.168.20.11
   User: zubair
   Password: sql
   Database: tradifyerp_db
   Port: 5432
 
 APP URLS
-  Dashboard: https://192.168.2.69/accounting/dashboard/
-  Cash Receipts: https://192.168.2.69/accounting/cash-receipts/
-  General Ledger: https://192.168.2.69/accounting/general-ledger/
+  Dashboard: https://192.168.20.10/accounting/dashboard/
+  Cash Receipts: https://192.168.20.10/accounting/cash-receipts/
+  General Ledger: https://192.168.20.10/accounting/general-ledger/
 
 ─────────────────────────────────────────────────────────────────────────────
 ACCOUNTS CONFIGURED

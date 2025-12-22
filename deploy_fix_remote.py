@@ -21,7 +21,7 @@ for cmd, desc in commands:
     
     try:
         result = subprocess.run(
-            f'plink -ssh -batch -l zubair -pw erp 192.168.2.69 "{full_cmd}"',
+            f'plink -ssh -batch -l zubair -pw erp 192.168.20.10 "{full_cmd}"',
             shell=True,
             capture_output=True,
             text=True,

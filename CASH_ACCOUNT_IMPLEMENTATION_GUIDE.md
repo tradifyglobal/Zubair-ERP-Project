@@ -87,7 +87,7 @@ WHERE account_number='3100';
 
 ### For End User (Cash Receipt Creation)
 
-1. **Navigate to**: `https://192.168.2.69/accounting/cash-receipts/create/`
+1. **Navigate to**: `https://192.168.20.10/accounting/cash-receipts/create/`
 
 2. **Form Fields**:
    ```
@@ -191,7 +191,7 @@ ORDER BY entry_date DESC LIMIT 20;
 
 ```bash
 # SSH into app server
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 
 # Navigate to project
 cd /home/zubair/tradifyerp
@@ -249,7 +249,7 @@ sudo systemctl restart gunicorn-tradifyerp
 
 ### Step 3: Verify in Web Browser
 
-1. Navigate to: `https://192.168.2.69/accounting/cash-receipts/create/`
+1. Navigate to: `https://192.168.20.10/accounting/cash-receipts/create/`
 2. Form should load successfully
 3. Try creating a test cash receipt
 4. Verify GL entries appear in General Ledger
@@ -311,15 +311,15 @@ sudo systemctl restart gunicorn-tradifyerp
 
 ## 📞 CONTACT & SUPPORT
 
-**Database Server**: 192.168.2.59
+**Database Server**: 192.168.20.11
 - User: zubair
 - Password: sql
 
-**App Server**: 192.168.2.69
+**App Server**: 192.168.20.10
 - User: zubair
 - Password: erp
 
-**Status Page**: https://192.168.2.69/accounting/dashboard/
+**Status Page**: https://192.168.20.10/accounting/dashboard/
 
 ---
 

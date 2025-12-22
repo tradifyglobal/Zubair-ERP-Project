@@ -5,7 +5,7 @@ from psycopg2.extras import RealDictCursor
 
 # Connect to PostgreSQL
 conn = psycopg2.connect(
-    host="192.168.2.59",
+    host="192.168.20.11",
     database="tradifyerp_db",
     user="zubair",
     password="zabuPassword@123"

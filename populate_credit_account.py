@@ -8,7 +8,7 @@ import sys
 from datetime import datetime
 
 # PostgreSQL Connection
-DB_HOST = '192.168.2.59'
+DB_HOST = '192.168.20.11'
 DB_PORT = 5432
 DB_NAME = 'tradifyerp_db'
 DB_USER = 'tradifyerp_user'

@@ -14,11 +14,11 @@ with open(settings_file, 'r') as f:
 
 # Find and replace the HOST setting
 old_host = "'HOST': 'localhost',"
-new_host = "'HOST': '192.168.2.59',"
+new_host = "'HOST': '192.168.20.11',"
 
 if old_host in content:
     content = content.replace(old_host, new_host)
-    print(f"✅ Changed HOST from 'localhost' to '192.168.2.59'")
+    print(f"✅ Changed HOST from 'localhost' to '192.168.20.11'")
 else:
     print("❌ Could not find HOST setting")
     sys.exit(1)

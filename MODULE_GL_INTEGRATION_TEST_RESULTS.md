@@ -1,7 +1,7 @@
 # Module → Accounting Integration Test Results
 
 ## Test Date: December 19, 2025
-## Server: tradifyglobal.com (192.168.2.69)
+## Server: tradifyglobal.com (192.168.20.10)
 
 ---
 
@@ -261,7 +261,7 @@ To verify each module is working correctly, perform these tests:
 1. **Verify Manufacturing Integration**
    ```bash
    # SSH to server
-   ssh zubair@192.168.2.69
+   ssh zubair@192.168.20.10
    
    # Check if JournalEntry model exists
    cd /var/www/tradifyerp
@@ -327,4 +327,4 @@ Integration is considered successful when:
 
 **Report Generated:** December 19, 2025 19:50 UTC  
 **Test Script:** `check_module_gl_status.py`  
-**Server:** tradifyglobal.com (192.168.2.69)
+**Server:** tradifyglobal.com (192.168.20.10)

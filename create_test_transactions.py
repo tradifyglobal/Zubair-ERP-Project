@@ -20,7 +20,7 @@ def upload_file(ssh, local_content, remote_path):
     sftp.close()
 
 def main():
-    host = '192.168.2.69'
+    host = '192.168.20.10'
     username = 'zubair'
     password = 'erp'
     

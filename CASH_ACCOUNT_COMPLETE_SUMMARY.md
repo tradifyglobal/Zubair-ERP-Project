@@ -69,7 +69,7 @@ python manage.py setup_cash_account
 
 **Usage**:
 ```bash
-psql -h 192.168.2.59 -U zubair -d tradifyerp_db -f setup_cash_account.sql
+psql -h 192.168.20.11 -U zubair -d tradifyerp_db -f setup_cash_account.sql
 ```
 
 **Functionality**:
@@ -287,7 +287,7 @@ CashReceiptLine (Input)
 
 1. **SSH to App Server**:
 ```bash
-ssh zubair@192.168.2.69
+ssh zubair@192.168.20.10
 cd /home/zubair/tradifyerp
 source venv/bin/activate
 ```
@@ -304,7 +304,7 @@ sudo systemctl restart gunicorn-tradifyerp
 
 4. **Test in Browser**:
 ```
-https://192.168.2.69/accounting/cash-receipts/create/
+https://192.168.20.10/accounting/cash-receipts/create/
 ```
 
 ### Automated Deployment
@@ -446,12 +446,12 @@ ORDER BY entry_date DESC LIMIT 10;
 ## 📞 SUPPORT
 
 ### System Credentials
-- **App Server**: 192.168.2.69 (zubair / erp)
-- **DB Server**: 192.168.2.59 (zubair / sql)
+- **App Server**: 192.168.20.10 (zubair / erp)
+- **DB Server**: 192.168.20.11 (zubair / sql)
 
 ### Key Contacts
-- **Database**: 192.168.2.59 (PostgreSQL)
-- **Django App**: 192.168.2.69 (Gunicorn + Nginx)
+- **Database**: 192.168.20.11 (PostgreSQL)
+- **Django App**: 192.168.20.10 (Gunicorn + Nginx)
 
 ### Documentation Files
 - `CASH_ACCOUNT_IMPLEMENTATION_GUIDE.md` - Complete reference

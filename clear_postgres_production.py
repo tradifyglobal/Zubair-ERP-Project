@@ -3,7 +3,7 @@
 PostgreSQL Production Database Cleaner
 =====================================
 Clear transaction data from PostgreSQL production database
-Database: 192.168.2.59
+Database: 192.168.20.11
 """
 
 import psycopg2
@@ -13,7 +13,7 @@ from datetime import datetime
 
 # Production PostgreSQL connection details
 DB_CONFIG = {
-    'host': '192.168.2.59',
+    'host': '192.168.20.11',
     'database': 'tradifyerp_db',
     'user': 'tradifyerp_user',
     'password': 'Tradify@PostgreSQL2024',

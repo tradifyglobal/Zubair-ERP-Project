@@ -4,7 +4,7 @@
 
 ```bash
 # SSH to app server, activate venv, and run setup
-ssh zubair@192.168.2.69 "cd /home/zubair/tradifyerp && source venv/bin/activate && python manage.py setup_cash_account"
+ssh zubair@192.168.20.10 "cd /home/zubair/tradifyerp && source venv/bin/activate && python manage.py setup_cash_account"
 ```
 
 ---
@@ -69,8 +69,8 @@ USER CREATES RECEIPT → APPROVER APPROVES → FINANCE POSTS → GL UPDATED
 
 | Server | IP | User | Password |
 |--------|-----|------|----------|
-| App | 192.168.2.69 | zubair | erp |
-| Database | 192.168.2.59 | zubair | sql |
+| App | 192.168.20.10 | zubair | erp |
+| Database | 192.168.20.11 | zubair | sql |
 
 ---
 

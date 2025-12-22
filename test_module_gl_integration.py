@@ -16,7 +16,7 @@ def run_remote_command(ssh, command):
 
 def main():
     # Server credentials
-    host = '192.168.2.69'
+    host = '192.168.20.10'
     username = 'zubair'
     password = 'erp'
     

@@ -75,7 +75,7 @@
 4. Test: All endpoints from TRIAL_BALANCE_DEPLOYMENT_COMPLETE.md
 
 ### For Testing
-1. Access: http://192.168.2.69/accounting/trial-balance-dashboard/
+1. Access: http://192.168.20.10/accounting/trial-balance-dashboard/
 2. Test: Each endpoint listed in documentation
 3. Verify: Database connectivity
 4. Monitor: Service logs for errors
@@ -114,8 +114,8 @@ Export:       /accounting/trial-balance/<id>/export/
 - **Files Deployed**: 9 (3 Python + 6 HTML)
 - **Issues Fixed**: 4 major import errors
 - **View Classes**: 7 functional views
-- **Database**: PostgreSQL 192.168.2.59
-- **Server**: 192.168.2.69
+- **Database**: PostgreSQL 192.168.20.11
+- **Server**: 192.168.20.10
 - **Service**: Gunicorn (2 workers)
 - **Status**: ✅ Operational
 
@@ -132,7 +132,7 @@ sudo systemctl restart gunicorn
 journalctl -u gunicorn -n 50 --no-pager
 
 # Database issues?
-psql -h 192.168.2.59 -U tradifyerp_user -d tradifyerp_db -c "SELECT 1"
+psql -h 192.168.20.11 -U tradifyerp_user -d tradifyerp_db -c "SELECT 1"
 ```
 
 **Full troubleshooting**: See TRIAL_BALANCE_QUICK_REFERENCE.md

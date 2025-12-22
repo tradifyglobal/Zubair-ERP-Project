@@ -345,7 +345,7 @@ Cash Receipt → GL Entries + CapitalContribution
 4. Contact development team
 
 ### Contact Information
-- Server: 192.168.2.69
+- Server: 192.168.20.10
 - System: TradifyERP v2.0
 - Deployment: 2025-01-XX
 
@@ -422,7 +422,7 @@ Cash Receipt → GL Entries + CapitalContribution
 
 **Deployment Date:** 2025-01-XX  
 **System:** TradifyERP v2.0 Production  
-**Server:** 192.168.2.69  
+**Server:** 192.168.20.10  
 **Status:** ✅ **LIVE & VERIFIED**  
 
 ---
