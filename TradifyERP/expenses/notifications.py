@@ -14,15 +14,26 @@ def get_pending_reviews_for_user(user, entity=None):
     Get pending expense reports awaiting review by the user
     
     User must have 'expenses.review_employeeexpensereport' permission
+    Shows only reports assigned to this user for manager review
     """
     try:
         # Check if user has review permission
         if not user.has_perm('expenses.review_employeeexpensereport'):
             return EmployeeExpenseReport.objects.none()
         
-        # Get expense reports awaiting review (PENDING_REVIEW status)
+        # Get the employee associated with this user (if any)
+        from hr.models import Employee
+        try:
+            employee = Employee.objects.get(user=user)
+        except Employee.DoesNotExist:
+            return EmployeeExpenseReport.objects.none()
+        
+        # Get expense reports awaiting review assigned to THIS manager
+        from .models import ExpenseApprovalWorkflow
         pending = EmployeeExpenseReport.objects.filter(
-            status='PENDING_REVIEW'
+            status='PENDING_REVIEW',
+            approval_workflow__manager=employee,
+            approval_workflow__manager_approved=False
         ).distinct()
         
         if entity:
@@ -39,15 +50,19 @@ def get_pending_approvals_for_user(user, entity=None):
     Get pending expense reports awaiting approval by this user
     
     User must have 'expenses.approve_employeeexpensereport' permission
+    Shows only reports assigned to this user for finance approval
     """
     try:
         # Check if user has approval permission
         if not user.has_perm('expenses.approve_employeeexpensereport'):
             return EmployeeExpenseReport.objects.none()
         
-        # Get ALL expense reports in PENDING_APPROVAL status
+        # Get expense reports awaiting approval assigned to THIS finance approver
+        from .models import ExpenseApprovalWorkflow
         pending = EmployeeExpenseReport.objects.filter(
-            status='PENDING_APPROVAL'
+            status='PENDING_APPROVAL',
+            approval_workflow__finance_approver=user,
+            approval_workflow__finance_approved=False
         ).distinct()
         
         if entity:

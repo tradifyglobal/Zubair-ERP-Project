@@ -1,0 +1,81 @@
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Approve Payment Commitment{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box">
+                    <h4 class="mb-0">Approve Payment Commitment</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Commitment for {{ object.stakeholder.full_name }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Shareholder:</strong> {{ object.stakeholder.full_name }}</p>
+                                <p><strong>Amount:</strong> {{ object.currency.symbol }} {{ object.committed_amount|floatformat:2 }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Commitment Date:</strong> {{ object.promised_payment_date|date:"M d, Y" }}</p>
+                                <p><strong>Due Date:</strong> {% if object.due_date %}{{ object.due_date|date:"M d, Y" }}{% else %}<span class="text-muted">Not set</span>{% endif %}</p>
+                            </div>
+                        </div>
+
+                        {% if object.reviewed_by %}
+                        <div class="alert alert-success">
+                            <strong>✓ First Review Completed:</strong> {{ object.reviewed_by.get_full_name }} on {{ object.reviewed_at|date:"M d, Y" }}
+                            {% if object.review_notes %}<br><small>{{ object.review_notes }}</small>{% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if object.reviewed_by_2 %}
+                        <div class="alert alert-success">
+                            <strong>✓ Second Review Completed:</strong> {{ object.reviewed_by_2.get_full_name }} on {{ object.reviewed_at_2|date:"M d, Y" }}
+                            {% if object.review_notes_2 %}<br><small>{{ object.review_notes_2 }}</small>{% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Approval Form -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h4 class="card-title">Final Approval</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" id="commitment-approve-form">
+                            {% csrf_token %}
+                            {% crispy form %}
+                        </form>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" form="commitment-approve-form" class="btn btn-success">
+                                <i class="feather-check-square"></i> Approve Commitment
+                            </button>
+                            <a href="{% url 'shareholder:payment_commitment_reject' object.pk %}" class="btn btn-danger">
+                                <i class="feather-x-square"></i> Reject
+                            </a>
+                            <a href="{% url 'shareholder:payment_commitment_detail' object.pk %}" class="btn btn-secondary">
+                                Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

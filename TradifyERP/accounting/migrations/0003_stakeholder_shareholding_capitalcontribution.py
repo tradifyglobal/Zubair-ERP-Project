@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounting', '0002_fixedasset_disposal_amount_fixedasset_disposal_date_and_more'),
+        ('accounting', '0002_add_exchange_rate_fields'),
     ]
 
     operations = [

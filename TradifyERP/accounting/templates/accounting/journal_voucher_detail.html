@@ -1,0 +1,236 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Journal Voucher {{ voucher.voucher_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Journal Voucher: {{ voucher.voucher_number }}</h4>
+                <div class="page-title-right">
+                    <a href="{% url 'accounting:journal_voucher_list' %}" class="btn btn-secondary">
+                        <i class="bx bx-arrow-back align-middle me-1"></i> Back to List
+                    </a>
+                    
+                    {% if voucher.status == 'DRAFT' %}
+                    <a href="{% url 'accounting:journal_voucher_edit' voucher.pk %}" class="btn btn-primary">
+                        <i class="bx bx-edit align-middle me-1"></i> Edit
+                    </a>
+                    <form method="post" action="{% url 'accounting:journal_voucher_submit' voucher.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-info" onclick="return confirm('Submit for approval?')">
+                            <i class="bx bx-send align-middle me-1"></i> Submit for Approval
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if voucher.status == 'PENDING_APPROVAL' or voucher.status == 'APPROVED' %}
+                    <form method="post" action="{% url 'accounting:journal_voucher_approve' voucher.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Approve this voucher?')">
+                            <i class="bx bx-check-circle align-middle me-1"></i> Approve
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if voucher.status == 'APPROVED' and not voucher.is_posted %}
+                    <form method="post" action="{% url 'accounting:journal_voucher_post' voucher.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Post this voucher to ledger?')">
+                            <i class="bx bx-paper-plane align-middle me-1"></i> Post to Ledger
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Voucher Header Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <th width="40%">Voucher Number:</th>
+                                    <td><strong>{{ voucher.voucher_number }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Voucher Date:</th>
+                                    <td>{{ voucher.voucher_date|date:"d M Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Voucher Type:</th>
+                                    <td><span class="badge bg-info">{{ voucher.get_voucher_type_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Reference Number:</th>
+                                    <td>{{ voucher.reference_number|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Reference Type:</th>
+                                    <td>{{ voucher.reference_type|default:"-" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <th width="40%">Status:</th>
+                                    <td>
+                                        {% if voucher.status == 'DRAFT' %}
+                                            <span class="badge bg-secondary">Draft</span>
+                                        {% elif voucher.status == 'PENDING_APPROVAL' %}
+                                            <span class="badge bg-warning">Pending Approval</span>
+                                        {% elif voucher.status == 'APPROVED' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif voucher.status == 'POSTED' %}
+                                            <span class="badge bg-primary">Posted</span>
+                                        {% elif voucher.status == 'REJECTED' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% elif voucher.status == 'CANCELLED' %}
+                                            <span class="badge bg-dark">Cancelled</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Posted:</th>
+                                    <td>
+                                        {% if voucher.is_posted %}
+                                            <span class="badge bg-success">Yes</span>
+                                            <br><small>{{ voucher.posted_date|date:"d M Y H:i" }} by {{ voucher.posted_by.get_full_name|default:voucher.posted_by.username }}</small>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Prepared By:</th>
+                                    <td>{{ voucher.prepared_by.get_full_name|default:voucher.prepared_by.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Approved By:</th>
+                                    <td>
+                                        {% if voucher.approved_by %}
+                                            {{ voucher.approved_by.get_full_name|default:voucher.approved_by.username }}
+                                            <br><small>{{ voucher.approved_date|date:"d M Y H:i" }}</small>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="mb-2">Description:</h5>
+                            <p class="text-muted">{{ voucher.description }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Voucher Lines -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="mb-3">Voucher Lines:</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="5%">#</th>
+                                            <th width="25%">Account</th>
+                                            <th width="20%">Description</th>
+                                            <th width="15%" class="text-end">Debit</th>
+                                            <th width="15%" class="text-end">Credit</th>
+                                            <th width="10%">Stakeholder</th>
+                                            <th width="10%">Employee</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for line in lines %}
+                                        <tr>
+                                            <td>{{ line.line_number }}</td>
+                                            <td>
+                                                <strong>{{ line.account.account_number }}</strong> - {{ line.account.name }}
+                                            </td>
+                                            <td>{{ line.description|default:"-" }}</td>
+                                            <td class="text-end">
+                                                {% if line.entry_type == 'DEBIT' %}
+                                                    ₹{{ line.amount|floatformat:2 }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                {% if line.entry_type == 'CREDIT' %}
+                                                    ₹{{ line.amount|floatformat:2 }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ line.stakeholder.full_name|default:"-" }}</td>
+                                            <td>{{ line.employee.get_full_name|default:"-" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3" class="text-end">TOTAL:</th>
+                                            <th class="text-end">₹{{ total_debit|floatformat:2 }}</th>
+                                            <th class="text-end">₹{{ total_credit|floatformat:2 }}</th>
+                                            <th colspan="2"></th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">
+                                                {% if is_balanced %}
+                                                    <span class="text-success"><i class="bx bx-check-circle"></i> Balanced</span>
+                                                {% else %}
+                                                    <span class="text-danger"><i class="bx bx-error-circle"></i> Not Balanced</span>
+                                                {% endif %}
+                                            </th>
+                                            <th class="text-end" colspan="4">
+                                                Difference: 
+                                                {% widthratio total_debit 1 1 as debit_val %}
+                                                {% widthratio total_credit 1 1 as credit_val %}
+                                                <span class="{% if is_balanced %}text-success{% else %}text-danger{% endif %}">
+                                                    ₹{{ total_debit|floatformat:2|add:"-"|add:total_credit|floatformat:2|default:"0.00" }}
+                                                </span>
+                                            </th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if voucher.notes %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="mb-2">Notes:</h5>
+                            <p class="text-muted">{{ voucher.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if voucher.attachment %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="mb-2">Attachment:</h5>
+                            <a href="{{ voucher.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bx bx-download"></i> Download Attachment
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

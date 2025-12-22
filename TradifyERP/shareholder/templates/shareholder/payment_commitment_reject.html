@@ -1,0 +1,74 @@
+{% extends "partials/base.html" %}
+
+{% block title %}Reject Payment Commitment{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box">
+                    <h4 class="mb-0">Reject Payment Commitment</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rejection Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Commitment for {{ object.stakeholder.full_name }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Shareholder:</strong> {{ object.stakeholder.full_name }}</p>
+                                <p><strong>Amount:</strong> {{ object.currency.symbol }} {{ object.committed_amount|floatformat:2 }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Commitment Date:</strong> {{ object.promised_payment_date|date:"M d, Y" }}</p>
+                                <p><strong>Due Date:</strong> {% if object.due_date %}{{ object.due_date|date:"M d, Y" }}{% else %}<span class="text-muted">Not set</span>{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rejection Form -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h4 class="card-title">Rejection Reason</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" id="commitment-reject-form">
+                            {% csrf_token %}
+                            <div class="form-group mb-3">
+                                <label for="id_rejection_reason" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
+                                {{ form.rejection_reason }}
+                                {% if form.rejection_reason.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.rejection_reason.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </form>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" form="commitment-reject-form" class="btn btn-danger">
+                                <i class="feather-x-square"></i> Reject Commitment
+                            </button>
+                            <a href="{% url 'shareholder:payment_commitment_detail' object.pk %}" class="btn btn-secondary">
+                                Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="mdi mdi-alert-circle"></i>
+                    <strong>Note:</strong> Rejecting will change the commitment status to REJECTED and save the rejection reason.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

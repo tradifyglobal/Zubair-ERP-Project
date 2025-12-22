@@ -108,8 +108,8 @@
                         <th>Description</th>
                         <th>Debit</th>
                         <th>Credit</th>
-                        <th>Amount</th>
-                        <th>Workflow Status</th>
+                        <th class="text-center">Amount</th>
+                        <th class="text-center">Workflow Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -130,14 +130,20 @@
                                         <strong>{{ receipt.credit_account.account_number }}</strong><br>
                                         {{ receipt.credit_account.name }}
                                     {% else %}
-                                        <span class="text-muted">—</span>
+                                        <strong>100001</strong><br>
+                                        Cash Account
                                     {% endif %}
                                 </small>
                             </td>
-                            <td class="text-end">
-                                <span class="badge bg-info">{{ receipt.debit_amount|floatformat:2 }}</span>
+                            <td class="text-center">
+                                <div>
+                                    <span class="badge bg-info">{{ receipt.debit_amount|floatformat:2 }}</span>
+                                    {% if receipt.currency %}
+                                        <br><small class="text-muted">{{ receipt.currency.code }}</small>
+                                    {% endif %}
+                                </div>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 {% if receipt.workflow_status == 'DRAFT' %}
                                     <span class="badge bg-secondary">Draft</span>
                                 {% elif receipt.workflow_status == 'PENDING_APPROVAL' %}
@@ -187,7 +193,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="6" class="text-center text-muted py-4">
                                 <i class="fas fa-inbox fa-2x mb-2"></i>
                                 <p>No cash receipts found</p>
                             </td>

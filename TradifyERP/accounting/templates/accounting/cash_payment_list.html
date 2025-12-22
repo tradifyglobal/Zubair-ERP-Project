@@ -135,7 +135,12 @@
                                 </small>
                             </td>
                             <td class="text-end">
-                                <span class="badge bg-info">{{ payment.debit_amount|floatformat:2 }}</span>
+                                <div>
+                                    <span class="badge bg-info">{{ payment.debit_amount|floatformat:2 }}</span>
+                                    {% if payment.currency %}
+                                        <br><small class="text-muted">{{ payment.currency.code }}</small>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td>
                                 {% if payment.workflow_status == 'DRAFT' %}

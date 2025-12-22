@@ -5,9 +5,8 @@
     <title>Trial Balance | TradifyERP</title>
 {% endblock %}
 {% block content %}
-<div class="main-content">
-    <div class="page-content">
-        <div class="container-fluid">
+<div class="page-content">
+    <div class="container-fluid">
             <!-- start page title -->
             <div class="row">
                 <div class="col-12">
@@ -38,6 +37,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>As Of Date</th>
+                                            <th>Entity Currency</th>
                                             <th>Total Debits</th>
                                             <th>Total Credits</th>
                                             <th>Difference</th>
@@ -53,19 +53,35 @@
                                                 <strong>{{ tb.as_of_date|date:"d M Y" }}</strong>
                                             </td>
                                             <td>
-                                                <span class="text-danger">{{ tb.total_debits }}</span>
+                                                {% if tb.entity and tb.entity.company_currency %}
+                                                    <span class="badge bg-primary">{{ tb.entity.company_currency.code }}</span>
+                                                    <br><small class="text-muted">{{ tb.entity.company_currency.name }}</small>
+                                                {% else %}
+                                                    <span class="text-muted small">Not Set</span>
+                                                {% endif %}
                                             </td>
                                             <td>
-                                                <span class="text-success">{{ tb.total_credits }}</span>
-                                            </td>
-                                            <td>
-                                                {% with diff=tb.total_debits|add:tb.total_credits %}
-                                                    {% if diff == 0 %}
-                                                        <span class="badge bg-success-subtle text-success">0.00</span>
-                                                    {% else %}
-                                                        <span class="badge bg-danger-subtle text-danger">{{ diff }}</span>
+                                                <div>
+                                                    <span class="text-danger">{{ tb.total_debits }}</span>
+                                                    {% if tb.entity.company_currency %}
+                                                        <br><small class="text-muted">{{ tb.entity.company_currency.code }}</small>
                                                     {% endif %}
-                                                {% endwith %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <span class="text-success">{{ tb.total_credits }}</span>
+                                                    {% if tb.entity.company_currency %}
+                                                        <br><small class="text-muted">{{ tb.entity.company_currency.code }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if tb.difference == 0 %}
+                                                    <span class="badge bg-success-subtle text-success">0.00</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger">{{ tb.difference|floatformat:2 }}</span>
+                                                {% endif %}
                                             </td>
                                             <td>
                                                 {% if tb.is_balanced %}
@@ -185,9 +201,77 @@
                                     </div>
                                 </div>
                             </div>
-                            {% else %}
+                            {% endif %}
+                            
+                            <!-- Current Trial Balance Details -->
+                            {% if account_balances %}
+                            <div class="mt-4">
+                                <h5 class="mb-3">Current Trial Balance (As of Today)</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-nowrap mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Account Number</th>
+                                                <th>Account Name</th>
+                                                <th>Type</th>
+                                                <th class="text-end">Debit Balance</th>
+                                                <th class="text-end">Credit Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for balance in account_balances %}
+                                            <tr>
+                                                <td><code>{{ balance.account_number }}</code></td>
+                                                <td>{{ balance.account_name }}</td>
+                                                <td>
+                                                    <span class="badge bg-info-subtle text-info">{{ balance.account_type }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    {% if balance.debit_balance > 0 %}
+                                                        <span class="text-danger">₹{{ balance.debit_balance|floatformat:2 }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">—</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-end">
+                                                    {% if balance.credit_balance > 0 %}
+                                                        <span class="text-success">₹{{ balance.credit_balance|floatformat:2 }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">—</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot class="table-light">
+                                            <tr>
+                                                <th colspan="3">TOTALS</th>
+                                                <th class="text-end text-danger">₹{{ total_debits|floatformat:2 }}</th>
+                                                <th class="text-end text-success">₹{{ total_credits|floatformat:2 }}</th>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="4">STATUS</th>
+                                                <th class="text-end">
+                                                    {% if is_balanced %}
+                                                        <span class="badge bg-success">BALANCED</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">OUT OF BALANCE</span>
+                                                    {% endif %}
+                                                </th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            {% elif not trial_balances %}
                             <div class="alert alert-info m-3" role="alert">
                                 <i class="mdi mdi-information-outline"></i> No trial balances found. Trial balances are automatically generated from ledger entries.
+                            </div>
+                            {% endif %}
+                            
+                            {% if trial_balance_error %}
+                            <div class="alert alert-warning m-3" role="alert">
+                                <i class="mdi mdi-alert"></i> Error calculating trial balance: {{ trial_balance_error }}
                             </div>
                             {% endif %}
                         </div>

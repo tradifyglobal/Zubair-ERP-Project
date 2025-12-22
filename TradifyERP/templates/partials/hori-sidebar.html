@@ -46,7 +46,9 @@
                                         <a href="{% url 'accounting:cash_position' %}" class="dropdown-item"><i class="feather-trending-up me-2"></i>Capital & Cash Position</a>
                                         <a href="{% url 'accounting:account_list' %}" class="dropdown-item">Accounts</a>
                                         <a href="{% url 'accounting:ledger_entry_list' %}" class="dropdown-item">Ledger Entries</a>
+                                        <a href="{% url 'accounting:journal_voucher_list' %}" class="dropdown-item">Journal Vouchers</a>
                                         <a href="{% url 'accounting:trial_balance_list' %}" class="dropdown-item">Trial Balances</a>
+                                        <a href="{% url 'accounting:trading_manufacturing' %}" class="dropdown-item">Trading & Manufacturing Account</a>
                                         <a href="{% url 'accounting:profit_loss_list' %}" class="dropdown-item">Profit & Loss Reports</a>
                                         <a href="{% url 'accounting:balance_sheet_list' %}" class="dropdown-item">Balance Sheets</a>
                                         <div class="dropdown-divider"></div>
@@ -55,6 +57,14 @@
                                         <a href="{% url 'accounting:vendor_list' %}" class="dropdown-item">Vendors</a>
                                         <a href="{% url 'accounting:vendor_invoice_list' %}" class="dropdown-item">Vendor Invoices</a>
                                         <a href="{% url 'accounting:vendor_payments_list' %}" class="dropdown-item">Vendor Payments</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Accounts Payable</div>
+                                        <a href="{% url 'ap:dashboard' %}" class="dropdown-item">AP Dashboard</a>
+                                        <a href="{% url 'ap:bill_list' %}" class="dropdown-item">All Bills</a>
+                                        <a href="{% url 'ap:bill_create' %}" class="dropdown-item">Create Bill</a>
+                                        <a href="{% url 'ap:payment_list' %}" class="dropdown-item">All Payments</a>
+                                        <a href="{% url 'ap:payment_create' %}" class="dropdown-item">Record Payment</a>
+                                        <a href="{% url 'ap:aging_report' %}" class="dropdown-item">AP Aging Report</a>
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Accounts Receivable</div>
                                         <a href="{% url 'ar:dashboard' %}" class="dropdown-item">AR Dashboard</a>
@@ -299,27 +309,6 @@
                                 </li>
                                 {% endif %}
 
-                                {% if user|has_module_permission:'ap' %}
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-ap" role="button">
-                                        <i data-feather="credit-card"></i><span data-key="t-ap">Accounts Payable</span> <div class="arrow-down"></div>
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="topnav-ap">
-                                        <div class="dropdown-header">Dashboard & Reports</div>
-                                        <a href="{% url 'ap:dashboard' %}" class="dropdown-item">AP Dashboard</a>
-                                        <a href="{% url 'ap:aging_report' %}" class="dropdown-item">Aging Report</a>
-                                        <div class="dropdown-divider"></div>
-                                        <div class="dropdown-header">Vendor Bills</div>
-                                        <a href="{% url 'ap:bill_list' %}" class="dropdown-item">All Bills</a>
-                                        <a href="{% url 'ap:bill_create' %}" class="dropdown-item">Create Bill</a>
-                                        <div class="dropdown-divider"></div>
-                                        <div class="dropdown-header">Payments</div>
-                                        <a href="{% url 'ap:payment_list' %}" class="dropdown-item">All Payments</a>
-                                        <a href="{% url 'ap:payment_create' %}" class="dropdown-item">Record Payment</a>
-                                    </div>
-                                </li>
-                                {% endif %}
-
                                 {% if user|has_module_permission:'procurement' %}
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-procurement" role="button">
@@ -459,6 +448,31 @@
                                     </div>
                                 </li>
                                 {% endif %}
+
+                                <!-- Documentation Menu -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-documentation" role="button">
+                                        <i data-feather="book-open"></i><span data-key="t-documentation">Documentation</span> <div class="arrow-down"></div>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="topnav-documentation">
+                                        <div class="dropdown-header">User Guides</div>
+                                        <a href="{% url 'accounting:user_guide' %}" class="dropdown-item"><i class="feather-book me-2"></i>Complete User Guide</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Module Guides</div>
+                                        <a href="{% url 'accounting:user_guide' %}#accounting-overview" class="dropdown-item">Accounting Module</a>
+                                        <a href="{% url 'accounting:user_guide' %}#chart-of-accounts" class="dropdown-item">Chart of Accounts</a>
+                                        <a href="{% url 'accounting:user_guide' %}#shareholder-management" class="dropdown-item">Shareholder Management</a>
+                                        <a href="{% url 'accounting:user_guide' %}#expense-management" class="dropdown-item">Employee Expenses</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Quick Reference</div>
+                                        <a href="{% url 'accounting:user_guide' %}#common-workflows" class="dropdown-item">Common Workflows</a>
+                                        <a href="{% url 'accounting:user_guide' %}#troubleshooting" class="dropdown-item">Troubleshooting</a>
+                                        <a href="{% url 'accounting:user_guide' %}#best-practices" class="dropdown-item">Best Practices</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Downloads</div>
+                                        <a href="{% url 'accounting:user_guide_download' %}" class="dropdown-item"><i class="feather-download me-2"></i>Download PDF Guide</a>
+                                    </div>
+                                </li>
 
                             </ul>
                         </div>

@@ -42,6 +42,13 @@
                             <form method="post" novalidate>
                                 {% csrf_token %}
                                 
+                                {# Render all hidden fields first #}
+                                {% for field in form %}
+                                    {% if field.field.widget.input_type == 'hidden' %}
+                                        {{ field }}
+                                    {% endif %}
+                                {% endfor %}
+                                
                                 {% for field in form %}
                                     {% if field.field.widget.input_type != 'hidden' %}
                                         <div class="mb-3">
@@ -53,6 +60,10 @@
                                             </label>
                                             {% if field.field.widget.input_type == 'textarea' %}
                                                 <textarea name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}" rows="3">{{ field.value|default:'' }}</textarea>
+                                            {% elif field.field.widget.input_type == 'date' %}
+                                                {{ field }}
+                                            {% elif field.name == 'shareholder' or field.name == 'employee' %}
+                                                {{ field }}
                                             {% else %}
                                                 <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" class="form-control {% if field.errors %}is-invalid{% endif %}" id="{{ field.id_for_label }}" value="{{ field.value|default:'' }}">
                                             {% endif %}

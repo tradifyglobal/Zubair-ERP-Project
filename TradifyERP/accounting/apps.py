@@ -9,5 +9,7 @@ class AccountingConfig(AppConfig):
     def ready(self):
         # Import signals to register them
         import accounting.signals
+        from accounting.signals import register_signals
+        register_signals()
         # Import theme models to ensure they're registered
         import accounting.models_theme

@@ -28,7 +28,8 @@ from .cash_views import (
     CashReceiptCreateView, CashReceiptListView, CashReceiptDetailView, CashReceiptPrintView,
     CashPaymentCreateView, CashPaymentListView, CashPaymentDetailView, CashPaymentPrintView,
     BankReceiptCreateView, BankReceiptListView, BankReceiptDetailView, BankReceiptPrintView,
-    BankPaymentCreateView, BankPaymentListView, BankPaymentDetailView, BankPaymentPrintView
+    BankPaymentCreateView, BankPaymentListView, BankPaymentDetailView, BankPaymentPrintView,
+    get_sub_accounts_api, generate_reference_number_api
 )
 from .cash_workflow_views import (
     CashReceiptApprovalView, CashReceiptAuthorizationView, CashReceiptRejectView,
@@ -44,6 +45,7 @@ from .views_extended import (
     QuickAddReconciliationEntryView, QuickAddReconciliationMatchView
 )
 from .views_pl import ProfitLossDetailView, ProfitLossComparisonView
+from .views_tm import TradingManufacturingAccountView
 from .views_analytics import (
     FinancialRatiosView, AccountsReceivableAgingView, AccountsPayableAgingView,
     VarianceAnalysisView, CostCenterAnalysisView
@@ -56,7 +58,12 @@ from .stakeholder_views import (
 )
 from .user_views import (
     UserListView, UserCreateView, UserEditView, UserDetailView,
-    UserApplyTemplateView, UserToggleStatusView
+    UserApplyTemplateView, UserToggleStatusView, UserChangePasswordView, UserResetPasswordView
+)
+from .views_journal_voucher import (
+    JournalVoucherListView, JournalVoucherDetailView, JournalVoucherCreateView,
+    JournalVoucherUpdateView, JournalVoucherDeleteView,
+    journal_voucher_post, journal_voucher_approve, journal_voucher_submit
 )
 from .import_export_views import (
     BaseImportView, BaseExportView, ImportTemplateDownloadView,
@@ -77,6 +84,8 @@ urlpatterns = [
     
     # AJAX API Endpoints
     path('api/save-layout-preference/', save_layout_preference, name='save_layout_preference'),
+    path('api/get-sub-accounts/', get_sub_accounts_api, name='get_sub_accounts'),
+    path('api/generate-reference-number/', generate_reference_number_api, name='generate_reference_number'),
     
     # Entity Selection
     path('select-entity/', EntitySelectionView.as_view(), name='select-entity'),
@@ -101,6 +110,16 @@ urlpatterns = [
     path('ledger-entries/create/', DoubleEntryJournalView.as_view(), name='ledger_entry_create'),
     path('journal-entries/create/', DoubleEntryJournalView.as_view(), name='journal_entry_create'),
     path('quick-add-entry/', QuickAddLedgerEntryView.as_view(), name='quick_add_entry'),
+    
+    # Journal Vouchers
+    path('journal-vouchers/', JournalVoucherListView.as_view(), name='journal_voucher_list'),
+    path('journal-vouchers/create/', JournalVoucherCreateView.as_view(), name='journal_voucher_create'),
+    path('journal-vouchers/<int:pk>/', JournalVoucherDetailView.as_view(), name='journal_voucher_detail'),
+    path('journal-vouchers/<int:pk>/edit/', JournalVoucherUpdateView.as_view(), name='journal_voucher_edit'),
+    path('journal-vouchers/<int:pk>/delete/', JournalVoucherDeleteView.as_view(), name='journal_voucher_delete'),
+    path('journal-vouchers/<int:pk>/post/', journal_voucher_post, name='journal_voucher_post'),
+    path('journal-vouchers/<int:pk>/approve/', journal_voucher_approve, name='journal_voucher_approve'),
+    path('journal-vouchers/<int:pk>/submit/', journal_voucher_submit, name='journal_voucher_submit'),
     
     # Quick Add Views
     path('quick-add-customer/', QuickAddCustomerView.as_view(), name='quick_add_customer'),
@@ -138,6 +157,7 @@ urlpatterns = [
     path('profit-loss/', ProfitLossListView.as_view(), name='profit_loss_list'),
     path('profit-loss-detail/', ProfitLossDetailView.as_view(), name='profit_loss_detail'),
     path('profit-loss-comparison/', ProfitLossComparisonView.as_view(), name='profit_loss_comparison'),
+    path('trading-manufacturing/', TradingManufacturingAccountView.as_view(), name='trading_manufacturing'),
     path('balance-sheets/', BalanceSheetListView.as_view(), name='balance_sheet_list'),
     
     # Customers & Vendors
@@ -235,6 +255,8 @@ urlpatterns = [
     path('users/<int:pk>/edit/', UserEditView.as_view(), name='user_edit'),
     path('users/<int:pk>/apply-template/', UserApplyTemplateView.as_view(), name='user_apply_template'),
     path('users/<int:pk>/toggle-status/', UserToggleStatusView.as_view(), name='user_toggle_status'),
+    path('users/<int:pk>/reset-password/', UserResetPasswordView.as_view(), name='user_reset_password'),
+    path('change-password/', UserChangePasswordView.as_view(), name='user_change_password'),
     
     # Import/Export Dashboard
     path('import-export/', ImportExportDashboardView.as_view(), name='import_export_dashboard'),
@@ -339,4 +361,13 @@ urlpatterns += [
     path('accounting-dashboard/', AccountingDashboardView.as_view(), name='accounting_dashboard'),
     path('cash-position/', CashPositionView.as_view(), name='cash_position'),
     path('theme/', include('accounting.urls_theme')),
+]
+
+# Add Documentation URLs
+from .views import UserGuideView, user_guide_download
+
+urlpatterns += [
+    # Documentation
+    path('user-guide/', UserGuideView.as_view(), name='user_guide'),
+    path('user-guide/download/', user_guide_download, name='user_guide_download'),
 ]

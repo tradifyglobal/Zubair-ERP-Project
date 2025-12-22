@@ -1,0 +1,121 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Accounting Dashboard | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="page-title">Accounting Dashboard</h4>
+                </div>
+            </div>
+
+            {% if entity %}
+            <!-- Entity Info -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <strong>Current Entity:</strong> {{ entity.code }} - {{ entity.name }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="row">
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'accounting:account_list' %}" class="card text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h6 class="card-title">Chart of Accounts</h6>
+                            <p class="card-text text-muted">{{ total_accounts }} Accounts</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'accounting:customer_list' %}" class="card text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h6 class="card-title">Customers</h6>
+                            <p class="card-text text-muted">{{ total_customers }} Records</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'accounting:vendor_list' %}" class="card text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h6 class="card-title">Vendors</h6>
+                            <p class="card-text text-muted">{{ total_vendors }} Records</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'accounting:ledger_entry_list' %}" class="card text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h6 class="card-title">Ledger Entries</h6>
+                            <p class="card-text text-muted">Journal Entries</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="mb-3">Financial Reports</h5>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'accounting:trial-balance-list' %}" class="card text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h6 class="card-title">Trial Balance</h6>
+                            <p class="card-text text-muted">View GL Reports</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'accounting:profit_loss_list' %}" class="card text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h6 class="card-title">P&L Statement</h6>
+                            <p class="card-text text-muted">Income Statement</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'accounting:balance_sheet_list' %}" class="card text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h6 class="card-title">Balance Sheet</h6>
+                            <p class="card-text text-muted">Financial Position</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'accounting:audit_log_list' %}" class="card text-decoration-none text-dark">
+                        <div class="card-body">
+                            <h6 class="card-title">Audit Log</h6>
+                            <p class="card-text text-muted">Activity History</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="alert alert-warning">
+                <p>Please select an entity to view the dashboard.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

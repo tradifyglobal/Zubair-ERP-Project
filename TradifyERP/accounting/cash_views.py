@@ -8,11 +8,14 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 from decimal import Decimal
 from .models import (
     CashReceiptLine, CashPaymentLine, BankReceiptLine, BankPaymentLine,
-    Account, LedgerEntry, AuditLog
+    Account, LedgerEntry, AuditLog, Entity
 )
 from .cash_forms import (
     CashReceiptLineForm, CashPaymentLineForm, BankReceiptLineForm, BankPaymentLineForm
@@ -33,6 +36,11 @@ class CashReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             initial = kwargs.get('initial', {})
             initial['date'] = datetime.now().date()
             kwargs['initial'] = initial
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+            kwargs['entity'] = entity
         return kwargs
     
     def form_valid(self, form):
@@ -40,6 +48,12 @@ class CashReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
         form.instance.entity = self.request.entity
         form.instance.workflow_status = 'DRAFT'
         form.instance.status = 'DRAFT'
+        
+        # Auto-assign stakeholder based on selected account BEFORE saving
+        if not form.instance.stakeholder_id and form.instance.account:
+            stakeholder = self._find_stakeholder_for_account(form.instance.account)
+            if stakeholder:
+                form.instance.stakeholder = stakeholder
         
         try:
             receipt = form.save()
@@ -61,6 +75,68 @@ class CashReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
         
         return redirect('accounting:cash_receipt_list')
     
+    def _find_stakeholder_for_account(self, account):
+        """Find stakeholder that matches the account name pattern."""
+        from accounting.models import Stakeholder
+        
+        if not account or not account.name:
+            return None
+            
+        account_name = account.name.strip()
+        
+        # Extract stakeholder name from account name patterns like:
+        # "Dr. Irfan Mohammed - Capital" -> "Dr. Irfan Mohammed"
+        # "Nasir Ali Ali Mohammed - Capital" -> "Nasir Ali Ali Mohammed"
+        if ' - Capital' in account_name:
+            stakeholder_name = account_name.replace(' - Capital', '').strip()
+        else:
+            return None
+        
+        # Try to find matching stakeholder by name
+        stakeholders = Stakeholder.objects.filter(entity=account.entity)
+        
+        # 1. First, try exact match by full name
+        for stakeholder in stakeholders:
+            if stakeholder.full_name == stakeholder_name:
+                return stakeholder
+        
+        # 2. Try fuzzy matching for name variations
+        extracted_words = set(stakeholder_name.lower().split())
+        best_match = None
+        best_score = 0
+        
+        for stakeholder in stakeholders:
+            stakeholder_words = set(stakeholder.full_name.lower().split())
+            
+            # Calculate word overlap
+            overlap = len(extracted_words.intersection(stakeholder_words))
+            total_words = max(len(extracted_words), len(stakeholder_words))
+            
+            if total_words > 0:
+                score = overlap / total_words
+                
+                # Require at least 60% word match and minimum 2 matching words
+                if score >= 0.6 and overlap >= 2 and score > best_score:
+                    best_match = stakeholder
+                    best_score = score
+        
+        if best_match:
+            return best_match
+        
+        # 3. Fallback: try partial matching by first/last name
+        name_parts = stakeholder_name.split()
+        if len(name_parts) >= 2:
+            first_part = name_parts[0]
+            last_part = name_parts[-1]
+            
+            for stakeholder in stakeholders:
+                if (stakeholder.first_name and stakeholder.last_name and 
+                    first_part.lower() in stakeholder.first_name.lower() and 
+                    last_part.lower() in stakeholder.last_name.lower()):
+                    return stakeholder
+        
+        return None
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Create Cash Receipt'
@@ -70,6 +146,10 @@ class CashReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             {'name': 'Cash Receipts', 'url': 'cash_receipt_list'},
             {'name': 'New Receipt', 'url': '#'},
         ]
+        # Add entity_id for reference number generation
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            context['entity_id'] = entity_id
         return context
 
 
@@ -124,6 +204,11 @@ class CashPaymentCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             initial = kwargs.get('initial', {})
             initial['date'] = datetime.now().date()
             kwargs['initial'] = initial
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+            kwargs['entity'] = entity
         return kwargs
     
     def form_valid(self, form):
@@ -161,6 +246,10 @@ class CashPaymentCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             {'name': 'Cash Payments', 'url': 'cash_payment_list'},
             {'name': 'New Payment', 'url': '#'},
         ]
+        # Add entity_id for reference number generation
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            context['entity_id'] = entity_id
         return context
 
 
@@ -215,6 +304,11 @@ class BankReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             initial = kwargs.get('initial', {})
             initial['date'] = datetime.now().date()
             kwargs['initial'] = initial
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+            kwargs['entity'] = entity
         return kwargs
     
     def form_valid(self, form):
@@ -255,6 +349,10 @@ class BankReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             {'name': 'Bank Receipts', 'url': 'bank_receipt_list'},
             {'name': 'New Receipt', 'url': '#'},
         ]
+        # Add entity_id for reference number generation
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            context['entity_id'] = entity_id
         return context
 
 
@@ -309,6 +407,11 @@ class BankPaymentCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             initial = kwargs.get('initial', {})
             initial['date'] = datetime.now().date()
             kwargs['initial'] = initial
+        # Get entity from session
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+            kwargs['entity'] = entity
         return kwargs
     
     def form_valid(self, form):
@@ -349,6 +452,10 @@ class BankPaymentCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             {'name': 'Bank Payments', 'url': 'bank_payment_list'},
             {'name': 'New Payment', 'url': '#'},
         ]
+        # Add entity_id for reference number generation
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            context['entity_id'] = entity_id
         return context
 
 
@@ -466,3 +573,155 @@ class BankPaymentPrintView(LoginRequiredMixin, SessionEntityMixin, DetailView):
     model = BankPaymentLine
     template_name = 'accounting/bank_payment_print.html'
     context_object_name = 'payment'
+
+
+@require_http_methods(["GET"])
+@csrf_exempt
+def get_sub_accounts_api(request):
+    """
+    API endpoint to get sub-accounts for a given main account.
+    Used by JavaScript to populate cascading dropdown.
+    
+    Query params:
+        - main_account_id: ID of the main account
+        - entity_id: ID of the entity
+    
+    Returns JSON: {
+        'success': bool,
+        'sub_accounts': [
+            {'id': 1, 'account_number': '3100-01', 'name': 'Account Name'},
+            ...
+        ]
+    }
+    """
+    try:
+        main_account_id = request.GET.get('main_account_id')
+        entity_id = request.GET.get('entity_id')
+        
+        if not main_account_id or not entity_id:
+            return JsonResponse({
+                'success': False,
+                'message': 'main_account_id and entity_id are required'
+            }, status=400)
+        
+        # Get the main account
+        main_account = Account.objects.filter(
+            id=main_account_id,
+            entity_id=entity_id,
+            is_active=True
+        ).first()
+        
+        if not main_account:
+            return JsonResponse({
+                'success': False,
+                'message': 'Main account not found'
+            }, status=404)
+        
+        # Get all sub-accounts of this main account
+        sub_accounts = Account.objects.filter(
+            parent_account=main_account,
+            entity_id=entity_id,
+            is_active=True
+        ).order_by('account_number').values('id', 'account_number', 'name')
+        
+        # If no sub-accounts exist, include the main account itself as an option
+        accounts_list = list(sub_accounts)
+        if not accounts_list:
+            accounts_list = [{
+                'id': main_account.id,
+                'account_number': main_account.account_number,
+                'name': main_account.name
+            }]
+        
+        return JsonResponse({
+            'success': True,
+            'sub_accounts': accounts_list,
+            'has_sub_accounts': len(sub_accounts) > 0,
+            'main_account_fallback': not bool(sub_accounts)
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+
+@require_http_methods(["GET"])
+def generate_reference_number_api(request):
+    """
+    API endpoint to generate reference numbers based on form type.
+    Used by JavaScript to auto-populate reference number fields.
+    
+    Query params:
+        - form_type: Type of form ('cash_receipt', 'cash_payment', 'bank_receipt', 'bank_payment')
+        - entity_id: ID of the entity
+    
+    Returns JSON: {
+        'success': bool,
+        'reference_number': 'CR001' or 'CP001' or 'BR001' or 'BP001'
+    }
+    """
+    try:
+        form_type = request.GET.get('form_type')
+        entity_id = request.GET.get('entity_id')
+        
+        if not form_type or not entity_id:
+            return JsonResponse({
+                'success': False,
+                'message': 'form_type and entity_id are required'
+            }, status=400)
+        
+        # Determine the prefix and model based on form type
+        prefix_map = {
+            'cash_receipt': 'CR',
+            'cash_payment': 'CP',
+            'bank_receipt': 'BR',
+            'bank_payment': 'BP'
+        }
+        
+        model_map = {
+            'cash_receipt': CashReceiptLine,
+            'cash_payment': CashPaymentLine,
+            'bank_receipt': BankReceiptLine,
+            'bank_payment': BankPaymentLine
+        }
+        
+        if form_type not in prefix_map:
+            return JsonResponse({
+                'success': False,
+                'message': f'Invalid form_type: {form_type}'
+            }, status=400)
+        
+        prefix = prefix_map[form_type]
+        model = model_map[form_type]
+        
+        # Get the highest sequence number for this form type and entity
+        latest = model.objects.filter(
+            entity_id=entity_id,
+            reference_number__startswith=prefix
+        ).order_by('-reference_number').first()
+        
+        if latest and latest.reference_number:
+            try:
+                # Extract the number from the reference (e.g., 'CR001' -> 1)
+                number_part = latest.reference_number[len(prefix):]
+                sequence = int(number_part) + 1
+            except (ValueError, IndexError):
+                sequence = 1
+        else:
+            sequence = 1
+        
+        # Generate the reference number with zero-padding (e.g., CR001)
+        reference_number = f"{prefix}{sequence:03d}"
+        
+        return JsonResponse({
+            'success': True,
+            'reference_number': reference_number
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)

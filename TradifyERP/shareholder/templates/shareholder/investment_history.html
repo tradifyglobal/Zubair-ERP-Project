@@ -164,10 +164,10 @@
                                                 </tr>
                                                 <tr>
                                                     <td class="text-muted">
-                                                        <strong>USD Equivalent:</strong>
+                                                        <strong>{{ contribution.currency_destination.code }} Equivalent:</strong>
                                                     </td>
                                                     <td>
-                                                        <span class="text-info">{{ contribution.amount_usd|floatformat:2 }}</span> USD
+                                                        <span class="text-info">{{ contribution.amount_company_currency|floatformat:2 }}</span> {{ contribution.currency_destination.code }}
                                                     </td>
                                                 </tr>
                                                 <tr class="table-active">

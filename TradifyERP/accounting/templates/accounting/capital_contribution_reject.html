@@ -1,0 +1,98 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block head_title%}
+    <title>Reject Capital Contribution | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Reject Capital Contribution</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:capital_contribution_list' %}">Contributions</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:capital_contribution_detail' contribution.id %}">Detail</a></li>
+                                <li class="breadcrumb-item active">Reject</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0 text-white">
+                                <i class="mdi mdi-close-circle"></i> Reject Contribution
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <i class="mdi mdi-alert"></i>
+                                <strong>Warning:</strong> Rejecting this contribution will set its status to CANCELLED. This action cannot be easily undone.
+                            </div>
+
+                            <div class="mb-3">
+                                <h6>Contribution Summary:</h6>
+                                <table class="table table-sm table-bordered">
+                                    <tr>
+                                        <th width="30%">Stakeholder:</th>
+                                        <td>{{ contribution.stakeholder.full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Amount:</th>
+                                        <td>{{ contribution.currency.symbol }}{{ contribution.amount|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date:</th>
+                                        <td>{{ contribution.contribution_date }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Payment Mode:</th>
+                                        <td>{{ contribution.get_payment_mode_display }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Current Status:</th>
+                                        <td><span class="badge bg-warning text-dark">{{ contribution.get_workflow_status_display }}</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <form method="post" class="form">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="id_rejection_reason" class="form-label">
+                                        Rejection Reason <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea name="rejection_reason" id="id_rejection_reason" 
+                                              class="form-control" rows="4" required
+                                              placeholder="Please provide a detailed reason for rejection"></textarea>
+                                    <small class="form-text text-muted">This reason will be visible to all parties.</small>
+                                </div>
+                                
+                                <div class="mt-4 d-flex gap-2">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="mdi mdi-close-circle"></i> Confirm Rejection
+                                    </button>
+                                    <a href="{% url 'accounting:capital_contribution_detail' contribution.id %}" class="btn btn-secondary">
+                                        <i class="mdi mdi-arrow-left"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

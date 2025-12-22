@@ -295,36 +295,55 @@ class StakeholderAdmin(admin.ModelAdmin):
     list_filter = ('entity', 'stakeholder_type', 'status', 'created_at')
     search_fields = ('first_name', 'last_name', 'company_name', 'email', 'phone_number')
     readonly_fields = ('created_at', 'updated_at')
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('entity', 'stakeholder_type', 'status')
-        }),
-        ('Personal Details', {
-            'fields': ('first_name', 'last_name', 'date_of_birth', 'gender', 'nationality', 'occupation'),
-            'classes': ('collapse',)
-        }),
-        ('Corporate Details', {
-            'fields': ('company_name', 'registration_number', 'company_type', 'relationship_to_company'),
-            'classes': ('collapse',)
-        }),
-        ('Contact Information', {
-            'fields': ('email', 'phone_number', 'secondary_phone', 'fax')
-        }),
-        ('Address', {
-            'fields': ('address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country')
-        }),
-        ('Tax & Legal', {
-            'fields': ('tax_identification_number', 'tax_id_type')
-        }),
-        ('Additional', {
-            'fields': ('joined_date', 'notes'),
-            'classes': ('collapse',)
-        }),
-        ('System', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
+    
+    def get_fieldsets(self, request, obj=None):
+        """Dynamically add start_date and end_date fields if they exist on the model."""
+        fieldsets = (
+            ('Basic Information', {
+                'fields': ('entity', 'stakeholder_type', 'status')
+            }),
+            ('Personal Details', {
+                'fields': ('first_name', 'last_name', 'date_of_birth', 'gender', 'nationality', 'occupation'),
+                'classes': ('collapse',)
+            }),
+            ('Corporate Details', {
+                'fields': ('company_name', 'registration_number', 'company_type', 'relationship_to_company'),
+                'classes': ('collapse',)
+            }),
+            ('Contact Information', {
+                'fields': ('email', 'phone_number', 'secondary_phone', 'fax')
+            }),
+            ('Address', {
+                'fields': ('address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country')
+            }),
+            ('Tax & Legal', {
+                'fields': ('tax_identification_number', 'tax_id_type')
+            }),
+            ('Additional', {
+                'fields': ('joined_date', 'notes'),
+                'classes': ('collapse',)
+            }),
+            ('System', {
+                'fields': ('created_at', 'updated_at'),
+                'classes': ('collapse',)
+            }),
+        )
+        
+        # Dynamically add Profit Calculation Dates section if fields exist
+        model_field_names = [f.name for f in self.model._meta.get_fields()]
+        if 'start_date' in model_field_names and 'end_date' in model_field_names:
+            profit_section = (
+                'Profit Calculation Dates',
+                {
+                    'fields': ('start_date', 'end_date'),
+                    'description': 'Set the date range for profit calculation purposes (leave blank for ongoing)',
+                    'classes': ('collapse',)
+                }
+            )
+            # Insert before System section
+            fieldsets = fieldsets[:-1] + (profit_section,) + (fieldsets[-1],)
+        
+        return fieldsets
 
 
 @admin.register(CapitalContribution)

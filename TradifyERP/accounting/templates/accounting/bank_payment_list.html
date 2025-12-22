@@ -108,6 +108,7 @@
                         <th>Description</th>
                         <th>Debit</th>
                         <th>Credit</th>
+                        <th>Currency Info</th>
                         <th>Amount</th>
                         <th>Workflow Status</th>
                         <th>Actions</th>
@@ -134,8 +135,31 @@
                                     {% endif %}
                                 </small>
                             </td>
+                            <td>
+                                {% if payment.currency %}
+                                    <div class="small">
+                                        <strong>Original:</strong> {{ payment.currency.code }}<br>
+                                        <strong>Entity:</strong> 
+                                        {% if payment.entity.company_currency %}
+                                            {{ payment.entity.company_currency.code }}
+                                        {% else %}
+                                            <span class="text-muted">Not Set</span>
+                                        {% endif %}
+                                        {% if payment.currency != payment.entity.company_currency %}
+                                            <br><span class="badge bg-warning text-dark">Multi-Currency</span>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small">No Currency</span>
+                                {% endif %}
+                            </td>
                             <td class="text-end">
-                                <span class="badge bg-info">{{ payment.debit_amount|floatformat:2 }}</span>
+                                <div>
+                                    <span class="badge bg-info">{{ payment.debit_amount|floatformat:2 }}</span>
+                                    {% if payment.currency %}
+                                        <br><small class="text-muted">{{ payment.currency.code }}</small>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td>
                                 {% if payment.workflow_status == 'DRAFT' %}

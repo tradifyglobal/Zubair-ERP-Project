@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Trial Balance - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-1">
+                <i class="fas fa-chart-line text-primary"></i> Trial Balance Dashboard
+            </h1>
+            <p class="text-muted">Overview of accounting accuracy and trial balances</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <!-- Trial Balance generation is automatic -->
+            <a href="{% url 'trial-balance-list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-list"></i> View All
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Metrics Row -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow-sm">
+                <div class="card-body">
+                    <div class="text-primary font-weight-bold text-uppercase mb-1">Latest TB Status</div>
+                    {% if latest_tb %}
+                        {% if latest_tb.is_balanced %}
+                            <div class="h3 mb-0 text-success">
+                                <i class="fas fa-check-circle"></i> Balanced
+                            </div>
+                        {% else %}
+                            <div class="h3 mb-0 text-danger">
+                                <i class="fas fa-exclamation-circle"></i> Unbalanced
+                            </div>
+                        {% endif %}
+                        <small class="text-muted">{{ latest_tb.trial_balance_date|date:"M d, Y" }}</small>
+                    {% else %}
+                        <div class="h3 mb-0 text-muted">No TB</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-success shadow-sm">
+                <div class="card-body">
+                    <div class="text-success font-weight-bold text-uppercase mb-1">Balanced TBs</div>
+                    <div class="h3 mb-0">{{ balanced_count }}</div>
+                    <small class="text-muted">This month</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow-sm">
+                <div class="card-body">
+                    <div class="text-warning font-weight-bold text-uppercase mb-1">Unbalanced TBs</div>
+                    <div class="h3 mb-0">{{ unbalanced_count }}</div>
+                    <small class="text-muted">This month</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-info shadow-sm">
+                <div class="card-body">
+                    <div class="text-info font-weight-bold text-uppercase mb-1">Total TBs</div>
+                    <div class="h3 mb-0">{{ total_count }}</div>
+                    <small class="text-muted">All time</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Trial Balance Section -->
+    {% if latest_tb %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-square text-primary"></i> Latest Trial Balance
+                        <small class="text-muted">({{ latest_tb.trial_balance_date|date:"M d, Y" }})</small>
+                    </h5>
+                    <a href="{% url 'trial-balance-detail' latest_tb.id %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-2">Total Debit</h6>
+                            <h3 class="text-success">₹{{ latest_tb.total_debit|floatformat:2 }}</h3>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-2">Total Credit</h6>
+                            <h3 class="text-danger">₹{{ latest_tb.total_credit|floatformat:2 }}</h3>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-2">Difference</h6>
+                            <h3 class="{% if latest_tb.balance_difference == 0 %}text-success{% else %}text-danger{% endif %}">
+                                ₹{{ latest_tb.balance_difference|floatformat:2 }}
+                            </h3>
+                            {% if latest_tb.is_balanced %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> Balanced
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-exclamation-circle"></i> Unbalanced
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Trial Balances -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history text-primary"></i> Recent Trial Balances
+                    </h5>
+                    <a href="{% url 'trial-balance-list' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> All Trial Balances
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Total Debit</th>
+                                <th>Total Credit</th>
+                                <th>Difference</th>
+                                <th>Status</th>
+                                <th>Balance</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tb in recent_tbs %}
+                            <tr>
+                                <td><strong>{{ tb.trial_balance_date|date:"M d, Y" }}</strong></td>
+                                <td>
+                                    <span class="text-success">
+                                        ₹{{ tb.total_debit|floatformat:2 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-danger">
+                                        ₹{{ tb.total_credit|floatformat:2 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if tb.balance_difference == 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                        ₹{{ tb.balance_difference|floatformat:2 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if tb.status == 'VERIFIED' %}
+                                        <span class="badge bg-success">Verified</span>
+                                    {% elif tb.status == 'GENERATED' %}
+                                        <span class="badge bg-info">Generated</span>
+                                    {% elif tb.status == 'ERROR' %}
+                                        <span class="badge bg-danger">Error</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if tb.is_balanced %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Balanced
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-circle"></i> Unbalanced
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'trial-balance-detail' tb.id %}" class="btn btn-sm btn-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    No trial balances found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trial Balances -->
+    {% if monthly_tbs %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar text-primary"></i> Monthly Trial Balances
+                    </h5>
+                    <a href="{% url 'trial-balance-monthly' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-calendar"></i> Monthly Archive
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month End Date</th>
+                                <th>Total Debit</th>
+                                <th>Total Credit</th>
+                                <th>Status</th>
+                                <th>Approved</th>
+                                <th>P&L Generated</th>
+                                <th>Balance Sheet Generated</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mtb in monthly_tbs %}
+                            <tr>
+                                <td><strong>{{ mtb.month_end_date|date:"B Y" }}</strong></td>
+                                <td>₹{{ mtb.total_debit|floatformat:2 }}</td>
+                                <td>₹{{ mtb.total_credit|floatformat:2 }}</td>
+                                <td>
+                                    {% if mtb.trial_balance.is_balanced %}
+                                        <span class="badge bg-success">Balanced</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Unbalanced</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if mtb.approved %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Yes
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if mtb.p_and_l_generated %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Yes
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if mtb.balance_sheet_generated %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Yes
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'trial-balance-detail' mtb.trial_balance.id %}" class="btn btn-sm btn-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    No monthly trial balances found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .border-left-primary { border-left: 4px solid #007bff !important; }
+    .border-left-success { border-left: 4px solid #28a745 !important; }
+    .border-left-warning { border-left: 4px solid #ffc107 !important; }
+    .border-left-info { border-left: 4px solid #17a2b8 !important; }
+    
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+</style>
+{% endblock %}

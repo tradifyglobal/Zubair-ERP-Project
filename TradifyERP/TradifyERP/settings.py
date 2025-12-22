@@ -174,7 +174,7 @@ DATABASES = {
         'NAME': 'tradifyerp_db',
         'USER': 'tradifyerp_user',
         'PASSWORD': 'Tradify@PostgreSQL2024',
-        'HOST': 'localhost',
+        'HOST': '192.168.2.59',
         'PORT': '5432',
         'ATOMIC_REQUESTS': True,
         'CONN_MAX_AGE': 600,

@@ -1,0 +1,312 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Edit{% else %}Create{% endif %} Journal Voucher{% endblock %}
+
+{% block extra_css %}
+<style>
+    .formset-row {
+        border-bottom: 1px solid #e9ecef;
+        padding: 10px 0;
+        margin-bottom: 10px;
+    }
+    .formset-row:last-child {
+        border-bottom: none;
+    }
+    .delete-checkbox {
+        width: 20px;
+        height: 20px;
+    }
+    #total-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+    .balance-warning {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">
+                    {% if is_update %}Edit{% else %}Create{% endif %} Journal Voucher
+                </h4>
+                <div class="page-title-right">
+                    <a href="{% url 'accounting:journal_voucher_list' %}" class="btn btn-secondary">
+                        <i class="bx bx-arrow-back align-middle me-1"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="voucher-form">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Voucher Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.voucher_number.id_for_label }}" class="form-label">
+                                        Voucher Number <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.voucher_number }}
+                                    {% if form.voucher_number.errors %}
+                                        <div class="text-danger">{{ form.voucher_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.voucher_date.id_for_label }}" class="form-label">
+                                        Voucher Date <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.voucher_date }}
+                                    {% if form.voucher_date.errors %}
+                                        <div class="text-danger">{{ form.voucher_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.voucher_type.id_for_label }}" class="form-label">
+                                        Voucher Type <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.voucher_type }}
+                                    {% if form.voucher_type.errors %}
+                                        <div class="text-danger">{{ form.voucher_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.reference_number.id_for_label }}" class="form-label">
+                                        Reference Number
+                                    </label>
+                                    {{ form.reference_number }}
+                                    {% if form.reference_number.errors %}
+                                        <div class="text-danger">{{ form.reference_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.reference_type.id_for_label }}" class="form-label">
+                                        Reference Type
+                                    </label>
+                                    {{ form.reference_type }}
+                                    {% if form.reference_type.errors %}
+                                        <div class="text-danger">{{ form.reference_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.attachment.id_for_label }}" class="form-label">
+                                        Attachment
+                                    </label>
+                                    {{ form.attachment }}
+                                    {% if form.attachment.errors %}
+                                        <div class="text-danger">{{ form.attachment.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                                        Description <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                        Notes
+                                    </label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger">{{ form.notes.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voucher Lines -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Voucher Lines</h5>
+                        
+                        {{ formset.management_form }}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="formset-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="5%">Line #</th>
+                                        <th width="25%">Account <span class="text-danger">*</span></th>
+                                        <th width="10%">Type <span class="text-danger">*</span></th>
+                                        <th width="12%">Amount <span class="text-danger">*</span></th>
+                                        <th width="18%">Description</th>
+                                        <th width="12%">Stakeholder</th>
+                                        <th width="12%">Employee</th>
+                                        <th width="6%">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="formset-body">
+                                    {% for line_form in formset %}
+                                    <tr class="formset-row">
+                                        <td>
+                                            {{ line_form.id }}
+                                            {{ line_form.line_number }}
+                                        </td>
+                                        <td>{{ line_form.account }}</td>
+                                        <td>{{ line_form.entry_type }}</td>
+                                        <td>{{ line_form.amount }}</td>
+                                        <td>{{ line_form.description }}</td>
+                                        <td>{{ line_form.stakeholder }}</td>
+                                        <td>{{ line_form.employee }}</td>
+                                        <td class="text-center">
+                                            {{ line_form.DELETE }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totals Section -->
+                        <div id="total-section">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6>Total Debit: <span id="total-debit" class="text-primary">₹0.00</span></h6>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6>Total Credit: <span id="total-credit" class="text-success">₹0.00</span></h6>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6>Difference: <span id="difference" class="text-muted">₹0.00</span></h6>
+                                    <div class="balance-warning text-danger" id="balance-warning">
+                                        <i class="bx bx-error-circle"></i> Voucher is not balanced!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="text-end">
+                    <a href="{% url 'accounting:journal_voucher_list' %}" class="btn btn-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bx bx-save align-middle me-1"></i> Save Voucher
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculate totals on page load and on input change
+    function calculateTotals() {
+        let totalDebit = 0;
+        let totalCredit = 0;
+        
+        document.querySelectorAll('.formset-row').forEach(function(row) {
+            // Skip deleted rows
+            const deleteCheckbox = row.querySelector('input[type="checkbox"][id$="-DELETE"]');
+            if (deleteCheckbox && deleteCheckbox.checked) {
+                return;
+            }
+            
+            const amountInput = row.querySelector('input[id$="-amount"]');
+            const entryTypeSelect = row.querySelector('select[id$="-entry_type"]');
+            
+            if (amountInput && entryTypeSelect) {
+                const amount = parseFloat(amountInput.value) || 0;
+                const entryType = entryTypeSelect.value;
+                
+                if (entryType === 'DEBIT') {
+                    totalDebit += amount;
+                } else if (entryType === 'CREDIT') {
+                    totalCredit += amount;
+                }
+            }
+        });
+        
+        const difference = Math.abs(totalDebit - totalCredit);
+        
+        // Update UI
+        document.getElementById('total-debit').textContent = '₹' + totalDebit.toFixed(2);
+        document.getElementById('total-credit').textContent = '₹' + totalCredit.toFixed(2);
+        document.getElementById('difference').textContent = '₹' + difference.toFixed(2);
+        
+        // Show/hide balance warning
+        const warningDiv = document.getElementById('balance-warning');
+        if (difference > 0.01) {  // Account for floating point precision
+            warningDiv.style.display = 'block';
+            document.getElementById('difference').className = 'text-danger fw-bold';
+        } else {
+            warningDiv.style.display = 'none';
+            document.getElementById('difference').className = 'text-success fw-bold';
+        }
+    }
+    
+    // Attach event listeners
+    document.getElementById('formset-body').addEventListener('input', calculateTotals);
+    document.getElementById('formset-body').addEventListener('change', calculateTotals);
+    
+    // Set today's date as default if creating new voucher
+    {% if not is_update %}
+    const dateInput = document.getElementById('{{ form.voucher_date.id_for_label }}');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+    {% endif %}
+    
+    // Initial calculation
+    calculateTotals();
+});
+</script>
+{% endblock %}

@@ -221,6 +221,8 @@ class Employee(models.Model):
     base_salary = models.DecimalField(
         max_digits=18,
         decimal_places=2,
+        null=True,
+        blank=True,
         validators=[MinValueValidator(0)]
     )
     salary_currency = models.CharField(

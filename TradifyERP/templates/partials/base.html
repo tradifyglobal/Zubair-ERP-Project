@@ -42,6 +42,9 @@
         <!-- Responsive Scrollbar System - Shows scrollbars based on zoom and screen size -->
         <link href="{% static 'css/responsive-scrollbars.css' %}" rel="stylesheet" type="text/css" />
 
+        <!-- Scrollable Page Content -->
+        <link href="{% static 'css/scrollable-page.css' %}" rel="stylesheet" type="text/css" />
+
         {% comment %} <link href="{% static 'css/bootstrap-rtl.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" /> {% endcomment %}
         {% comment %} <link href="{% static 'css/app-rtl.min.css' %}" id="app-style" rel="stylesheet" type="text/css" /> {% endcomment %}
         {% endblock%}
@@ -69,16 +72,23 @@
         html, body {
             scroll-behavior: smooth;
             overflow-x: hidden !important;
-            height: auto !important;
             width: 100% !important;
         }
-
-        /* Remove all custom scrollbars - use browser default */
-        body {
-            -ms-overflow-style: auto !important;
-            scrollbar-width: auto !important;
-            overflow-y: auto !important;
+        
+        /* Body settings for horizontal layout */
+        body[data-layout="horizontal"] {
+            height: 100vh !important;
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+            overflow: hidden !important;
+        }
+        
+        /* Body settings for vertical layout */
+        body:not([data-layout="horizontal"]) {
+            height: auto !important;
+            min-height: 100vh !important;
             overflow-x: hidden !important;
+            overflow-y: auto !important;
         }
 
         /* Remove simplebar and all custom scrollbar implementations */
@@ -131,7 +141,7 @@
         }
 
         /* Main content should not have additional top margin since layout-wrapper has padding */
-        .main-content {
+        body[data-layout="horizontal"] .main-content {
             margin-top: 0 !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
@@ -139,18 +149,47 @@
             position: relative !important;
             z-index: 1 !important;
             width: 100% !important;
+            height: calc(100vh - 70px) !important;
             box-sizing: border-box !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .main-content {
+            margin-top: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-top: 0 !important;
+            position: relative !important;
+            z-index: 1 !important;
+            width: auto !important;
+            height: auto !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
         }
 
         /* Page content positioning */
-        .page-content {
-            margin-top: 0 !important;
-            padding-top: 1.5rem !important;
+        body[data-layout="horizontal"] .page-content {
+            margin-top: 70px !important;
+            padding-top: 0.5rem !important;
             position: relative !important;
             z-index: 1 !important;
             width: 100% !important;
+            max-height: 80vh !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .page-content {
+            margin-top: 0 !important;
+            padding-top: 0.5rem !important;
+            position: relative !important;
+            z-index: 1 !important;
+            width: 100% !important;
+            height: auto !important;
+        }
             box-sizing: border-box !important;
             overflow-x: hidden !important;
+            overflow-y: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
         }
 
         /* Ensure horizontal sidebar is also properly positioned */
@@ -320,22 +359,87 @@
         /* Constrain navbar-brand-box and logo */
         .navbar-brand-box {
             max-height: 70px;
-            overflow: hidden;
+            overflow: visible !important;
             padding-left: 2.5rem !important;
             padding-right: 0 !important;
             display: flex !important;
             align-items: center !important;
+            width: auto !important;
+        }
+        
+        /* Vertical layout - same size as horizontal */
+        body:not([data-layout="horizontal"]) .navbar-brand-box {
+            padding-left: 1.5rem !important;
+            padding-right: 0 !important;
+            max-width: none !important;
+            min-width: auto !important;
+            flex-shrink: 0 !important;
+            margin-right: 0 !important;
+        }
+        
+        /* Horizontal layout - wider logo */
+        body[data-layout="horizontal"] .navbar-brand-box {
+            padding-left: 2.5rem !important;
+            max-width: 250px !important;
+            min-width: 200px !important;
+        }
+        
+        /* Ensure menu button doesn't overlap */
+        #vertical-menu-btn {
+            flex-shrink: 0 !important;
+            z-index: 1051 !important;
         }
         
         .navbar-brand-box .logo {
             margin-left: 0 !important;
             padding-left: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            height: 32px !important;
         }
         
-        /* Fix logo size ONLY in vertical layout */
+        /* Show logo-dark in light theme */
+        body[data-bs-theme="light"] .navbar-brand-box .logo-dark {
+            display: flex !important;
+        }
+        
+        /* Hide logo-light in light theme */
+        body[data-bs-theme="light"] .navbar-brand-box .logo-light {
+            display: none !important;
+        }
+        
+        /* Show logo-light in dark theme */
+        body[data-bs-theme="dark"] .navbar-brand-box .logo-light {
+            display: flex !important;
+        }
+        
+        /* Hide logo-dark in dark theme */
+        body[data-bs-theme="dark"] .navbar-brand-box .logo-dark {
+            display: none !important;
+        }
+        
+        /* If theme is not set, default to showing logo-dark and hiding logo-light */
+        body:not([data-bs-theme]) .navbar-brand-box .logo-dark {
+            display: flex !important;
+        }
+        
+        body:not([data-bs-theme]) .navbar-brand-box .logo-light {
+            display: none !important;
+        }
+        
+        /* Fix logo size ONLY in vertical layout - same as horizontal */
         body:not([data-layout="horizontal"]) .navbar-brand-box .logo img {
-            max-height: 24px !important;
-            max-width: 100% !important;
+            height: 32px !important;
+            width: auto !important;
+            max-width: 150px !important;
+            object-fit: contain !important;
+        }
+        
+        /* Fix logo size in horizontal layout */
+        body[data-layout="horizontal"] .navbar-brand-box .logo img {
+            height: 32px !important;
+            width: auto !important;
+            max-width: 150px !important;
             object-fit: contain !important;
         }
         
@@ -411,28 +515,97 @@
         
         body[data-layout="horizontal"] .topnav {
             position: relative !important;
-            z-index: 999 !important;
+            z-index: 10000 !important;
             background: white !important;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
             width: 100% !important;
+            max-width: 100% !important;
             overflow: visible !important;
             display: block !important;
             height: auto !important;
             min-height: 50px !important;
+            box-sizing: border-box !important;
         }
         
-        body[data-layout="horizontal"] .topnav-menu {
-            width: 100% !important;
-            display: flex !important;
+        /* Desktop: Full width horizontal menu */
+        @media (min-width: 992px) {
+            body[data-layout="horizontal"] .topnav-menu {
+                width: 100% !important;
+                min-width: max-content !important;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+            }
+            
+            body[data-layout="horizontal"] .navbar-nav {
+                display: flex !important;
+                width: 100% !important;
+            }
+            
+            body[data-layout="horizontal"] .nav-item {
+                display: flex !important;
+                position: relative !important;
+            }
         }
         
-        body[data-layout="horizontal"] .navbar-nav {
-            display: flex !important;
-            width: 100% !important;
-        }
-        
-        body[data-layout="horizontal"] .nav-item {
-            display: flex !important;
+        /* Mobile: Collapsible menu */
+        @media (max-width: 991px) {
+            body[data-layout="horizontal"] .topnav {
+                position: fixed !important;
+                top: 70px !important;
+                left: 0 !important;
+                right: 0 !important;
+                z-index: 1040 !important;
+                background: white !important;
+            }
+            
+            body[data-layout="horizontal"] .topnav-menu {
+                width: 100% !important;
+                min-width: auto !important;
+                display: block !important;
+            }
+            
+            body[data-layout="horizontal"] .navbar-nav {
+                display: block !important;
+                width: 100% !important;
+                background: white !important;
+                padding: 0 !important;
+            }
+            
+            body[data-layout="horizontal"] .nav-item {
+                display: block !important;
+                position: relative !important;
+                width: 100% !important;
+                border-bottom: 1px solid #e9ecef !important;
+            }
+            
+            body[data-layout="horizontal"] .nav-link {
+                padding: 12px 15px !important;
+                width: 100% !important;
+            }
+            
+            /* Hide collapsed menu by default */
+            body[data-layout="horizontal"] #topnav-menu-content:not(.show) {
+                display: none !important;
+            }
+            
+            /* Show menu when toggled */
+            body[data-layout="horizontal"] #topnav-menu-content.show {
+                display: block !important;
+                position: absolute !important;
+                top: 100% !important;
+                left: 0 !important;
+                right: 0 !important;
+                background: white !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+                max-height: calc(100vh - 130px) !important;
+                overflow-y: auto !important;
+                z-index: 1041 !important;
+            }
+            
+            /* Adjust page content margin for fixed menu */
+            body[data-layout="horizontal"] #layout-wrapper {
+                padding-top: 130px !important;
+            }
         }
         
         body[data-layout="horizontal"] .nav-link {
@@ -459,6 +632,19 @@
         body[data-bs-theme="dark"] .horizontal-layout-sidebar {
             background: #1f2937 !important;
             border-bottom-color: #374151 !important;
+        }
+        
+        /* Dark theme mobile menu */
+        @media (max-width: 991px) {
+            body[data-bs-theme="dark"][data-layout="horizontal"] .topnav,
+            body[data-bs-theme="dark"][data-layout="horizontal"] .navbar-nav,
+            body[data-bs-theme="dark"][data-layout="horizontal"] #topnav-menu-content.show {
+                background: #1f2937 !important;
+            }
+            
+            body[data-bs-theme="dark"][data-layout="horizontal"] .nav-item {
+                border-bottom-color: #374151 !important;
+            }
         }
         
         body[data-bs-theme="dark"] #page-topbar {
@@ -579,16 +765,27 @@
             background-color: #e8f5e9 !important;
         }
         
+        /* Dark theme page background */
+        body[data-bs-theme="dark"] {
+            background-color: #111827 !important;
+        }
+        
+        body[data-bs-theme="dark"] .page-content {
+            background-color: #111827 !important;
+        }
+        
         /* Dropdown click effects */
         body[data-layout="horizontal"] .dropdown-menu {
             position: absolute !important;
             display: none !important;
-            z-index: 1001 !important;
+            z-index: 10001 !important;
             top: 100% !important;
             left: 0 !important;
             max-height: 70vh !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
+            background: white !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
         }
         
         body[data-layout="horizontal"] .dropdown-menu.show {
@@ -604,6 +801,22 @@
         
         body[data-layout="horizontal"] .nav-item.dropdown > .dropdown-menu {
             margin-top: 0 !important;
+        }
+        
+        /* Mobile dropdown styles */
+        @media (max-width: 991px) {
+            body[data-layout="horizontal"] .dropdown-menu {
+                position: static !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                border: 1px solid #e9ecef !important;
+                margin-top: 0.25rem !important;
+            }
+            
+            body[data-layout="horizontal"] .dropdown-mega-menu-xl {
+                width: 100% !important;
+                left: 0 !important;
+            }
         }
         
         .navbar-header {
@@ -633,14 +846,14 @@
         /* Fix page title overflow */
         .page-title-box {
             margin-top: 0 !important;
-            padding-top: 1.5rem !important;
+            padding-top: 0.5rem !important;
             padding-left: 1.5rem !important;
             padding-right: 1.5rem !important;
             overflow: hidden;
         }
         
         body[data-layout="horizontal"] .page-title-box {
-            padding-top: 1.5rem !important;
+            padding-top: 0.5rem !important;
         }
         
         .page-title-box h4 {
@@ -685,8 +898,10 @@
             grid-template-areas: "header header"
                                  "sidebar content" !important;
             grid-template-columns: 250px 1fr !important;
-            grid-template-rows: 70px 1fr !important;
+            grid-template-rows: 70px calc(100vh - 70px) !important;
             padding-top: 0 !important;
+            height: 100vh !important;
+            width: 100% !important;
         }
 
         body:not([data-layout="horizontal"]) .vertical-layout-header {
@@ -696,11 +911,43 @@
         body:not([data-layout="horizontal"]) .vertical-layout-sidebar {
             grid-area: sidebar !important;
             flex: none !important;
-        }        body:not([data-layout="horizontal"]) .main-content {
+            width: 250px !important;
+            position: relative !important;
+        }
+        
+        /* Light theme vertical sidebar */
+        body[data-bs-theme="light"]:not([data-layout="horizontal"]) .vertical-layout-sidebar {
+            background-color: #e8f5e9 !important;
+        }
+        
+        /* Dark theme vertical sidebar */
+        body[data-bs-theme="dark"]:not([data-layout="horizontal"]) .vertical-layout-sidebar {
+            background-color: #1f2937 !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .main-content {
+            grid-area: content !important;
+            display: block !important;
             order: 3;
             margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
             flex: 1 1 auto !important;
-            grid-area: content !important;
+            position: relative !important;
+            min-width: 0 !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+        }
+        
+        /* Light theme vertical main-content */
+        body[data-bs-theme="light"]:not([data-layout="horizontal"]) .main-content {
+            background: #e8f5e9 !important;
+        }
+        
+        /* Dark theme vertical main-content */
+        body[data-bs-theme="dark"]:not([data-layout="horizontal"]) .main-content {
+            background: #111827 !important;
         }
         
         .main-content .content {
@@ -743,10 +990,19 @@
         }
         
         /* Ensure container-fluid fits properly */
-        .container-fluid {
+        body[data-layout="horizontal"] .container-fluid {
             width: 100% !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            max-width: 100% !important;
+        }
+        
+        body:not([data-layout="horizontal"]) .container-fluid {
+            width: 100% !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
             max-width: 100% !important;
@@ -829,8 +1085,16 @@
         }
 
         /* Modals and dropdowns stay on top */
-        .modal,
-        .dropdown-menu,
+        .modal {
+            z-index: 1060 !important;
+        }
+        
+        .dropdown-menu {
+            z-index: 2000 !important;
+            position: absolute !important;
+            min-width: 160px !important;
+        }
+        
         .popover,
         .tooltip {
             z-index: 1060 !important;
@@ -969,6 +1233,86 @@
         body[data-bs-theme="dark"] .dropdown-header {
             color: #ffffff !important;
         }
+
+        /* CRITICAL FIX: Ensure header buttons are clickable */
+        #page-topbar .navbar-header button,
+        #page-topbar .navbar-header a {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 1051 !important;
+        }
+
+        /* Dropdown toggle buttons must be clickable */
+        .btn.header-item {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 1051 !important;
+            position: relative !important;
+        }
+
+        /* Entity and user dropdowns */
+        .entity-button,
+        .user-button {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 1051 !important;
+            position: relative !important;
+        }
+
+        /* Dropdown container position relative for proper z-index stacking */
+        .dropdown {
+            position: relative !important;
+            z-index: 1051 !important;
+        }
+
+        /* Dropdown menu always visible and clickable */
+        .dropdown-menu {
+            pointer-events: auto !important;
+            z-index: 2000 !important;
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            min-width: 160px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(0, 0, 0, 0.15) !important;
+            border-radius: 0.25rem !important;
+            background-color: #fff !important;
+        }
+
+        .dropdown-menu.show {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translate(0, 0) !important;
+        }
+
+        /* Dropdown items are clickable */
+        .dropdown-item {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 2000 !important;
+            position: relative !important;
+        }
+
+        /* Prevent layout wrapper from blocking header */
+        #layout-wrapper {
+            pointer-events: auto !important;
+        }
+
+        /* Header container must allow clicks */
+        #page-topbar {
+            z-index: 1050 !important;
+        }
+
+        #page-topbar .navbar-header {
+            pointer-events: auto !important;
+            z-index: 1050 !important;
+        }
+
+        #page-topbar .navbar-header .d-flex {
+            pointer-events: auto !important;
+            z-index: 1050 !important;
+        }
     </style>
     <script>
         // CRITICAL: Initialize layout and theme mode from localStorage
@@ -1088,7 +1432,7 @@
         <!-- Begin page -->       
         <!--Vertical View -->
         {% block header %}
-        <div class="vertical-layout-header" style="display: block;">
+        <div class="vertical-layout-header" style="display: none;">
             {% include 'partials/header.html' %}
         </div>
         {% endblock %}
@@ -1111,9 +1455,12 @@
         </div>
         {% endblock %}
 
-        {% block content %}
-        {% include 'partials/content.html' %}
-        {% endblock  %}
+        <div class="main-content">
+            {% block content %}
+            {% include 'partials/content.html' %}
+            {% endblock  %}
+        </div>
+        
         {% block footer %}
         {% include 'partials/footer.html' %}          
         {% endblock %}

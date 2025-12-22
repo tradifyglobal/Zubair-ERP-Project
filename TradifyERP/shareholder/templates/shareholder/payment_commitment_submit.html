@@ -1,0 +1,86 @@
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Submit Payment Commitment for Review{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box">
+                    <h4 class="mb-0">Submit Payment Commitment for Review</h4>
+                </div>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Submit Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Commitment Details for {{ object.stakeholder.full_name }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Shareholder:</strong> {{ object.stakeholder.full_name }}</p>
+                                <p><strong>Amount:</strong> {{ object.currency.symbol }} {{ object.committed_amount|floatformat:2 }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Commitment Date:</strong> {{ object.promised_payment_date|date:"M d, Y" }}</p>
+                                <p><strong>Due Date:</strong> {% if object.due_date %}{{ object.due_date|date:"M d, Y" }}{% else %}<span class="text-muted">Not set</span>{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group-Based Review Info -->
+                <div class="alert alert-info mt-3">
+                    <i class="mdi mdi-information"></i>
+                    <strong>Group-Based Review:</strong> Once submitted, any member of the <strong>"Capital Contribution Reviewers"</strong> group can review this commitment. No need to assign specific reviewers.
+                </div>
+
+                <!-- Submit Form -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h4 class="card-title">Submit for Review</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" id="commitment-submit-form">
+                            {% csrf_token %}
+                            {% crispy form %}
+                        </form>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" form="commitment-submit-form" class="btn btn-primary">
+                                <i class="feather-send"></i> Submit for Review
+                            </button>
+                            <a href="{% url 'shareholder:payment_commitment_detail' object.pk %}" class="btn btn-secondary">
+                                Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

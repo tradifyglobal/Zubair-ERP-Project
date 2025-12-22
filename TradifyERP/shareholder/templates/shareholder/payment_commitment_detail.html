@@ -1,0 +1,636 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{# Cache Bust: 2025-12-11-v2 #}
+
+{% block title %}Payment Commitment Details - {{ commitment.stakeholder.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="mb-sm-0">Payment Commitment Details</h4>
+                        <p class="text-muted mb-0 mt-2">{{ commitment.stakeholder.full_name }}</p>
+                    </div>
+                    <div class="page-title-right">
+                        <a href="{% url 'shareholder:payment_commitment_edit' commitment.pk %}" class="btn btn-primary waves-effect waves-light">
+                            <i class="feather-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'shareholder:investment_report' %}" class="btn btn-secondary waves-effect waves-light">
+                            Back to Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflow Status -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="mb-3"><i class="mdi mdi-workflow"></i> Workflow Status</h6>
+                                
+                                <!-- Status Message -->
+                                {% if commitment.workflow_status == 'DRAFT' %}
+                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                        <strong><i class="mdi mdi-information"></i> Draft:</strong> This commitment is in draft status. Click "Submit" to start the review process.
+                                    </div>
+                                {% elif commitment.workflow_status == 'SUBMITTED' %}
+                                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                        <strong><i class="mdi mdi-clock"></i> Awaiting Review:</strong> Waiting for Reviewer 1 to complete review.
+                                    </div>
+                                {% elif commitment.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
+                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                        <strong><i class="mdi mdi-check-circle"></i> Reviewer 1 Completed:</strong> Awaiting Reviewer 2 to complete their review.
+                                    </div>
+                                {% elif commitment.workflow_status == 'REVIEWED' %}
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        <strong><i class="mdi mdi-check-all"></i> Both Reviews Completed:</strong> Awaiting approval from the approver.
+                                    </div>
+                                {% elif commitment.workflow_status == 'APPROVED' %}
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        <strong><i class="mdi mdi-check-decagram"></i> Approved:</strong> This commitment has been approved.
+                                    </div>
+                                {% elif commitment.workflow_status == 'REJECTED' %}
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <strong><i class="mdi mdi-close-circle"></i> Rejected:</strong> This commitment was rejected.
+                                        {% if commitment.rejection_reason %}
+                                            <br><small>Reason: {{ commitment.rejection_reason }}</small>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Workflow Progress -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="workflow-progress-container">
+                                    <!-- Step 1: Submit -->
+                                    <div class="workflow-step">
+                                        <div class="step-header">
+                                            <div class="avatar-sm mx-auto mb-2">
+                                                <span class="avatar-title rounded-circle {% if commitment.workflow_status in 'SUBMITTED,FIRST_REVIEW_COMPLETED,REVIEWED,APPROVED' %}bg-success text-white{% elif commitment.workflow_status == 'DRAFT' %}bg-secondary text-white{% else %}bg-light text-muted{% endif %}">
+                                                    <i class="mdi mdi-send"></i>
+                                                </span>
+                                            </div>
+                                            <h6 class="mb-1">Step 1: Submit</h6>
+                                        </div>
+                                        <div class="step-content">
+                                            {% if commitment.submitted_by %}
+                                                <p class="text-muted mb-2">
+                                                    <i class="mdi mdi-check-circle text-success"></i> Done
+                                                </p>
+                                                <p class="mb-1">
+                                                    <strong>{{ commitment.submitted_by.get_full_name }}</strong>
+                                                </p>
+                                                {% if commitment.created_at %}
+                                                    <small class="text-muted">{{ commitment.created_at|date:"M d, Y H:i" }}</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <p class="text-warning mb-1">
+                                                    <i class="mdi mdi-clock"></i> Pending
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Step 2: Review 1 -->
+                                    <div class="workflow-step">
+                                        <div class="step-header">
+                                            <div class="avatar-sm mx-auto mb-2">
+                                                <span class="avatar-title rounded-circle {% if commitment.workflow_status in 'FIRST_REVIEW_COMPLETED,REVIEWED,APPROVED' %}bg-success text-white{% elif commitment.workflow_status == 'SUBMITTED' %}bg-warning text-dark{% else %}bg-light text-muted{% endif %}">
+                                                    <i class="mdi mdi-eye-check"></i>
+                                                </span>
+                                            </div>
+                                            <h6 class="mb-1">Step 2: Review 1</h6>
+                                        </div>
+                                        <div class="step-content">
+                                            {% if commitment.reviewed_by %}
+                                                <p class="text-muted mb-2">
+                                                    <i class="mdi mdi-check-circle text-success"></i> Done
+                                                </p>
+                                                <p class="mb-1">
+                                                    <strong>{{ commitment.reviewed_by.get_full_name }}</strong>
+                                                </p>
+                                                {% if commitment.reviewed_at %}
+                                                    <small class="text-muted">{{ commitment.reviewed_at|date:"M d, Y H:i" }}</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <p class="text-warning mb-1">
+                                                    <i class="mdi mdi-clock"></i> Pending
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Step 3: Review 2 -->
+                                    <div class="workflow-step">
+                                        <div class="step-header">
+                                            <div class="avatar-sm mx-auto mb-2">
+                                                <span class="avatar-title rounded-circle {% if commitment.workflow_status in 'REVIEWED,APPROVED' %}bg-success text-white{% elif commitment.workflow_status == 'FIRST_REVIEW_COMPLETED' %}bg-warning text-dark{% else %}bg-light text-muted{% endif %}">
+                                                    <i class="mdi mdi-eye-check"></i>
+                                                </span>
+                                            </div>
+                                            <h6 class="mb-1">Step 3: Review 2</h6>
+                                        </div>
+                                        <div class="step-content">
+                                            {% if commitment.reviewed_by_2 %}
+                                                <p class="text-muted mb-2">
+                                                    <i class="mdi mdi-check-circle text-success"></i> Done
+                                                </p>
+                                                <p class="mb-1">
+                                                    <strong>{{ commitment.reviewed_by_2.get_full_name }}</strong>
+                                                </p>
+                                                {% if commitment.reviewed_at_2 %}
+                                                    <small class="text-muted">{{ commitment.reviewed_at_2|date:"M d, Y H:i" }}</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <p class="text-warning mb-1">
+                                                    <i class="mdi mdi-clock"></i> Pending
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Step 4: Approve -->
+                                    <div class="workflow-step">
+                                        <div class="step-header">
+                                            <div class="avatar-sm mx-auto mb-2">
+                                                <span class="avatar-title rounded-circle {% if commitment.workflow_status == 'APPROVED' %}bg-success text-white{% elif commitment.workflow_status == 'REVIEWED' %}bg-warning text-dark{% else %}bg-light text-muted{% endif %}">
+                                                    <i class="mdi mdi-check-decagram"></i>
+                                                </span>
+                                            </div>
+                                            <h6 class="mb-1">Step 4: Approve</h6>
+                                        </div>
+                                        <div class="step-content">
+                                            {% if commitment.approved_by %}
+                                                <p class="text-muted mb-2">
+                                                    <i class="mdi mdi-check-circle text-success"></i> Done
+                                                </p>
+                                                <p class="mb-1">
+                                                    <strong>{{ commitment.approved_by.get_full_name }}</strong>
+                                                </p>
+                                                {% if commitment.approved_at %}
+                                                    <small class="text-muted">{{ commitment.approved_at|date:"M d, Y H:i" }}</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <p class="text-warning mb-1">
+                                                    <i class="mdi mdi-clock"></i> Pending
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                {% if commitment.workflow_status == 'DRAFT' %}
+                                    <a href="{% url 'shareholder:payment_commitment_submit' commitment.pk %}" class="btn btn-info waves-effect waves-light">
+                                        <i class="mdi mdi-send"></i> Submit for Review
+                                    </a>
+                                {% elif commitment.workflow_status in 'SUBMITTED,FIRST_REVIEW_COMPLETED' %}
+                                    <a href="{% url 'shareholder:payment_commitment_review' commitment.pk %}" class="btn btn-warning waves-effect waves-light">
+                                        <i class="mdi mdi-eye-check"></i> Review
+                                    </a>
+                                {% elif commitment.workflow_status == 'REVIEWED' %}
+                                    <a href="{% url 'shareholder:payment_commitment_approve' commitment.pk %}" class="btn btn-success waves-effect waves-light">
+                                        <i class="mdi mdi-check-decagram"></i> Approve
+                                    </a>
+                                    <a href="{% url 'shareholder:payment_commitment_reject' commitment.pk %}" class="btn btn-danger waves-effect waves-light">
+                                        <i class="mdi mdi-close-circle"></i> Reject
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row mt-3">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="feather-file-text"></i> Commitment Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Shareholder:</strong></td>
+                                    <td>
+                                        <a href="{% url 'shareholder:stakeholder-detail' commitment.stakeholder.pk %}">
+                                            {{ commitment.stakeholder.full_name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Committed Amount:</strong></td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">
+                                            {{ commitment.currency.symbol }} {{ commitment.committed_amount|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Commitment Date:</strong></td>
+                                    <td>{{ commitment.promised_payment_date|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Due Date:</strong></td>
+                                    <td>
+                                        {% if commitment.due_date %}
+                                            {{ commitment.due_date|date:"F d, Y" }}
+                                        {% else %}
+                                            <span class="text-muted">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Actual Payment Date:</strong></td>
+                                    <td>
+                                        {% if commitment.actual_payment_date %}
+                                            {{ commitment.actual_payment_date|date:"F d, Y" }}
+                                        {% else %}
+                                            <span class="text-muted">Not paid yet</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if commitment.status == 'PAID' %}bg-success
+                                            {% elif commitment.status == 'OVERDUE' %}bg-danger
+                                            {% elif commitment.status == 'RESCHEDULED' %}bg-warning
+                                            {% elif commitment.status == 'CANCELLED' %}bg-secondary
+                                            {% else %}bg-primary{% endif %}">
+                                            {{ commitment.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% if commitment.reference_number %}
+                                <tr>
+                                    <td><strong>Reference Number:</strong></td>
+                                    <td>{{ commitment.reference_number }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td><strong>Amount Received:</strong></td>
+                                    <td>
+                                        {% if commitment.status == 'PAID' %}
+                                            <span class="badge bg-success">
+                                                {{ commitment.currency.symbol }} {{ commitment.committed_amount|floatformat:2 }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if commitment.notes %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="feather-note"></i> Notes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ commitment.notes|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Status Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Status Summary</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <span class="badge badge-lg 
+                                {% if commitment.status == 'PAID' %}bg-success
+                                {% elif commitment.status == 'OVERDUE' %}bg-danger
+                                {% elif commitment.status == 'RESCHEDULED' %}bg-warning
+                                {% elif commitment.status == 'CANCELLED' %}bg-secondary
+                                {% else %}bg-primary{% endif %}" style="font-size: 14px;">
+                                {{ commitment.get_status_display }}
+                            </span>
+                        </div>
+                        <h3 class="text-primary">{{ commitment.currency.symbol }} {{ commitment.committed_amount|floatformat:2 }}</h3>
+                        <p class="text-muted mb-0">Committed Amount</p>
+                    </div>
+                </div>
+
+                <!-- Timeline Card -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Timeline</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline-item">
+                            <div class="timeline-dot bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Commitment Made</h6>
+                                <p class="text-muted mb-0">{{ commitment.promised_payment_date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% if commitment.due_date %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot {% if commitment.actual_payment_date %}bg-success{% else %}bg-warning{% endif %}"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Due Date</h6>
+                                <p class="text-muted mb-0">{{ commitment.due_date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if commitment.actual_payment_date %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Payment Received</h6>
+                                <p class="text-muted mb-0">{{ commitment.actual_payment_date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Timestamps Card -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Record Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <small class="text-muted">Created:</small><br>
+                            <small>{{ commitment.created_at|date:"F d, Y H:i" }}</small>
+                        </p>
+                        <p class="mb-0">
+                            <small class="text-muted">Last Updated:</small><br>
+                            <small>{{ commitment.updated_at|date:"F d, Y H:i" }}</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.workflow-progress-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.workflow-step {
+    text-align: center;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.workflow-step:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.step-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.step-header .avatar-sm {
+    width: 50px;
+    height: 50px;
+}
+
+.step-header h6 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    color: #2c3e50;
+}
+
+.step-content {
+    text-align: center;
+}
+
+.step-content p {
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.step-content strong {
+    display: block;
+    color: #2c3e50;
+    margin-top: 0.5rem;
+}
+
+.step-content .text-muted {
+    font-size: 0.8rem;
+}
+
+.avatar-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+    font-size: 1.25rem;
+}
+
+.workflow-progress-container {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1.5rem !important;
+    margin-bottom: 2rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.workflow-step {
+    background-color: #fff !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 0.5rem !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 250px !important;
+}
+
+.workflow-step:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.step-header {
+    padding: 1.25rem !important;
+    text-align: center !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 1.25rem !important;
+    border-bottom: 1px solid #e9ecef !important;
+    position: relative !important;
+    height: 80px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Color the header based on status */
+.workflow-step:has(.avatar-title.bg-success) .step-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    border-bottom-color: #1e7e34 !important;
+}
+
+.workflow-step:has(.avatar-title.bg-warning) .step-header {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%) !important;
+    border-bottom-color: #e0a800 !important;
+}
+
+.workflow-step:has(.avatar-title.bg-secondary) .step-header {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    border-bottom-color: #4e555b !important;
+}
+
+.workflow-step:has(.avatar-title.bg-light) .step-header {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%) !important;
+    border-bottom-color: #23272b !important;
+}
+
+.step-header h6 {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    color: #fff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+}
+
+.step-content {
+    padding: 1.25rem !important;
+    text-align: center !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+}
+
+.step-content p {
+    margin-bottom: 0.5rem !important;
+    font-size: 0.875rem !important;
+}
+
+.step-content strong {
+    display: block !important;
+    color: #2c3e50 !important;
+    margin-top: 0.5rem !important;
+    font-weight: 600 !important;
+}
+
+.step-content .text-muted {
+    font-size: 0.8rem !important;
+    color: #6c757d !important;
+}
+
+.step-content .text-success {
+    color: #28a745 !important;
+    font-weight: 500 !important;
+}
+
+.step-content .text-warning {
+    color: #ffc107 !important;
+    font-weight: 500 !important;
+}
+
+.avatar-sm {
+    display: none !important;
+}
+
+.avatar-title {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    width: 100% !important;
+    border-radius: 50% !important;
+    font-size: 1.25rem !important;
+}
+
+@media (max-width: 1200px) {
+    .workflow-progress-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .workflow-progress-container {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.timeline-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.timeline-item:last-child {
+    border-bottom: none;
+}
+
+.timeline-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+}
+
+.badge-lg {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}

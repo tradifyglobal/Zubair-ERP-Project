@@ -74,7 +74,7 @@ class Account(models.Model):
         ('EXPENSE', 'Expense'),
     ]
 
-    account_number = models.CharField(max_length=50, unique=True)
+    account_number = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
     account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
     description = models.TextField(blank=True, null=True)
@@ -98,23 +98,9 @@ class Account(models.Model):
         return 'capital' in self.name.lower() and self.account_type == 'EQUITY'
     
     def get_shareholder_subaccount(self, stakeholder):
-        """Get or create a shareholder sub-account under this capital account."""
+        """Get existing shareholder sub-account (DISABLED auto-creation to prevent duplicates)."""
         if not self.is_capital_account():
             return None
-        
-        # Find highest sub-account number
-        sub_accounts = self.sub_accounts.filter(account_number__startswith=self.account_number + '-').order_by('-account_number')
-        
-        if sub_accounts.exists():
-            last_number = sub_accounts.first().account_number
-            # Extract the sub-number (e.g., "3100-02" -> 02)
-            sub_num = int(last_number.split('-')[-1])
-            next_sub_num = sub_num + 1
-        else:
-            next_sub_num = 1
-        
-        # Generate sub-account code
-        new_account_number = f"{self.account_number}-{next_sub_num:02d}"
         
         # Get stakeholder name
         if stakeholder.stakeholder_type == 'INDIVIDUAL':
@@ -122,20 +108,49 @@ class Account(models.Model):
         else:
             shareholder_name = stakeholder.company_name or str(stakeholder)
         
-        # Create or get the sub-account
-        sub_account, created = Account.objects.get_or_create(
+        # Try to find existing sub-account by name pattern
+        existing_account = Account.objects.filter(
             entity=self.entity,
-            account_number=new_account_number,
-            defaults={
-                'name': f"{shareholder_name} - Capital",
-                'account_type': self.account_type,
-                'currency': self.currency,
-                'parent_account': self,
-                'is_active': True,
-                'description': f"Capital account for {shareholder_name}"
-            }
-        )
-        return sub_account
+            parent_account=self,
+            name__icontains=shareholder_name
+        ).first()
+        
+        if existing_account:
+            return existing_account
+        
+        # DISABLED AUTO-CREATION TO PREVENT DUPLICATES
+        # Return None - manual account creation required
+        return None
+        
+        # OLD AUTO-CREATION CODE (DISABLED):
+        # Find highest sub-account number
+        # sub_accounts = self.sub_accounts.filter(account_number__startswith=self.account_number + '-').order_by('-account_number')
+        # 
+        # if sub_accounts.exists():
+        #     last_number = sub_accounts.first().account_number
+        #     # Extract the sub-number (e.g., "3100-02" -> 02)
+        #     sub_num = int(last_number.split('-')[-1])
+        #     next_sub_num = sub_num + 1
+        # else:
+        #     next_sub_num = 1
+        # 
+        # # Generate sub-account code
+        # new_account_number = f"{self.account_number}-{next_sub_num:02d}"
+        # 
+        # # Create or get the sub-account
+        # sub_account, created = Account.objects.get_or_create(
+        #     entity=self.entity,
+        #     account_number=new_account_number,
+        #     defaults={
+        #         'name': f"{shareholder_name} - Capital",
+        #         'account_type': self.account_type,
+        #         'currency': self.currency,
+        #         'parent_account': self,
+        #         'is_active': True,
+        #         'description': f"Capital account for {shareholder_name}"
+        #     }
+        # )
+        # return sub_account
 
 
 class LedgerEntry(models.Model):
@@ -738,6 +753,8 @@ class Stakeholder(models.Model):
     
     # Timestamps
     joined_date = models.DateField(default=timezone.now)
+    start_date = models.DateField(blank=True, null=True, help_text="Start date for profit calculation period")
+    end_date = models.DateField(blank=True, null=True, help_text="End date for profit calculation period (leave blank for ongoing)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -765,15 +782,27 @@ class Stakeholder(models.Model):
         """Calculate total capital invested by this stakeholder.
         
         Includes:
-        - Approved capital contributions (workflow_status=APPROVED)
+        - Approved capital contributions (workflow_status=APPROVED or CONTRIBUTION)
         - Paid shareholder payment commitments (status=PAID)
+        - Minus capital withdrawals (workflow_status=WITHDRAWAL)
+        - Minus profit distributions (workflow_status=PROFIT_DISTRIBUTION)
         """
         total = Decimal('0.00')
         
-        # Add approved capital contributions (workflow_status = APPROVED)
-        approved_contributions = self.capital_contributions.filter(workflow_status='APPROVED')
+        # Add approved capital contributions (workflow_status = APPROVED or CONTRIBUTION)
+        approved_contributions = self.capital_contributions.filter(workflow_status__in=['APPROVED', 'CONTRIBUTION'])
         for cc in approved_contributions:
             total += Decimal(str(cc.amount_company_currency or 0))
+        
+        # Subtract capital withdrawals (workflow_status = WITHDRAWAL)
+        withdrawals = self.capital_contributions.filter(workflow_status='WITHDRAWAL')
+        for cc in withdrawals:
+            total -= Decimal(str(cc.amount_company_currency or 0))
+        
+        # Subtract profit distributions (workflow_status = PROFIT_DISTRIBUTION)
+        profit_distributions = self.capital_contributions.filter(workflow_status='PROFIT_DISTRIBUTION')
+        for cc in profit_distributions:
+            total -= Decimal(str(cc.amount_company_currency or 0))
         
         # Add paid payment commitments
         paid_commitments = self.payment_commitments.filter(status='PAID')
@@ -800,6 +829,52 @@ class Stakeholder(models.Model):
         
         my_shares = self.total_shares
         return (Decimal(my_shares) / Decimal(total_shares) * 100).quantize(Decimal('0.01'))
+    
+    def save(self, *args, **kwargs):
+        """Override save to handle status changes"""
+        # Check if status changed to an inactive state
+        if self.pk:  # Only for updates, not creation
+            try:
+                old_instance = self.__class__.objects.get(pk=self.pk)
+                # If status changed to inactive
+                if old_instance.status != self.status and self.status in ['INACTIVE', 'SUSPENDED', 'WITHDRAWN']:
+                    self._deactivate_capital_accounts()
+            except self.__class__.DoesNotExist:
+                pass
+        
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        """Override delete to deactivate accounts instead of deleting"""
+        self._deactivate_capital_accounts()
+        super().delete(*args, **kwargs)
+    
+    def _deactivate_capital_accounts(self):
+        """Deactivate all capital accounts for this shareholder"""
+        try:
+            capital_account = Account.objects.filter(
+                entity=self.entity,
+                account_number='3000'
+            ).first()
+            
+            if not capital_account:
+                return
+            
+            # Find all child accounts under capital that belong to this stakeholder
+            stakeholder_name = self.full_name
+            capital_subaccounts = Account.objects.filter(
+                entity=self.entity,
+                parent_account=capital_account,
+                name__startswith=stakeholder_name
+            )
+            
+            # Deactivate the sub-accounts (preserve history)
+            for account in capital_subaccounts:
+                account.is_active = False
+                account.save()
+        except Exception as e:
+            # Silently fail - don't break operations
+            pass
 
 
 class CapitalContribution(models.Model):
@@ -830,6 +905,9 @@ class CapitalContribution(models.Model):
         ('REVIEWED', 'Both Reviews Completed'),
         ('APPROVED', 'Approved'),
         ('REJECTED', 'Rejected'),
+        ('CONTRIBUTION', 'Capital Contribution'),
+        ('WITHDRAWAL', 'Capital Withdrawal'),
+        ('PROFIT_DISTRIBUTION', 'Profit Distribution'),
     ]
     
     # Core Fields
@@ -999,6 +1077,31 @@ class CapitalContribution(models.Model):
         help_text="Cash account to debit"
     )
     
+    # Source Transaction Tracking (NEW - replaces workflow)
+    # Links contribution to the transaction that triggered auto-posting
+    source_cash_receipt = models.ForeignKey(
+        'accounting.CashReceiptLine',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='capital_contributions',
+        help_text='Source cash receipt that triggered this contribution'
+    )
+    
+    source_bank_receipt = models.ForeignKey(
+        'accounting.BankReceiptLine',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='capital_contributions',
+        help_text='Source bank receipt that triggered this contribution'
+    )
+    
+    is_auto_posted = models.BooleanField(
+        default=False,
+        help_text='True if GL entries were auto-created from approved transaction'
+    )
+    
     # Documentation
     document_file = models.FileField(upload_to='stakeholder_docs/%Y/%m/', blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
@@ -1011,17 +1114,27 @@ class CapitalContribution(models.Model):
         ordering = ['-contribution_date', '-created_at']
         verbose_name_plural = "Capital Contributions"
         unique_together = ('entity', 'reference_number')
+        permissions = [
+            ('workflow_reviewer', 'Can review capital contributions'),
+            ('workflow_approver', 'Can approve capital contributions'),
+        ]
     
     def __str__(self):
         return f"{self.stakeholder} - {self.amount} {self.currency.code} ({self.contribution_date})"
     
     def save(self, *args, **kwargs):
         """Auto-calculate amounts and create ledger entry."""
+        from decimal import Decimal
+        
         # Calculate converted amounts
         if self.currency == self.currency_destination:
-            self.exchange_rate = 1.0
+            self.exchange_rate = Decimal('1.0')
         
-        self.amount_company_currency = self.amount * self.exchange_rate
+        # Ensure proper type conversion for decimal operations
+        amount = Decimal(str(self.amount)) if self.amount else Decimal('0')
+        exchange_rate = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal('1.0')
+        
+        self.amount_company_currency = amount * exchange_rate
         
         # Calculate USD equivalent
         # currency_destination.exchange_rate is the rate from that currency to USD
@@ -1032,14 +1145,16 @@ class CapitalContribution(models.Model):
                 self.amount_usd = self.amount_company_currency
             else:
                 # Multiply by the exchange rate to get USD amount
-                self.amount_usd = self.amount_company_currency * self.currency_destination.exchange_rate
+                dest_rate = Decimal(str(self.currency_destination.exchange_rate)) if self.currency_destination.exchange_rate else Decimal('1.0')
+                self.amount_usd = self.amount_company_currency * dest_rate
         except:
             self.amount_usd = self.amount_company_currency
         
         super().save(*args, **kwargs)
         
         # Create ledger entry if status is completed and no entry exists
-        if self.status == 'COMPLETED' and not self.ledger_entry:
+        # BUT: Skip if auto-posted from cash/bank receipt (ledger already created by receipt)
+        if self.status == 'COMPLETED' and not self.ledger_entry and not self.is_auto_posted:
             self._create_ledger_entry()
     
     def _create_ledger_entry(self):
@@ -1047,24 +1162,32 @@ class CapitalContribution(models.Model):
         from .models import Account, LedgerEntry
         
         try:
-            # Find or create equity account
+            # DISABLED: Auto-creation of equity accounts to prevent duplicates
+            # Find existing equity account only, don't create
             if not self.equity_account:
+                # Try to find existing equity account for this stakeholder
                 equity_account = Account.objects.filter(
                     entity=self.entity,
                     account_type='EQUITY',
-                    name__icontains='capital'
+                    name__icontains=self.stakeholder.full_name
                 ).first()
                 
                 if not equity_account:
-                    # Create default equity account
-                    equity_account = Account.objects.create(
+                    # Try to find the main Capital account (3100)
+                    main_capital = Account.objects.filter(
                         entity=self.entity,
-                        account_number='3100',
-                        name=f'Capital - {self.stakeholder.full_name}',
                         account_type='EQUITY',
-                        currency=self.currency_destination,
-                        description=f'Capital contribution from {self.stakeholder.full_name}'
-                    )
+                        account_number='3100'
+                    ).first()
+                    
+                    # Use main capital account if no specific stakeholder account exists
+                    if main_capital:
+                        equity_account = main_capital
+                
+                # DISABLED: No auto sub-account creation
+                # if equity_account:
+                #     equity_account = equity_account.get_shareholder_subaccount(self.stakeholder)
+                
                 self.equity_account = equity_account
             
             # Find or create cash account
@@ -1234,16 +1357,27 @@ class CashReceiptLine(models.Model):
     account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_receipt_debit', help_text="Debit account (e.g., 3100-01 Capital)")
     credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_receipt_credit', help_text="Credit account (e.g., 100001 Cash)", null=True, blank=True)
     currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    exchange_rate = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True, default=1.0, help_text="Exchange rate from transaction currency to entity currency")
     date = models.DateField(default=timezone.now)
     description = models.CharField(max_length=500)
     debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    converted_debit_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True, help_text="Debit amount converted to entity currency")
+    converted_credit_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True, help_text="Credit amount converted to entity currency")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
     reference_number = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_capital_contribution_posted = models.BooleanField(default=False, help_text="Whether capital contribution was auto-posted from this receipt")
+    stakeholder = models.ForeignKey('accounting.Stakeholder', on_delete=models.SET_NULL, null=True, blank=True, related_name='cash_receipt_lines_as_contributor')
+    
+    def save(self, *args, **kwargs):
+        """Save cash receipt line"""
+        # Note: credit_account is intentionally NOT auto-populated to debit_account
+        # This allows the authorization view to correctly default to cash account 100001
+        super().save(*args, **kwargs)
     
     class Meta:
         ordering = ['-date', '-id']
@@ -1275,20 +1409,37 @@ class CashPaymentLine(models.Model):
         ('REJECTED', 'Rejected'),
     ]
     
+    PAYMENT_PURPOSE_CHOICES = [
+        ('', 'Not Specified'),
+        ('EXPENSE', 'Business Expense'),
+        ('VENDOR_PAYMENT', 'Vendor Payment'),
+        ('CAPITAL_WITHDRAWAL', 'Capital Withdrawal (Return Investment)'),
+        ('PROFIT_DISTRIBUTION', 'Profit Distribution / Drawings'),
+        ('SALARY', 'Salary Payment'),
+        ('LOAN_REPAYMENT', 'Loan Repayment'),
+        ('OTHER', 'Other'),
+    ]
+    
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='cash_payment_lines')
     account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_payment_debit', help_text="Debit account (e.g., shareholder capital)")
     credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='cash_payment_credit', help_text="Credit account (e.g., 100001 Cash)", null=True, blank=True)
     currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    exchange_rate = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True, default=1.0, help_text="Exchange rate from transaction currency to entity currency")
     date = models.DateField(default=timezone.now)
     description = models.CharField(max_length=500)
     debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    converted_debit_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True, help_text="Debit amount converted to entity currency")
+    converted_credit_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True, help_text="Credit amount converted to entity currency")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
     reference_number = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    payment_purpose = models.CharField(max_length=30, choices=PAYMENT_PURPOSE_CHOICES, blank=True, null=True, help_text="Purpose of this payment (e.g., Capital Withdrawal, Profit Distribution)")
+    is_capital_contribution_posted = models.BooleanField(default=False, help_text="Whether capital contribution (withdrawal) was auto-posted from this payment")
+    stakeholder = models.ForeignKey('accounting.Stakeholder', on_delete=models.SET_NULL, null=True, blank=True, related_name='cash_payment_lines_as_withdrawer', help_text="Required for capital withdrawals and profit distributions")
     
     class Meta:
         ordering = ['-date', '-id']
@@ -1324,16 +1475,21 @@ class BankReceiptLine(models.Model):
     account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_receipt_debit', help_text="Debit account (e.g., 3100-01 Capital)", null=True, blank=True)
     credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_receipt_credit', help_text="Credit account (e.g., 1000 Bank)", null=True, blank=True)
     currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    exchange_rate = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True, default=1.0, help_text="Exchange rate from transaction currency to entity currency")
     date = models.DateField(default=timezone.now)
     description = models.CharField(max_length=500)
     debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    converted_debit_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True, help_text="Debit amount converted to entity currency")
+    converted_credit_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True, help_text="Credit amount converted to entity currency")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
     reference_number = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_capital_contribution_posted = models.BooleanField(default=False, help_text="Whether capital contribution was auto-posted from this receipt")
+    stakeholder = models.ForeignKey('accounting.Stakeholder', on_delete=models.SET_NULL, null=True, blank=True, related_name='bank_receipt_lines_as_contributor')
     
     class Meta:
         ordering = ['-date', '-id']
@@ -1365,20 +1521,37 @@ class BankPaymentLine(models.Model):
         ('REJECTED', 'Rejected'),
     ]
     
+    PAYMENT_PURPOSE_CHOICES = [
+        ('', 'Not Specified'),
+        ('EXPENSE', 'Business Expense'),
+        ('VENDOR_PAYMENT', 'Vendor Payment'),
+        ('CAPITAL_WITHDRAWAL', 'Capital Withdrawal (Return Investment)'),
+        ('PROFIT_DISTRIBUTION', 'Profit Distribution / Drawings'),
+        ('SALARY', 'Salary Payment'),
+        ('LOAN_REPAYMENT', 'Loan Repayment'),
+        ('OTHER', 'Other'),
+    ]
+    
     entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='bank_payment_lines')
     account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_payment_debit', help_text="Debit account (e.g., 1000 Bank)", null=True, blank=True)
     credit_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='bank_payment_credit', help_text="Credit account (e.g., 3100-01 Capital)", null=True, blank=True)
     currency = models.ForeignKey('Currency', on_delete=models.PROTECT, null=True, blank=True, help_text="Currency for this transaction")
+    exchange_rate = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True, default=1.0, help_text="Exchange rate from transaction currency to entity currency")
     date = models.DateField(default=timezone.now)
     description = models.CharField(max_length=500)
     debit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     credit_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    converted_debit_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True, help_text="Debit amount converted to entity currency")
+    converted_credit_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True, help_text="Credit amount converted to entity currency")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     workflow_status = models.CharField(max_length=20, choices=WORKFLOW_STATUS_CHOICES, default='DRAFT')
     reference_number = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    payment_purpose = models.CharField(max_length=30, choices=PAYMENT_PURPOSE_CHOICES, blank=True, null=True, help_text="Purpose of this payment (e.g., Capital Withdrawal, Profit Distribution)")
+    is_capital_contribution_posted = models.BooleanField(default=False, help_text="Whether capital contribution (withdrawal) was auto-posted from this payment")
+    stakeholder = models.ForeignKey('accounting.Stakeholder', on_delete=models.SET_NULL, null=True, blank=True, related_name='bank_payment_lines_as_withdrawer', help_text="Required for capital withdrawals and profit distributions")
     
     class Meta:
         ordering = ['-date', '-id']
@@ -1492,6 +1665,7 @@ class ShareholderPaymentCommitment(models.Model):
     committed_amount = models.DecimalField(max_digits=18, decimal_places=2)
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
     promised_payment_date = models.DateField(help_text="Date shareholder promised to pay")
+    due_date = models.DateField(null=True, blank=True, help_text="Payment due date")
     
     # Status Tracking
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
@@ -1521,6 +1695,194 @@ class ShareholderPaymentCommitment(models.Model):
         if self.status == 'PENDING':
             return timezone.now().date() > self.promised_payment_date
         return False
+
+
+class JournalVoucher(models.Model):
+    """
+    Journal Voucher - Master document for all manual GL entries
+    Used for: Sales Returns, Purchase Returns, Shareholder Transactions,
+    Employee Payments, and all manual Payment/Receipt entries
+    """
+    VOUCHER_TYPE_CHOICES = [
+        ('SALES_RETURN', 'Sales Return'),
+        ('PURCHASE_RETURN', 'Purchase Return'),
+        ('PAYMENT', 'Payment'),
+        ('RECEIPT', 'Receipt'),
+        ('SHAREHOLDER', 'Shareholder Transaction'),
+        ('EMPLOYEE', 'Employee Transaction'),
+        ('GENERAL', 'General Journal Entry'),
+        ('ADJUSTMENT', 'Adjustment Entry'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('POSTED', 'Posted'),
+        ('REJECTED', 'Rejected'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    # Header Information
+    voucher_number = models.CharField(max_length=50, unique=True, db_index=True)
+    voucher_date = models.DateField()
+    voucher_type = models.CharField(max_length=20, choices=VOUCHER_TYPE_CHOICES)
+    entity = models.ForeignKey(Entity, on_delete=models.PROTECT, related_name='journal_vouchers')
+    
+    # Reference Information
+    reference_number = models.CharField(max_length=100, blank=True, null=True, help_text="External reference number")
+    reference_type = models.CharField(max_length=50, blank=True, null=True, help_text="Type of referenced document")
+    description = models.TextField(help_text="Voucher description/narration")
+    
+    # Workflow
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    is_posted = models.BooleanField(default=False)
+    posted_date = models.DateTimeField(blank=True, null=True)
+    posted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='posted_vouchers')
+    
+    # Approval Workflow
+    prepared_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='prepared_vouchers')
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_vouchers')
+    approved_date = models.DateTimeField(blank=True, null=True)
+    
+    # Audit Fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_vouchers')
+    
+    # Additional Info
+    attachment = models.FileField(upload_to='journal_vouchers/', blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        db_table = 'journal_voucher'
+        ordering = ['-voucher_date', '-voucher_number']
+        verbose_name = 'Journal Voucher'
+        verbose_name_plural = 'Journal Vouchers'
+        indexes = [
+            models.Index(fields=['voucher_date', 'entity']),
+            models.Index(fields=['status']),
+            models.Index(fields=['voucher_type']),
+        ]
+    
+    def __str__(self):
+        return f"{self.voucher_number} - {self.get_voucher_type_display()} ({self.voucher_date})"
+    
+    def save(self, *args, **kwargs):
+        """Override save to auto-generate voucher number if not provided"""
+        if not self.voucher_number:
+            # Generate voucher number: JV-ENTITY-YYYYMM-XXXX
+            from datetime import datetime
+            year_month = datetime.now().strftime('%Y%m')
+            entity_code = self.entity.code if self.entity else 'XX'
+            
+            # Get the last voucher for this entity and month
+            last_voucher = JournalVoucher.objects.filter(
+                entity=self.entity,
+                voucher_number__startswith=f'JV-{entity_code}-{year_month}-'
+            ).order_by('-voucher_number').first()
+            
+            if last_voucher:
+                # Extract the sequence number from the last voucher
+                try:
+                    last_seq = int(last_voucher.voucher_number.split('-')[-1])
+                    next_seq = last_seq + 1
+                except (ValueError, IndexError):
+                    next_seq = 1
+            else:
+                next_seq = 1
+            
+            self.voucher_number = f'JV-{entity_code}-{year_month}-{next_seq:04d}'
+        
+        super().save(*args, **kwargs)
+    
+    def is_balanced(self):
+        """Check if total debits equal total credits"""
+        total_debit = self.lines.filter(entry_type='DEBIT').aggregate(
+            total=models.Sum('amount'))['total'] or Decimal('0')
+        total_credit = self.lines.filter(entry_type='CREDIT').aggregate(
+            total=models.Sum('amount'))['total'] or Decimal('0')
+        return total_debit == total_credit
+    
+    def get_total_debit(self):
+        """Get total debit amount"""
+        return self.lines.filter(entry_type='DEBIT').aggregate(
+            total=models.Sum('amount'))['total'] or Decimal('0')
+    
+    def get_total_credit(self):
+        """Get total credit amount"""
+        return self.lines.filter(entry_type='CREDIT').aggregate(
+            total=models.Sum('amount'))['total'] or Decimal('0')
+    
+    def post(self, user=None):
+        """Post journal voucher to ledger"""
+        if self.is_posted:
+            raise ValueError("Voucher is already posted")
+        
+        if not self.is_balanced():
+            raise ValueError("Cannot post unbalanced voucher")
+        
+        # Create ledger entries for each line
+        for line in self.lines.all():
+            LedgerEntry.objects.create(
+                account=line.account,
+                entity=self.entity,
+                entry_date=self.voucher_date,
+                entry_type=line.entry_type,
+                amount=line.amount,
+                description=f"{self.description} - {line.description}" if line.description else self.description,
+                reference_number=self.voucher_number,
+                is_posted=True,
+                workflow_status='APPROVED'
+            )
+        
+        # Mark as posted
+        self.is_posted = True
+        self.status = 'POSTED'
+        self.posted_date = timezone.now()
+        self.posted_by = user
+        self.save()
+
+
+class JournalVoucherLine(models.Model):
+    """
+    Journal Voucher Lines - Individual debit/credit entries
+    """
+    ENTRY_TYPE_CHOICES = [
+        ('DEBIT', 'Debit'),
+        ('CREDIT', 'Credit'),
+    ]
+    
+    voucher = models.ForeignKey(JournalVoucher, on_delete=models.CASCADE, related_name='lines')
+    line_number = models.IntegerField(help_text="Line sequence number")
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='journal_lines')
+    entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    description = models.TextField(blank=True, null=True, help_text="Line item description")
+    
+    # Optional linking fields
+    stakeholder = models.ForeignKey(Stakeholder, on_delete=models.SET_NULL, null=True, blank=True, 
+                                   help_text="Link to shareholder if applicable")
+    employee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='employee_journal_lines', help_text="Link to employee if applicable")
+    
+    # Dimensions for reporting
+    cost_center = models.CharField(max_length=100, blank=True, null=True)
+    project = models.CharField(max_length=100, blank=True, null=True)
+    department = models.CharField(max_length=100, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'journal_voucher_line'
+        ordering = ['line_number']
+        verbose_name = 'Journal Voucher Line'
+        verbose_name_plural = 'Journal Voucher Lines'
+        unique_together = ('voucher', 'line_number')
+    
+    def __str__(self):
+        return f"{self.voucher.voucher_number} - Line {self.line_number}: {self.account.name} ({self.entry_type}) ₹{self.amount}"
 
 
 # Import RBAC models to register them with Django ORM

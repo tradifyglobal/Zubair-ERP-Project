@@ -1,4 +1,4 @@
-# ✅ NOTIFICATION FIX DEPLOYMENT - COMPLETE
+https://tradifyglobal.com/shareholder/investment-report/# ✅ NOTIFICATION FIX DEPLOYMENT - COMPLETE
 
 **Date:** December 8, 2025  
 **Status:** ✅ DEPLOYED AND RUNNING

@@ -81,6 +81,63 @@
     .btn-group .dropdown-menu {
         z-index: 1100 !important;
     }
+    
+    /* Add scrollbar to main content area */
+    .main-content {
+        overflow-y: auto !important;
+        height: calc(100vh - 56px) !important;
+    }
+    
+    /* Add scrollbar to page content */
+    .page-content {
+        overflow-y: auto !important;
+        max-height: calc(100vh - 56px) !important;
+        padding-bottom: 15rem !important;
+    }
+    
+    .container-fluid {
+        padding-bottom: 2rem;
+    }
+    
+    /* Custom scrollbar styling for main-content */
+    .main-content::-webkit-scrollbar {
+        width: 12px;
+    }
+    
+    .main-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .main-content::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+        border: 3px solid #f1f1f1;
+    }
+    
+    .main-content::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    
+    /* Custom scrollbar styling for page-content */
+    .page-content::-webkit-scrollbar {
+        width: 12px;
+    }
+    
+    .page-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .page-content::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+        border: 3px solid #f1f1f1;
+    }
+    
+    .page-content::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
 </style>
 <div class="page-content">
     <div class="container-fluid">
@@ -112,7 +169,7 @@
 
         <!-- Statistics Cards -->
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Total Contributions</h5>
@@ -120,29 +177,44 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            
+            <!-- Dynamic cards for each pending currency -->
+            {% for currency_data in pending_by_currency %}
+            <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Pending Amount</h5>
+                        <h5 class="card-title">Pending ({{ currency_data.code }})</h5>
                         <p class="text-muted">
-                            {% if entity.company_currency %}
+                            {{ currency_data.symbol }}{{ currency_data.total|floatformat:2 }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Pending (Converted)</h5>
+                        <p class="text-muted">
+                            {% if entity and entity.company_currency %}
                                 {{ entity.company_currency.symbol }}{{ pending_total|floatformat:2 }}
                             {% else %}
-                                ${{ pending_total|floatformat:2 }}
+                                &#8377;{{ pending_total|floatformat:2 }}
                             {% endif %}
                         </p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Completed Amount</h5>
                         <p class="text-muted">
-                            {% if entity.company_currency %}
+                            {% if entity and entity.company_currency %}
                                 {{ entity.company_currency.symbol }}{{ completed_total|floatformat:2 }}
                             {% else %}
-                                ${{ completed_total|floatformat:2 }}
+                                &#8377;{{ completed_total|floatformat:2 }}
                             {% endif %}
                         </p>
                     </div>
@@ -188,10 +260,10 @@
                                         </td>
                                         <td>{{ contribution.currency.symbol }}{{ contribution.amount|floatformat:2 }}</td>
                                         <td>
-                                            {% if entity.company_currency %}
+                                            {% if entity and entity.company_currency %}
                                                 {{ entity.company_currency.symbol }}{{ contribution.amount_company_currency|floatformat:2 }}
                                             {% else %}
-                                                ${{ contribution.amount_company_currency|floatformat:2 }}
+                                                &#8377;{{ contribution.amount_company_currency|floatformat:2 }}
                                             {% endif %}
                                         </td>
                                         <td>{{ contribution.currency_destination.code }}</td>
@@ -204,11 +276,6 @@
                                                 <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-primary" title="Edit Contribution">
                                                     <i class="feather-edit"></i> Edit
                                                 </a>
-                                                {% if contribution.workflow_status == 'DRAFT' %}
-                                                <a href="{% url 'shareholder:capital-contribution-submit' contribution.pk %}" class="btn btn-warning" title="Submit for Review">
-                                                    <i class="feather-send"></i> Submit
-                                                </a>
-                                                {% endif %}
                                             </div>
                                         </td>
                                     </tr>

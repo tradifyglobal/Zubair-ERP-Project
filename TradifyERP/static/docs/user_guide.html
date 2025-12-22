@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradifyERP User Guide - Complete Guide to Accounting, Chart of Accounts, Shareholders & Expenses</title>
+    <style>
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 2cm 2.5cm;
+            color: #333;
+        }
+        h1 {
+            color: #0066cc;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+            font-size: 28pt;
+            margin-top: 30px;
+        }
+        h2 {
+            color: #0066cc;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 8px;
+            font-size: 20pt;
+            margin-top: 25px;
+            page-break-before: always;
+        }
+        h3 {
+            color: #004080;
+            font-size: 16pt;
+            margin-top: 20px;
+        }
+        h4 {
+            color: #004080;
+            font-size: 14pt;
+            margin-top: 15px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+            font-size: 11pt;
+        }
+        th {
+            background-color: #0066cc;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .code-block {
+            background-color: #f4f4f4;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            white-space: pre-wrap;
+        }
+        .screenshot-note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .warning-box {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        .cover-page {
+            text-align: center;
+            margin-top: 150px;
+            page-break-after: always;
+        }
+        .cover-title {
+            font-size: 36pt;
+            color: #0066cc;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .cover-subtitle {
+            font-size: 20pt;
+            color: #666;
+            margin-bottom: 40px;
+        }
+        .cover-info {
+            font-size: 14pt;
+            color: #333;
+            margin: 10px 0;
+        }
+        .toc {
+            page-break-after: always;
+        }
+        .toc-item {
+            margin: 8px 0;
+            font-size: 12pt;
+        }
+        @media print {
+            h2 {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Cover Page -->
+<div class="cover-page">
+    <div class="cover-title">TradifyERP User Guide</div>
+    <div class="cover-subtitle">Complete Guide to Accounting, Chart of Accounts,<br>Shareholders & Expenses</div>
+    <div style="margin-top: 80px;">
+        <div class="cover-info"><strong>Version:</strong> 1.0</div>
+        <div class="cover-info"><strong>Last Updated:</strong> December 19, 2025</div>
+        <div class="cover-info"><strong>System URL:</strong> https://tradifyglobal.com</div>
+    </div>
+</div>
+
+<!-- Table of Contents -->
+<div class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+        <li class="toc-item"><a href="#getting-started">Getting Started</a></li>
+        <li class="toc-item"><a href="#accounting-overview">Accounting Module Overview</a></li>
+        <li class="toc-item"><a href="#chart-of-accounts">Chart of Accounts Setup</a></li>
+        <li class="toc-item"><a href="#shareholder-management">Shareholder Management</a></li>
+        <li class="toc-item"><a href="#expense-management">Employee Expense Management</a></li>
+        <li class="toc-item"><a href="#common-workflows">Common Workflows</a></li>
+        <li class="toc-item"><a href="#troubleshooting">Troubleshooting</a></li>
+        <li class="toc-item"><a href="#reports">Viewing Financial Reports</a></li>
+        <li class="toc-item"><a href="#best-practices">Best Practices</a></li>
+        <li class="toc-item"><a href="#appendix">Appendix: Complete Account List</a></li>
+    </ol>
+</div>
+
+<!-- Main Content -->
+<h2 id="getting-started">1. Getting Started</h2>
+
+<h3>Login to TradifyERP</h3>
+<ol>
+    <li>Navigate to: <strong>https://tradifyglobal.com</strong></li>
+    <li>Enter your username and password</li>
+    <li>Click <strong>"Login"</strong></li>
+</ol>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Login page showing username/password fields
+</div>
+
+<h3>Dashboard Overview</h3>
+<p>After login, you'll see the main dashboard with quick links to:</p>
+<ul>
+    <li><strong>Accounting</strong> - Financial management and general ledger</li>
+    <li><strong>Shareholder</strong> - Shareholder management, capital contributions, and distributions</li>
+    <li><strong>Expenses</strong> - Employee expense tracking and reimbursements</li>
+    <li><strong>Reports</strong> - Financial statements and analytics</li>
+</ul>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Main dashboard showing module tiles
+</div>
+
+<h2 id="accounting-overview">2. Accounting Module Overview</h2>
+
+<p>The Accounting module is the core of TradifyERP, managing all financial transactions.</p>
+
+<h3>Accessing Accounting Module</h3>
+<p><strong>Path:</strong> Dashboard → <strong>Accounting</strong></p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Accounting module homepage
+</div>
+
+<h3>Sub-Modules</h3>
+<table>
+    <tr>
+        <th>Module</th>
+        <th>Purpose</th>
+        <th>Common Use Cases</th>
+    </tr>
+    <tr>
+        <td><strong>Chart of Accounts</strong></td>
+        <td>Manage account structure</td>
+        <td>Add new accounts, organize finances</td>
+    </tr>
+    <tr>
+        <td><strong>General Ledger</strong></td>
+        <td>View all transactions</td>
+        <td>Audit trail, balance verification</td>
+    </tr>
+    <tr>
+        <td><strong>Journal Entries</strong></td>
+        <td>Manual transactions</td>
+        <td>Adjustments, accruals, corrections</td>
+    </tr>
+    <tr>
+        <td><strong>Trial Balance</strong></td>
+        <td>Account balances summary</td>
+        <td>Month-end reconciliation</td>
+    </tr>
+    <tr>
+        <td><strong>Cash Payments</strong></td>
+        <td>Record cash outflows</td>
+        <td>Vendor payments, expenses</td>
+    </tr>
+    <tr>
+        <td><strong>Bank Payments</strong></td>
+        <td>Record bank transactions</td>
+        <td>Wire transfers, checks</td>
+    </tr>
+    <tr>
+        <td><strong>Cash Receipts</strong></td>
+        <td>Record cash inflows</td>
+        <td>Customer payments, sales</td>
+    </tr>
+    <tr>
+        <td><strong>Bank Receipts</strong></td>
+        <td>Record bank deposits</td>
+        <td>Customer deposits, transfers</td>
+    </tr>
+</table>
+
+<h2 id="chart-of-accounts">3. Chart of Accounts Setup</h2>
+
+<h3>Understanding Account Structure</h3>
+<p>TradifyERP uses a <strong>4-digit account numbering system</strong>:</p>
+
+<div class="code-block">1000-1999: ASSETS (what you own)
+2000-2999: LIABILITIES (what you owe)
+3000-3999: EQUITY (owner's investment)
+4000-4999: INCOME (revenue earned)
+5000-5999: EXPENSES (costs incurred)</div>
+
+<h3>Standard Chart of Accounts</h3>
+
+<h4>1. ASSET ACCOUNTS (1000-1999)</h4>
+<table>
+    <tr>
+        <th>Account #</th>
+        <th>Account Name</th>
+        <th>Type</th>
+        <th>Usage</th>
+    </tr>
+    <tr>
+        <td>1000</td>
+        <td>Cash in Hand</td>
+        <td>ASSET</td>
+        <td>Physical cash, petty cash</td>
+    </tr>
+    <tr>
+        <td>1100</td>
+        <td>Cash and Bank</td>
+        <td>ASSET</td>
+        <td>Bank account balances</td>
+    </tr>
+    <tr>
+        <td>1200</td>
+        <td>Accounts Receivable</td>
+        <td>ASSET</td>
+        <td>Money owed by customers</td>
+    </tr>
+    <tr>
+        <td>1500</td>
+        <td>Fixed Assets</td>
+        <td>ASSET</td>
+        <td>Equipment, vehicles, buildings</td>
+    </tr>
+    <tr>
+        <td>1510</td>
+        <td>Accumulated Depreciation</td>
+        <td>ASSET (contra)</td>
+        <td>Depreciation of fixed assets</td>
+    </tr>
+</table>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Asset accounts list in Chart of Accounts
+</div>
+
+<h4>2. LIABILITY ACCOUNTS (2000-2999)</h4>
+<table>
+    <tr>
+        <th>Account #</th>
+        <th>Account Name</th>
+        <th>Type</th>
+        <th>Usage</th>
+    </tr>
+    <tr>
+        <td>2000</td>
+        <td>Accounts Payable</td>
+        <td>LIABILITY</td>
+        <td>Money owed to vendors</td>
+    </tr>
+    <tr>
+        <td>2100</td>
+        <td>Accounts Payable - Employee Expenses</td>
+        <td>LIABILITY</td>
+        <td>Approved expenses pending reimbursement</td>
+    </tr>
+    <tr>
+        <td>2110</td>
+        <td>Salaries Payable</td>
+        <td>LIABILITY</td>
+        <td>Unpaid employee salaries</td>
+    </tr>
+</table>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Liability accounts list
+</div>
+
+<h4>3. EQUITY ACCOUNTS (3000-3999)</h4>
+<table>
+    <tr>
+        <th>Account #</th>
+        <th>Account Name</th>
+        <th>Type</th>
+        <th>Usage</th>
+    </tr>
+    <tr>
+        <td>3000</td>
+        <td>Owner's Capital</td>
+        <td>EQUITY</td>
+        <td>Initial investment</td>
+    </tr>
+    <tr>
+        <td>3100-XX</td>
+        <td>Shareholder Capital - [Name]</td>
+        <td>EQUITY</td>
+        <td>Individual shareholder investments</td>
+    </tr>
+    <tr>
+        <td>3200-XX</td>
+        <td>Drawings/Distributions - [Name]</td>
+        <td>EQUITY (contra)</td>
+        <td>Profit distributions to shareholders</td>
+    </tr>
+</table>
+
+<div class="info-box">
+    <strong>Example:</strong><br>
+    • 3100-01: Shareholder Capital - John Smith<br>
+    • 3200-01: Drawings/Distributions - John Smith
+</div>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Equity accounts showing shareholder structure
+</div>
+
+<h4>4. INCOME ACCOUNTS (4000-4999)</h4>
+<table>
+    <tr>
+        <th>Account #</th>
+        <th>Account Name</th>
+        <th>Type</th>
+        <th>Usage</th>
+    </tr>
+    <tr>
+        <td>4000</td>
+        <td>Sales Revenue</td>
+        <td>INCOME</td>
+        <td>Product/service sales</td>
+    </tr>
+    <tr>
+        <td>4100</td>
+        <td>Service Revenue</td>
+        <td>INCOME</td>
+        <td>Service income</td>
+    </tr>
+    <tr>
+        <td>4900</td>
+        <td>Other Income</td>
+        <td>INCOME</td>
+        <td>Miscellaneous income</td>
+    </tr>
+</table>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Income accounts list
+</div>
+
+<h4>5. EXPENSE ACCOUNTS (5000-5999)</h4>
+<table>
+    <tr>
+        <th>Account #</th>
+        <th>Account Name</th>
+        <th>Type</th>
+        <th>Usage</th>
+    </tr>
+    <tr>
+        <td>5100</td>
+        <td>Travel Expense</td>
+        <td>EXPENSE</td>
+        <td>Business travel costs</td>
+    </tr>
+    <tr>
+        <td>5200</td>
+        <td>Office Supplies Expense</td>
+        <td>EXPENSE</td>
+        <td>Stationery, supplies</td>
+    </tr>
+    <tr>
+        <td>5300</td>
+        <td>Meals & Entertainment Expense</td>
+        <td>EXPENSE</td>
+        <td>Business meals</td>
+    </tr>
+    <tr>
+        <td>5400</td>
+        <td>Utilities Expense</td>
+        <td>EXPENSE</td>
+        <td>Electricity, water, internet</td>
+    </tr>
+    <tr>
+        <td>5500</td>
+        <td>Maintenance & Repairs Expense</td>
+        <td>EXPENSE</td>
+        <td>Equipment repairs</td>
+    </tr>
+    <tr>
+        <td>5600</td>
+        <td>Professional Services Expense</td>
+        <td>EXPENSE</td>
+        <td>Consulting, legal fees</td>
+    </tr>
+    <tr>
+        <td>5700</td>
+        <td>Training & Development Expense</td>
+        <td>EXPENSE</td>
+        <td>Employee training</td>
+    </tr>
+    <tr>
+        <td>5800</td>
+        <td>Communications Expense</td>
+        <td>EXPENSE</td>
+        <td>Phone, internet</td>
+    </tr>
+</table>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Expense accounts list
+</div>
+
+<h3>How to Add a New Account</h3>
+<p><strong>Path:</strong> Accounting → <strong>Chart of Accounts</strong> → <strong>Add Account</strong></p>
+
+<h4>Step-by-Step:</h4>
+<ol>
+    <li>Click <strong>"Add Account"</strong> button</li>
+    <li>Fill in required fields:</li>
+</ol>
+
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Description</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td><strong>Account Number</strong></td>
+        <td>4-digit unique code</td>
+        <td>5900</td>
+    </tr>
+    <tr>
+        <td><strong>Account Name</strong></td>
+        <td>Descriptive name</td>
+        <td>"Marketing Expense"</td>
+    </tr>
+    <tr>
+        <td><strong>Account Type</strong></td>
+        <td>Select from dropdown</td>
+        <td>EXPENSE</td>
+    </tr>
+    <tr>
+        <td><strong>Currency</strong></td>
+        <td>Account currency</td>
+        <td>USD</td>
+    </tr>
+    <tr>
+        <td><strong>Description</strong></td>
+        <td>Optional details</td>
+        <td>"Advertising and promotions"</td>
+    </tr>
+    <tr>
+        <td><strong>Is Active</strong></td>
+        <td>Check to enable</td>
+        <td>✓</td>
+    </tr>
+</table>
+
+<ol start="3">
+    <li>Click <strong>"Save"</strong></li>
+</ol>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Add Account form with all fields labeled
+</div>
+
+<h3>Account Type Guidelines</h3>
+<p><strong>When creating accounts, choose the correct type:</strong></p>
+<ul>
+    <li><strong>ASSET</strong> - Resources owned (cash, inventory, receivables)</li>
+    <li><strong>LIABILITY</strong> - Obligations owed (payables, loans)</li>
+    <li><strong>EQUITY</strong> - Owner's stake (capital, retained earnings)</li>
+    <li><strong>INCOME</strong> - Revenue earned (sales, services)</li>
+    <li><strong>EXPENSE</strong> - Costs incurred (salaries, rent, supplies)</li>
+</ul>
+
+<h2 id="shareholder-management">4. Shareholder Management</h2>
+
+<h3>Overview</h3>
+<p>The Shareholder module tracks:</p>
+<ul>
+    <li>Capital contributions (investments)</li>
+    <li>Profit distributions (dividends)</li>
+    <li>Drawings/withdrawals</li>
+    <li>Individual shareholder balances</li>
+</ul>
+
+<h3>Setting Up Stakeholders</h3>
+<p><strong>Path:</strong> Shareholder → <strong>Shareholders</strong> → <strong>Create</strong></p>
+
+<h4>Step 1: Create Stakeholder Record</h4>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Stakeholder creation form
+</div>
+
+<p><strong>Required Fields:</strong></p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Description</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td><strong>Entity</strong></td>
+        <td>Your company</td>
+        <td>"Main Company"</td>
+    </tr>
+    <tr>
+        <td><strong>Name</strong></td>
+        <td>Stakeholder full name</td>
+        <td>"John Smith"</td>
+    </tr>
+    <tr>
+        <td><strong>Type</strong></td>
+        <td>SHAREHOLDER or PARTNER</td>
+        <td>SHAREHOLDER</td>
+    </tr>
+    <tr>
+        <td><strong>Email</strong></td>
+        <td>Contact email</td>
+        <td>john.smith@email.com</td>
+    </tr>
+    <tr>
+        <td><strong>Phone</strong></td>
+        <td>Contact number</td>
+        <td>+1-555-0123</td>
+    </tr>
+    <tr>
+        <td><strong>ID Number</strong></td>
+        <td>National ID/Passport</td>
+        <td>123-45-6789</td>
+    </tr>
+    <tr>
+        <td><strong>Ownership %</strong></td>
+        <td>Share percentage</td>
+        <td>25.00</td>
+    </tr>
+</table>
+
+<p><strong>Optional Fields:</strong></p>
+<ul>
+    <li>Address</li>
+    <li>Bank details (for distributions)</li>
+    <li>Notes</li>
+</ul>
+
+<h4>Step 2: GL Accounts Auto-Creation</h4>
+
+<div class="success-box">
+    ✅ <strong>Automatic:</strong> When you create a stakeholder, the system automatically creates:<br>
+    • <strong>Capital Account</strong> (3100-XX): Tracks investments<br>
+    • <strong>Drawings Account</strong> (3200-XX): Tracks distributions<br><br>
+    <strong>You don't need to manually create these accounts!</strong>
+</div>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Chart of Accounts showing auto-created shareholder accounts
+</div>
+
+<h3>Recording Capital Contributions</h3>
+<p><strong>Path:</strong> Shareholder → <strong>Capital Contributions</strong> → <strong>Create</strong></p>
+
+<h4>Scenario: Shareholder invests $10,000 cash</h4>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Capital Contribution form
+</div>
+
+<p><strong>Form Fields:</strong></p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>What to Enter</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td><strong>Stakeholder</strong></td>
+        <td>Select from dropdown</td>
+        <td>John Smith</td>
+    </tr>
+    <tr>
+        <td><strong>Entity</strong></td>
+        <td>Your company</td>
+        <td>Main Company</td>
+    </tr>
+    <tr>
+        <td><strong>Contribution Type</strong></td>
+        <td>CASH or BANK</td>
+        <td>CASH</td>
+    </tr>
+    <tr>
+        <td><strong>Amount</strong></td>
+        <td>Investment amount</td>
+        <td>10,000.00</td>
+    </tr>
+    <tr>
+        <td><strong>Date</strong></td>
+        <td>Transaction date</td>
+        <td>2025-12-19</td>
+    </tr>
+    <tr>
+        <td><strong>Description</strong></td>
+        <td>Purpose/notes</td>
+        <td>"Initial capital investment"</td>
+    </tr>
+</table>
+
+<p><strong>Approval Workflow:</strong></p>
+<ol>
+    <li><strong>Draft</strong> → Create contribution</li>
+    <li><strong>Submit</strong> → Submit for approval</li>
+    <li><strong>Review</strong> → Manager reviews</li>
+    <li><strong>Approve</strong> → Finance approves</li>
+    <li><strong>Authorized</strong> → GL posting automatic</li>
+</ol>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Contribution approval workflow buttons
+</div>
+
+<p><strong>GL Posting (Automatic):</strong></p>
+<div class="code-block">DEBIT:  1000 - Cash in Hand             $10,000
+CREDIT: 3100-01 - Capital - John Smith  $10,000</div>
+
+<h3>Recording Profit Distributions</h3>
+<p><strong>Path:</strong> Cash/Bank Payments → <strong>Create Payment</strong> (Purpose: Profit Distribution)</p>
+
+<h4>Scenario: Distribute $5,000 profit to shareholder</h4>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Cash Payment form with Profit Distribution selected
+</div>
+
+<p><strong>Form Fields:</strong></p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>What to Enter</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td><strong>Payment Type</strong></td>
+        <td>CASH_PAYMENT</td>
+        <td>Cash Payment</td>
+    </tr>
+    <tr>
+        <td><strong>Payment Purpose</strong></td>
+        <td>PROFIT_DISTRIBUTION</td>
+        <td>Profit Distribution</td>
+    </tr>
+    <tr>
+        <td><strong>Stakeholder</strong></td>
+        <td>Select shareholder</td>
+        <td>John Smith</td>
+    </tr>
+    <tr>
+        <td><strong>Amount</strong></td>
+        <td>Distribution amount</td>
+        <td>5,000.00</td>
+    </tr>
+    <tr>
+        <td><strong>Payment Date</strong></td>
+        <td>Transaction date</td>
+        <td>2025-12-19</td>
+    </tr>
+    <tr>
+        <td><strong>Description</strong></td>
+        <td>Purpose</td>
+        <td>"Q4 2025 profit distribution"</td>
+    </tr>
+</table>
+
+<p><strong>Approval Workflow:</strong></p>
+<ol>
+    <li><strong>Draft</strong> → Create payment</li>
+    <li><strong>Pending Approval</strong> → Submit</li>
+    <li><strong>Approved</strong> → Manager approves</li>
+    <li><strong>Authorized</strong> → Finance authorizes → <strong>GL posting happens here</strong></li>
+</ol>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Payment workflow status progression
+</div>
+
+<p><strong>GL Posting (Automatic):</strong></p>
+<div class="code-block">DEBIT:  3200-01 - Drawings - John Smith  $5,000
+CREDIT: 1000 - Cash in Hand               $5,000</div>
+
+<h3>Viewing Shareholder Balances</h3>
+<p><strong>Path:</strong> Shareholder → <strong>Capital Contributions</strong> → Filter by Stakeholder</p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Capital Contributions list filtered by stakeholder
+</div>
+
+<p><strong>How to Check Balance:</strong></p>
+<ol>
+    <li>Go to <strong>Shareholder</strong> → <strong>Capital Contributions</strong></li>
+    <li>Filter by stakeholder name</li>
+    <li>View summary:
+        <ul>
+            <li>Total Contributions</li>
+            <li>Total Withdrawals</li>
+            <li>Current Balance</li>
+        </ul>
+    </li>
+</ol>
+
+<p><strong>Alternative:</strong> Run <strong>Trial Balance</strong> report and look at 3100/3200 accounts</p>
+
+<h2 id="expense-management">5. Employee Expense Management</h2>
+
+<h3>Overview</h3>
+<p>The Expense module tracks:</p>
+<ul>
+    <li>Employee expense reports</li>
+    <li>Receipt management</li>
+    <li>Approval workflows</li>
+    <li>Reimbursement processing</li>
+    <li>GL posting</li>
+</ul>
+
+<h3>Setting Up Expense Categories</h3>
+<p><strong>Path:</strong> Admin → <strong>Expenses</strong> → <strong>Expense Categories</strong></p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Expense Categories list
+</div>
+
+<h4>Default Categories (Already Set Up):</h4>
+<table>
+    <tr>
+        <th>Category</th>
+        <th>GL Account</th>
+        <th>Receipt Required</th>
+        <th>Manager Approval</th>
+    </tr>
+    <tr>
+        <td>Travel Expenses</td>
+        <td>5100</td>
+        <td>✓ Yes</td>
+        <td>✓ Yes</td>
+    </tr>
+    <tr>
+        <td>Office Supplies</td>
+        <td>5200</td>
+        <td>✓ Yes</td>
+        <td>✗ No</td>
+    </tr>
+    <tr>
+        <td>Meals & Entertainment</td>
+        <td>5300</td>
+        <td>✓ Yes</td>
+        <td>✓ Yes</td>
+    </tr>
+    <tr>
+        <td>Utilities</td>
+        <td>5400</td>
+        <td>✓ Yes</td>
+        <td>✓ Yes</td>
+    </tr>
+    <tr>
+        <td>Maintenance & Repairs</td>
+        <td>5500</td>
+        <td>✓ Yes</td>
+        <td>✓ Yes</td>
+    </tr>
+    <tr>
+        <td>Professional Services</td>
+        <td>5600</td>
+        <td>✓ Yes</td>
+        <td>✓ Yes</td>
+    </tr>
+    <tr>
+        <td>Training & Development</td>
+        <td>5700</td>
+        <td>✓ Yes</td>
+        <td>✓ Yes</td>
+    </tr>
+    <tr>
+        <td>Communications</td>
+        <td>5800</td>
+        <td>✓ Yes</td>
+        <td>✗ No</td>
+    </tr>
+</table>
+
+<div class="info-box">
+    <strong>Important:</strong> Each category is linked to a GL account - this is already configured!
+</div>
+
+<h3>Employee Expense Workflow</h3>
+
+<h4>Step 1: Employee Creates Expense Report</h4>
+<p><strong>Path:</strong> Expenses → <strong>Reports</strong> → <strong>Create Report</strong></p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Create Expense Report form
+</div>
+
+<p><strong>Form Fields:</strong></p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>What to Enter</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td><strong>Period Start</strong></td>
+        <td>Start date of expenses</td>
+        <td>2025-12-01</td>
+    </tr>
+    <tr>
+        <td><strong>Period End</strong></td>
+        <td>End date of expenses</td>
+        <td>2025-12-07</td>
+    </tr>
+    <tr>
+        <td><strong>Description</strong></td>
+        <td>Purpose of expenses</td>
+        <td>"Business trip to NYC"</td>
+    </tr>
+</table>
+
+<p>Click <strong>"Save"</strong></p>
+
+<h4>Step 2: Add Expense Items</h4>
+<p><strong>Path:</strong> Open the report → <strong>Add Expense Item</strong></p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Add Expense Item form
+</div>
+
+<p><strong>Form Fields:</strong></p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>What to Enter</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td><strong>Category</strong></td>
+        <td>Select from dropdown</td>
+        <td>Travel Expenses</td>
+    </tr>
+    <tr>
+        <td><strong>Expense Date</strong></td>
+        <td>Date expense occurred</td>
+        <td>2025-12-02</td>
+    </tr>
+    <tr>
+        <td><strong>Amount</strong></td>
+        <td>Expense amount</td>
+        <td>250.00</td>
+    </tr>
+    <tr>
+        <td><strong>Description</strong></td>
+        <td>What was purchased</td>
+        <td>"Flight ticket to NYC"</td>
+    </tr>
+    <tr>
+        <td><strong>Receipt</strong></td>
+        <td>Upload file</td>
+        <td>flight_receipt.pdf</td>
+    </tr>
+    <tr>
+        <td><strong>Receipt Number</strong></td>
+        <td>Invoice/receipt #</td>
+        <td>INV-12345</td>
+    </tr>
+</table>
+
+<p>Click <strong>"Save"</strong></p>
+
+<div class="info-box">
+    You can add multiple expense items to one report.
+</div>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Expense report showing multiple line items
+</div>
+
+<h4>Step 3: Submit for Approval</h4>
+<ol>
+    <li>Review all expense items</li>
+    <li>Click <strong>"Submit for Approval"</strong></li>
+    <li>Report status changes to <strong>"Submitted"</strong></li>
+</ol>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Submit button and status change
+</div>
+
+<h4>Step 4: Manager Approval</h4>
+<p><strong>Path:</strong> Expenses → <strong>Reports</strong> → Filter: Pending Review</p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Manager view of pending reports
+</div>
+
+<p><strong>Manager Actions:</strong></p>
+<ol>
+    <li>Click on report to review</li>
+    <li>Check all expense items and receipts</li>
+    <li>Click <strong>"Approve"</strong> or <strong>"Reject"</strong></li>
+    <li>Add notes (optional)</li>
+</ol>
+
+<p><strong>Upon Approval:</strong></p>
+<ul>
+    <li>Report status → <strong>"Approved"</strong></li>
+    <li><strong>GL posting happens automatically</strong></li>
+</ul>
+
+<p><strong>GL Entries Created (Automatic):</strong></p>
+<div class="code-block">For each expense item:
+DEBIT:  5XXX - Expense Account (e.g., 5100 Travel)  $250.00
+CREDIT: 2100 - Accounts Payable - Employee Expenses  $250.00</div>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Approved report showing GL entry confirmation
+</div>
+
+<h4>Step 5: Finance Creates Reimbursement</h4>
+<p><strong>Path:</strong> Expenses → <strong>Reimbursements</strong> → <strong>Create Reimbursement</strong></p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Create Reimbursement form
+</div>
+
+<p><strong>Form Fields:</strong></p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>What to Enter</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td><strong>Report</strong></td>
+        <td>Select approved report</td>
+        <td>Report #123 - John Doe</td>
+    </tr>
+    <tr>
+        <td><strong>Amount</strong></td>
+        <td>Reimbursement amount</td>
+        <td>250.00</td>
+    </tr>
+    <tr>
+        <td><strong>Method</strong></td>
+        <td>Payment method</td>
+        <td>Bank Transfer</td>
+    </tr>
+    <tr>
+        <td><strong>Scheduled Date</strong></td>
+        <td>When to pay</td>
+        <td>2025-12-20</td>
+    </tr>
+</table>
+
+<p>Click <strong>"Save"</strong></p>
+
+<h4>Step 6: Process Payment</h4>
+<p><strong>Path:</strong> Expenses → <strong>Reimbursements</strong> → Open reimbursement → <strong>Process Payment</strong></p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Process Payment button
+</div>
+
+<p><strong>Form Fields:</strong></p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>What to Enter</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td><strong>Transaction ID</strong></td>
+        <td>Bank reference</td>
+        <td>TXN-ABC123</td>
+    </tr>
+</table>
+
+<p>Click <strong>"Process Payment"</strong></p>
+
+<p><strong>Upon Payment:</strong></p>
+<ul>
+    <li>Reimbursement status → <strong>"Completed"</strong></li>
+    <li><strong>GL posting happens automatically</strong></li>
+</ul>
+
+<p><strong>GL Entries Created (Automatic):</strong></p>
+<div class="code-block">DEBIT:  2100 - Accounts Payable - Employee Expenses  $250.00
+CREDIT: 1100 - Cash and Bank                         $250.00</div>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Completed reimbursement with GL confirmation
+</div>
+
+<h3>Viewing Expense Reports</h3>
+<p><strong>Path:</strong> Expenses → <strong>Reports</strong></p>
+
+<p><strong>Available Filters:</strong></p>
+<ul>
+    <li>Status (Draft, Submitted, Approved, Rejected)</li>
+    <li>Employee</li>
+    <li>Date Range</li>
+    <li>Category</li>
+</ul>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Reports list with filter options
+</div>
+
+<h2 id="common-workflows">6. Common Workflows</h2>
+
+<h3>Workflow 1: Recording a Sale</h3>
+<p><strong>Scenario:</strong> Customer pays $1,000 cash for products</p>
+<p><strong>Path:</strong> Accounting → <strong>Cash Receipts</strong> → <strong>Create Receipt</strong></p>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Cash Receipt form
+</div>
+
+<p><strong>Steps:</strong></p>
+<ol>
+    <li>Select <strong>Receipt Type</strong>: Cash Receipt</li>
+    <li>Enter <strong>Amount</strong>: 1,000.00</li>
+    <li>Enter <strong>Date</strong>: Today's date</li>
+    <li>Select <strong>Account</strong>: 4000 - Sales Revenue</li>
+    <li>Enter <strong>Description</strong>: "Product sale - Invoice #123"</li>
+    <li>Click <strong>"Save"</strong></li>
+    <li>Submit for approval</li>
+    <li>Manager approves → GL posting automatic</li>
+</ol>
+
+<p><strong>GL Posting:</strong></p>
+<div class="code-block">DEBIT:  1000 - Cash in Hand      $1,000
+CREDIT: 4000 - Sales Revenue     $1,000</div>
+
+<h3>Workflow 2: Paying a Vendor Bill</h3>
+<p><strong>Scenario:</strong> Pay $500 for office supplies via bank</p>
+<p><strong>Path:</strong> Accounting → <strong>Bank Payments</strong> → <strong>Create Payment</strong></p>
+
+<p><strong>Steps:</strong></p>
+<ol>
+    <li>Select <strong>Payment Type</strong>: Bank Payment</li>
+    <li>Enter <strong>Amount</strong>: 500.00</li>
+    <li>Enter <strong>Date</strong>: Payment date</li>
+    <li>Select <strong>Account</strong>: 5200 - Office Supplies Expense</li>
+    <li>Enter <strong>Description</strong>: "Office supplies - Invoice #ABC"</li>
+    <li>Click <strong>"Save"</strong></li>
+    <li>Submit → Approve → Authorize</li>
+</ol>
+
+<p><strong>GL Posting:</strong></p>
+<div class="code-block">DEBIT:  5200 - Office Supplies Expense  $500
+CREDIT: 1100 - Cash and Bank            $500</div>
+
+<h3>Workflow 3: Month-End Closing</h3>
+<p><strong>Steps:</strong></p>
+<ol>
+    <li><strong>Review Trial Balance</strong>
+        <ul>
+            <li>Path: Accounting → <strong>Trial Balance</strong></li>
+            <li>Verify all accounts balance</li>
+            <li>Check for unusual balances</li>
+        </ul>
+    </li>
+    <li><strong>Review Ledger Entries</strong>
+        <ul>
+            <li>Path: Accounting → <strong>General Ledger</strong></li>
+            <li>Filter by date range (current month)</li>
+            <li>Verify all postings</li>
+        </ul>
+    </li>
+    <li><strong>Generate Financial Statements</strong>
+        <ul>
+            <li><strong>Profit & Loss</strong>: Accounting → <strong>P&L Report</strong></li>
+            <li><strong>Balance Sheet</strong>: Accounting → <strong>Balance Sheet</strong></li>
+        </ul>
+    </li>
+</ol>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Trial Balance report<br>
+    📸 Screenshot Needed: P&L Statement<br>
+    📸 Screenshot Needed: Balance Sheet
+</div>
+
+<h2 id="troubleshooting">7. Troubleshooting</h2>
+
+<h3>Common Issues & Solutions</h3>
+
+<h4>Issue 1: "GL account not configured for expense category"</h4>
+<div class="warning-box">
+    <strong>Problem:</strong> Expense approval fails with this error
+</div>
+
+<p><strong>Solution:</strong></p>
+<ol>
+    <li>Go to <strong>Admin</strong> → <strong>Expenses</strong> → <strong>Expense Categories</strong></li>
+    <li>Find the category</li>
+    <li>Click <strong>"Edit"</strong></li>
+    <li>Select <strong>"Expense Account"</strong> from dropdown (e.g., 5100)</li>
+    <li>Click <strong>"Save"</strong></li>
+</ol>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Edit Category form highlighting Expense Account field
+</div>
+
+<h4>Issue 2: "Cannot find Cash/Bank account"</h4>
+<div class="warning-box">
+    <strong>Problem:</strong> Reimbursement payment fails
+</div>
+
+<p><strong>Solution:</strong></p>
+<p>Ensure you have these accounts:</p>
+<ul>
+    <li><strong>1000</strong> - Cash in Hand (for cash payments)</li>
+    <li><strong>1100</strong> - Cash and Bank (for bank payments)</li>
+</ul>
+
+<p>Create if missing:</p>
+<ol>
+    <li>Accounting → <strong>Chart of Accounts</strong> → <strong>Add Account</strong></li>
+    <li>Create account 1000 or 1100 as ASSET type</li>
+</ol>
+
+<h4>Issue 3: "Shareholder accounts not created"</h4>
+<div class="warning-box">
+    <strong>Problem:</strong> Capital contribution fails
+</div>
+
+<p><strong>Solution:</strong></p>
+<p>Shareholder accounts auto-create when:</p>
+<ol>
+    <li>Stakeholder is created</li>
+    <li>First capital contribution is made</li>
+</ol>
+
+<p>Check: Accounting → <strong>Chart of Accounts</strong> → Look for 3100-XX and 3200-XX</p>
+
+<p>If missing, contact system administrator.</p>
+
+<h4>Issue 4: "Reimbursement amount exceeds approved expenses"</h4>
+<div class="warning-box">
+    <strong>Problem:</strong> Payment processing fails
+</div>
+
+<p><strong>Solution:</strong></p>
+<p>This is a validation error. Check:</p>
+<ol>
+    <li>Total approved expense items</li>
+    <li>Reimbursement amount</li>
+    <li>Ensure reimbursement ≤ approved total</li>
+</ol>
+
+<p>You may need to split into multiple reimbursements.</p>
+
+<h2 id="reports">8. Viewing Financial Reports</h2>
+
+<h3>Trial Balance</h3>
+<p><strong>Path:</strong> Accounting → <strong>Trial Balance</strong></p>
+
+<p><strong>Purpose:</strong> Shows all account balances at a point in time</p>
+
+<p><strong>How to Generate:</strong></p>
+<ol>
+    <li>Select <strong>Date</strong> (end date for balances)</li>
+    <li>Click <strong>"Generate"</strong></li>
+</ol>
+
+<p><strong>What to Check:</strong></p>
+<ul>
+    <li>Total Debits = Total Credits (must balance)</li>
+    <li>Account balances make sense</li>
+    <li>No negative balances in wrong places</li>
+</ul>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Trial Balance report with totals highlighted
+</div>
+
+<h3>Profit & Loss Statement</h3>
+<p><strong>Path:</strong> Accounting → <strong>P&L Report</strong></p>
+
+<p><strong>Purpose:</strong> Shows income vs expenses for a period</p>
+
+<p><strong>How to Generate:</strong></p>
+<ol>
+    <li>Select <strong>Start Date</strong> (e.g., Jan 1, 2025)</li>
+    <li>Select <strong>End Date</strong> (e.g., Dec 31, 2025)</li>
+    <li>Click <strong>"Generate"</strong></li>
+</ol>
+
+<p><strong>Report Shows:</strong></p>
+<ul>
+    <li><strong>Revenue</strong> (4000-series accounts)</li>
+    <li><strong>Expenses</strong> (5000-series accounts)</li>
+    <li><strong>Net Profit</strong> = Revenue - Expenses</li>
+</ul>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: P&L report showing revenue, expenses, and net profit
+</div>
+
+<h3>Balance Sheet</h3>
+<p><strong>Path:</strong> Accounting → <strong>Balance Sheet</strong></p>
+
+<p><strong>Purpose:</strong> Shows what you own (assets) vs what you owe (liabilities) + equity</p>
+
+<p><strong>How to Generate:</strong></p>
+<ol>
+    <li>Select <strong>As of Date</strong> (e.g., Dec 31, 2025)</li>
+    <li>Click <strong>"Generate"</strong></li>
+</ol>
+
+<p><strong>Report Shows:</strong></p>
+<ul>
+    <li><strong>Assets</strong> (1000-series)</li>
+    <li><strong>Liabilities</strong> (2000-series)</li>
+    <li><strong>Equity</strong> (3000-series)</li>
+    <li><strong>Must Balance:</strong> Assets = Liabilities + Equity</li>
+</ul>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: Balance Sheet report
+</div>
+
+<h3>General Ledger</h3>
+<p><strong>Path:</strong> Accounting → <strong>General Ledger</strong></p>
+
+<p><strong>Purpose:</strong> Complete transaction log</p>
+
+<p><strong>How to Use:</strong></p>
+<ol>
+    <li>Select filters:
+        <ul>
+            <li>Date range</li>
+            <li>Account (optional)</li>
+            <li>Entry status (Posted/All)</li>
+        </ul>
+    </li>
+    <li>Click <strong>"Filter"</strong></li>
+</ol>
+
+<p><strong>Shows:</strong></p>
+<ul>
+    <li>Date</li>
+    <li>Account</li>
+    <li>Description</li>
+    <li>Debit amount</li>
+    <li>Credit amount</li>
+    <li>Reference number</li>
+    <li>Status</li>
+</ul>
+
+<p><strong>Use Cases:</strong></p>
+<ul>
+    <li>Audit trail</li>
+    <li>Finding specific transactions</li>
+    <li>Reconciling accounts</li>
+</ul>
+
+<div class="screenshot-note">
+    📸 Screenshot Needed: General Ledger report with transactions
+</div>
+
+<h2 id="best-practices">9. Best Practices</h2>
+
+<h3>1. Account Naming</h3>
+<div class="success-box">
+    <strong>✅ Do:</strong>
+    <ul>
+        <li>Use clear, descriptive names</li>
+        <li>Follow standard numbering</li>
+        <li>Be consistent</li>
+    </ul>
+</div>
+
+<div class="warning-box">
+    <strong>❌ Don't:</strong>
+    <ul>
+        <li>Use vague names ("Misc Account")</li>
+        <li>Skip account numbers</li>
+        <li>Duplicate names</li>
+    </ul>
+</div>
+
+<h3>2. Transaction Descriptions</h3>
+<div class="success-box">
+    <strong>✅ Do:</strong>
+    <ul>
+        <li>Include invoice/reference numbers</li>
+        <li>Describe the transaction clearly</li>
+        <li>Note the counterparty</li>
+    </ul>
+</div>
+
+<div class="warning-box">
+    <strong>❌ Don't:</strong>
+    <ul>
+        <li>Leave blank</li>
+        <li>Use only "Payment" or "Receipt"</li>
+        <li>Forget dates</li>
+    </ul>
+</div>
+
+<h3>3. Approvals</h3>
+<div class="success-box">
+    <strong>✅ Do:</strong>
+    <ul>
+        <li>Review all supporting documents</li>
+        <li>Check amounts match receipts</li>
+        <li>Verify account selections</li>
+    </ul>
+</div>
+
+<div class="warning-box">
+    <strong>❌ Don't:</strong>
+    <ul>
+        <li>Auto-approve without review</li>
+        <li>Skip receipt verification</li>
+        <li>Ignore policy limits</li>
+    </ul>
+</div>
+
+<h3>4. Month-End</h3>
+<div class="success-box">
+    <strong>✅ Do:</strong>
+    <ul>
+        <li>Run trial balance</li>
+        <li>Review unusual balances</li>
+        <li>Reconcile bank accounts</li>
+        <li>Generate financial statements</li>
+    </ul>
+</div>
+
+<div class="warning-box">
+    <strong>❌ Don't:</strong>
+    <ul>
+        <li>Skip reconciliations</li>
+        <li>Ignore imbalances</li>
+        <li>Close books with errors</li>
+    </ul>
+</div>
+
+<h2>Quick Reference: Account Selection Guide</h2>
+
+<p><strong>When recording a transaction, ask yourself:</strong></p>
+
+<table>
+    <tr>
+        <th>Transaction Type</th>
+        <th>Account to Use</th>
+    </tr>
+    <tr>
+        <td>Received cash from sale</td>
+        <td>DR: 1000 (Cash), CR: 4000 (Revenue)</td>
+    </tr>
+    <tr>
+        <td>Paid cash for supplies</td>
+        <td>DR: 5200 (Supplies), CR: 1000 (Cash)</td>
+    </tr>
+    <tr>
+        <td>Bank transfer received</td>
+        <td>DR: 1100 (Bank), CR: 4000 (Revenue)</td>
+    </tr>
+    <tr>
+        <td>Bank payment for utilities</td>
+        <td>DR: 5400 (Utilities), CR: 1100 (Bank)</td>
+    </tr>
+    <tr>
+        <td>Shareholder invests cash</td>
+        <td>DR: 1000 (Cash), CR: 3100-XX (Capital)</td>
+    </tr>
+    <tr>
+        <td>Distribute profit</td>
+        <td>DR: 3200-XX (Drawings), CR: 1000 (Cash)</td>
+    </tr>
+    <tr>
+        <td>Employee expense approved</td>
+        <td>DR: 5XXX (Expense), CR: 2100 (AP)</td>
+    </tr>
+    <tr>
+        <td>Reimburse employee</td>
+        <td>DR: 2100 (AP), CR: 1100 (Bank)</td>
+    </tr>
+</table>
+
+<h2>Quick Reference: Status Meanings</h2>
+
+<table>
+    <tr>
+        <th>Status</th>
+        <th>Meaning</th>
+        <th>Action Needed</th>
+    </tr>
+    <tr>
+        <td><strong>Draft</strong></td>
+        <td>Not yet submitted</td>
+        <td>Complete and submit</td>
+    </tr>
+    <tr>
+        <td><strong>Pending Approval</strong></td>
+        <td>Awaiting manager review</td>
+        <td>Manager to approve/reject</td>
+    </tr>
+    <tr>
+        <td><strong>Approved</strong></td>
+        <td>Manager approved</td>
+        <td>Finance to authorize</td>
+    </tr>
+    <tr>
+        <td><strong>Authorized</strong></td>
+        <td>Finance approved</td>
+        <td>GL posting automatic</td>
+    </tr>
+    <tr>
+        <td><strong>Posted</strong></td>
+        <td>In general ledger</td>
+        <td>Complete - no action</td>
+    </tr>
+    <tr>
+        <td><strong>Rejected</strong></td>
+        <td>Not approved</td>
+        <td>Review and resubmit</td>
+    </tr>
+</table>
+
+<h2>Contact & Support</h2>
+
+<h3>Getting Help</h3>
+
+<p><strong>For system issues:</strong></p>
+<ul>
+    <li>Email: support@tradifyglobal.com</li>
+    <li>Phone: +1-XXX-XXX-XXXX</li>
+</ul>
+
+<p><strong>For accounting questions:</strong></p>
+<ul>
+    <li>Contact your Finance Manager</li>
+    <li>Refer to this user guide</li>
+</ul>
+
+<p><strong>For training requests:</strong></p>
+<ul>
+    <li>Contact HR or your supervisor</li>
+</ul>
+
+<h2 id="appendix">10. Appendix: Complete Account List</h2>
+
+<h3>Assets (1000-1999)</h3>
+<div class="code-block">1000 - Cash in Hand
+1100 - Cash and Bank
+1200 - Accounts Receivable
+1500 - Fixed Assets
+1510 - Accumulated Depreciation</div>
+
+<h3>Liabilities (2000-2999)</h3>
+<div class="code-block">2000 - Accounts Payable
+2100 - Accounts Payable - Employee Expenses
+2110 - Salaries Payable</div>
+
+<h3>Equity (3000-3999)</h3>
+<div class="code-block">3000 - Owner's Capital
+3100-01 - Shareholder Capital - [Name 1]
+3100-02 - Shareholder Capital - [Name 2]
+3200-01 - Drawings/Distributions - [Name 1]
+3200-02 - Drawings/Distributions - [Name 2]</div>
+
+<h3>Income (4000-4999)</h3>
+<div class="code-block">4000 - Sales Revenue
+4100 - Service Revenue
+4900 - Other Income</div>
+
+<h3>Expenses (5000-5999)</h3>
+<div class="code-block">5100 - Travel Expense
+5200 - Office Supplies Expense
+5300 - Meals & Entertainment Expense
+5400 - Utilities Expense
+5500 - Maintenance & Repairs Expense
+5600 - Professional Services Expense
+5700 - Training & Development Expense
+5800 - Communications Expense</div>
+
+<hr>
+
+<h2>Version History</h2>
+<table>
+    <tr>
+        <th>Version</th>
+        <th>Date</th>
+        <th>Changes</th>
+    </tr>
+    <tr>
+        <td>1.0</td>
+        <td>2025-12-19</td>
+        <td>Initial release - Complete user guide</td>
+    </tr>
+</table>
+
+<hr>
+
+<p style="text-align: center; margin-top: 50px; font-size: 12pt; color: #666;">
+    <strong>End of User Guide</strong><br>
+    For the latest version of this guide, visit: <strong>https://tradifyglobal.com/docs</strong>
+</p>
+
+</body>
+</html>

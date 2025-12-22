@@ -1,0 +1,81 @@
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Review Payment Commitment{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="page-title-box">
+                    <h4 class="mb-0">Review Payment Commitment</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Commitment for {{ object.stakeholder.full_name }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Shareholder:</strong> {{ object.stakeholder.full_name }}</p>
+                                <p><strong>Amount:</strong> {{ object.currency.symbol }} {{ object.committed_amount|floatformat:2 }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Commitment Date:</strong> {{ object.promised_payment_date|date:"M d, Y" }}</p>
+                                <p><strong>Due Date:</strong> {% if object.due_date %}{{ object.due_date|date:"M d, Y" }}{% else %}<span class="text-muted">Not set</span>{% endif %}</p>
+                            </div>
+                        </div>
+                        {% if object.notes %}
+                        <div class="alert alert-info">
+                            <strong>Commitment Notes:</strong>
+                            <p class="mb-0">{{ object.notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Review Form -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h4 class="card-title">
+                            {% if object.workflow_status == 'SUBMITTED' %}
+                                First Review
+                            {% elif object.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
+                                Second Review
+                            {% endif %}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" id="commitment-review-form">
+                            {% csrf_token %}
+                            {% crispy form %}
+                        </form>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" form="commitment-review-form" class="btn btn-success">
+                                <i class="feather-check-circle"></i> 
+                                {% if object.workflow_status == 'SUBMITTED' %}
+                                    Complete First Review
+                                {% else %}
+                                    Complete Second Review
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'shareholder:payment_commitment_detail' object.pk %}" class="btn btn-secondary">
+                                Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

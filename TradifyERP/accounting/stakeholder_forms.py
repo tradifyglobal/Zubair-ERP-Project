@@ -18,22 +18,46 @@ class StakeholderForm(forms.ModelForm):
             'permanent_address_line_1', 'permanent_address_line_2', 'permanent_city', 'permanent_state_province', 'permanent_postal_code', 'permanent_country',
             'address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country', 'same_as_permanent',
             'tax_identification_number', 'tax_id_type',
-            'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date'
+            'nationality', 'occupation', 'relationship_to_company', 'notes', 'joined_date', 'start_date', 'end_date'
         ]
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
             'joined_date': forms.DateInput(attrs={'type': 'date'}),
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Dynamically add start_date and end_date fields if they exist on the model
+        model_field_names = [f.name for f in self.Meta.model._meta.get_fields()]
+        if 'start_date' in model_field_names:
+            self.fields['start_date'] = forms.DateField(
+                required=False,
+                widget=forms.DateInput(attrs={'type': 'date'}),
+                label='Start Date'
+            )
+        if 'end_date' in model_field_names:
+            self.fields['end_date'] = forms.DateField(
+                required=False,
+                widget=forms.DateInput(attrs={'type': 'date'}),
+                label='End Date'
+            )
+        
         # Set default joined_date if not editing an existing instance
         if not self.instance.pk and 'joined_date' in self.fields:
             from django.utils import timezone
             self.fields['joined_date'].initial = timezone.now().date()
             # Make the field not required since we have a default
             self.fields['joined_date'].required = False
+        
+        # Make start_date and end_date optional
+        if 'start_date' in self.fields:
+            self.fields['start_date'].required = False
+        if 'end_date' in self.fields:
+            self.fields['end_date'].required = False
         
         # Make current address fields optional - they'll be validated in clean() based on checkbox
         current_address_fields = ['address_line_1', 'address_line_2', 'city', 'state_province', 'postal_code', 'country']
@@ -153,6 +177,22 @@ class StakeholderForm(forms.ModelForm):
                 )
             ),
         )
+        
+        # Dynamically add Profit Calculation Period section if fields were added
+        if 'start_date' in self.fields or 'end_date' in self.fields:
+            row_columns = []
+            if 'start_date' in self.fields:
+                row_columns.append(Column('start_date', css_class='col-md-6'))
+            if 'end_date' in self.fields:
+                row_columns.append(Column('end_date', css_class='col-md-6'))
+            
+            profit_fieldset = Fieldset(
+                'Profit Calculation Period (Optional)',
+                Row(*row_columns) if row_columns else None,
+                HTML('<p class="text-muted small">Set the date range for profit calculation purposes. Leave blank for ongoing.</p>')
+            )
+            # Insert before Additional Information
+            self.helper.layout.fields.insert(-1, profit_fieldset)
     
     def clean(self):
         """Validate that current address is filled when not using same as permanent."""
@@ -181,6 +221,10 @@ class CapitalContributionForm(forms.ModelForm):
             'paying_bank_name', 'paying_account_number', 'paying_account_holder',
             'document_file', 'notes'
         ]
+        labels = {
+            'stakeholder': 'Shareholder',
+            'approver_group': 'Approver Group',
+        }
         widgets = {
             'stakeholder': forms.Select(attrs={'class': 'form-select'}),
             'contribution_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -208,10 +252,11 @@ class CapitalContributionForm(forms.ModelForm):
             # Check if instance has entity_id (might be set but not loaded yet)
             entity_id = getattr(self.instance, 'entity_id', None) or (self.instance.entity_id if hasattr(self.instance, 'entity_id') else None)
             if entity_id:
-                # Filter stakeholders to only show those from the current entity
+                # Filter stakeholders to only show active stakeholders from the current entity
                 if 'stakeholder' in self.fields:
                     self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
-                        entity_id=entity_id
+                        entity_id=entity_id,
+                        status='ACTIVE'
                     ).order_by('first_name', 'last_name')
                 
                 # Filter bank profiles to only show those from the current entity
@@ -227,6 +272,17 @@ class CapitalContributionForm(forms.ModelForm):
             self.fields['contribution_date'].initial = timezone.now().date()
             # Make the field not required since we have a default
             self.fields['contribution_date'].required = False
+        
+        # Add data attributes for currency matching
+        if 'currency' in self.fields:
+            self.fields['currency'].widget.attrs['data-toggle-field'] = 'exchange_rate'
+        if 'currency_destination' in self.fields:
+            self.fields['currency_destination'].widget.attrs['data-toggle-field'] = 'exchange_rate'
+        if 'exchange_rate' in self.fields:
+            self.fields['exchange_rate'].widget.attrs['id'] = 'id_exchange_rate'
+            # Make exchange_rate not required since we handle it in clean()
+            self.fields['exchange_rate'].required = False
+            
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
@@ -285,6 +341,26 @@ class CapitalContributionForm(forms.ModelForm):
                 )
             ),
         )
+    
+    def clean(self):
+        """Validate and set exchange_rate based on currency matching."""
+        cleaned_data = super().clean()
+        currency = cleaned_data.get('currency')
+        currency_destination = cleaned_data.get('currency_destination')
+        exchange_rate = cleaned_data.get('exchange_rate')
+        
+        # If currencies are the same, set exchange_rate to 1.0
+        if currency and currency_destination and currency == currency_destination:
+            cleaned_data['exchange_rate'] = 1.0
+        else:
+            # If currencies are different, exchange_rate is required
+            if not exchange_rate:
+                raise forms.ValidationError(
+                    "Exchange rate is required when currencies are different."
+                )
+        
+        return cleaned_data
+
 
 
 class ShareholdingForm(forms.ModelForm):
@@ -393,123 +469,14 @@ class ShareholdingForm(forms.ModelForm):
         )
 
 
-class CapitalContributionSubmitForm(forms.ModelForm):
-    """Form for submitting a contribution and assigning two reviewers."""
-    reviewer = forms.ModelChoiceField(
-        queryset=None,
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Assign First Reviewer',
-        help_text='Select the first user who will review this contribution'
-    )
-    
-    reviewer_2 = forms.ModelChoiceField(
-        queryset=None,
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Assign Second Reviewer',
-        help_text='Select the second user who will review this contribution'
-    )
-    
-    class Meta:
-        model = CapitalContribution
-        fields = ['review_notes']
-        widgets = {
-            'review_notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Optional notes for the reviewers'
-            }),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        from django.contrib.auth.models import User
-        # Show all active users as potential reviewers
-        active_users = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
-        self.fields['reviewer'].queryset = active_users
-        self.fields['reviewer_2'].queryset = active_users
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        reviewer = cleaned_data.get('reviewer')
-        reviewer_2 = cleaned_data.get('reviewer_2')
-        
-        if reviewer and reviewer_2 and reviewer == reviewer_2:
-            raise forms.ValidationError("First and second reviewers must be different users.")
-        
-        return cleaned_data
-    
-    def save(self, commit=True):
-        """Save the form and assign reviewers to the contribution."""
-        instance = super().save(commit=False)
-        
-        # Save assigned reviewers
-        instance.assigned_reviewer_1 = self.cleaned_data.get('reviewer')
-        instance.assigned_reviewer_2 = self.cleaned_data.get('reviewer_2')
-        
-        if commit:
-            instance.save()
-        
-        return instance
-
-
-class CapitalContributionReviewForm(forms.ModelForm):
-    """Form for completing review and moving to approval when both reviewers have reviewed."""
-    approver = forms.ModelChoiceField(
-        queryset=None,
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Assign Approver',
-        help_text='Select the user who will approve this contribution'
-    )
-    
-    class Meta:
-        model = CapitalContribution
-        fields = ['review_notes_2', 'approval_notes']
-        widgets = {
-            'review_notes_2': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Your review notes as second reviewer'
-            }),
-            'approval_notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Optional notes for the approver'
-            }),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        from django.contrib.auth.models import User
-        # Show all active users as potential approvers
-        self.fields['approver'].queryset = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
-    
-    def save(self, commit=True):
-        """Save the form and assign approver to the contribution."""
-        instance = super().save(commit=False)
-        
-        # Save assigned approver
-        instance.assigned_approver = self.cleaned_data.get('approver')
-        
-        if commit:
-            instance.save()
-        
-        return instance
-
-
-class CapitalContributionApprovalForm(forms.ModelForm):
-    """Form for approving a contribution."""
-    
-    class Meta:
-        model = CapitalContribution
-        fields = ['status', 'approval_notes']
-        widgets = {
-            'status': forms.Select(attrs={'class': 'form-select'}),
-            'approval_notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Your approval notes'
-            }),
-        }
+# ==================== Capital Contribution Workflow Forms ====================
+# DEPRECATED: Workflow moved to transaction level (CashReceiptLine/BankReceiptLine)
+#
+# The following form classes have been removed:
+# - CapitalContributionSubmitForm (line ~472)
+# - CapitalContributionReviewForm (line ~549)
+# - CapitalContributionApprovalForm (line ~644)
+#
+# Capital contributions are now auto-created and posted when source transaction is approved.
+# No manual submission/review/approval needed at contribution level.
+# See REFACTORING_PLAN.md for complete migration information.

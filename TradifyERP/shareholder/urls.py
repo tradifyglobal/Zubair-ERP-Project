@@ -24,10 +24,11 @@ urlpatterns = [
     path('capital-contributions/create/', views.CapitalContributionCreateView.as_view(), name='capital-contribution-create'),
     path('capital-contributions/create/<int:stakeholder_id>/', views.CapitalContributionCreateView.as_view(), name='capital-contribution-create-for-stakeholder'),
     path('capital-contributions/<int:pk>/edit/', views.CapitalContributionUpdateView.as_view(), name='capital-contribution-edit'),
-    path('capital-contributions/<int:pk>/submit/', views.CapitalContributionSubmitView.as_view(), name='capital-contribution-submit'),
-    path('capital-contributions/<int:pk>/review/', views.CapitalContributionReviewView.as_view(), name='capital-contribution-review'),
-    path('capital-contributions/<int:pk>/approve/', views.CapitalContributionApproveView.as_view(), name='capital-contribution-approve'),
-    path('capital-contributions/<int:pk>/reject/', views.CapitalContributionRejectView.as_view(), name='capital-contribution-reject'),
+    # DEPRECATED: Workflow URLs removed - approval now happens at transaction (receipt/payment) level
+    # path('capital-contributions/<int:pk>/submit/', ...) - REMOVED
+    # path('capital-contributions/<int:pk>/review/', ...) - REMOVED
+    # path('capital-contributions/<int:pk>/approve/', ...) - REMOVED
+    # path('capital-contributions/<int:pk>/reject/', ...) - REMOVED
     path('capital-contributions/export/', views.CapitalContributionExportView.as_view(), name='capital-contribution-export'),
     path('capital-contributions/import/', views.CapitalContributionImportView.as_view(), name='capital-contribution-import'),
 

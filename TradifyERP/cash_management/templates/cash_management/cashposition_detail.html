@@ -82,6 +82,11 @@
                                             {{ cashposition.bank_account.currency.symbol }}
                                             {{ cashposition.opening_balance|floatformat:2 }}
                                         </p>
+                                        {% if cashposition.entity.company_currency and cashposition.bank_account.currency != cashposition.entity.company_currency %}
+                                            <small class="text-muted">
+                                                Entity Currency: {{ cashposition.entity.company_currency.code }}
+                                            </small>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -91,6 +96,11 @@
                                             {{ cashposition.bank_account.currency.symbol }}
                                             {{ cashposition.closing_balance|floatformat:2 }}
                                         </p>
+                                        {% if cashposition.entity.company_currency and cashposition.bank_account.currency != cashposition.entity.company_currency %}
+                                            <small class="text-muted">
+                                                Entity Currency: {{ cashposition.entity.company_currency.code }}
+                                            </small>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

@@ -59,6 +59,24 @@
                                 
                                 <dt>Created:</dt>
                                 <dd>{{ object.created_at|date:"M d, Y H:i" }}</dd>
+                                
+                                {% if object.start_date or object.end_date %}
+                                <dt><strong>Profit Calculation Period</strong></dt>
+                                <dd></dd>
+                                {% if object.start_date %}
+                                <dt>Start Date:</dt>
+                                <dd>{{ object.start_date|date:"M d, Y" }}</dd>
+                                {% endif %}
+                                {% if object.end_date %}
+                                <dt>End Date:</dt>
+                                <dd>{{ object.end_date|date:"M d, Y" }}</dd>
+                                {% else %}
+                                {% if object.start_date %}
+                                <dt>End Date:</dt>
+                                <dd><span class="badge bg-info">Ongoing</span></dd>
+                                {% endif %}
+                                {% endif %}
+                                {% endif %}
                             </dl>
                             <div class="mt-3">
                                 <a href="{% url 'accounting:stakeholder_update' object.id %}" class="btn btn-warning btn-sm">

@@ -8,12 +8,10 @@ from .views import (
     EmployeeExpenseReportListView, EmployeeExpenseReportDetailView,
     EmployeeExpenseReportCreateView, EmployeeExpenseCreateView,
     EmployeeExpenseSubmitView, EmployeeExpenseApproveView, EmployeeExpenseRejectView,
-    EmployeeExpenseInlineReviewView, EmployeeExpenseInlineFinanceApprovalView,
-    ExpenseBudgetListView, ExpenseBudgetDetailView,
+    ExpenseBudgetListView, ExpenseBudgetDetailView, ExpenseBudgetCreateView,
     ExpenseReimbursementListView, ExpenseReimbursementCreateView,
     ExpenseReimbursementDetailView, ExpenseReimbursementProcessView,
     ExpenseCategoryListView, ExpenseCategoryCreateView,
-    ExpenseAttachmentUploadView, ExpenseAttachmentDeleteView,
 )
 
 app_name = 'expenses'
@@ -29,12 +27,11 @@ urlpatterns = [
     path('reports/<int:report_id>/expense/add/', EmployeeExpenseCreateView.as_view(), name='expense_add'),
     path('reports/<int:pk>/submit/', EmployeeExpenseSubmitView.as_view(), name='report_submit'),
     path('reports/<int:pk>/approve/', EmployeeExpenseApproveView.as_view(), name='report_approve'),
-    path('reports/<int:pk>/inline-review/', EmployeeExpenseInlineReviewView.as_view(), name='report_inline_review'),
-    path('reports/<int:pk>/inline-finance-approval/', EmployeeExpenseInlineFinanceApprovalView.as_view(), name='report_inline_finance_approval'),
     path('reports/<int:pk>/reject/', EmployeeExpenseRejectView.as_view(), name='report_reject'),
     
     # Budgets
     path('budgets/', ExpenseBudgetListView.as_view(), name='budget_list'),
+    path('budgets/create/', ExpenseBudgetCreateView.as_view(), name='budget_create'),
     path('budgets/<int:pk>/', ExpenseBudgetDetailView.as_view(), name='budget_detail'),
     
     # Reimbursements
@@ -47,7 +44,5 @@ urlpatterns = [
     path('categories/', ExpenseCategoryListView.as_view(), name='category_list'),
     path('categories/create/', ExpenseCategoryCreateView.as_view(), name='category_create'),
     
-    # Attachments
-    path('reports/<int:report_id>/attachment/add/', ExpenseAttachmentUploadView.as_view(), name='attachment_upload'),
-    path('attachments/<int:pk>/delete/', ExpenseAttachmentDeleteView.as_view(), name='attachment_delete'),
+    # Attachments (removed in revert)
 ]

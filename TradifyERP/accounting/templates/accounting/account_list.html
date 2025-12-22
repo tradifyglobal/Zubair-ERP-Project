@@ -73,43 +73,63 @@
                                             <th>Type</th>
                                             <th>Currency (INR)</th>
                                             <th>Opening Balance</th>
+                                            <th>Total Debits</th>
+                                            <th>Total Credits</th>
+                                            <th>Current Balance</th>
                                             <th>Status</th>
                                             <th>Created</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for account in accounts %}
-                                        <tr>
+                                        {% for item in accounts %}
+                                        <tr {% if item.level > 0 %}style="background-color: #f8f9fa;"{% endif %}>
                                             <td>
-                                                <strong>{{ account.account_number }}</strong>
-                                            </td>
-                                            <td>{{ account.name }}</td>
-                                            <td>
-                                                {% if account.account_type == 'ASSET' %}
-                                                    <span class="badge bg-primary-subtle text-primary">{{ account.get_account_type_display }}</span>
-                                                {% elif account.account_type == 'LIABILITY' %}
-                                                    <span class="badge bg-warning-subtle text-warning">{{ account.get_account_type_display }}</span>
-                                                {% elif account.account_type == 'EQUITY' %}
-                                                    <span class="badge bg-info-subtle text-info">{{ account.get_account_type_display }}</span>
-                                                {% elif account.account_type == 'INCOME' %}
-                                                    <span class="badge bg-success-subtle text-success">{{ account.get_account_type_display }}</span>
+                                                {% if item.level > 0 %}
+                                                    <div style="padding-left: {{ item.level|add:1 }}rem;">
+                                                        <i class="mdi mdi-arrow-right"></i> <strong>{{ item.account.account_number }}</strong>
+                                                    </div>
                                                 {% else %}
-                                                    <span class="badge bg-danger-subtle text-danger">{{ account.get_account_type_display }}</span>
+                                                    <strong>{{ item.account.account_number }}</strong>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ account.entity.company_currency.code }}</td>
-                                            <td><strong>{{ account.entity.company_currency.symbol }}{{ account.opening_balance }}</strong></td>
                                             <td>
-                                                {% if account.is_active %}
+                                                {% if item.level > 0 %}
+                                                    <div style="padding-left: {{ item.level|add:1 }}rem;">
+                                                        {{ item.account.name }}
+                                                    </div>
+                                                {% else %}
+                                                    {{ item.account.name }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.account.account_type == 'ASSET' %}
+                                                    <span class="badge bg-primary-subtle text-primary">{{ item.account.get_account_type_display }}</span>
+                                                {% elif item.account.account_type == 'LIABILITY' %}
+                                                    <span class="badge bg-warning-subtle text-warning">{{ item.account.get_account_type_display }}</span>
+                                                {% elif item.account.account_type == 'EQUITY' %}
+                                                    <span class="badge bg-info-subtle text-info">{{ item.account.get_account_type_display }}</span>
+                                                {% elif item.account.account_type == 'INCOME' %}
+                                                    <span class="badge bg-success-subtle text-success">{{ item.account.get_account_type_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger">{{ item.account.get_account_type_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ item.account.entity.company_currency.code }}</td>
+                                            <td><strong>{{ item.account.entity.company_currency.symbol }}{{ item.account.opening_balance }}</strong></td>
+                                            <td><strong>{{ item.account.entity.company_currency.symbol }}{{ item.total_debits|floatformat:2 }}</strong></td>
+                                            <td><strong>{{ item.account.entity.company_currency.symbol }}{{ item.total_credits|floatformat:2 }}</strong></td>
+                                            <td><strong>{{ item.account.entity.company_currency.symbol }}{{ item.current_balance|floatformat:2 }}</strong></td>
+                                            <td>
+                                                {% if item.account.is_active %}
                                                     <span class="badge bg-success-subtle text-success">Active</span>
                                                 {% else %}
                                                     <span class="badge bg-danger-subtle text-danger">Inactive</span>
                                                 {% endif %}
                                             </td>
-                                            <td><small>{{ account.created_at|date:"d M Y" }}</small></td>
+                                            <td><small>{{ item.account.created_at|date:"d M Y" }}</small></td>
                                             <td>
-                                                <a href="{% url 'accounting:account_detail' account.id %}" class="btn btn-sm btn-info">
+                                                <a href="{% url 'accounting:account_detail' item.account.id %}" class="btn btn-sm btn-info">
                                                     <i class="mdi mdi-eye"></i> View
                                                 </a>
                                             </td>

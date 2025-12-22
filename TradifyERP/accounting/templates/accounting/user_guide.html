@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>{{ page_title }} | TradifyERP</title>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Embedded User Guide -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="feather-book me-2"></i>{{ page_title }}
+                        </h4>
+                        <div>
+                            <a href="{% url 'accounting:user_guide_download' %}" class="btn btn-sm btn-light">
+                                <i class="feather-download me-1"></i> Download HTML
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Iframe to display user guide -->
+                        <iframe 
+                            src="{% static 'docs/user_guide.html' %}" 
+                            style="width: 100%; height: calc(100vh - 200px); border: none; overflow-y: auto;"
+                            frameborder="0">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Ensure iframe is scrollable */
+    iframe {
+        display: block;
+    }
+    
+    .card {
+        height: calc(100vh - 140px);
+    }
+    
+    .card-body {
+        height: calc(100% - 60px);
+        overflow: hidden;
+    }
+</style>
+{% endblock %}

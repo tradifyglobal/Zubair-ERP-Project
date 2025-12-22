@@ -92,6 +92,21 @@
                                     </div>
                                 </div>
 
+                                <!-- Base Currency -->
+                                <div class="row mb-3">
+                                    <label for="{{ form.company_currency.id_for_label }}" class="col-md-3 col-form-label">
+                                        Base Currency <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        {{ form.company_currency }}
+                                        {% if form.company_currency.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.company_currency.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
                                 <!-- Is Active -->
                                 <div class="row mb-3">
                                     <label for="{{ form.is_active.id_for_label }}" class="col-md-3 col-form-label">

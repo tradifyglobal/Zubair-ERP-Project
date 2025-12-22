@@ -67,6 +67,32 @@
                         <!-- Review Form -->
                         <form method="post" class="form-horizontal">
                             {% csrf_token %}
+                            
+                            <!-- Verification Checkbox -->
+                            <div class="form-group mb-3">
+                                {% if form.verified_receipts %}
+                                    <div class="form-check">
+                                        {{ form.verified_receipts }}
+                                        <label class="form-check-label" for="{{ form.verified_receipts.id_for_label }}">
+                                            {{ form.verified_receipts.label }}
+                                        </label>
+                                        <small class="d-block text-muted mt-1">{{ form.verified_receipts.help_text|safe }}</small>
+                                    </div>
+                                    {% if form.verified_receipts.errors %}
+                                        <div class="alert alert-danger mt-2">{{ form.verified_receipts.errors }}</div>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Fallback checkbox if form field not available -->
+                                    <div class="form-check">
+                                        <input type="checkbox" name="verified_receipts" id="id_verified_receipts" class="form-check-input" required>
+                                        <label class="form-check-label" for="id_verified_receipts">
+                                            <strong>I have verified receipts/proof of payments</strong>
+                                        </label>
+                                        <small class="d-block text-muted mt-1">Check this box to confirm you have reviewed and verified all supporting documents</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+
                             <div class="form-group mb-3">
                                 <label for="id_review_notes">Your Review Notes</label>
                                 <textarea name="review_notes" id="id_review_notes" class="form-control" rows="4" placeholder="Add your review notes here...">{{ form.review_notes.value }}</textarea>

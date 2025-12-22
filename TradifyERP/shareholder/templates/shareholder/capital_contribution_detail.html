@@ -4,6 +4,37 @@
 {% block title %}{{ contribution.stakeholder.full_name }} - Capital Contribution Detail{% endblock %}
 
 {% block content %}
+<style>
+    html, body {
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .page-content {
+        height: calc(100vh - 60px);
+        overflow-y: scroll;
+        overflow-x: hidden;
+        display: block;
+    }
+    
+    /* Custom scrollbar styling */
+    .page-content::-webkit-scrollbar {
+        width: 10px;
+    }
+    
+    .page-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    .page-content::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 5px;
+    }
+    
+    .page-content::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
 <div class="page-content">
     <div class="container-fluid">
         <!-- Page Title -->
@@ -12,27 +43,19 @@
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">Capital Contribution - {{ contribution.stakeholder.full_name }}</h4>
                     <div class="page-title-right">
-                        {% if contribution.workflow_status == 'DRAFT' %}
-                            <a href="{% url 'shareholder:capital-contribution-submit' contribution.pk %}" class="btn btn-info waves-effect waves-light">
-                                <i class="feather-send"></i> Submit
-                            </a>
-                        {% elif contribution.workflow_status == 'SUBMITTED' %}
-                            <a href="{% url 'shareholder:capital-contribution-review' contribution.pk %}" class="btn btn-warning waves-effect waves-light">
-                                <i class="feather-check-circle"></i> Review
-                            </a>
-                        {% elif contribution.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
-                            <!-- Second reviewer review button -->
-                            <a href="{% url 'shareholder:capital-contribution-review' contribution.pk %}" class="btn btn-warning waves-effect waves-light">
-                                <i class="feather-check-circle"></i> Review (2nd)
-                            </a>
-                        {% elif contribution.workflow_status == 'REVIEWED' %}
-                            <!-- After both reviews, show approve/reject -->
-                            <a href="{% url 'shareholder:capital-contribution-approve' contribution.pk %}" class="btn btn-success waves-effect waves-light">
-                                <i class="feather-check"></i> Approve
-                            </a>
-                            <a href="{% url 'shareholder:capital-contribution-reject' contribution.pk %}" class="btn btn-danger waves-effect waves-light">
-                                <i class="feather-x"></i> Reject
-                            </a>
+                        <!-- Source Transaction Info -->
+                        {% if contribution.source_cash_receipt %}
+                            <span class="badge bg-info-subtle text-info me-2">
+                                <i class="mdi mdi-link"></i> Linked to Cash Receipt
+                            </span>
+                        {% elif contribution.source_bank_receipt %}
+                            <span class="badge bg-info-subtle text-info me-2">
+                                <i class="mdi mdi-link"></i> Linked to Bank Receipt
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary me-2">
+                                <i class="mdi mdi-file"></i> Manual Entry
+                            </span>
                         {% endif %}
                         
                         <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-primary waves-effect waves-light">
@@ -46,216 +69,48 @@
             </div>
         </div>
 
-        <!-- Workflow Status -->
+        <!-- Source Transaction & Status Info -->
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <!-- Workflow Status Summary -->
+                        <!-- Source Transaction Info -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h6 class="mb-3"><i class="mdi mdi-workflow"></i> Workflow Status</h6>
+                                <h6 class="mb-3"><i class="mdi mdi-information"></i> Transaction Status</h6>
                                 
-                                <!-- Status Message -->
-                                {% if contribution.workflow_status == 'DRAFT' %}
+                                {% if contribution.source_cash_receipt %}
                                     <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                        <strong><i class="mdi mdi-information"></i> Draft:</strong> This contribution is in draft status. Click "Submit" to start the review process.
+                                        <strong><i class="mdi mdi-link"></i> Auto-Posted from Cash Receipt:</strong>
+                                        This contribution was automatically created and posted from 
+                                        <a href="{% url 'accounting:cash_receipt_detail' contribution.source_cash_receipt.id %}">
+                                            Cash Receipt #{{ contribution.source_cash_receipt.id }}
+                                        </a>
+                                        on {{ contribution.source_cash_receipt.date }}.
+                                        GL entries were auto-created.
                                     </div>
-                                {% elif contribution.workflow_status == 'SUBMITTED' %}
+                                {% elif contribution.source_bank_receipt %}
+                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                        <strong><i class="mdi mdi-link"></i> Auto-Posted from Bank Receipt:</strong>
+                                        This contribution was automatically created and posted from 
+                                        <a href="{% url 'accounting:bank_receipt_detail' contribution.source_bank_receipt.id %}">
+                                            Bank Receipt #{{ contribution.source_bank_receipt.id }}
+                                        </a>
+                                        on {{ contribution.source_bank_receipt.date }}.
+                                        GL entries were auto-created.
+                                    </div>
+                                {% elif contribution.ledger_entry %}
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        <strong><i class="mdi mdi-check-circle"></i> GL Entry Created:</strong>
+                                        Ledger entry #{{ contribution.ledger_entry.id }} was created on {{ contribution.ledger_entry.entry_date }}.
+                                        This contribution has been posted to the general ledger.
+                                    </div>
+                                {% else %}
                                     <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                        <strong><i class="mdi mdi-clock"></i> Awaiting Review:</strong> Waiting for Reviewer 1 to complete review.
-                                    </div>
-                                {% elif contribution.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
-                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                        <strong><i class="mdi mdi-check-circle"></i> Reviewer 1 Completed:</strong> Awaiting Reviewer 2 to complete their review.
-                                    </div>
-                                {% elif contribution.workflow_status == 'REVIEWED' %}
-                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                        <strong><i class="mdi mdi-check-all"></i> Both Reviews Completed:</strong> Awaiting approval from the approver.
-                                    </div>
-                                {% elif contribution.workflow_status == 'APPROVED' %}
-                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                        <strong><i class="mdi mdi-check-decagram"></i> Approved:</strong> This contribution has been approved and ledger entries have been created.
-                                    </div>
-                                {% elif contribution.workflow_status == 'REJECTED' %}
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        <strong><i class="mdi mdi-close-circle"></i> Rejected:</strong> This contribution was rejected.
-                                        {% if contribution.rejection_reason %}
-                                            <br><small>Reason: {{ contribution.rejection_reason }}</small>
-                                        {% endif %}
+                                        <strong><i class="mdi mdi-alert"></i> No GL Entry:</strong>
+                                        This contribution is recorded but has not been posted to the general ledger yet.
                                     </div>
                                 {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Workflow Progress -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="d-flex align-items-center justify-content-between mb-4">
-                                    <!-- Step 1: Submitted -->
-                                    <div class="text-center flex-grow-1">
-                                        <div class="mb-2">
-                                            <div class="avatar-sm mx-auto">
-                                                <span class="avatar-title rounded-circle {% if contribution.workflow_status in 'SUBMITTED,FIRST_REVIEW_COMPLETED,REVIEWED,APPROVED' %}bg-success text-white{% elif contribution.workflow_status == 'DRAFT' %}bg-secondary text-white{% else %}bg-light text-muted{% endif %}">
-                                                    <i class="mdi mdi-send"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <small class="d-block text-muted">Step 1: Submit</small>
-                                        {% if contribution.submitted_by %}
-                                            <small class="d-block text-success">✓ Done</small>
-                                        {% else %}
-                                            <small class="d-block text-warning">Pending</small>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Line -->
-                                    <div style="flex: 1; height: 2px; background: {% if contribution.workflow_status in 'FIRST_REVIEW_COMPLETED,REVIEWED,APPROVED' %}#28a745{% else %}#dee2e6{% endif %};"></div>
-
-                                    <!-- Step 2: Review 1 -->
-                                    <div class="text-center flex-grow-1">
-                                        <div class="mb-2">
-                                            <div class="avatar-sm mx-auto">
-                                                <span class="avatar-title rounded-circle {% if contribution.workflow_status in 'FIRST_REVIEW_COMPLETED,REVIEWED,APPROVED' %}bg-success text-white{% elif contribution.workflow_status == 'SUBMITTED' %}bg-warning text-white{% else %}bg-light text-muted{% endif %}">
-                                                    <i class="mdi mdi-check"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <small class="d-block text-muted">Step 2: Review 1</small>
-                                        {% if contribution.reviewed_by %}
-                                            <small class="d-block text-success">✓ Done</small>
-                                        {% elif contribution.workflow_status == 'SUBMITTED' %}
-                                            <small class="d-block text-warning">Pending</small>
-                                        {% else %}
-                                            <small class="d-block text-muted">—</small>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Line -->
-                                    <div style="flex: 1; height: 2px; background: {% if contribution.workflow_status in 'REVIEWED,APPROVED' %}#28a745{% else %}#dee2e6{% endif %};"></div>
-
-                                    <!-- Step 3: Review 2 -->
-                                    <div class="text-center flex-grow-1">
-                                        <div class="mb-2">
-                                            <div class="avatar-sm mx-auto">
-                                                <span class="avatar-title rounded-circle {% if contribution.workflow_status in 'REVIEWED,APPROVED' %}bg-success text-white{% elif contribution.workflow_status == 'FIRST_REVIEW_COMPLETED' %}bg-warning text-white{% else %}bg-light text-muted{% endif %}">
-                                                    <i class="mdi mdi-check-all"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <small class="d-block text-muted">Step 3: Review 2</small>
-                                        {% if contribution.reviewed_by_2 %}
-                                            <small class="d-block text-success">✓ Done</small>
-                                        {% elif contribution.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
-                                            <small class="d-block text-warning">Pending</small>
-                                        {% else %}
-                                            <small class="d-block text-muted">—</small>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Line -->
-                                    <div style="flex: 1; height: 2px; background: {% if contribution.workflow_status == 'APPROVED' %}#28a745{% else %}#dee2e6{% endif %};"></div>
-
-                                    <!-- Step 4: Approval -->
-                                    <div class="text-center flex-grow-1">
-                                        <div class="mb-2">
-                                            <div class="avatar-sm mx-auto">
-                                                <span class="avatar-title rounded-circle {% if contribution.workflow_status == 'APPROVED' %}bg-success text-white{% elif contribution.workflow_status == 'REVIEWED' %}bg-warning text-white{% else %}bg-light text-muted{% endif %}">
-                                                    <i class="mdi mdi-check-decagram"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <small class="d-block text-muted">Step 4: Approve</small>
-                                        {% if contribution.approved_by %}
-                                            <small class="d-block text-success">✓ Done</small>
-                                        {% elif contribution.workflow_status == 'REVIEWED' %}
-                                            <small class="d-block text-warning">Pending</small>
-                                        {% else %}
-                                            <small class="d-block text-muted">—</small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Detailed Workflow Info -->
-                        <div class="row">
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6>Submitted</h6>
-                                    {% if contribution.submitted_by %}
-                                        <small>{{ contribution.submitted_by.get_full_name }}</small>
-                                        {% if contribution.submitted_at %}
-                                            <br><small class="text-muted">{{ contribution.submitted_at|date:"M d, Y H:i" }}</small>
-                                        {% endif %}
-                                        <br><span class="badge bg-success-subtle text-success">✓ Submitted</span>
-                                    {% else %}
-                                        <small class="text-muted">Not submitted yet</small>
-                                        <br><span class="badge bg-secondary-subtle text-secondary">—</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6>Reviewer 1</h6>
-                                    {% if contribution.assigned_reviewer_1 %}
-                                        <small>{{ contribution.assigned_reviewer_1.get_full_name }}</small>
-                                    {% else %}
-                                        <small class="text-muted">Not assigned</small>
-                                    {% endif %}
-                                    {% if contribution.reviewed_by %}
-                                        {% if contribution.reviewed_at %}
-                                            <br><small class="text-muted">{{ contribution.reviewed_at|date:"M d, Y H:i" }}</small>
-                                        {% endif %}
-                                        <br><span class="badge bg-success-subtle text-success">✓ Completed</span>
-                                    {% else %}
-                                        <br><span class="badge bg-warning-subtle text-warning">Pending</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6>Reviewer 2</h6>
-                                    {% if contribution.assigned_reviewer_2 %}
-                                        <small>{{ contribution.assigned_reviewer_2.get_full_name }}</small>
-                                    {% else %}
-                                        <small class="text-muted">Not assigned</small>
-                                    {% endif %}
-                                    {% if contribution.reviewed_by_2 %}
-                                        {% if contribution.reviewed_at_2 %}
-                                            <br><small class="text-muted">{{ contribution.reviewed_at_2|date:"M d, Y H:i" }}</small>
-                                        {% endif %}
-                                        <br><span class="badge bg-success-subtle text-success">✓ Completed</span>
-                                    {% else %}
-                                        {% if contribution.workflow_status == 'FIRST_REVIEW_COMPLETED' %}
-                                            <br><span class="badge bg-warning-subtle text-warning">Pending</span>
-                                        {% else %}
-                                            <br><span class="badge bg-secondary-subtle text-secondary">—</span>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="text-center">
-                                    <h6>Approver</h6>
-                                    {% if contribution.assigned_approver %}
-                                        <small>{{ contribution.assigned_approver.get_full_name }}</small>
-                                    {% else %}
-                                        <small class="text-muted">Not assigned</small>
-                                    {% endif %}
-                                    {% if contribution.approved_by %}
-                                        {% if contribution.approved_at %}
-                                            <br><small class="text-muted">{{ contribution.approved_at|date:"M d, Y H:i" }}</small>
-                                        {% endif %}
-                                        <br><span class="badge bg-success-subtle text-success">✓ Approved</span>
-                                    {% else %}
-                                        {% if contribution.workflow_status == 'REVIEWED' %}
-                                            <br><span class="badge bg-warning-subtle text-warning">Pending</span>
-                                        {% else %}
-                                            <br><span class="badge bg-secondary-subtle text-secondary">—</span>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -340,8 +195,8 @@
                                     <td class="text-end">{{ contribution.currency_destination.code }}</td>
                                 </tr>
                                 <tr class="table-success">
-                                    <td><strong>USD Amount:</strong></td>
-                                    <td class="text-end">{{ contribution.amount_usd }}</td>
+                                    <td><strong>{{ contribution.currency_destination.code }} Amount:</strong></td>
+                                    <td class="text-end">{{ contribution.amount_company_currency|floatformat:2 }}</td>
                                 </tr>
                             </tbody>
                         </table>
