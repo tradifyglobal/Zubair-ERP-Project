@@ -1,0 +1,14 @@
+[Unit]
+Description=ERP System Health Check (Post-Boot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /tmp/health_check_startup.sh
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
