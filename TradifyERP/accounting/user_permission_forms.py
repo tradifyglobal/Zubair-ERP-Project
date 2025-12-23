@@ -611,3 +611,60 @@ class UserResetPasswordForm(forms.Form):
         self.user.save()
         
         return self.user, new_password
+
+
+class AdminPasswordChangeForm(forms.Form):
+    """Form for admins to change a user's password during edit (without old password verification)."""
+    
+    new_password1 = forms.CharField(
+        label='New Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter new password'
+        }),
+        required=False,
+        help_text='Leave blank to skip changing password. If provided, password must be at least 8 characters long.'
+    )
+    
+    new_password2 = forms.CharField(
+        label='Confirm New Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm new password'
+        }),
+        required=False
+    )
+    
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+    
+    def clean(self):
+        """Validate password fields."""
+        cleaned_data = super().clean()
+        new_password1 = cleaned_data.get('new_password1')
+        new_password2 = cleaned_data.get('new_password2')
+        
+        # If either password field is provided, both must be provided and match
+        if new_password1 or new_password2:
+            if not new_password1 or not new_password2:
+                raise forms.ValidationError('Both password fields must be filled if changing password.')
+            
+            if new_password1 != new_password2:
+                raise forms.ValidationError('Passwords do not match.')
+            
+            if len(new_password1) < 8:
+                raise forms.ValidationError('Password must be at least 8 characters long.')
+        
+        return cleaned_data
+    
+    def save(self):
+        """Set the new password only if provided."""
+        new_password = self.cleaned_data.get('new_password1')
+        
+        if new_password:
+            self.user.set_password(new_password)
+            self.user.save()
+            return True  # Password was changed
+        
+        return False  # Password was not changed
