@@ -184,6 +184,44 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Password Change Card (for existing users only) -->
+                        {% if object %}
+                        <div class="card mt-3">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="mdi mdi-lock-reset me-2"></i>Change Password</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if password_form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ password_form.non_field_errors }}
+                                </div>
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ password_form.new_password1.label }}</label>
+                                    {{ password_form.new_password1 }}
+                                    {% if password_form.new_password1.errors %}
+                                    <div class="text-danger small">{{ password_form.new_password1.errors }}</div>
+                                    {% endif %}
+                                    <div class="small text-muted mt-1">{{ password_form.new_password1.help_text }}</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ password_form.new_password2.label }}</label>
+                                    {{ password_form.new_password2 }}
+                                    {% if password_form.new_password2.errors %}
+                                    <div class="text-danger small">{{ password_form.new_password2.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="alert alert-info alert-sm" role="alert">
+                                    <strong><i class="mdi mdi-information me-1"></i>Password Change:</strong>
+                                    <p class="mb-0 small mt-2">Leave both fields blank to keep the current password. To change the password, fill in both fields with the new password.</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <!-- Quick Permission Templates -->

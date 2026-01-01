@@ -19,7 +19,8 @@ from accounting.user_permission_forms import (
     QuickAccessTemplateForm,
     UserEntityAssignmentForm,
     UserChangePasswordForm,
-    UserResetPasswordForm
+    UserResetPasswordForm,
+    AdminPasswordChangeForm
 )
 from accounting.module_permissions import ModulePermission, UserModuleAccessLog
 from accounting.mixins import SessionEntityMixin
@@ -195,6 +196,16 @@ class UserEditView(AdminRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Add password change form for existing users
+        if self.object and self.object.pk:
+            if self.request.POST:
+                context['password_form'] = AdminPasswordChangeForm(
+                    self.object,
+                    self.request.POST
+                )
+            else:
+                context['password_form'] = AdminPasswordChangeForm(self.object)
+        
         # Add permission form with existing permissions
         if self.request.POST:
             context['permission_form'] = BulkModulePermissionForm(
@@ -253,6 +264,26 @@ class UserEditView(AdminRequiredMixin, UpdateView):
                 all_permissions = Permission.objects.all()
                 user.user_permissions.set(all_permissions)
             
+            # Handle password change for existing users
+            password_changed = False
+            if self.object and self.object.pk:
+                password_form = AdminPasswordChangeForm(user, self.request.POST)
+                if password_form.is_valid():
+                    password_changed = password_form.save()
+                    if password_changed:
+                        logger.info(f"Password changed for user {user.username}")
+                        messages.success(
+                            self.request,
+                            f'Password updated for "{user.username}".'
+                        )
+                else:
+                    logger.error(f"Password form invalid: {password_form.errors}")
+                    messages.error(
+                        self.request,
+                        f'Error changing password: {password_form.errors}'
+                    )
+                    return redirect(self.success_url)
+            
             # Get permission form
             permission_form = BulkModulePermissionForm(self.request.POST, user=user)
             
@@ -262,10 +293,11 @@ class UserEditView(AdminRequiredMixin, UpdateView):
                 permission_form.save_permissions(user, granted_by=self.request.user)
                 logger.info(f"Permissions saved for {user.username}")
                 
-                messages.success(
-                    self.request,
-                    f'User "{user.username}" updated successfully with module permissions and admin access.'
-                )
+                if not password_changed:
+                    messages.success(
+                        self.request,
+                        f'User "{user.username}" updated successfully with module permissions and admin access.'
+                    )
             else:
                 logger.error(f"Permission form invalid: {permission_form.errors}")
                 messages.warning(
