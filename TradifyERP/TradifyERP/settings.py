@@ -27,10 +27,14 @@ sys.path.insert(0, str(ADMIN_PATH))
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1)#1l8_^l#)qu$su2n3x1et2*=lifl30%y%4%&m@ldm-+an-#+'
+# Use environment variable in production
+import os
+from decouple import config
+
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='django-insecure-1)#1l8_^l#)qu$su2n3x1et2*=lifl30%y%4%&m@ldm-+an-#+')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = [
     '192.168.5.10',
@@ -99,6 +103,11 @@ INSTALLED_APPS = [
     # Crispy forms for nicer form rendering used by templates
     'crispy_forms',
     'crispy_bootstrap5',
+    # Security and monitoring apps
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'rest_framework',
+    'corsheaders',
     # Tradify Global Admin apps (keeps UI theme available without copying files)
     'minia',
     'apps',
@@ -118,15 +127,23 @@ INSTALLED_APPS = [
     'ar.apps.ArConfig',  # Accounts Receivable Module
     'expenses.apps.ExpensesConfig',  # Employee Expense Tracking Module
     'maintenance.apps.MaintenanceConfig',  # Site Maintenance Module
+    'audit_logging.apps.AuditLoggingConfig',  # Audit and Security Logging Module
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',  # Two-factor authentication
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Custom security middleware
+    'TradifyERP.security_middleware.SecurityHeadersMiddleware',
+    'TradifyERP.security_middleware.RateLimitMiddleware',
+    'TradifyERP.security_middleware.AuditLoggingMiddleware',
+    'TradifyERP.security_middleware.SQLInjectionProtectionMiddleware',
     # Social auth and allauth middleware required by Tradify Global admin
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
@@ -191,6 +208,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,  # Require 12+ characters
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -199,6 +219,115 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Session and Security Configuration
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access
+SESSION_COOKIE_SAMESITE = 'Strict'  # CSRF protection
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# CSRF Configuration
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+CSRF_USE_SESSIONS = True
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+SECURE_CONTENT_SECURITY_POLICY = {
+    'default-src': ("'self'",),
+    'script-src': ("'self'", "'unsafe-inline'", 'cdnjs.cloudflare.com'),
+    'style-src': ("'self'", "'unsafe-inline'"),
+    'img-src': ("'self'", 'data:'),
+    'frame-ancestors': ("'self'",),
+}
+
+# Encryption Configuration
+ENCRYPTION_KEY = config('ENCRYPTION_KEY', default=None)
+
+# Cache Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
+    }
+}
+
+# REST Framework Security
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour'
+    }
+}
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000', cast=lambda v: [s.strip() for s in v.split(',')])
+CORS_ALLOW_CREDENTIALS = True
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        'audit_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'audit.log',
+            'maxBytes': 1024 * 1024 * 50,  # 50 MB
+            'backupCount': 20,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django.security': {
+            'handlers': ['security_file', 'console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'TradifyERP': {
+            'handlers': ['audit_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist
+import logging.config
+logs_dir = BASE_DIR / 'logs'
+logs_dir.mkdir(exist_ok=True)
+logging.config.dictConfig(LOGGING)
 
 
 # Internationalization
@@ -264,14 +393,23 @@ ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
-# SMTP placeholders (fill with real credentials for sending email)
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.mailtrap.io"
-EMAIL_PORT = 2525
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = ""
-EMAIL_HOST_PASSWORD = ""
-DEFAULT_FROM_EMAIL = ""
+# SMTP Configuration (fill with real credentials)
+EMAIL_BACKEND = config('EMAIL_BACKEND', default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = config('EMAIL_HOST', default="smtp.mailtrap.io")
+EMAIL_PORT = config('EMAIL_PORT', default=2525, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default="")
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default="")
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default="security@tradifyglobal.com")
+
+# Admin email for security alerts
+ADMINS = [('Security Team', config('SECURITY_ADMIN_EMAIL', default='admin@tradifyglobal.com'))]
+
+# File Upload Security
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5 MB
+FILE_UPLOAD_PERMISSIONS = 0o644
+ALLOWED_FILE_EXTENSIONS = ['pdf', 'xlsx', 'xls', 'csv', 'doc', 'docx', 'jpg', 'jpeg', 'png']
 
 ACCOUNT_FORMS = {}
 
