@@ -541,30 +541,26 @@ class AccountListView(SessionEntityMixin, LoginRequiredMixin, ListView):
         # Get all root accounts (no parent)
         root_accounts = all_accounts.filter(parent_account__isnull=True).order_by('account_number')
         
+        # Recursive function to add all descendants at any depth
+        def add_descendants(parent_acc, level):
+            """Recursively add all descendants of a parent account"""
+            children = all_accounts.filter(parent_account=parent_acc).order_by('account_number')
+            for child in children:
+                flattened.append({
+                    'account': child,
+                    'level': level
+                })
+                # Recursively add this child's descendants
+                add_descendants(child, level + 1)
+        
         for root in root_accounts:
             # Add the root account
             flattened.append({
                 'account': root,
                 'level': 0
             })
-            
-            # Get all descendants of this root
-            def get_all_descendants(parent_acc):
-                children = all_accounts.filter(parent_account=parent_acc).order_by('account_number')
-                for child in children:
-                    flattened.append({
-                        'account': child,
-                        'level': 1
-                    })
-                    # Get grandchildren
-                    grandchildren = all_accounts.filter(parent_account=child).order_by('account_number')
-                    for grandchild in grandchildren:
-                        flattened.append({
-                            'account': grandchild,
-                            'level': 2
-                        })
-            
-            get_all_descendants(root)
+            # Add all descendants (at any depth)
+            add_descendants(root, 1)
         
         return flattened
     
@@ -613,32 +609,62 @@ class AccountListView(SessionEntityMixin, LoginRequiredMixin, ListView):
             item['total_credits'] = credits
             item['current_balance'] = balance
         
-        # Second pass: Roll up child account balances to parent accounts
+        # Second pass: Roll up ALL descendant account balances to parent accounts
         for item in flattened_accounts:
-            if item['level'] == 0:  # Parent account
+            if item['level'] == 0:  # Parent account only
                 account = item['account']
                 
-                # Get all child accounts (direct children and grandchildren)
+                # Helper function to get all descendant account IDs recursively
+                def get_all_descendant_ids(parent_acc_id):
+                    """Get all descendant account IDs (children, grandchildren, etc.)"""
+                    descendant_ids = set()
+                    direct_children = Account.objects.filter(
+                        parent_account_id=parent_acc_id,
+                        entity_id=entity_id
+                    ).values_list('id', flat=True)
+                    
+                    for child_id in direct_children:
+                        descendant_ids.add(child_id)
+                        # Recursively add all descendants of this child
+                        descendant_ids.update(get_all_descendant_ids(child_id))
+                    
+                    return descendant_ids
+                
+                # Get all descendant account IDs for this parent
+                all_descendant_ids = get_all_descendant_ids(account.id)
+                
+                # Sum up all debits and credits from all descendants
                 child_debits = Decimal('0')
                 child_credits = Decimal('0')
                 
                 for child_item in flattened_accounts:
                     child_account = child_item['account']
-                    # Check if this is a child or grandchild of current parent
-                    if child_account.parent_account == account or \
-                       (child_account.parent_account and child_account.parent_account.parent_account == account):
+                    # Include if it's any descendant of the parent account
+                    if child_account.id in all_descendant_ids:
                         child_debits += child_item['total_debits']
                         child_credits += child_item['total_credits']
                 
-                # Add child balances to parent
-                item['total_debits'] += child_debits
-                item['total_credits'] += child_credits
+                # Add child balances to parent's debits/credits (NOT their opening balances)
+                # Calculate new debits/credits for parent
+                parent_direct_debits = item['total_debits']
+                parent_direct_credits = item['total_credits']
                 
-                # Recalculate parent balance including children
+                # Remove parent's opening_balance to recalculate
+                current_balance_without_opening = item['current_balance'] - account.opening_balance
+                
+                # Add child debits/credits
+                total_debits = parent_direct_debits + child_debits
+                total_credits = parent_direct_credits + child_credits
+                
+                # Recalculate balance with children included
                 if account.account_type in ['ASSET', 'EXPENSE']:
-                    item['current_balance'] = item['total_debits'] - item['total_credits'] + account.opening_balance
+                    new_balance = total_debits - total_credits + account.opening_balance
                 else:  # LIABILITY, EQUITY, INCOME
-                    item['current_balance'] = item['total_credits'] - item['total_debits'] + account.opening_balance
+                    new_balance = total_credits - total_debits + account.opening_balance
+                
+                item['total_debits'] = total_debits
+                item['total_credits'] = total_credits
+                item['current_balance'] = new_balance
         
         # Apply search filter if provided
         search = self.request.GET.get('search', '').strip()
