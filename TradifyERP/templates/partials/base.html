@@ -42,8 +42,11 @@
         <!-- Responsive Scrollbar System - Shows scrollbars based on zoom and screen size -->
         <link href="{% static 'css/responsive-scrollbars.css' %}" rel="stylesheet" type="text/css" />
 
-        <!-- Scrollable Page Content -->
-        <link href="{% static 'css/scrollable-page.css' %}" rel="stylesheet" type="text/css" />
+        <!-- Scrollable Page Content - Desktop Only -->
+        <link href="{% static 'css/scrollable-page.css' %}" rel="stylesheet" type="text/css" media="screen and (min-width: 769px)" />
+        
+        <!-- Mobile Responsive Fixes -->
+        <link href="{% static 'css/mobile-responsive-fixes.css' %}" rel="stylesheet" type="text/css" media="screen and (max-width: 768px)" />
 
         {% comment %} <link href="{% static 'css/bootstrap-rtl.min.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" /> {% endcomment %}
         {% comment %} <link href="{% static 'css/app-rtl.min.css' %}" id="app-style" rel="stylesheet" type="text/css" /> {% endcomment %}

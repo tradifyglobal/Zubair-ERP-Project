@@ -1,0 +1,178 @@
+/* ============================================
+   CRITICAL MOBILE RESPONSIVE FIXES
+   ============================================
+   
+   This file fixes mobile overshooting issues by:
+   1. Removing 100vw width constraints
+   2. Properly handling overflow on mobile
+   3. Allowing natural scrolling
+   4. Fixing container widths for mobile
+*/
+
+/* ============================================
+   MOBILE DEVICES (max-width: 768px)
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* CRITICAL: Reset html/body for mobile */
+    html {
+        width: 100%;
+        height: auto;
+        overflow: auto;
+    }
+    
+    body {
+        width: 100% !important;
+        height: auto !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* Allow main layout to scroll naturally */
+    #layout-wrapper {
+        height: auto !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+    
+    /* Main content should not have fixed height */
+    .main-content {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        flex: none !important;
+    }
+    
+    /* Page content should flow naturally */
+    .page-content {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+        max-height: none !important;
+        height: auto !important;
+        flex: none !important;
+    }
+    
+    /* Container should be full width */
+    .container-fluid {
+        width: 100% !important;
+        max-width: 100%;
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    /* Prevent nested scrolling on tables */
+    .table-responsive {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    
+    /* Cards should not overflow */
+    .card {
+        overflow: hidden !important;
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+    }
+    
+    /* Prevent body element from extending beyond screen */
+    * {
+        max-width: 100%;
+    }
+    
+    /* Row should not overflow */
+    .row {
+        margin-left: 0;
+        margin-right: 0;
+        overflow-x: hidden;
+    }
+}
+
+/* ============================================
+   EXTRA SMALL MOBILE (max-width: 576px)
+   ============================================ */
+
+@media (max-width: 576px) {
+    /* Strict overflow control */
+    html {
+        width: 100%;
+        overflow-x: hidden;
+    }
+    
+    body {
+        width: 100%;
+        overflow-x: hidden !important;
+    }
+    
+    .main-content,
+    .page-content,
+    .container-fluid {
+        height: auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+    
+    /* Stack all content vertically */
+    [class*='col-'] {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Full-width tables */
+    .table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+}
+
+/* ============================================
+   SCROLLBAR FIXES FOR MOBILE
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* Use thin scrollbars on mobile for less visual impact */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Firefox scrollbar for mobile */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+    }
+}
+
+/* ============================================
+   ENSURE 100vw FIX
+   ============================================ */
+
+/* Replace 100vw with 100% on mobile - fixes overshooting */
+@media (max-width: 768px) {
+    html,
+    body {
+        width: 100% !important;
+    }
+}
