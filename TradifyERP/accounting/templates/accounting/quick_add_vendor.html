@@ -246,5 +246,121 @@
         color: #dc3545;
         font-size: 0.875rem;
     }
+    
+    .vendor-code-loading {
+        position: relative;
+    }
+    
+    .vendor-code-spinner {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: none;
+    }
+    
+    .vendor-code-spinner.show {
+        display: block;
+    }
+    
+    .vendor-code-override {
+        margin-top: 8px;
+        font-size: 12px;
+    }
+    
+    .override-toggle {
+        cursor: pointer;
+        color: #007bff;
+        text-decoration: underline;
+    }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const vendorCodeField = document.getElementById('id_vendor_code');
+    
+    if (!vendorCodeField) {
+        console.warn('Vendor code field not found');
+        return;
+    }
+    
+    // Check if we're editing (vendor code already has a value)
+    if (vendorCodeField.value && vendorCodeField.value.trim()) {
+        // We're editing an existing vendor, remove readonly
+        vendorCodeField.removeAttribute('readonly');
+        return;
+    }
+    
+    // Show loading state
+    vendorCodeField.disabled = true;
+    vendorCodeField.value = 'Generating...';
+    
+    // Fetch the next vendor code from API
+    const apiUrl = "{% url 'accounting:generate_vendor_code' %}";
+    
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.vendor_code) {
+                // Populate the field with generated code
+                vendorCodeField.value = data.vendor_code;
+                vendorCodeField.disabled = false;
+                vendorCodeField.readOnly = true;
+                
+                // Add a note about the auto-generated code
+                addVendorCodeInfo(vendorCodeField, data.vendor_code);
+            } else if (data.error) {
+                console.error('API error:', data.error);
+                vendorCodeField.disabled = false;
+                vendorCodeField.value = '';
+                vendorCodeField.placeholder = 'Error generating code - enter manually';
+            }
+        })
+        .catch(error => {
+            console.error('Failed to generate vendor code:', error);
+            vendorCodeField.disabled = false;
+            vendorCodeField.value = '';
+            vendorCodeField.placeholder = 'Error generating code - enter manually';
+        });
+    
+    function addVendorCodeInfo(field, code) {
+        // Find the parent div that contains the field
+        const parentDiv = field.closest('.col-md-9');
+        if (!parentDiv) return;
+        
+        // Remove any existing info
+        const existingInfo = parentDiv.querySelector('.vendor-code-override');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+        
+        // Add override option
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'vendor-code-override';
+        infoDiv.innerHTML = `
+            <small class="text-muted">
+                <i class="ri-check-double-line" style="color: #28a745;"></i> 
+                Auto-generated: <strong>${code}</strong> 
+                | <span class="override-toggle" onclick="toggleVendorCodeOverride()" title="Click to enter a different code">Edit</span>
+            </small>
+        `;
+        parentDiv.appendChild(infoDiv);
+    }
+});
+
+// Global function to toggle vendor code override
+function toggleVendorCodeOverride() {
+    const vendorCodeField = document.getElementById('id_vendor_code');
+    if (vendorCodeField.readOnly) {
+        vendorCodeField.readOnly = false;
+        vendorCodeField.focus();
+        vendorCodeField.setSelectionRange(0, vendorCodeField.value.length);
+    }
+}
+</script>
 {% endblock %}
