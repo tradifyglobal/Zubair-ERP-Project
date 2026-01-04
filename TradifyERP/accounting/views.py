@@ -6,6 +6,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.http import JsonResponse
 from decimal import Decimal
 from .models import (
     Entity, Account, LedgerEntry, TrialBalance, ProfitLossReport, BalanceSheet,
@@ -2548,6 +2549,35 @@ class QuickAddVendorView(PermissionRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context['entity'] = Entity.objects.filter(is_active=True).first()
         return context
+
+
+class GenerateVendorCodeView(LoginRequiredMixin, View):
+    """API endpoint to generate next vendor code for current entity."""
+    
+    def get(self, request):
+        """Return next vendor code as JSON."""
+        from .vendor_utils import generate_next_vendor_code
+        
+        # Get entity from session
+        entity_id = request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        
+        if not entity:
+            return JsonResponse({
+                'error': 'No entity selected or entity not found'
+            }, status=404)
+        
+        try:
+            vendor_code = generate_next_vendor_code(entity)
+            return JsonResponse({
+                'vendor_code': vendor_code,
+                'entity_id': entity.id,
+                'entity_name': entity.name
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error generating vendor code: {str(e)}'
+            }, status=500)
 
 
 # ============ QUICK ADD VIEWS FOR ACCOUNTS ============

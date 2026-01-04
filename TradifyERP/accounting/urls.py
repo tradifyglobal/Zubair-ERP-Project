@@ -13,6 +13,7 @@ from .views import (
     CashFlowForecastListView, CashTransactionListView,
     ReconciliationEntryListView, ReconciliationRecordListView, ReconciliationMatchListView,
     TaxRateListView, TaxTransactionListView, TaxSummaryListView,
+    GenerateVendorCodeView,
     save_layout_preference,
 )
 from accounting.views_debug import theme_debug
@@ -86,6 +87,7 @@ urlpatterns = [
     path('api/save-layout-preference/', save_layout_preference, name='save_layout_preference'),
     path('api/get-sub-accounts/', get_sub_accounts_api, name='get_sub_accounts'),
     path('api/generate-reference-number/', generate_reference_number_api, name='generate_reference_number'),
+    path('api/generate-vendor-code/', GenerateVendorCodeView.as_view(), name='generate_vendor_code'),
     
     # Entity Selection
     path('select-entity/', EntitySelectionView.as_view(), name='select-entity'),

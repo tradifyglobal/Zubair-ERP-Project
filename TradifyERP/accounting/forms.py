@@ -314,8 +314,9 @@ class QuickAddVendorForm(forms.ModelForm):
         widgets = {
             'vendor_code': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'e.g., VEND-001',
-                'required': 'required'
+                'placeholder': 'Auto-generated vendor code',
+                'readonly': 'readonly',
+                'data-auto-generated': 'true'
             }),
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -356,6 +357,9 @@ class QuickAddVendorForm(forms.ModelForm):
     def clean_vendor_code(self):
         """Validate vendor code is unique within the entity."""
         vendor_code = self.cleaned_data.get('vendor_code')
+        
+        if not vendor_code:
+            raise forms.ValidationError('Vendor code is required.')
         
         if self.entity and vendor_code:
             existing = Vendor.objects.filter(
