@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
-from accounting.models import Entity
+from accounting.models import Entity, Account, LedgerEntry
 from django.contrib.auth.models import User
 
 
@@ -40,6 +40,14 @@ class MaintenanceAsset(models.Model):
     serial_number = models.CharField(max_length=255, blank=True, unique=True)
     purchase_date = models.DateField()
     acquisition_cost = models.DecimalField(max_digits=15, decimal_places=2)
+    purchase_account = models.ForeignKey(
+        Account,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='purchased_assets',
+        help_text="Source account from which the asset was purchased (e.g., Capital Investment)"
+    )
     warranty_expiry = models.DateField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPERATIONAL')
     operational_hours = models.IntegerField(default=0)

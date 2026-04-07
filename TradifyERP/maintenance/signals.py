@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Sum
 from decimal import Decimal
-from .models import WorkOrder, MaintenanceCost
+from .models import WorkOrder, MaintenanceCost, MaintenanceAsset
 
 
 @receiver(post_save, sender=WorkOrder)
@@ -137,3 +137,86 @@ def update_work_order_gl_on_cost_change(sender, instance, created, **kwargs):
         if hasattr(wo, 'is_posted_to_gl'):
             wo.is_posted_to_gl = False
             wo.save()
+
+
+@receiver(post_save, sender=MaintenanceAsset)
+def post_asset_purchase_to_gl(sender, instance, created, **kwargs):
+    """
+    Auto-post asset purchase to GL when a new asset is created with a purchase_account.
+    Creates GL entries:
+      DEBIT: Asset account
+      CREDIT: Purchase account (e.g., Capital Investment)
+    """
+    # Only process on creation AND if a purchase account is specified
+    if not created or not instance.purchase_account or not instance.entity:
+        return
+    
+    try:
+        from accounting.models import LedgerEntry, Account
+        
+        # Get or create the Fixed Assets account
+        try:
+            asset_account = Account.objects.get(
+                entity=instance.entity,
+                account_type='ASSET',
+                name__icontains='Fixed Assets'
+            )
+        except Account.DoesNotExist:
+            # Try to get any asset account
+            asset_account = Account.objects.filter(
+                entity=instance.entity,
+                account_type='ASSET'
+            ).order_by('account_number').first()
+            
+            if not asset_account:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"No asset account found for equipment {instance.asset_code}")
+                return
+        
+        # Reference for GL entries
+        reference = f"ASSET-{instance.id}"
+        
+        # Check if entries already exist (idempotent check)
+        existing = LedgerEntry.objects.filter(
+            reference_number=reference,
+            entity=instance.entity
+        ).exists()
+        
+        if existing:
+            return  # Already posted
+        
+        # DEBIT: Fixed Assets Account
+        LedgerEntry.objects.create(
+            account=asset_account,
+            entity=instance.entity,
+            entry_date=instance.purchase_date,
+            entry_type='DEBIT',
+            amount=instance.acquisition_cost,
+            description=f"Asset Purchase - {instance.asset_code} ({instance.asset_name})",
+            reference_number=reference,
+            is_posted=True,
+            workflow_status='AUTHORIZED'
+        )
+        
+        # CREDIT: Purchase Account (e.g., Capital Investment)
+        LedgerEntry.objects.create(
+            account=instance.purchase_account,
+            entity=instance.entity,
+            entry_date=instance.purchase_date,
+            entry_type='CREDIT',
+            amount=instance.acquisition_cost,
+            description=f"Asset Purchase - {instance.asset_code} ({instance.asset_name})",
+            reference_number=reference,
+            is_posted=True,
+            workflow_status='AUTHORIZED'
+        )
+        
+        print(f"✓ Posted asset purchase {instance.asset_code} to GL: {instance.acquisition_cost}")
+        
+    except Exception as e:
+        # Don't break asset saving if GL posting fails
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error posting asset {instance.asset_code} purchase to GL: {e}")
+        print(f"ERROR posting asset to GL: {e}")

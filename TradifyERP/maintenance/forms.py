@@ -4,16 +4,27 @@ from .models import (
     WorkOrderSparePart, MaintenanceVendor, VendorContract,
     ComplianceStandard, ComplianceAudit, MaintenanceCost, DowntimeRecord
 )
+from accounting.models import Account
 
 
 class MaintenanceAssetForm(forms.ModelForm):
     """Form for creating/editing maintenance assets."""
     
+    purchase_account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'help_text': 'Select the account from which this asset was purchased'
+        }),
+        help_text="Source account (e.g., Capital Investment account)"
+    )
+    
     class Meta:
         model = MaintenanceAsset
         fields = ['asset_code', 'asset_name', 'asset_type', 'description', 'location',
                   'manufacturer', 'model', 'serial_number', 'purchase_date', 'acquisition_cost',
-                  'warranty_expiry', 'status', 'operational_hours', 'critical_asset']
+                  'purchase_account', 'warranty_expiry', 'status', 'operational_hours', 'critical_asset']
         widgets = {
             'asset_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Asset Code', 'required': 'required'}),
             'asset_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Asset Name', 'required': 'required'}),
@@ -30,6 +41,20 @@ class MaintenanceAssetForm(forms.ModelForm):
             'operational_hours': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0', 'min': '0'}),
             'critical_asset': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter purchase accounts to show capital/equity accounts
+        if self.instance and self.instance.entity:
+            self.fields['purchase_account'].queryset = Account.objects.filter(
+                entity=self.instance.entity,
+                is_active=True
+            ).exclude(account_type='EXPENSE').order_by('account_number')
+        else:
+            # If no entity context, get all active accounts
+            self.fields['purchase_account'].queryset = Account.objects.filter(
+                is_active=True
+            ).exclude(account_type='EXPENSE').order_by('entity__name', 'account_number')
 
 
 class MaintenanceTaskForm(forms.ModelForm):
