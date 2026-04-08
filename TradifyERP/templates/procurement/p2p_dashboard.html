@@ -404,10 +404,95 @@
 </div>
 
 <style>
+    /* Border colors for pipeline cards */
     .border-left-primary { border-left: 0.25rem solid #004085 !important; }
     .border-left-success { border-left: 0.25rem solid #155724 !important; }
     .border-left-info { border-left: 0.25rem solid #0c5460 !important; }
     .border-left-warning { border-left: 0.25rem solid #856404 !important; }
+    
+    /* Fix horizontal overflow */
+    .container-fluid {
+        overflow-x: hidden;
+    }
+    
+    /* Table responsive wrapper - allows horizontal scroll within the table only */
+    .table-responsive {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Constrain table widths */
+    .table {
+        width: 100%;
+        min-width: 100%;
+        white-space: nowrap;
+    }
+    
+    /* Make table cells responsive */
+    .table th, .table td {
+        padding: 0.5rem !important;
+        font-size: 0.875rem;
+        white-space: normal;
+    }
+    
+    /* Constrain column widths for Recent Documents tables */
+    .table thead th:nth-child(1) { width: 30%; min-width: 80px; }
+    .table thead th:nth-child(2) { width: 35%; min-width: 100px; }
+    .table thead th:nth-child(3) { width: 20%; min-width: 70px; }
+    .table thead th:nth-child(4) { width: 15%; min-width: 60px; }
+    
+    /* Text truncation for long values */
+    .table td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Badge alignment */
+    .badge {
+        display: inline-block;
+        white-space: nowrap;
+    }
+    
+    /* Card body padding adjustment */
+    .card-body {
+        overflow-x: hidden;
+    }
+    
+    /* Heading responsiveness */
+    @media (max-width: 768px) {
+        h1.display-4 {
+            font-size: 1.75rem;
+        }
+        
+        .table th, .table td {
+            padding: 0.4rem 0.25rem !important;
+            font-size: 0.75rem;
+        }
+        
+        /* Stack columns on mobile */
+        .table thead th:nth-child(1) { width: 40%; }
+        .table thead th:nth-child(2) { width: 30%; }
+        .table thead th:nth-child(3) { width: 15%; }
+        .table thead th:nth-child(4) { width: 15%; }
+    }
+    
+    @media (max-width: 576px) {
+        .card {
+            margin-bottom: 1rem;
+        }
+        
+        .table th, .table td {
+            padding: 0.3rem 0.15rem !important;
+            font-size: 0.7rem;
+        }
+        
+        /* Further reduce column widths on very small screens */
+        .table thead th:nth-child(1) { width: 35%; }
+        .table thead th:nth-child(2) { width: 35%; }
+        .table thead th:nth-child(3) { width: 15%; }
+        .table thead th:nth-child(4) { width: 15%; }
+    }
 </style>
 
 <script>
