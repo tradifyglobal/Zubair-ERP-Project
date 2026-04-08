@@ -408,6 +408,156 @@
     .border-left-success { border-left: 0.25rem solid #155724 !important; }
     .border-left-info { border-left: 0.25rem solid #0c5460 !important; }
     .border-left-warning { border-left: 0.25rem solid #856404 !important; }
+
+    /* Default styles for high resolution (2560x1440) */
+    .container-fluid {
+        max-width: 100%;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    /* Media query for 1920x1080 and lower resolution displays */
+    @media (max-width: 1920px) {
+        .container-fluid {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        h1.display-4 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card {
+            margin-bottom: 0.75rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem !important;
+        }
+
+        .mb-3 {
+            margin-bottom: 0.75rem !important;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .card-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        .table th, .table td {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .table-responsive {
+            max-width: 100%;
+        }
+
+        /* Adjust col widths for 1920 resolution */
+        .col-lg-3 {
+            flex: 0 0 calc(50% - 0.375rem);
+            max-width: calc(50% - 0.375rem);
+        }
+
+        .col-lg-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        small {
+            font-size: 0.8rem;
+        }
+
+        .h3 {
+            font-size: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 0.5rem;
+        }
+
+        .text-uppercase {
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+    }
+
+    /* Media query for tablets and smaller displays */
+    @media (max-width: 1366px) {
+        .container-fluid {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        h1.display-4 {
+            font-size: 1.75rem;
+        }
+
+        .col-lg-3 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .col-lg-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .card-body {
+            padding: 0.75rem;
+        }
+
+        .table th, .table td {
+            padding: 0.4rem;
+            font-size: 0.75rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 0.75rem !important;
+        }
+    }
+
+    /* Media query for small devices */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        h1.display-4 {
+            font-size: 1.5rem;
+        }
+
+        .card {
+            margin-bottom: 0.5rem;
+        }
+
+        .card-body {
+            padding: 0.5rem;
+        }
+
+        .card-header {
+            padding: 0.5rem;
+        }
+
+        .table th, .table td {
+            padding: 0.3rem;
+            font-size: 0.7rem;
+        }
+
+        .h3 {
+            font-size: 1.2rem;
+        }
+
+        small {
+            font-size: 0.7rem;
+        }
+    }
 </style>
 
 <script>
