@@ -742,20 +742,22 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
         from accounting.models import InternationalTransferTracking
         
         # Build a map of pending in foreign bank amounts per stakeholder
+        # Include all non-cancelled, non-posted transfers (these are still pending)
         pending_in_foreign_bank_by_stakeholder = {}
         intl_transfers = InternationalTransferTracking.objects.filter(
             capital_contribution__entity=entity,
             transfer_status__in=['PENDING_ABROAD', 'IN_TRANSIT', 'RECEIVED_LOCALLY', 'CONVERTED']
-        ).select_related('capital_contribution__stakeholder')
+        ).select_related('capital_contribution__stakeholder').values_list(
+            'capital_contribution__stakeholder_id',
+            'destination_amount'
+        )
         
-        for transfer in intl_transfers:
-            if transfer.capital_contribution and transfer.capital_contribution.stakeholder:
-                stakeholder_id = transfer.capital_contribution.stakeholder.id
-                if stakeholder_id not in pending_in_foreign_bank_by_stakeholder:
-                    pending_in_foreign_bank_by_stakeholder[stakeholder_id] = Decimal('0')
-                # Add destination_amount to pending total
-                if transfer.destination_amount:
-                    pending_in_foreign_bank_by_stakeholder[stakeholder_id] += Decimal(str(transfer.destination_amount))
+        for stakeholder_id, destination_amount in intl_transfers:
+            if stakeholder_id not in pending_in_foreign_bank_by_stakeholder:
+                pending_in_foreign_bank_by_stakeholder[stakeholder_id] = Decimal('0')
+            # Add destination_amount (INR Amount from international capital report) to pending total
+            if destination_amount:
+                pending_in_foreign_bank_by_stakeholder[stakeholder_id] += Decimal(str(destination_amount))
         
         # First: Get all investment limits for this entity
         limits = ShareholderInvestmentLimit.objects.filter(entity=entity, is_active=True)
@@ -1181,6 +1183,117 @@ class NotificationAPIView(LoginRequiredMixin, View):
             'review_items': review_items,
             'approval_items': approval_items,
         })
+
+
+class InternationalTransferDataSyncAPIView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, View):
+    """
+    API endpoint to verify and refresh "Pending in Foreign Bank" data sync from 
+    international capital report (InternationalTransferTracking.destination_amount)
+    to shareholder investment report.
+    """
+    permission_required = 'accounting.view_stakeholder'
+    
+    def get(self, request):
+        """
+        Get current sync status and sample data.
+        Returns JSON with statistics about international transfers and pending amounts.
+        """
+        from decimal import Decimal
+        
+        entity_id = request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id).first() if entity_id else None
+        
+        if not entity:
+            return JsonResponse({
+                'success': False,
+                'error': 'Entity not found in session',
+                'message': 'Please select an entity first'
+            }, status=400)
+        
+        # Get all international transfers with pending amounts
+        synced_transfers = InternationalTransferTracking.objects.filter(
+            capital_contribution__entity=entity,
+            transfer_status__in=['PENDING_ABROAD', 'IN_TRANSIT', 'RECEIVED_LOCALLY', 'CONVERTED']
+        ).select_related(
+            'capital_contribution__stakeholder'
+        ).values_list(
+            'capital_contribution__stakeholder__first_name',
+            'capital_contribution__stakeholder__last_name',
+            'capital_contribution__stakeholder__id',
+            'destination_amount',
+            'transfer_status',
+            'source_amount',
+            'exchange_rate_used'
+        )
+        
+        # Build summary statistics
+        pending_by_stakeholder = {}
+        total_pending_inr = Decimal('0')
+        transfer_details = []
+        
+        for stakeholder_first, stakeholder_last, stakeholder_id, dest_amount, status, source_amount, rate in synced_transfers:
+            stakeholder_name = f"{stakeholder_first} {stakeholder_last}".strip()
+            
+            if stakeholder_id not in pending_by_stakeholder:
+                pending_by_stakeholder[stakeholder_id] = {
+                    'stakeholder_name': stakeholder_name,
+                    'total_pending_inr': Decimal('0'),
+                    'transfer_count': 0,
+                    'transfers': []
+                }
+            
+            # Add to total
+            if dest_amount:
+                pending_by_stakeholder[stakeholder_id]['total_pending_inr'] += Decimal(str(dest_amount))
+                total_pending_inr += Decimal(str(dest_amount))
+            
+            pending_by_stakeholder[stakeholder_id]['transfer_count'] += 1
+            
+            # Add transfer detail
+            pending_by_stakeholder[stakeholder_id]['transfers'].append({
+                'status': status,
+                'source_amount': float(source_amount) if source_amount else 0,
+                'destination_amount_inr': float(dest_amount) if dest_amount else 0,
+                'exchange_rate': float(rate) if rate else 0
+            })
+            
+            transfer_details.append({
+                'stakeholder': stakeholder_name,
+                'status': status,
+                'source_amount': float(source_amount) if source_amount else 0,
+                'destination_amount_inr': float(dest_amount) if dest_amount else 0,
+                'exchange_rate': float(rate) if rate else 0
+            })
+        
+        # Format pending_by_stakeholder for JSON
+        pending_summary = []
+        for stakeholder_id, data in pending_by_stakeholder.items():
+            pending_summary.append({
+                'stakeholder_id': stakeholder_id,
+                'stakeholder_name': data['stakeholder_name'],
+                'total_pending_inr': float(data['total_pending_inr']),
+                'transfer_count': data['transfer_count'],
+            })
+        
+        # Get total stakeholders with international transfers
+        total_stakeholders_with_transfers = len(pending_by_stakeholder)
+        total_transfers = sum(data['transfer_count'] for data in pending_by_stakeholder.values())
+        
+        return JsonResponse({
+            'success': True,
+            'entity': entity.name,
+            'sync_status': 'ACTIVE - Data auto-syncs from international capital report',
+            'statistics': {
+                'total_pending_inr': float(total_pending_inr),
+                'total_stakeholders_with_pending': total_stakeholders_with_transfers,
+                'total_transfers_pending': total_transfers,
+                'transfer_statuses_included': ['PENDING_ABROAD', 'IN_TRANSIT', 'RECEIVED_LOCALLY', 'CONVERTED'],
+                'transfer_statuses_excluded': ['POSTED_TO_GL', 'CANCELLED']
+            },
+            'pending_by_stakeholder': pending_summary,
+            'transfer_details': transfer_details[:10]  # First 10 transfers
+        })
+
 
 
 class InternationalCapitalTransfersView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, ListView):
