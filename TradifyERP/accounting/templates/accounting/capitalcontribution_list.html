@@ -193,7 +193,7 @@
                                                     {% if user|has_action_permission:'accounting:edit' %}
                                                     {% if user|has_action_permission:'accounting:edit' %}
                                                     {% if user|has_action_permission:'accounting:edit' %}
-                                                    <a href="{% url 'accounting:capital_contribution_update' contribution.id %}" 
+                                                    <a href="{% url 'accounting:capital_contribution_edit' contribution.id %}" 
                                                        class="btn btn-sm btn-warning" title="Edit">
                                                         <i class="mdi mdi-pencil"></i>
                                                     </a>

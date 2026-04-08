@@ -191,6 +191,117 @@
                 </div>
             </div>
 
+            <!-- Raw Materials Metrics Row -->
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <h5 class="card-title">Raw Materials Management</h5>
+                </div>
+                
+                <!-- Total Raw Materials -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Raw Materials</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ total_raw_materials }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-info-subtle text-info rounded">
+                                            <i class="mdi mdi-package-variant font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <a href="/admin/raw_materials/rawmaterial/" class="badge bg-light text-dark text-decoration-none">View Materials</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Suppliers -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Suppliers</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ total_suppliers }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-success-subtle text-success rounded">
+                                            <i class="mdi mdi-account-multiple font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <a href="/admin/raw_materials/supplier/" class="badge bg-light text-dark text-decoration-none">View Suppliers</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Material Categories -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Categories</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ total_categories }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-primary-subtle text-primary rounded">
+                                            <i class="mdi mdi-folder-multiple font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <a href="/admin/raw_materials/rawmaterialcategory/" class="badge bg-light text-dark text-decoration-none">View Categories</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Low Stock Items -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card card-h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <span class="text-muted mb-3 lh-1 d-block text-truncate">Low Stock</span>
+                                    <h4 class="mb-3">
+                                        <span class="counter-value" data-target="{{ low_stock_items }}">0</span>
+                                    </h4>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-end">
+                                        <div class="icon-box bg-warning-subtle text-warning rounded">
+                                            <i class="mdi mdi-alert-circle font-size-24"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-nowrap">
+                                <a href="/admin/raw_materials/stock/" class="badge bg-light text-dark text-decoration-none">View Stock</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Quick Action Buttons -->
             <div class="row">
                 <div class="col-12">
@@ -210,7 +321,10 @@
                                 <a href="{% url 'manufacturing:qualityinspection_create' %}" class="btn btn-warning">
                                     <i class="mdi mdi-plus"></i> New Inspection
                                 </a>
-                                <a href="{% url 'manufacturing:productionorder_list' %}" class="btn btn-secondary">
+                                <a href="/admin/raw_materials/rawmaterial/" class="btn btn-secondary">
+                                    <i class="mdi mdi-plus"></i> Add Raw Material
+                                </a>
+                                <a href="{% url 'manufacturing:productionorder_list' %}" class="btn btn-dark">
                                     <i class="mdi mdi-eye"></i> View All Orders
                                 </a>
                             </div>

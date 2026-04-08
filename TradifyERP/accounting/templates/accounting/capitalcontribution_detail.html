@@ -30,9 +30,18 @@
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Contribution Information</h5>
                             <div class="btn-group" role="group">
-                                <a href="{% url 'accounting:capital_contribution_update' object.id %}" class="btn btn-sm btn-warning">
+                                <a href="{% url 'accounting:capital_contribution_edit' object.id %}" class="btn btn-sm btn-warning">
                                     <i class="mdi mdi-pencil"></i> Edit
                                 </a>
+                                {% if not object.international_transfer %}
+                                <a href="{% url 'accounting:international_transfer_create' object.id %}" class="btn btn-sm btn-primary">
+                                    <i class="mdi mdi-plane"></i> Track Transfer
+                                </a>
+                                {% else %}
+                                <a href="{% url 'accounting:international_transfer_edit' object.international_transfer.id %}" class="btn btn-sm btn-info">
+                                    <i class="mdi mdi-pencil"></i> Edit Transfer Tracking
+                                </a>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="card-body">

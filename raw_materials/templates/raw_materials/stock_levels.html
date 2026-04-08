@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Stock Levels{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title">Stock Levels</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:dashboard' %}">Raw Materials</a></li>
+                    <li class="breadcrumb-item active">Stock Levels</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Status Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">In Stock</h6>
+                    <h3 class="text-success">{{ in_stock_count }}</h3>
+                    <small class="text-muted">Above Minimum</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Low Stock</h6>
+                    <h3 class="text-warning">{{ low_stock_count }}</h3>
+                    <small class="text-muted">At or Below Minimum</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Out of Stock</h6>
+                    <h3 class="text-danger">{{ out_of_stock_count }}</h3>
+                    <small class="text-muted">Zero Quantity</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Items</h6>
+                    <h3>{{ total_items }}</h3>
+                    <small class="text-muted">All Items</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5>Stock Status</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <form method="GET" class="d-flex gap-2">
+                                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="">All Items</option>
+                                    <option value="good" {% if status == 'good' %}selected{% endif %}>In Stock</option>
+                                    <option value="low" {% if status == 'low' %}selected{% endif %}>Low Stock</option>
+                                    <option value="out" {% if status == 'out' %}selected{% endif %}>Out of Stock</option>
+                                </select>
+                                <input type="text" name="search" class="form-control form-control-sm" 
+                                       placeholder="Search..." value="{{ search }}">
+                                <button type="submit" class="btn btn-sm btn-primary">Search</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Material Code</th>
+                                    <th>Material Name</th>
+                                    <th>Current Stock</th>
+                                    <th>Minimum Level</th>
+                                    <th>Maximum Level</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in object_list %}
+                                <tr>
+                                    <td><strong>{{ stock.raw_material.product_code }}</strong></td>
+                                    <td>{{ stock.raw_material.name }}</td>
+                                    <td>{{ stock.quantity_on_hand }}</td>
+                                    <td>{{ stock.minimum_level }}</td>
+                                    <td>{{ stock.maximum_level }}</td>
+                                    <td>
+                                        {% if stock.quantity_on_hand > stock.minimum_level %}
+                                            <span class="badge bg-success">In Stock</span>
+                                        {% elif stock.quantity_on_hand > 0 %}
+                                            <span class="badge bg-warning">Low Stock</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'raw_materials:stock_edit' stock.id %}" class="btn btn-sm btn-info">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No stock records found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

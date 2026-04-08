@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Raw Material{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title">{{ title }}</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:dashboard' %}">Raw Materials</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:category_list' %}">Categories</a></li>
+                    <li class="breadcrumb-item active">Edit Material</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Edit Raw Material</h5>
+                    <small class="text-muted">Product Code: {{ product_code }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.product_code.id_for_label }}" class="form-label">
+                                    Product Code <span class="text-danger">*</span>
+                                </label>
+                                {{ form.product_code }}
+                                {% if form.product_code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.product_code.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">e.g., RM-PBAT-001</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.unit_of_measure.id_for_label }}" class="form-label">
+                                    Unit of Measure <span class="text-danger">*</span>
+                                </label>
+                                {{ form.unit_of_measure }}
+                                {% if form.unit_of_measure.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.unit_of_measure.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    Material Name <span class="text-danger">*</span>
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">
+                                    Description
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">
+                                    Category <span class="text-danger">*</span>
+                                </label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.category.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Select from available categories</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.hsn_code.id_for_label }}" class="form-label">
+                                    HSN Code
+                                </label>
+                                {{ form.hsn_code }}
+                                {% if form.hsn_code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.hsn_code.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.default_supplier.id_for_label }}" class="form-label">
+                                    Default Supplier
+                                </label>
+                                {{ form.default_supplier }}
+                                {% if form.default_supplier.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.default_supplier.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Select from active suppliers</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.current_unit_price.id_for_label }}" class="form-label">
+                                    Current Unit Price
+                                </label>
+                                {{ form.current_unit_price }}
+                                {% if form.current_unit_price.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.current_unit_price.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Supplier Materials Display -->
+                        <div class="row" id="supplier-materials-section" style="display: none;">
+                            <div class="col-md-12 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0"><i class="mdi mdi-package-multiple"></i> Products from Selected Supplier</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="supplier-materials-list" class="list-group">
+                                            <p class="text-muted"><i class="mdi mdi-loading mdi-spin"></i> Loading materials...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Active Material
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <a href="{% url 'raw_materials:category_list' %}" class="btn btn-secondary me-2">
+                                    <i class="mdi mdi-close"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-check"></i> Update Material
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    label {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    hr {
+        margin: 1.5rem 0;
+        border: none;
+        border-top: 1px solid #e3e6f0;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const supplierSelect = document.getElementById('id_default_supplier');
+    const supplierMaterialsSection = document.getElementById('supplier-materials-section');
+    const materialsList = document.getElementById('supplier-materials-list');
+
+    // Function to load materials by supplier
+    function loadSupplierMaterials(supplierId) {
+        if (!supplierId) {
+            supplierMaterialsSection.style.display = 'none';
+            return;
+        }
+
+        // Show loading state
+        supplierMaterialsSection.style.display = 'block';
+        materialsList.innerHTML = '<p class="text-muted"><i class="mdi mdi-loading mdi-spin"></i> Loading materials...</p>';
+
+        // Fetch materials from API
+        fetch(`{% url 'raw_materials:materials_by_supplier' %}?supplier_id=${supplierId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.count === 0) {
+                    materialsList.innerHTML = '<p class="text-muted">This supplier has no active products.</p>';
+                } else {
+                    materialsList.innerHTML = '';
+                    
+                    data.materials.forEach((material, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'list-group-item';
+                        itemDiv.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">${material.name}</h6>
+                                    <small class="text-muted">Unit: ${material.unit}</small>
+                                </div>
+                                <span class="badge badge-primary rounded-pill">${index + 1}</span>
+                            </div>
+                        `;
+                        materialsList.appendChild(itemDiv);
+                    });
+
+                    // Add summary badge
+                    const header = document.querySelector('#supplier-materials-section .card-header');
+                    const badgeDiv = header.querySelector('.badge');
+                    if (badgeDiv) {
+                        badgeDiv.remove();
+                    }
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-success float-end';
+                    badge.textContent = `${data.count} Product${data.count !== 1 ? 's' : ''}`;
+                    header.appendChild(badge);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading materials:', error);
+                materialsList.innerHTML = '<p class="text-danger"><i class="mdi mdi-alert"></i> Error loading materials</p>';
+            });
+    }
+
+    // Load materials when supplier changes
+    supplierSelect.addEventListener('change', function() {
+        loadSupplierMaterials(this.value);
+    });
+
+    // Load initial materials if supplier is already selected (edit mode)
+    if (supplierSelect.value) {
+        loadSupplierMaterials(supplierSelect.value);
+    }
+});
+</script>
+{% endblock %}

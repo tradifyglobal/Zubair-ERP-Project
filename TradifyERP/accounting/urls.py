@@ -50,11 +50,13 @@ from .views_analytics import (
     FinancialRatiosView, AccountsReceivableAgingView, AccountsPayableAgingView,
     VarianceAnalysisView, CostCenterAnalysisView
 )
+from .views import InternationalCapitalReportView
 from .dashboard_views import main_dashboard
 from .stakeholder_views import (
     StakeholderListView, StakeholderDetailView, StakeholderCreateView, StakeholderUpdateView, StakeholderDeleteView,
     CapitalContributionListView, CapitalContributionDetailView, CapitalContributionCreateView, CapitalContributionUpdateView,
-    ShareholdingListView, ShareholdingDetailView, ShareholdingCreateView, ShareholdingUpdateView
+    ShareholdingListView, ShareholdingDetailView, ShareholdingCreateView, ShareholdingUpdateView,
+    InternationalTransferTrackingCreateView, InternationalTransferTrackingUpdateView, BuildInternationalTransferView
 )
 from .user_views import (
     UserListView, UserCreateView, UserEditView, UserDetailView,
@@ -233,6 +235,14 @@ urlpatterns = [
     path('capital-contributions/create/', CapitalContributionCreateView.as_view(), name='capital_contribution_create'),
     path('capital-contributions/create/<int:stakeholder_id>/', CapitalContributionCreateView.as_view(), name='capital_contribution_create_for_stakeholder'),
     path('capital-contributions/<int:pk>/edit/', CapitalContributionUpdateView.as_view(), name='capital_contribution_edit'),
+    
+    # International Transfer Tracking
+    path('international-transfers/create/<int:contribution_id>/', InternationalTransferTrackingCreateView.as_view(), name='international_transfer_create'),
+    path('international-transfers/<int:pk>/edit/', InternationalTransferTrackingUpdateView.as_view(), name='international_transfer_edit'),
+    
+    # International Capital Investments
+    path('international-capital-report/', InternationalCapitalReportView.as_view(), name='international_capital_report'),
+    path('international-capital/add/', BuildInternationalTransferView.as_view(), name='international_capital_add'),
     
     # Shareholdings
     path('shareholdings/', ShareholdingListView.as_view(), name='shareholding_list'),

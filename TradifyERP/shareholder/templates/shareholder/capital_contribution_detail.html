@@ -58,7 +58,17 @@
                             </span>
                         {% endif %}
                         
-                        <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-primary waves-effect waves-light">
+                        {% if not contribution.international_transfer %}
+                            <a href="{% url 'accounting:international_transfer_create' contribution.id %}" class="btn btn-sm btn-primary waves-effect waves-light me-2">
+                                <i class="mdi mdi-plane"></i> Track Transfer
+                            </a>
+                        {% else %}
+                            <a href="{% url 'accounting:international_transfer_edit' contribution.international_transfer.id %}" class="btn btn-sm btn-info waves-effect waves-light me-2">
+                                <i class="mdi mdi-pencil"></i> Edit Transfer Tracking
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'shareholder:capital-contribution-edit' contribution.pk %}" class="btn btn-primary waves-effect waves-light me-2">
                             <i class="feather-edit"></i> Edit
                         </a>
                         <a href="{% url 'shareholder:capital-contribution-list' %}" class="btn btn-secondary waves-effect waves-light">

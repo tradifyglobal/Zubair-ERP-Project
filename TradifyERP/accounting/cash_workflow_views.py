@@ -124,19 +124,11 @@ class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
         
         with transaction.atomic():
             try:
-                # Get cash account first
-                if receipt.credit_account:
-                    cash_account = receipt.credit_account
-                else:
-                    cash_account = Account.objects.get(
-                        entity=request.entity,
-                        account_number='100001'  # Cash account
-                    )
-                
+                # For cash receipts: account = cash (to DEBIT), credit_account = source (to CREDIT)
                 # Create DEBIT entry to cash account (asset increases)
                 LedgerEntry.objects.create(
                     entity=request.entity,
-                    account=cash_account,
+                    account=receipt.account,  # Cash account selected in form
                     entry_type='DEBIT',
                     amount=receipt.debit_amount,
                     description=f"Cash Receipt: {receipt.description}",
@@ -146,10 +138,18 @@ class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                     workflow_status='AUTHORIZED'
                 )
                 
-                # Create CREDIT entry to the selected account (e.g., 3000-16 Shareholder Capital - equity increases)
+                # Create CREDIT entry to the source account (capital/revenue)
+                # Default to 100001 if not specified, but user should select a source account
+                source_account = receipt.credit_account
+                if not source_account:
+                    source_account = Account.objects.get(
+                        entity=request.entity,
+                        account_number='100001'  # Default to cash if nothing selected
+                    )
+                
                 LedgerEntry.objects.create(
                     entity=request.entity,
-                    account=receipt.account,
+                    account=source_account,
                     entry_type='CREDIT',
                     amount=receipt.credit_amount,
                     description=f"Cash Receipt: {receipt.description}",

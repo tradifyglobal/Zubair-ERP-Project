@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Raw Material Categories{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title">Raw Material Categories</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:dashboard' %}">Raw Materials</a></li>
+                    <li class="breadcrumb-item active">Categories</li>
+                </ol>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="/admin/raw_materials/rawmaterialcategory/add/" class="btn btn-primary">
+                    <i class="mdi mdi-plus"></i> Add Category
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            {% if categories_with_materials %}
+                {% for category in categories_with_materials %}
+                <div class="card mb-3">
+                    <div class="card-header" style="cursor: pointer; background-color: #f8f9fa; transition: background-color 0.3s;" data-bs-toggle="collapse" data-bs-target="#category-{{ category.id }}">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="mb-0">
+                                    <i class="mdi mdi-chevron-down" id="icon-{{ category.id }}"></i>
+                                    <strong>{{ category.name }}</strong>
+                                </h5>
+                                {% if category.description %}
+                                <small class="text-muted">{{ category.description|truncatewords:20 }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-info me-2">{{ category.material_count }} Materials</span>
+                                {% if category.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapse show" id="category-{{ category.id }}">
+                        <div class="card-body">
+                            {% if category.rawmaterial_set.all %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Product Code</th>
+                                            <th>Material Name</th>
+                                            <th>Description</th>
+                                            <th>Unit</th>
+                                            <th>Standard Cost</th>
+                                            <th>Actual Cost</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for material in category.rawmaterial_set.all %}
+                                        <tr>
+                                            <td><strong>{{ material.product_code }}</strong></td>
+                                            <td>{{ material.name }}</td>
+                                            <td>
+                                                {% if material.description %}
+                                                    <small>{{ material.description|truncatewords:10 }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ material.unit_of_measure }}</td>
+                                            <td>
+                                                {% if material.stock %}
+                                                    <span class="badge bg-light text-dark">{{ material.stock.standard_cost }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ material.current_unit_price }}</span>
+                                            </td>
+                                            <td>
+                                                {% if material.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'raw_materials:material_edit' material.id %}" class="btn btn-sm btn-info" title="Edit Material">
+                                                    <i class="mdi mdi-pencil"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info mb-0">
+                                <strong>No materials in this category yet.</strong>
+                                <a href="{% url 'raw_materials:material_create' %}" class="alert-link ms-2">Add your first material</a>
+                            </div>
+                            {% endif %}
+
+                            <!-- Add Material to Category Button -->
+                            <div class="mt-3 pt-3 border-top">
+                                <a href="{% url 'raw_materials:material_create' %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="mdi mdi-plus"></i> Add Material to {{ category.name }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h5 class="text-muted">No categories found</h5>
+                    <p class="text-muted">Create your first category to get started</p>
+                    <a href="/admin/raw_materials/rawmaterialcategory/add/" class="btn btn-primary">
+                        <i class="mdi mdi-plus"></i> Create Your First Category
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle chevron icon when expanding/collapsing
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(el => {
+        el.addEventListener('click', function(e) {
+            const targetId = this.getAttribute('data-bs-target');
+            const iconId = 'icon-' + targetId.substring(10);
+            const icon = document.getElementById(iconId);
+            
+            setTimeout(() => {
+                if (document.querySelector(targetId).classList.contains('show')) {
+                    icon.classList.remove('mdi-chevron-down');
+                    icon.classList.add('mdi-chevron-up');
+                } else {
+                    icon.classList.remove('mdi-chevron-up');
+                    icon.classList.add('mdi-chevron-down');
+                }
+            }, 100);
+        });
+    });
+</script>
+{% endblock %}

@@ -41,6 +41,8 @@
                                         <option value="EQUITY" {% if request.GET.account_type == 'EQUITY' %}selected{% endif %}>Equity</option>
                                         <option value="INCOME" {% if request.GET.account_type == 'INCOME' %}selected{% endif %}>Income</option>
                                         <option value="EXPENSE" {% if request.GET.account_type == 'EXPENSE' %}selected{% endif %}>Expenses</option>
+                                        <option value="SALES" {% if request.GET.account_type == 'SALES' %}selected{% endif %}>Sales</option>
+                                        <option value="PURCHASES" {% if request.GET.account_type == 'PURCHASES' %}selected{% endif %}>Purchases</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
@@ -111,6 +113,10 @@
                                                     <span class="badge bg-info-subtle text-info">{{ item.account.get_account_type_display }}</span>
                                                 {% elif item.account.account_type == 'INCOME' %}
                                                     <span class="badge bg-success-subtle text-success">{{ item.account.get_account_type_display }}</span>
+                                                {% elif item.account.account_type == 'SALES' %}
+                                                    <span class="badge bg-success-subtle text-success">{{ item.account.get_account_type_display }}</span>
+                                                {% elif item.account.account_type == 'PURCHASES' %}
+                                                    <span class="badge bg-danger-subtle text-danger">{{ item.account.get_account_type_display }}</span>
                                                 {% else %}
                                                     <span class="badge bg-danger-subtle text-danger">{{ item.account.get_account_type_display }}</span>
                                                 {% endif %}

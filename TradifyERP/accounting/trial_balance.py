@@ -68,10 +68,10 @@ def calculate_trial_balance(entity, as_of_date=None):
         account_type = balance['account__account_type']
         
         # Calculate NET balance based on normal balance for account type
-        # ASSET & EXPENSE accounts have DEBIT normal balance (debit - credit)
-        # LIABILITY, EQUITY & INCOME accounts have CREDIT normal balance (credit - debit)
+        # ASSET/EXPENSE/PURCHASES accounts have DEBIT normal balance (debit - credit)
+        # LIABILITY/EQUITY/INCOME/SALES accounts have CREDIT normal balance (credit - debit)
         
-        if account_type in ['ASSET', 'EXPENSE']:
+        if account_type in ['ASSET', 'EXPENSE', 'PURCHASES']:
             # Debit normal balance
             net_balance = debit_sum - credit_sum
             if net_balance > 0:
@@ -87,7 +87,7 @@ def calculate_trial_balance(entity, as_of_date=None):
                 # Zero balance - skip this account
                 continue
                 
-        elif account_type in ['LIABILITY', 'EQUITY', 'INCOME']:
+        elif account_type in ['LIABILITY', 'EQUITY', 'INCOME', 'SALES']:
             # Credit normal balance
             net_balance = credit_sum - debit_sum
             if net_balance > 0:

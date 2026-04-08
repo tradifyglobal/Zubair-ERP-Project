@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Suppliers{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title">Suppliers</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:dashboard' %}">Raw Materials</a></li>
+                    <li class="breadcrumb-item active">Suppliers</li>
+                </ol>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'raw_materials:supplier_create' %}" class="btn btn-primary">
+                    <i class="mdi mdi-plus"></i> Add Supplier
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5>All Suppliers ({{ object_list|length }})</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <form method="GET" class="d-flex">
+                                <input type="text" name="search" class="form-control form-control-sm me-2" 
+                                       placeholder="Search by name, contact..." value="{{ search }}">
+                                <button type="submit" class="btn btn-sm btn-primary">Search</button>
+                                {% if search %}
+                                <a href="{% url 'raw_materials:supplier_list' %}" class="btn btn-sm btn-secondary ms-2">Clear</a>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="suppliers-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;"></th>
+                                    <th>Supplier Name</th>
+                                    <th>Contact Person</th>
+                                    <th>Email</th>
+                                    <th>Materials</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for supplier in object_list %}
+                                <tr class="supplier-row" data-supplier-id="{{ supplier.id }}">
+                                    <td>
+                                        <button class="btn btn-sm btn-link expand-btn" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#details-{{ supplier.id }}"
+                                                aria-expanded="false" aria-controls="details-{{ supplier.id }}">
+                                            <i class="mdi mdi-chevron-right expand-icon"></i>
+                                        </button>
+                                    </td>
+                                    <td><strong>{{ supplier.name }}</strong></td>
+                                    <td>{{ supplier.contact_person|default:"-" }}</td>
+                                    <td>{{ supplier.email|default:"-" }}</td>
+                                    <td><span class="badge bg-info">{{ supplier.material_count }}</span></td>
+                                    <td>
+                                        {% if supplier.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'raw_materials:supplier_edit' supplier.id %}" class="btn btn-sm btn-info">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Details Row -->
+                                <tr class="details-row">
+                                    <td colspan="7" class="p-0">
+                                        <div class="collapse" id="details-{{ supplier.id }}">
+                                            <div class="card card-body bg-light border-0 m-2">
+                                                <h6 class="mb-3"><i class="mdi mdi-package-multiple"></i> Products Supplied</h6>
+                                                <div id="materials-{{ supplier.id }}" class="materials-list">
+                                                    <p class="text-muted"><i class="mdi mdi-loading mdi-spin"></i> Loading products...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No suppliers found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .expand-btn {
+        padding: 0 !important;
+        color: #666;
+        text-decoration: none;
+    }
+    
+    .expand-btn:hover {
+        color: #007bff;
+    }
+    
+    .expand-btn[aria-expanded="true"] .expand-icon {
+        transform: rotate(90deg);
+        transition: transform 0.2s ease;
+    }
+    
+    .expand-btn[aria-expanded="false"] .expand-icon {
+        transition: transform 0.2s ease;
+    }
+    
+    .details-row {
+        background-color: #f9f9f9;
+    }
+    
+    .materials-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .material-badge {
+        background-color: #e7f3ff;
+        border-left: 4px solid #007bff;
+        padding: 10px 12px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+    
+    .material-badge:hover {
+        background-color: #d0e8ff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .material-badge .material-name {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .material-badge .material-unit {
+        font-size: 0.85rem;
+        color: #666;
+        margin-left: 8px;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load materials when collapse is shown
+    const collapseElements = document.querySelectorAll('[id^="details-"]');
+    
+    collapseElements.forEach(collapseEl => {
+        collapseEl.addEventListener('show.bs.collapse', function() {
+            const supplierId = this.id.replace('details-', '');
+            const materialsList = document.getElementById('materials-' + supplierId);
+            
+            // Check if materials are already loaded
+            if (materialsList.dataset.loaded === 'true') {
+                return;
+            }
+            
+            // Load materials for this supplier
+            loadSupplierMaterials(supplierId, materialsList);
+        });
+    });
+    
+    // Rotate icon when expanding/collapsing
+    document.querySelectorAll('.expand-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const icon = this.querySelector('.expand-icon');
+            if (icon) {
+                // Icon rotation is handled by CSS
+            }
+        });
+    });
+});
+
+function loadSupplierMaterials(supplierId, container) {
+    container.innerHTML = '<p class="text-muted"><i class="mdi mdi-loading mdi-spin"></i> Loading products...</p>';
+    
+    fetch(`{% url 'raw_materials:materials_by_supplier' %}?supplier_id=${supplierId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.count === 0) {
+                container.innerHTML = '<p class="text-muted">This supplier has no active products.</p>';
+            } else {
+                container.innerHTML = '';
+                
+                data.materials.forEach(material => {
+                    const badge = document.createElement('div');
+                    badge.className = 'material-badge';
+                    badge.innerHTML = `
+                        <div>
+                            <div class="material-name">${material.name}</div>
+                            <small class="material-unit">${material.unit}</small>
+                        </div>
+                    `;
+                    container.appendChild(badge);
+                });
+            }
+            
+            container.dataset.loaded = 'true';
+        })
+        .catch(error => {
+            console.error('Error loading materials:', error);
+            container.innerHTML = '<p class="text-danger"><i class="mdi mdi-alert"></i> Error loading products</p>';
+            container.dataset.loaded = 'true';
+        });
+}
+</script>
+{% endblock %}

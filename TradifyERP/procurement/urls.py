@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import views_p2p_dashboard
 
 app_name = 'procurement'
 
@@ -29,6 +30,15 @@ urlpatterns = [
     path('matching/', views.ThreeWayMatchingListView.as_view(), name='matching_list'),
     path('matching/<int:pk>/', views.ThreeWayMatchingDetailView.as_view(), name='matching_detail'),
     
+    # Raw Material Purchase Orders
+    path('po/raw-material/create/', views.RawMaterialPurchaseOrderCreateView.as_view(), name='rm_po_create'),
+    path('po/<int:po_id>/add-raw-material/', views.RawMaterialPOLineItemAddView.as_view(), name='rm_po_add_item'),
+    
     # Procurement Dashboard
     path('dashboard/', views.ProcurementDashboardView.as_view(), name='dashboard'),
+    
+    # P2P Dashboard (Procure-to-Pay)
+    path('p2p/', views_p2p_dashboard.P2PDashboardView.as_view(), name='p2p_dashboard'),
+    path('p2p/<int:pk>/', views_p2p_dashboard.P2PDetailsView.as_view(), name='p2p_details'),
+    path('p2p-comparison/', views_p2p_dashboard.p2p_comparison_view, name='p2p_comparison'),
 ]

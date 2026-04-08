@@ -16,25 +16,27 @@ class CashReceiptLineForm(ModelForm):
     main_account = forms.ModelChoiceField(
         queryset=Account.objects.none(),
         required=False,
-        empty_label='-- Select Main Account --',
+        empty_label='-- Select Cash Main Account --',
         widget=forms.Select(attrs={
             'class': 'form-control select2',
-            'data-placeholder': 'Select Main Account',
+            'data-placeholder': 'Select Cash Main Account',
             'id': 'id_main_account',
         }),
-        label='Main Account'
+        label='Main Cash Account (will be DEBITED)',
+        help_text='Select the main cash account category'
     )
     
     main_credit_account = forms.ModelChoiceField(
         queryset=Account.objects.none(),
         required=False,
-        empty_label='-- Select Main Credit Account --',
+        empty_label='-- Select Source Main Account --',
         widget=forms.Select(attrs={
             'class': 'form-control select2',
-            'data-placeholder': 'Select Main Credit Account',
+            'data-placeholder': 'Select Source Main Account (Capital/Revenue)',
             'id': 'id_main_credit_account',
         }),
-        label='Main Credit Account'
+        label='Main Source Account (will be CREDITED)',
+        help_text='Select where the money is coming from (e.g., Capital, Revenue)'
     )
     
     # Stakeholder field for creating capital contributions
@@ -98,7 +100,7 @@ class CashReceiptLineForm(ModelForm):
     
     class Meta:
         model = CashReceiptLine
-        fields = ['date', 'account', 'currency', 'stakeholder', 'description', 'debit_amount', 'credit_amount', 'reference_number', 'notes']
+        fields = ['date', 'account', 'credit_account', 'currency', 'stakeholder', 'description', 'debit_amount', 'credit_amount', 'reference_number', 'notes', 'exchange_rate', 'converted_debit_amount', 'converted_credit_amount']
         widgets = {
             'date': forms.DateInput(attrs={
                 'type': 'date',
@@ -106,8 +108,13 @@ class CashReceiptLineForm(ModelForm):
             }),
             'account': forms.Select(attrs={
                 'class': 'form-control select2',
-                'data-placeholder': 'Select Sub-Account',
+                'data-placeholder': 'Select Cash Sub-Account (to be DEBITED)',
                 'id': 'id_account',
+            }),
+            'credit_account': forms.Select(attrs={
+                'class': 'form-control select2',
+                'data-placeholder': 'Select Source Sub-Account (to be CREDITED)',
+                'id': 'id_credit_account',
             }),
             'currency': forms.Select(attrs={
                 'class': 'form-control select2',
@@ -148,14 +155,18 @@ class CashReceiptLineForm(ModelForm):
         }
         labels = {
             'date': 'Receipt Date',
-            'account': 'Sub-Account (Debit)',
+            'account': 'Cash Account (will be DEBITED)',
+            'credit_account': 'Source Account - Capital/Revenue (will be CREDITED)',
             'currency': 'Currency',
             'stakeholder': 'Stakeholder (for investment tracking)',
             'description': 'Description',
-            'debit_amount': 'Debit Amount',
-            'credit_amount': 'Credit Amount',
+            'debit_amount': 'Amount',
+            'credit_amount': 'Amount',
             'reference_number': 'Reference #',
-            'notes': 'Notes'
+            'notes': 'Notes',
+            'exchange_rate': 'Exchange Rate',
+            'converted_debit_amount': 'Converted Amount',
+            'converted_credit_amount': 'Converted Amount'
         }
     
     def __init__(self, *args, **kwargs):
@@ -173,8 +184,11 @@ class CashReceiptLineForm(ModelForm):
             self.fields['main_account'].queryset = parent_accounts
             self.fields['main_credit_account'].queryset = parent_accounts
             
-            # Set stakeholder field to all stakeholders
-            self.fields['stakeholder'].queryset = Stakeholder.objects.all().order_by('first_name', 'last_name')
+            # Set stakeholder field to only active stakeholders from the current entity
+            self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
+                entity=entity,
+                status='ACTIVE'
+            ).order_by('first_name', 'last_name')
             
             # Set sub-accounts queryset to ALL accounts for validation to work
             # JavaScript will filter/populate based on selected main account
@@ -183,8 +197,11 @@ class CashReceiptLineForm(ModelForm):
                 is_active=True
             ).order_by('account_number')
             
+            # Set credit_account queryset for the form field
+            self.fields['credit_account'].queryset = all_accounts
+            
             if self.instance and self.instance.pk and self.instance.account:
-                # For edit mode, get all related sub-accounts for the parent
+                # For edit mode, get all related sub-accounts for the parent (debit account)
                 current_account = self.instance.account
                 parent = current_account.parent_account or current_account
                 self.fields['account'].queryset = Account.objects.filter(
@@ -194,6 +211,18 @@ class CashReceiptLineForm(ModelForm):
                 ).order_by('account_number')
                 # Set the main account to the parent
                 self.initial['main_account'] = parent.id
+                
+                # If credit_account is set, set main_credit_account to its parent
+                if self.instance.credit_account:
+                    credit_account = self.instance.credit_account
+                    credit_parent = credit_account.parent_account or credit_account
+                    self.initial['main_credit_account'] = credit_parent.id
+                    # Also set credit_account queryset to the parent's sub-accounts
+                    self.fields['credit_account'].queryset = Account.objects.filter(
+                        entity=entity,
+                        is_active=True,
+                        parent_account=credit_parent
+                    ).order_by('account_number')
             else:
                 # For create mode, set to all accounts for form validation
                 self.fields['account'].queryset = all_accounts

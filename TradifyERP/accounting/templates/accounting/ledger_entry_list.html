@@ -42,19 +42,61 @@
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Search & Filters</h5>
+                        </div>
                         <div class="card-body">
                             <form method="get" class="row g-2">
-                                <div class="col-md-3">
+                                <!-- Row 1: Basic Search and Date Filters -->
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>Text Search</strong></small></label>
                                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by account or reference" value="{{ request.GET.search|default:'' }}">
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>From Date</strong></small></label>
+                                    <input type="date" name="from_date" class="form-control form-control-sm" value="{{ request.GET.from_date|default:'' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>To Date</strong></small></label>
+                                    <input type="date" name="to_date" class="form-control form-control-sm" value="{{ request.GET.to_date|default:'' }}">
+                                </div>
+                                
+                                <!-- Row 2: Account Number and Reference -->
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>Account Number</strong></small></label>
+                                    <select name="account_number" class="form-select form-select-sm">
+                                        <option value="">-- All Accounts --</option>
+                                        {% for account in accounts %}
+                                            <option value="{{ account.account_number }}" {% if request.GET.account_number == account.account_number %}selected{% endif %}>
+                                                {{ account.account_number }} - {{ account.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>Reference</strong></small></label>
+                                    <input type="text" name="reference" class="form-control form-control-sm" placeholder="Reference number" value="{{ request.GET.reference|default:'' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>Entry Type</strong></small></label>
                                     <select name="entry_type" class="form-select form-select-sm">
                                         <option value="">All Types</option>
                                         <option value="DEBIT" {% if request.GET.entry_type == 'DEBIT' %}selected{% endif %}>Debit</option>
                                         <option value="CREDIT" {% if request.GET.entry_type == 'CREDIT' %}selected{% endif %}>Credit</option>
                                     </select>
                                 </div>
+                                
+                                <!-- Row 3: Amount Range and Status -->
                                 <div class="col-md-3">
+                                    <label class="form-label"><small><strong>From Amount</strong></small></label>
+                                    <input type="number" name="from_amount" class="form-control form-control-sm" placeholder="Min amount" step="0.01" value="{{ request.GET.from_amount|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label"><small><strong>To Amount</strong></small></label>
+                                    <input type="number" name="to_amount" class="form-control form-control-sm" placeholder="Max amount" step="0.01" value="{{ request.GET.to_amount|default:'' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><small><strong>Status</strong></small></label>
                                     <select name="status" class="form-select form-select-sm">
                                         <option value="" {% if not request.GET.status %}selected{% endif %}>Approved & Authorized (default)</option>
                                         <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
@@ -65,11 +107,17 @@
                                         <option value="all" {% if request.GET.status == 'all' %}selected{% endif %}>All Statuses</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-light btn-sm w-100">Reset</a>
+                                
+                                <!-- Row 4: Buttons -->
+                                <div class="col-12">
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="ri-search-line"></i> Search & Filter
+                                        </button>
+                                        <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-light btn-sm">
+                                            <i class="ri-refresh-line"></i> Reset All Filters
+                                        </a>
+                                    </div>
                                 </div>
                             </form>
                         </div>

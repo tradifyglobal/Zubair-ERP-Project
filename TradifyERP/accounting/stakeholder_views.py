@@ -1,11 +1,12 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Sum, Q
-from accounting.models import Stakeholder, CapitalContribution, Shareholding, Entity, AuditLog
-from accounting.stakeholder_forms import StakeholderForm, CapitalContributionForm, ShareholdingForm
+from django.http import JsonResponse
+from accounting.models import Stakeholder, CapitalContribution, Shareholding, Entity, AuditLog, InternationalTransferTracking
+from accounting.stakeholder_forms import StakeholderForm, CapitalContributionForm, ShareholdingForm, InternationalTransferTrackingForm
 
 
 # ============ STAKEHOLDER VIEWS ============
@@ -182,7 +183,7 @@ class CapitalContributionCreateView(LoginRequiredMixin, PermissionRequiredMixin,
     model = CapitalContribution
     form_class = CapitalContributionForm
     template_name = 'accounting/capital_contribution_form.html'
-    success_url = reverse_lazy('accounting:capital_contribution_list')
+    success_url = reverse_lazy('accounting:international_capital_report')
     permission_required = 'accounting.add_capitalcontribution'
     
     def get_form_kwargs(self):
@@ -191,6 +192,14 @@ class CapitalContributionCreateView(LoginRequiredMixin, PermissionRequiredMixin,
         if stakeholder_id:
             stakeholder = get_object_or_404(Stakeholder, pk=stakeholder_id)
             self.stakeholder = stakeholder
+        
+        # Get the active entity and pass it to form so stakeholder dropdown filters by entity
+        entity = Entity.objects.filter(is_active=True).first()
+        if entity:
+            if 'initial' not in kwargs:
+                kwargs['initial'] = {}
+            kwargs['initial']['entity'] = entity
+        
         return kwargs
     
     def get_context_data(self, **kwargs):
@@ -228,7 +237,7 @@ class CapitalContributionUpdateView(LoginRequiredMixin, PermissionRequiredMixin,
     model = CapitalContribution
     form_class = CapitalContributionForm
     template_name = 'accounting/capital_contribution_form.html'
-    success_url = reverse_lazy('accounting:capital_contribution_list')
+    success_url = reverse_lazy('accounting:international_capital_report')
     permission_required = 'accounting.change_capitalcontribution'
     
     def form_valid(self, form):
@@ -349,3 +358,169 @@ class ShareholdingUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Update
         )
         messages.success(self.request, 'Shareholding updated successfully.')
         return response
+
+
+# ============ INTERNATIONAL TRANSFER TRACKING VIEWS ============
+
+class InternationalTransferTrackingCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Create international transfer tracking for a capital contribution."""
+    model = InternationalTransferTracking
+    form_class = InternationalTransferTrackingForm
+    template_name = 'accounting/international_transfer_tracking_form.html'
+    success_url = reverse_lazy('accounting:international_capital_report')
+    permission_required = 'accounting.add_internationaltransfertracking'
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        contribution_id = self.kwargs.get('contribution_id')
+        if contribution_id:
+            contribution = get_object_or_404(CapitalContribution, pk=contribution_id)
+            # Pre-fill with contribution data
+            if 'initial' not in kwargs:
+                kwargs['initial'] = {}
+            kwargs['initial']['capital_contribution'] = contribution
+            kwargs['initial']['source_currency_code'] = contribution.currency.code if contribution.currency else 'USD'
+            kwargs['initial']['source_amount'] = contribution.amount
+            kwargs['initial']['destination_amount'] = contribution.amount_company_currency
+            kwargs['initial']['exchange_rate_used'] = contribution.exchange_rate
+            kwargs['initial']['date_sent_from_shareholder'] = contribution.contribution_date
+            # Set entity from contribution (but allow user to override)
+            kwargs['initial']['entity'] = contribution.entity if contribution.entity else None
+        return kwargs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        contribution_id = self.kwargs.get('contribution_id')
+        if contribution_id:
+            context['contribution'] = get_object_or_404(CapitalContribution, pk=contribution_id)
+        return context
+    
+    def form_valid(self, form):
+        # Set the capital_contribution before saving
+        contribution_id = self.kwargs.get('contribution_id')
+        if contribution_id:
+            contribution = get_object_or_404(CapitalContribution, pk=contribution_id)
+            form.instance.capital_contribution = contribution
+        
+        # Handle entity selection - update contribution's entity if user selected a different one
+        selected_entity = form.cleaned_data.get('entity')
+        if form.instance.capital_contribution and selected_entity:
+            form.instance.capital_contribution.entity = selected_entity
+            form.instance.capital_contribution.save()
+        
+        response = super().form_valid(form)
+        
+        contribution = form.instance.capital_contribution
+        AuditLog.objects.create(
+            entity=form.instance.capital_contribution.entity,  # Use entity from form (may have been overridden)
+            user=self.request.user.username,
+            action='CREATE',
+            model_name='InternationalTransferTracking',
+            object_id=form.instance.id,
+            description=f'Created transfer tracking for {contribution.stakeholder.full_name}: {form.instance.source_amount} {form.instance.source_currency_code}'
+        )
+        messages.success(self.request, 'International transfer tracking created successfully.')
+        return response
+
+
+class InternationalTransferTrackingUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Update international transfer tracking."""
+    model = InternationalTransferTracking
+    form_class = InternationalTransferTrackingForm
+    template_name = 'accounting/international_transfer_tracking_form.html'
+    success_url = reverse_lazy('accounting:international_capital_report')
+    permission_required = 'accounting.change_internationaltransfertracking'
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Populate entity information for display
+        if self.object and self.object.capital_contribution:
+            if 'initial' not in kwargs:
+                kwargs['initial'] = {}
+            contribution = self.object.capital_contribution
+            kwargs['initial']['entity'] = contribution.entity if contribution.entity else None
+        return kwargs
+    
+    def form_valid(self, form):
+        # Handle entity selection - update contribution's entity if user selected a different one
+        selected_entity = form.cleaned_data.get('entity')
+        if self.object.capital_contribution and selected_entity:
+            self.object.capital_contribution.entity = selected_entity
+            self.object.capital_contribution.save()
+        
+        response = super().form_valid(form)
+        
+        AuditLog.objects.create(
+            entity=self.object.capital_contribution.entity,
+            user=self.request.user.username,
+            action='UPDATE',
+            model_name='InternationalTransferTracking',
+            object_id=self.object.id,
+            description=f'Updated transfer tracking: Status now {self.object.get_transfer_status_display()}'
+        )
+        messages.success(self.request, 'International transfer tracking updated successfully.')
+        return response
+
+
+class BuildInternationalTransferView(LoginRequiredMixin, TemplateView):
+    """View for adding international capital transfers from the international capital report.
+    
+    This view either:
+    1. Shows form to select existing capital contributions to track, or
+    2. Redirects to capital contribution creation if click through from that flow
+    """
+    template_name = 'accounting/international_capital_add.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity = Entity.objects.filter(is_active=True).first()
+        
+        if entity:
+            # Get capital contributions that don't have transfer tracking yet
+            # Using the correct related_name 'international_transfer'
+            from django.db.models import Q
+            contributions_without_tracking = CapitalContribution.objects.filter(
+                entity=entity,
+                international_transfer__isnull=True
+            ).select_related('stakeholder', 'currency')
+            
+            # Also get all contributions (user might want to add more transfers or update existing)
+            all_contributions = CapitalContribution.objects.filter(
+                entity=entity
+            ).select_related('stakeholder', 'currency')
+            
+            context['entity'] = entity
+            context['untracked_contributions'] = contributions_without_tracking
+            context['all_contributions'] = all_contributions
+            context['has_contributions'] = all_contributions.exists()
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        """Handle selection of capital contribution."""
+        contribution_id = request.POST.get('contribution_id')
+        action = request.POST.get('action')
+        
+        entity = Entity.objects.filter(is_active=True).first()
+        if not entity:
+            messages.error(request, 'No active entity configured.')
+            return redirect('accounting:international_capital_report')
+        
+        if action == 'create_new':
+            # Redirect to capital contribution creation
+            return redirect('accounting:capital_contribution_create')
+        
+        elif action == 'select' and contribution_id:
+            try:
+                contribution = CapitalContribution.objects.get(
+                    id=contribution_id,
+                    entity=entity
+                )
+                # Redirect to transfer tracking creation for this contribution
+                return redirect('accounting:international_transfer_create', contribution_id=contribution.id)
+            except CapitalContribution.DoesNotExist:
+                messages.error(request, 'Capital contribution not found.')
+                return redirect('accounting:international_capital_report')
+        
+        messages.error(request, 'Invalid selection.')
+        return redirect('accounting:international_capital_report')

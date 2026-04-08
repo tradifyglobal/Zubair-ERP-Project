@@ -154,15 +154,12 @@ class JournalVoucherLine(models.Model):
     voucher = models.ForeignKey(JournalVoucher, on_delete=models.CASCADE, related_name='lines')
     line_number = models.IntegerField(help_text="Line sequence number")
     account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='journal_lines')
+    sub_account = models.ForeignKey('Account', on_delete=models.SET_NULL, null=True, blank=True, 
+                                   related_name='journal_sub_lines',
+                                   help_text="Sub-account for detailed tracking (cascades from main account)")
     entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     description = models.TextField(blank=True, null=True, help_text="Line item description")
-    
-    # Optional linking fields
-    stakeholder = models.ForeignKey('Stakeholder', on_delete=models.SET_NULL, null=True, blank=True, 
-                                   help_text="Link to shareholder if applicable")
-    employee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
-                                related_name='employee_journal_lines', help_text="Link to employee if applicable")
     
     # Dimensions for reporting
     cost_center = models.CharField(max_length=100, blank=True, null=True)

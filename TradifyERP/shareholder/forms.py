@@ -38,15 +38,23 @@ class ShareholderInvestmentLimitForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
-        
-        # Filter stakeholder by entity
-        if 'stakeholder' in self.fields and self.instance:
+
+        # Match shareholder list page filtering: selected entity only.
+        entity_id = None
+        if request is not None:
+            entity_id = request.session.get('selected_entity_id')
+        if not entity_id and self.instance:
             entity_id = getattr(self.instance, 'entity_id', None)
+
+        if 'stakeholder' in self.fields:
             if entity_id:
                 self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
                     entity_id=entity_id
-                ).order_by('first_name', 'last_name')
+                ).order_by('company_name', 'last_name', 'first_name')
+            else:
+                self.fields['stakeholder'].queryset = Stakeholder.objects.none()
 
 
 class ShareholderPaymentCommitmentForm(forms.ModelForm):
@@ -102,13 +110,20 @@ class ShareholderPaymentCommitmentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
-        
-        # Filter stakeholder by entity
-        if 'stakeholder' in self.fields and self.instance:
+
+        entity_id = None
+        if request is not None:
+            entity_id = request.session.get('selected_entity_id')
+        if not entity_id and self.instance:
             entity_id = getattr(self.instance, 'entity_id', None)
+
+        if 'stakeholder' in self.fields:
             if entity_id:
                 self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
                     entity_id=entity_id
-                ).order_by('first_name', 'last_name')
+                ).order_by('company_name', 'last_name', 'first_name')
+            else:
+                self.fields['stakeholder'].queryset = Stakeholder.objects.none()
 

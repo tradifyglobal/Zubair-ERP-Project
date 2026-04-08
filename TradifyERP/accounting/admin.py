@@ -10,7 +10,8 @@ from .models import (
     FixedAsset, DeferredExpense, DeferredRevenue,
     PeriodLock, AuditLog,
     Stakeholder, CapitalContribution, Shareholding, UserEntity,
-    CashReceiptLine, CashPaymentLine, BankReceiptLine, BankPaymentLine
+    CashReceiptLine, CashPaymentLine, BankReceiptLine, BankPaymentLine,
+    JournalVoucher, JournalVoucherLine
 )
 from .models_theme import Theme, UserThemePreference
 from .module_permissions import ModulePermission
@@ -570,4 +571,91 @@ class UserThemePreferenceAdmin(admin.ModelAdmin):
     
     def has_delete_permission(self, request, obj=None):
         """Prevent deletion - preferences are tied to user."""
+        return False
+
+
+# ==================== Journal Voucher Admin ====================
+
+class JournalVoucherLineInline(admin.TabularInline):
+    """Inline admin for Journal Voucher Lines"""
+    model = JournalVoucherLine
+    extra = 1
+    fields = ('line_number', 'account', 'sub_account', 'entry_type', 'amount', 'description', 'cost_center', 'project', 'department')
+    raw_id_fields = ('account', 'sub_account')
+    
+    def get_queryset(self, request):
+        """Order lines by line number"""
+        qs = super().get_queryset(request)
+        return qs.order_by('line_number')
+
+
+@admin.register(JournalVoucher)
+class JournalVoucherAdmin(admin.ModelAdmin):
+    """Admin interface for Journal Vouchers"""
+    list_display = ('voucher_number', 'voucher_date', 'voucher_type', 'entity', 'status', 'total_debit', 'total_credit')
+    list_filter = ('voucher_type', 'status', 'voucher_date', 'entity')
+    search_fields = ('voucher_number', 'description', 'reference_number')
+    readonly_fields = ('voucher_number', 'created_at', 'updated_at', 'posted_date', 'posted_by', 'created_by')
+    inlines = [JournalVoucherLineInline]
+    date_hierarchy = 'voucher_date'
+    
+    fieldsets = (
+        ('Voucher Information', {
+            'fields': ('voucher_number', 'voucher_date', 'voucher_type', 'reference_number', 'reference_type', 'entity')
+        }),
+        ('Details', {
+            'fields': ('description', 'notes', 'attachment', 'status')
+        }),
+        ('Approvals', {
+            'fields': ('prepared_by', 'approved_by', 'posted_by'),
+            'classes': ('collapse',)
+        }),
+        ('System', {
+            'fields': ('created_by', 'created_at', 'updated_at', 'posted_date'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def total_debit(self, obj):
+        """Display total debit amount"""
+        return f"₹{obj.get_total_debit():,.2f}"
+    total_debit.short_description = 'Total Debit'
+    
+    def total_credit(self, obj):
+        """Display total credit amount"""
+        return f"₹{obj.get_total_credit():,.2f}"
+    total_credit.short_description = 'Total Credit'
+
+
+@admin.register(JournalVoucherLine)
+class JournalVoucherLineAdmin(admin.ModelAdmin):
+    """Admin interface for Journal Voucher Lines (standalone access)"""
+    list_display = ('voucher', 'line_number', 'account', 'entry_type', 'amount', 'description')
+    list_filter = ('entry_type', 'voucher__entity', 'voucher__voucher_date')
+    search_fields = ('voucher__voucher_number', 'description', 'account__name')
+    readonly_fields = ('voucher', 'created_at', 'updated_at')
+    raw_id_fields = ('account', 'sub_account')
+    
+    fieldsets = (
+        ('Voucher & Line', {
+            'fields': ('voucher', 'line_number')
+        }),
+        ('Accounts', {
+            'fields': ('account', 'sub_account', 'entry_type')
+        }),
+        ('Amount & Description', {
+            'fields': ('amount', 'description')
+        }),
+        ('Dimensions', {
+            'fields': ('cost_center', 'project', 'department'),
+            'classes': ('collapse',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        """Lines should be added via inline in Journal Voucher admin"""
         return False
