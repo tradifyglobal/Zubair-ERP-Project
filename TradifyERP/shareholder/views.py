@@ -743,21 +743,32 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
         
         # Build a map of pending in foreign bank amounts per stakeholder
         # Include all non-cancelled, non-posted transfers (these are still pending)
+        # Note: Handle multi-entity stakeholder mapping by email
         pending_in_foreign_bank_by_stakeholder = {}
         intl_transfers = InternationalTransferTracking.objects.filter(
             capital_contribution__entity=entity,
             transfer_status__in=['PENDING_ABROAD', 'IN_TRANSIT', 'RECEIVED_LOCALLY', 'CONVERTED']
-        ).select_related('capital_contribution__stakeholder').values_list(
-            'capital_contribution__stakeholder_id',
-            'destination_amount'
-        )
+        ).select_related('capital_contribution__stakeholder')
         
-        for stakeholder_id, destination_amount in intl_transfers:
-            if stakeholder_id not in pending_in_foreign_bank_by_stakeholder:
-                pending_in_foreign_bank_by_stakeholder[stakeholder_id] = Decimal('0')
+        for transfer in intl_transfers:
+            transfer_stakeholder = transfer.capital_contribution.stakeholder
+            destination_amount = transfer.destination_amount
+            
+            # Try to find matching stakeholder in current entity by email
+            # This handles cases where stakeholder exists in multiple entities
+            matching_stakeholder = Stakeholder.objects.filter(
+                entity=entity,
+                email=transfer_stakeholder.email
+            ).first()
+            
+            # Use current entity's stakeholder if found, otherwise use transfer's stakeholder
+            target_stakeholder_id = matching_stakeholder.id if matching_stakeholder else transfer_stakeholder.id
+            
+            if target_stakeholder_id not in pending_in_foreign_bank_by_stakeholder:
+                pending_in_foreign_bank_by_stakeholder[target_stakeholder_id] = Decimal('0')
             # Add destination_amount (INR Amount from international capital report) to pending total
             if destination_amount:
-                pending_in_foreign_bank_by_stakeholder[stakeholder_id] += Decimal(str(destination_amount))
+                pending_in_foreign_bank_by_stakeholder[target_stakeholder_id] += Decimal(str(destination_amount))
         
         # First: Get all investment limits for this entity
         limits = ShareholderInvestmentLimit.objects.filter(entity=entity, is_active=True)
