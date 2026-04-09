@@ -22,8 +22,8 @@ class CashReceiptLineForm(ModelForm):
             'data-placeholder': 'Select Cash Main Account',
             'id': 'id_main_account',
         }),
-        label='Main Cash Account (will be DEBITED)',
-        help_text='Select the main cash account category'
+        label='💳 Main Cash Account (will be DEBITED)',
+        help_text='Select the main cash account category (e.g., Bank, Cash in Hand). Sub-accounts will appear in the next field.'
     )
     
     main_credit_account = forms.ModelChoiceField(
@@ -35,8 +35,36 @@ class CashReceiptLineForm(ModelForm):
             'data-placeholder': 'Select Source Main Account (Capital/Revenue)',
             'id': 'id_main_credit_account',
         }),
-        label='Main Source Account (will be CREDITED)',
-        help_text='Select where the money is coming from (e.g., Capital, Revenue)'
+        label='💰 Main Source Account (will be CREDITED)',
+        help_text='Select where the money is coming from (e.g., Capital, Revenue, Loans). Sub-accounts will appear in the next field.'
+    )
+    
+    # Sub-account (debit) field - showing all accounts
+    account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        required=True,
+        empty_label='-- Select Cash Sub-Account (Debit) --',
+        widget=forms.Select(attrs={
+            'class': 'form-control select2',
+            'data-placeholder': 'Select Cash Account to Deposit Into',
+            'id': 'id_account',
+        }),
+        label='💳 DEBIT Account - Specific Cash Account',
+        help_text='Select the specific cash account where money will be deposited (e.g., Bank of America 01, Cash Drawer 1). First select main account above.'
+    )
+    
+    # Sub-account (credit) field - showing all accounts
+    credit_account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        required=True,
+        empty_label='-- Select Source Sub-Account (Credit) --',
+        widget=forms.Select(attrs={
+            'class': 'form-control select2',
+            'data-placeholder': 'Select Source Account (Capital/Investor)',
+            'id': 'id_credit_account',
+        }),
+        label='💰 CREDIT Account - Specific Source Account',
+        help_text='Select the specific source account (e.g., Shareholder John Smith, VIP Customer Revenue). First select main source account above.'
     )
     
     # Stakeholder field for creating capital contributions
@@ -106,16 +134,6 @@ class CashReceiptLineForm(ModelForm):
                 'type': 'date',
                 'class': 'form-control',
             }),
-            'account': forms.Select(attrs={
-                'class': 'form-control select2',
-                'data-placeholder': 'Select Cash Sub-Account (to be DEBITED)',
-                'id': 'id_account',
-            }),
-            'credit_account': forms.Select(attrs={
-                'class': 'form-control select2',
-                'data-placeholder': 'Select Source Sub-Account (to be CREDITED)',
-                'id': 'id_credit_account',
-            }),
             'currency': forms.Select(attrs={
                 'class': 'form-control select2',
                 'data-placeholder': 'Select Currency',
@@ -155,8 +173,6 @@ class CashReceiptLineForm(ModelForm):
         }
         labels = {
             'date': 'Receipt Date',
-            'account': 'Cash Account (will be DEBITED)',
-            'credit_account': 'Source Account - Capital/Revenue (will be CREDITED)',
             'currency': 'Currency',
             'stakeholder': 'Stakeholder (for investment tracking)',
             'description': 'Description',
@@ -330,13 +346,13 @@ class CashPaymentLineForm(ModelForm):
     main_account = forms.ModelChoiceField(
         queryset=Account.objects.none(),
         required=False,
-        empty_label='-- Select Main Account --',
+        empty_label='-- Select Debit Account --',
         widget=forms.Select(attrs={
             'class': 'form-control select2',
-            'data-placeholder': 'Select Main Account',
+            'data-placeholder': 'Select Debit Account',
             'id': 'id_main_account',
         }),
-        label='Main Account'
+        label='Debit Account'
     )
     
     main_credit_account = forms.ModelChoiceField(
@@ -349,6 +365,19 @@ class CashPaymentLineForm(ModelForm):
             'id': 'id_main_credit_account',
         }),
         label='Main Credit Account'
+    )
+    
+    # Sub-account (credit) field - showing all accounts
+    credit_account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        required=False,
+        empty_label='-- Select Sub-Account --',
+        widget=forms.Select(attrs={
+            'class': 'form-control select2',
+            'data-placeholder': 'Select Credit Account (Default: Cash 100001)',
+            'id': 'id_credit_account',
+        }),
+        label='Sub-Account (Credit)'
     )
     
     # Exchange rate field for currency conversion
@@ -406,7 +435,7 @@ class CashPaymentLineForm(ModelForm):
             }),
             'account': forms.Select(attrs={
                 'class': 'form-control select2',
-                'data-placeholder': 'Select Sub-Account',
+                'data-placeholder': 'Select Debit Account (e.g., Expense/Purchase)',
                 'id': 'id_account',
             }),
             'credit_account': forms.Select(attrs={
@@ -584,6 +613,34 @@ class BankReceiptLineForm(ModelForm):
         label='Main Account'
     )
     
+    # Sub-account (debit) field - showing all accounts
+    account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        required=True,
+        empty_label='-- Select Sub-Account (Debit) --',
+        widget=forms.Select(attrs={
+            'class': 'form-control select2',
+            'data-placeholder': 'Select Debit Account (e.g., Capital/Investment Account)',
+            'id': 'id_account',
+        }),
+        label='🏦 DEBIT Account (Capital/Investment Account)',
+        help_text='Select the account being debited (e.g., capital contribution account)'
+    )
+    
+    # Sub-account (credit) field - showing all accounts
+    credit_account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        required=True,
+        empty_label='-- Select Sub-Account (Credit) --',
+        widget=forms.Select(attrs={
+            'class': 'form-control select2',
+            'data-placeholder': 'Select Credit Account (Bank)',
+            'id': 'id_credit_account',
+        }),
+        label='💰 CREDIT Account (Bank Account Receiving Funds)',
+        help_text='Select the bank account being credited (receiving money)'
+    )
+    
     # Stakeholder field for creating capital contributions
     stakeholder = forms.ModelChoiceField(
         queryset=Stakeholder.objects.none(),
@@ -645,16 +702,11 @@ class BankReceiptLineForm(ModelForm):
     
     class Meta:
         model = BankReceiptLine
-        fields = ['date', 'account', 'currency', 'stakeholder', 'description', 'debit_amount', 'credit_amount', 'reference_number', 'notes']
+        fields = ['date', 'account', 'credit_account', 'currency', 'stakeholder', 'description', 'debit_amount', 'credit_amount', 'reference_number', 'notes']
         widgets = {
             'date': forms.DateInput(attrs={
                 'type': 'date',
                 'class': 'form-control',
-            }),
-            'account': forms.Select(attrs={
-                'class': 'form-control select2',
-                'data-placeholder': 'Select Sub-Account',
-                'id': 'id_account',
             }),
             'currency': forms.Select(attrs={
                 'class': 'form-control select2',
@@ -690,8 +742,6 @@ class BankReceiptLineForm(ModelForm):
         }
         labels = {
             'date': 'Receipt Date',
-            'account': 'Sub-Account (Debit)',
-            'credit_account': 'Sub-Account (Credit)',
             'currency': 'Currency',
             'stakeholder': 'Stakeholder (for investment tracking)',
             'description': 'Description',
@@ -719,6 +769,7 @@ class BankReceiptLineForm(ModelForm):
             self.fields['stakeholder'].queryset = Stakeholder.objects.all().order_by('first_name', 'last_name')
             
             self.fields['account'].queryset = Account.objects.filter(entity=entity, is_active=True)
+            self.fields['credit_account'].queryset = Account.objects.filter(entity=entity, is_active=True)
             self.fields['currency'].queryset = Currency.objects.filter(is_active=True)
             
             # Store entity for currency comparison
@@ -821,13 +872,13 @@ class BankPaymentLineForm(ModelForm):
     main_account = forms.ModelChoiceField(
         queryset=Account.objects.none(),
         required=False,
-        empty_label='-- Select Main Account --',
+        empty_label='-- Select Debit Account --',
         widget=forms.Select(attrs={
             'class': 'form-control select2',
-            'data-placeholder': 'Select Main Account',
+            'data-placeholder': 'Select Debit Account',
             'id': 'id_main_account',
         }),
-        label='Main Account'
+        label='Debit Account'
     )
     
     main_credit_account = forms.ModelChoiceField(
@@ -840,6 +891,34 @@ class BankPaymentLineForm(ModelForm):
             'id': 'id_main_credit_account',
         }),
         label='Main Credit Account'
+    )
+    
+    # Sub-account (debit) field - showing all accounts
+    account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        required=True,
+        empty_label='-- Select Sub-Account (Debit) --',
+        widget=forms.Select(attrs={
+            'class': 'form-control select2',
+            'data-placeholder': 'Select Debit Account (Bank Being Paid FROM)',
+            'id': 'id_account',
+        }),
+        label='🏦 DEBIT Account (Bank Account Being Paid FROM)',
+        help_text='Select the bank account being debited'
+    )
+    
+    # Sub-account (credit) field - showing all accounts
+    credit_account = forms.ModelChoiceField(
+        queryset=Account.objects.none(),
+        required=True,
+        empty_label='-- Select Sub-Account (Credit) --',
+        widget=forms.Select(attrs={
+            'class': 'form-control select2',
+            'data-placeholder': 'Select Credit Account (Expense Being Paid)',
+            'id': 'id_credit_account',
+        }),
+        label='💰 CREDIT Account (Expense/Vendor Being Paid)',
+        help_text='Select the expense or vendor account being credited'
     )
     
     # Exchange rate field for currency conversion
@@ -895,16 +974,6 @@ class BankPaymentLineForm(ModelForm):
                 'type': 'date',
                 'class': 'form-control',
             }),
-            'account': forms.Select(attrs={
-                'class': 'form-control select2',
-                'data-placeholder': 'Select Sub-Account',
-                'id': 'id_account',
-            }),
-            'credit_account': forms.Select(attrs={
-                'class': 'form-control select2',
-                'data-placeholder': 'Select Sub-Credit Account',
-                'id': 'id_credit_account',
-            }),
             'currency': forms.Select(attrs={
                 'class': 'form-control select2',
                 'data-placeholder': 'Select Currency',
@@ -948,8 +1017,6 @@ class BankPaymentLineForm(ModelForm):
         }
         labels = {
             'date': 'Payment Date',
-            'account': 'Sub-Account (Debit)',
-            'credit_account': 'Sub-Account (Credit)',
             'currency': 'Currency',
             'payment_purpose': 'Payment Purpose',
             'stakeholder': 'Stakeholder (for Capital Withdrawal/Profit Distribution)',
@@ -1027,3 +1094,21 @@ class BankPaymentLineForm(ModelForm):
                 cleaned_data['converted_credit_amount'] = credit_amount
         
         return cleaned_data
+
+    def save(self, commit=True):
+        """Override save to ensure debit and credit accounts are saved correctly."""
+        instance = super().save(commit=False)
+        
+        # Explicitly ensure accounts are assigned to correct fields
+        # account field = debit account (the account being debited)
+        # credit_account field = credit account (the account being credited)
+        account_value = self.cleaned_data.get('account')
+        credit_account_value = self.cleaned_data.get('credit_account')
+        
+        instance.account = account_value  # Must be the DEBIT account
+        instance.credit_account = credit_account_value  # Must be the CREDIT account
+        
+        if commit:
+            instance.save()
+        
+        return instance

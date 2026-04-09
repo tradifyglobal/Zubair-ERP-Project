@@ -71,7 +71,7 @@
                                     {% if form.main_account.errors %}
                                         <div class="invalid-feedback d-block">{{ form.main_account.errors }}</div>
                                     {% endif %}
-                                    <small class="form-text text-muted">Select a main account first</small>
+                                    <small class="form-text text-muted d-block mt-2">{{ form.main_account.help_text }}</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -81,7 +81,7 @@
                                     {% if form.account.errors %}
                                         <div class="invalid-feedback d-block">{{ form.account.errors }}</div>
                                     {% endif %}
-                                    <small class="form-text text-muted" id="sub_account_hint">Select a main account to populate sub-accounts</small>
+                                    <small class="form-text text-muted d-block mt-2" id="sub_account_hint">Select a main account first to see all sub-accounts with hierarchy</small>
                                 </div>
                             </div>
                         </div>
@@ -94,6 +94,7 @@
                                     {% if form.main_credit_account.errors %}
                                         <div class="invalid-feedback d-block">{{ form.main_credit_account.errors }}</div>
                                     {% endif %}
+                                    <small class="form-text text-muted d-block mt-2">{{ form.main_credit_account.help_text }}</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -103,6 +104,7 @@
                                     {% if form.credit_account.errors %}
                                         <div class="invalid-feedback d-block">{{ form.credit_account.errors }}</div>
                                     {% endif %}
+                                    <small class="form-text text-muted d-block mt-2">{{ form.credit_account.help_text }}</small>
                                 </div>
                             </div>
                         </div>
@@ -432,7 +434,7 @@
         
         console.log('Entity ID:', entityId);
 
-        // Helper function to populate sub-accounts dropdown
+        // Helper function to populate sub-accounts dropdown with enhanced grouping and visibility
         function populateSubAccounts(mainAccountId, subAccountSelect, hintElement, currentValue = null) {
             if (!mainAccountId) {
                 subAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
@@ -448,47 +450,59 @@
                 return;
             }
 
-            // Fetch sub-accounts for selected main account
+            // Fetch sub-accounts for selected main account with enhanced grouping
             const apiUrl = `/accounting/api/get-sub-accounts/?main_account_id=${mainAccountId}&entity_id=${entityId}`;
-            console.log('Fetching sub-accounts from:', apiUrl);
+            console.log('Fetching enhanced sub-accounts from:', apiUrl);
             
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Sub-accounts response:', data);
+                    console.log('Enhanced sub-accounts response:', data);
                     if (data.success) {
-                        // Clear and populate sub-accounts dropdown
+                        // Clear dropdown and start fresh
                         subAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
                         
-                        if (data.main_account_fallback) {
-                            // No sub-accounts exist, show main account as option
-                            subAccountSelect.innerHTML = '<option value="">-- Select Account --</option>';
-                        }
-                        
-                        if (data.sub_accounts && data.sub_accounts.length > 0) {
-                            data.sub_accounts.forEach(account => {
-                                const option = document.createElement('option');
-                                option.value = account.id;
-                                option.textContent = `${account.account_number} - ${account.name}`;
+                        // Create optgroups for better hierarchy visualization
+                        if (data.grouped_accounts && Object.keys(data.grouped_accounts).length > 0) {
+                            Object.entries(data.grouped_accounts).forEach(([groupName, accounts]) => {
+                                // Create optgroup
+                                const optgroup = document.createElement('optgroup');
+                                optgroup.label = `📊 ${groupName}`;
                                 
-                                // Pre-select if editing and this was the original value
-                                if (currentValue && account.id == currentValue) {
-                                    option.selected = true;
-                                }
+                                // Add accounts to the optgroup
+                                accounts.forEach(account => {
+                                    const option = document.createElement('option');
+                                    option.value = account.id;
+                                    
+                                    // Enhanced display with visual indicators
+                                    const displayText = account.is_parent ? 
+                                        `📁 ${account.account_number} - ${account.name}` :
+                                        `   ├─ ${account.account_number} - ${account.name}`;
+                                    
+                                    option.textContent = displayText;
+                                    
+                                    // Pre-select if editing and this was the original value
+                                    if (currentValue && account.id == currentValue) {
+                                        option.selected = true;
+                                    }
+                                    
+                                    optgroup.appendChild(option);
+                                });
                                 
-                                subAccountSelect.appendChild(option);
+                                subAccountSelect.appendChild(optgroup);
                             });
                             
                             // Auto-select if only one option (main account fallback)
-                            if (data.main_account_fallback && data.sub_accounts.length === 1 && !currentValue) {
-                                subAccountSelect.value = data.sub_accounts[0].id;
+                            if (data.main_account_fallback && data.accounts.length === 1 && !currentValue) {
+                                subAccountSelect.value = data.accounts[0].id;
                             }
                             
                             subAccountSelect.disabled = false;
                             if (hintElement) {
+                                const accountWord = data.count === 1 ? 'account' : 'accounts';
                                 const message = data.main_account_fallback ? 
-                                    'Main account selected (no sub-accounts available)' :
-                                    `${data.sub_accounts.length} sub-account(s) available`;
+                                    `✓ ${data.main_account.account_number} - ${data.main_account.name} (no sub-accounts)` :
+                                    `✓ ${data.count} ${accountWord} available under ${data.main_account.account_number}`;
                                 hintElement.textContent = message;
                                 hintElement.classList.remove('text-muted', 'text-warning', 'text-danger');
                                 hintElement.classList.add('text-success');
@@ -496,19 +510,22 @@
                         } else {
                             subAccountSelect.disabled = true;
                             if (hintElement) {
-                                hintElement.textContent = 'No accounts found';
+                                hintElement.textContent = 'No accounts found for this main account';
                                 hintElement.classList.remove('text-muted', 'text-success', 'text-danger');
                                 hintElement.classList.add('text-warning');
                             }
                         }
                         
-                        // Reinitialize Select2 if it exists
+                        // Reinitialize Select2 if it exists for better dropdown styling
                         if (typeof $ !== 'undefined' && $.fn.select2) {
-                            $(subAccountSelect).select2();
+                            $(subAccountSelect).select2({
+                                width: '100%',
+                                allowClear: false
+                            });
                         }
                     } else {
                         if (hintElement) {
-                            hintElement.textContent = 'Error loading sub-accounts';
+                            hintElement.textContent = `Error: ${data.message || 'Unable to load accounts'}`;
                             hintElement.classList.remove('text-muted', 'text-success', 'text-warning');
                             hintElement.classList.add('text-danger');
                         }
@@ -517,7 +534,7 @@
                 .catch(error => {
                     console.error('Error fetching sub-accounts:', error);
                     if (hintElement) {
-                        hintElement.textContent = 'Error loading sub-accounts';
+                        hintElement.textContent = 'Error loading sub-accounts. Please try again.';
                         hintElement.classList.remove('text-muted', 'text-success', 'text-warning');
                         hintElement.classList.add('text-danger');
                     }
@@ -545,7 +562,7 @@
             });
         }
 
-        // Cascading dropdown for credit accounts
+        // Cascading dropdown for credit accounts with enhanced visibility
         const mainCreditAccountSelect = document.getElementById('id_main_credit_account');
         const subCreditAccountSelect = document.getElementById('id_credit_account');
 
@@ -556,26 +573,53 @@
                 if (!mainAccountId) {
                     // Clear sub-accounts dropdown
                     subCreditAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
+                    subCreditAccountSelect.disabled = true;
                     return;
                 }
 
-                // Fetch sub-accounts for selected main account
+                // Fetch sub-accounts for selected main account with enhanced grouping
                 fetch(`/accounting/api/get-sub-accounts/?main_account_id=${mainAccountId}&entity_id=${entityId}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Clear and populate sub-accounts dropdown
+                            // Clear dropdown and start fresh
                             subCreditAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                            data.sub_accounts.forEach(account => {
-                                const option = document.createElement('option');
-                                option.value = account.id;
-                                option.textContent = `${account.account_number} - ${account.name}`;
-                                subCreditAccountSelect.appendChild(option);
-                            });
                             
-                            // Reinitialize Select2 if it exists
+                            // Create optgroups for better hierarchy visualization
+                            if (data.grouped_accounts && Object.keys(data.grouped_accounts).length > 0) {
+                                Object.entries(data.grouped_accounts).forEach(([groupName, accounts]) => {
+                                    // Create optgroup
+                                    const optgroup = document.createElement('optgroup');
+                                    optgroup.label = `📊 ${groupName}`;
+                                    
+                                    // Add accounts to the optgroup
+                                    accounts.forEach(account => {
+                                        const option = document.createElement('option');
+                                        option.value = account.id;
+                                        
+                                        // Enhanced display with visual indicators
+                                        const displayText = account.is_parent ? 
+                                            `📁 ${account.account_number} - ${account.name}` :
+                                            `   ├─ ${account.account_number} - ${account.name}`;
+                                        
+                                        option.textContent = displayText;
+                                        optgroup.appendChild(option);
+                                    });
+                                    
+                                    subCreditAccountSelect.appendChild(optgroup);
+                                });
+                                
+                                subCreditAccountSelect.disabled = false;
+                            } else {
+                                subCreditAccountSelect.disabled = true;
+                            }
+                            
+                            // Reinitialize Select2 if it exists for better dropdown styling
                             if (typeof $ !== 'undefined' && $.fn.select2) {
-                                $(subCreditAccountSelect).select2();
+                                $(subCreditAccountSelect).select2({
+                                    width: '100%',
+                                    allowClear: false
+                                });
                             }
                         }
                     })
