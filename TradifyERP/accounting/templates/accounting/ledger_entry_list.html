@@ -147,40 +147,67 @@
                                             <th>Account</th>
                                             <th>Account #</th>
                                             <th>Type</th>
+                                            <th>Debit</th>
+                                            <th>Credit</th>
+                                            <th>Balance</th>
+                                            <th>JV Entry</th>
                                             <th>Currency Info</th>
-                                            <th>Amount</th>
                                             <th>Reference</th>
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for entry in entries %}
+                                        {% for item in entries %}
                                         <tr>
                                             <td>
-                                                <small>{{ entry.entry_date|date:"d M Y" }}</small>
+                                                <small>{{ item.entry.entry_date|date:"d M Y" }}</small>
                                             </td>
                                             <td>
-                                                <a href="{% url 'accounting:account_detail' entry.account.id %}">
-                                                    {{ entry.account.name }}
+                                                <a href="{% url 'accounting:account_detail' item.entry.account.id %}">
+                                                    {{ item.entry.account.name }}
                                                 </a>
                                             </td>
                                             <td>
-                                                <strong>{{ entry.account.account_number }}</strong>
+                                                <strong>{{ item.entry.account.account_number }}</strong>
                                             </td>
                                             <td>
-                                                {% if entry.entry_type == 'DEBIT' %}
+                                                {% if item.entry.entry_type == 'DEBIT' %}
                                                     <span class="badge bg-danger-subtle text-danger">DEBIT</span>
                                                 {% else %}
                                                     <span class="badge bg-success-subtle text-success">CREDIT</span>
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if entry.account.entity %}
+                                                {% if item.debit_amount > 0 %}
+                                                    <strong>{{ item.debit_amount|floatformat:2 }}</strong>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.credit_amount > 0 %}
+                                                    <strong>{{ item.credit_amount|floatformat:2 }}</strong>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong>{{ item.running_balance|floatformat:2 }}</strong>
+                                            </td>
+                                            <td>
+                                                {% if item.entry.reference_number and item.entry.reference_number|slice:"0:3" == "JV-" %}
+                                                    <small>JV-{{ item.entry.id }}</small>
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.entry.account.entity %}
                                                     <div class="small">
                                                         <strong>Entity:</strong> 
-                                                        {% if entry.account.entity.company_currency %}
-                                                            {{ entry.account.entity.company_currency.code }}
+                                                        {% if item.entry.account.entity.company_currency %}
+                                                            {{ item.entry.account.entity.company_currency.code }}
                                                         {% else %}
                                                             <span class="text-muted">Not Set</span>
                                                         {% endif %}
@@ -191,39 +218,31 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <div>
-                                                    <strong>{{ entry.amount }}</strong>
-                                                    {% if entry.account.entity.company_currency %}
-                                                        <br><small class="text-muted">{{ entry.account.entity.company_currency.code }}</small>
-                                                    {% endif %}
-                                                </div>
+                                                {{ item.entry.reference_number|default:"—" }}
                                             </td>
                                             <td>
-                                                {{ entry.reference_number|default:"—" }}
-                                            </td>
-                                            <td>
-                                                {% if entry.workflow_status == 'AUTHORIZED' %}
+                                                {% if item.entry.workflow_status == 'AUTHORIZED' %}
                                                     <span class="badge bg-success">Authorized</span>
-                                                {% elif entry.workflow_status == 'APPROVED' %}
+                                                {% elif item.entry.workflow_status == 'APPROVED' %}
                                                     <span class="badge bg-info">Approved</span>
-                                                {% elif entry.workflow_status == 'PENDING_APPROVAL' %}
+                                                {% elif item.entry.workflow_status == 'PENDING_APPROVAL' %}
                                                     <span class="badge bg-warning">Pending</span>
-                                                {% elif entry.workflow_status == 'REJECTED' %}
+                                                {% elif item.entry.workflow_status == 'REJECTED' %}
                                                     <span class="badge bg-danger">Rejected</span>
                                                 {% else %}
-                                                    <span class="badge bg-secondary">{{ entry.workflow_status|default:"Draft" }}</span>
+                                                    <span class="badge bg-secondary">{{ item.entry.workflow_status|default:"Draft" }}</span>
                                                 {% endif %}
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <a href="{% url 'accounting:ledger_entry_detail' entry.id %}" class="btn btn-sm btn-info" title="View Entry">
+                                                    <a href="{% url 'accounting:ledger_entry_detail' item.entry.id %}" class="btn btn-sm btn-info" title="View Entry">
                                                         <i class="mdi mdi-eye"></i>
                                                     </a>
-                                                    <a href="{% url 'accounting:ledger_entry_print' entry.id %}" class="btn btn-sm btn-secondary" title="Print Entry" target="_blank">
+                                                    <a href="{% url 'accounting:ledger_entry_print' item.entry.id %}" class="btn btn-sm btn-secondary" title="Print Entry" target="_blank">
                                                         <i class="mdi mdi-printer"></i>
                                                     </a>
-                                                    {% if entry.workflow_status != 'AUTHORIZED' %}
-                                                    <a href="{% url 'accounting:ledger_entry_edit_workflow' entry.id %}" class="btn btn-sm btn-warning" title="Edit Workflow">
+                                                    {% if item.entry.workflow_status != 'AUTHORIZED' %}
+                                                    <a href="{% url 'accounting:ledger_entry_edit_workflow' item.entry.id %}" class="btn btn-sm btn-warning" title="Edit Workflow">
                                                         <i class="mdi mdi-pencil"></i>
                                                     </a>
                                                     {% endif %}
