@@ -176,7 +176,7 @@ class LiquidityForecastLineInline(admin.TabularInline):
 class LiquidityForecastAdmin(admin.ModelAdmin):
     list_display = (
         'entity', 'period_display', 'forecasted_balance_display', 
-        'risk_level_badge', 'confidence_level'
+        'risk_level_badge'
     )
     list_filter = ('entity', 'risk_level', 'forecast_start_date', 'created_at')
     search_fields = ('entity__name',)

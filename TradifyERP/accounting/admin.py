@@ -580,8 +580,8 @@ class JournalVoucherLineInline(admin.TabularInline):
     """Inline admin for Journal Voucher Lines"""
     model = JournalVoucherLine
     extra = 1
-    fields = ('line_number', 'account', 'sub_account', 'entry_type', 'amount', 'description', 'cost_center', 'project', 'department')
-    raw_id_fields = ('account', 'sub_account')
+    fields = ('line_number', 'account', 'entry_type', 'amount', 'description', 'cost_center', 'project', 'department')
+    raw_id_fields = ('account',)
     
     def get_queryset(self, request):
         """Order lines by line number"""
@@ -634,7 +634,7 @@ class JournalVoucherLineAdmin(admin.ModelAdmin):
     list_filter = ('entry_type', 'voucher__entity', 'voucher__voucher_date')
     search_fields = ('voucher__voucher_number', 'description', 'account__name')
     readonly_fields = ('voucher', 'created_at', 'updated_at')
-    raw_id_fields = ('account', 'sub_account')
+    raw_id_fields = ('account',)
     
     fieldsets = (
         ('Voucher & Line', {
