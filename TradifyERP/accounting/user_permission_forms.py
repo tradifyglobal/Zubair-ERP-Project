@@ -80,16 +80,26 @@ class UserCreateFormWithPermissions(UserCreationForm):
         }
     
     def clean_username(self):
-        """Allow duplicate usernames across entities by appending entity suffix if needed."""
+        """Check username uniqueness within current entity only."""
         username = self.cleaned_data.get('username')
+        entity = self.entity if hasattr(self, 'entity') else None
         
-        # Check if username already exists
-        if User.objects.filter(username=username).exists():
-            # Suggest an alternative username
-            raise forms.ValidationError(
-                f'Username "{username}" already exists. Please try "{username}_v2" or another variation. '
-                'Users can have different login names per entity.'
-            )
+        if not username:
+            return username
+        
+        # Check if username exists for THIS ENTITY only
+        if entity:
+            from accounting.models import UserEntity
+            existing_in_entity = UserEntity.objects.filter(
+                entity=entity,
+                user__username=username
+            ).exists()
+            
+            if existing_in_entity:
+                raise forms.ValidationError(
+                    f'Username "{username}" is already used by another user in {entity.name}. '
+                    f'However, you can use this username in a different entity.'
+                )
         
         return username
     
@@ -102,8 +112,9 @@ class UserCreateFormWithPermissions(UserCreationForm):
             user.save()
         return user
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, entity=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.entity = entity
         self.fields['password1'].widget.attrs['class'] = 'form-control'
         self.fields['password2'].widget.attrs['class'] = 'form-control'
 
@@ -160,6 +171,34 @@ class UserEditFormWithPermissions(UserChangeForm):
         if commit:
             user.save()
         return user
+    
+    def clean_username(self):
+        """Check username uniqueness within current entity only (excluding self)."""
+        username = self.cleaned_data.get('username')
+        entity = self.entity if hasattr(self, 'entity') else None
+        
+        if not username:
+            return username
+        
+        # Check if username exists for THIS ENTITY only (excluding the current user)
+        if entity:
+            from accounting.models import UserEntity
+            existing_in_entity = UserEntity.objects.filter(
+                entity=entity,
+                user__username=username
+            ).exclude(user=self.instance).exists()
+            
+            if existing_in_entity:
+                raise forms.ValidationError(
+                    f'Username "{username}" is already used by another user in {entity.name}. '
+                    f'However, you can use this username in a different entity.'
+                )
+        
+        return username
+    
+    def __init__(self, *args, entity=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.entity = entity
 
 
 class BulkModulePermissionForm(forms.Form):

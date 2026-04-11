@@ -123,8 +123,30 @@ class UserCreateView(AdminRequiredMixin, CreateView):
     template_name = 'accounting/user_management/user_create.html'
     success_url = reverse_lazy('accounting:user_list')
     
+    def get_form_kwargs(self):
+        """Pass entity to form for validating username uniqueness per entity."""
+        kwargs = super().get_form_kwargs()
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            from accounting.models import Entity
+            try:
+                entity = Entity.objects.get(id=entity_id)
+                kwargs['entity'] = entity
+            except Entity.DoesNotExist:
+                pass
+        return kwargs
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Add entity info to context
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            from accounting.models import Entity
+            try:
+                context['current_entity'] = Entity.objects.get(id=entity_id)
+            except Entity.DoesNotExist:
+                pass
         
         # Add permission form
         if self.request.POST:
@@ -188,6 +210,19 @@ class UserEditView(AdminRequiredMixin, UpdateView):
     template_name = 'accounting/user_management/user_edit.html'
     success_url = reverse_lazy('accounting:user_list')
     context_object_name = 'edited_user'
+    
+    def get_form_kwargs(self):
+        """Pass entity to form for validating username uniqueness per entity."""
+        kwargs = super().get_form_kwargs()
+        entity_id = self.request.session.get('selected_entity_id')
+        if entity_id:
+            from accounting.models import Entity
+            try:
+                entity = Entity.objects.get(id=entity_id)
+                kwargs['entity'] = entity
+            except Entity.DoesNotExist:
+                pass
+        return kwargs
     
     @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True, max_age=0))
     def dispatch(self, *args, **kwargs):
