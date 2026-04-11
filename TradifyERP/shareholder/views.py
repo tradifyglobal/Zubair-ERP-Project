@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from accounting.models import Stakeholder, CapitalContribution, Shareholding, Entity, ShareholderInvestmentLimit, InternationalTransferTracking, LedgerEntry, Account, ShareholderPaymentCommitment
 from accounting.stakeholder_forms import StakeholderForm, CapitalContributionForm, ShareholdingForm
-from accounting.mixins import SessionEntityMixin
+from accounting.mixins import SessionEntityMixin, ReportAccessMixin
 from shareholder.import_export import (
     export_shareholders_csv, export_shareholders_excel,
     import_shareholders_csv, import_shareholders_excel,
@@ -19,9 +19,10 @@ from shareholder.notifications import get_all_pending_for_user
 
 # ==================== Shareholder Dashboard ====================
 
-class ShareholderDashboardView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+class ShareholderDashboardView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'shareholder/dashboard.html'
     permission_required = 'accounting.view_stakeholder'
+    report_type = 'shareholder_dashboard'  # For ReportAccessMixin
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -802,10 +803,11 @@ from accounting.models import ShareholderInvestmentLimit, ShareholderPaymentComm
 from shareholder.forms import ShareholderInvestmentLimitForm, ShareholderPaymentCommitmentForm
 
 
-class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+class ShareholderInvestmentReportView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     """Report showing investment status for all shareholders."""
     template_name = 'shareholder/investment_report.html'
     permission_required = 'accounting.view_stakeholder'
+    report_type = 'shareholder_investment'  # For ReportAccessMixin
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

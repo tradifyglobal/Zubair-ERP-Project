@@ -1,0 +1,31 @@
+{% comment %}
+Report Access Control Template Partial
+
+Usage in your report templates:
+    {% include 'partials/report_access_notice.html' %}
+
+Variables passed by ReportAccessMixin:
+- report_access_level: 'view_only', 'edit', or 'full_access'
+- can_view: True/False
+- can_edit: True/False  
+- can_export: True/False
+{% endcomment %}
+
+{% if report_access_level == 'view_only' %}
+<div class="alert alert-info" role="alert">
+    <i class="ri-eye-line me-2"></i>
+    <strong>View Only Access:</strong> You have read-only access to this report.
+    {% if can_export %}
+    You can view and export data.
+    {% else %}
+    You cannot edit or export data.
+    {% endif %}
+</div>
+{% endif %}
+
+{% if not can_view %}
+<div class="alert alert-danger" role="alert">
+    <i class="ri-forbid-line me-2"></i>
+    <strong>Access Denied:</strong> You don't have permission to view this report.
+</div>
+{% endif %}

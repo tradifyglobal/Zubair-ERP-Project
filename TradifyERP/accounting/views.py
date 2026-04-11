@@ -17,7 +17,7 @@ from .models import (
     DeferredExpense, DeferredRevenue, PeriodLock,
     CapitalContribution, InternationalTransferTracking
 )
-from .mixins import SessionEntityMixin
+from .mixins import SessionEntityMixin, ReportAccessMixin
 from .forms import DoubleEntryJournalForm, SimpleLedgerEntryForm, QuickAddCustomerForm, QuickAddVendorForm, QuickAddVendorPaymentForm, QuickAddVendorInvoiceForm, QuickAddBankProfileForm, FixedAssetForm
 from .permission_utils import get_user_accessible_entities
 # from .trial_balance import calculate_trial_balance, get_trial_balance_details
@@ -72,9 +72,10 @@ class PermissionRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return redirect('accounting:dashboard')
 
 
-class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
+class DashboardView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, TemplateView):
     """General Ledger Dashboard - overview of accounting data."""
     template_name = 'accounting/dashboard.html'
+    report_type = 'accounting_dashboard'  # For ReportAccessMixin
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -552,12 +553,13 @@ class GLDashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
         return context
 
 
-class AccountListView(SessionEntityMixin, LoginRequiredMixin, ListView):
+class AccountListView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, ListView):
     """List all accounts with hierarchical display."""
     model = Account
     template_name = 'accounting/account_list.html'
     context_object_name = 'accounts'
     paginate_by = None
+    report_type = 'accounts'  # For ReportAccessMixin
 
     def get_queryset(self):
         # Use the mixin's filtering which applies entity filter automatically
@@ -1047,12 +1049,13 @@ class LedgerEntryEditWorkflowView(SessionEntityMixin, LoginRequiredMixin, Update
         return redirect(self.get_success_url())
 
 
-class TrialBalanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
+class TrialBalanceListView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, ListView):
     """List trial balances."""
     model = TrialBalance
     template_name = 'accounting/trial_balance_list.html'
     context_object_name = 'trial_balances'
     paginate_by = 20
+    report_type = 'trial_balance'  # For ReportAccessMixin
 
     def dispatch(self, request, *args, **kwargs):
         """Add no-cache headers to ensure page always syncs with latest data."""
@@ -1105,9 +1108,10 @@ class TrialBalanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
         return context
 
 
-class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
+class ProfitLossListView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, ListView):
     """List P&L reports."""
     model = ProfitLossReport
+    report_type = 'profit_loss'  # For ReportAccessMixin
     template_name = 'accounting/profit_loss_list.html'
     context_object_name = 'reports'
     paginate_by = 20
@@ -1241,12 +1245,13 @@ class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
         }
 
 
-class BalanceSheetListView(SessionEntityMixin, LoginRequiredMixin, ListView):
+class BalanceSheetListView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, ListView):
     """List balance sheets."""
     model = BalanceSheet
     template_name = 'accounting/balance_sheet_list.html'
     context_object_name = 'balance_sheets'
     paginate_by = 20
+    report_type = 'balance_sheet'  # For ReportAccessMixin
 
     def dispatch(self, request, *args, **kwargs):
         """Add no-cache headers to ensure page always syncs with latest data."""
