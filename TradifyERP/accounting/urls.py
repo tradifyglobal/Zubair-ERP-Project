@@ -22,7 +22,6 @@ from .views import (
     QuickAddLedgerEntryView, QuickAddCustomerView, QuickAddVendorView, QuickAddAccountView, QuickAddVendorInvoiceView,
     QuickAddVendorPaymentView, QuickAddFixedAssetView, QuickAddCashTransactionView, QuickAddBankProfileView,
     QuickAddTaxRateView, QuickAddDeferredExpenseView, QuickAddDeferredRevenueView, QuickAddReconciliationRecordView,
-    GetAccountShareholderAPIView,
 )
 from .cash_views import (
     CashReceiptCreateView, CashReceiptListView, CashReceiptDetailView, CashReceiptPrintView,
@@ -150,9 +149,6 @@ urlpatterns = [
     path('quick-add-balance-sheet/', QuickAddBalanceSheetView.as_view(), name='quick_add_balance_sheet'),
     path('quick-add-reconciliation-entry/', QuickAddReconciliationEntryView.as_view(), name='quick_add_reconciliation_entry'),
     path('quick-add-reconciliation-match/', QuickAddReconciliationMatchView.as_view(), name='quick_add_reconciliation_match'),
-    
-    # API Endpoints
-    path('api/account-shareholder/', GetAccountShareholderAPIView.as_view(), name='api_account_shareholder'),
     
     # Financial Reports
     path('trial-balances/', TrialBalanceListView.as_view(), name='trial_balance_list'),

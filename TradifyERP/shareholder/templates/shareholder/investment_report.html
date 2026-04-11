@@ -90,7 +90,12 @@
                                     <td>
                                         {% if investment.pending_in_foreign_bank and investment.pending_in_foreign_bank > 0 %}
                                             <span class="badge bg-info">
-                                                ₹ {{ investment.pending_in_foreign_bank|floatformat:2 }}
+                                                {% if investment.currency %}
+                                                    {{ investment.currency.symbol }}
+                                                {% else %}
+                                                    ₹
+                                                {% endif %}
+                                                {{ investment.pending_in_foreign_bank|floatformat:2 }}
                                             </span>
                                         {% else %}
                                             <span class="text-muted">—</span>

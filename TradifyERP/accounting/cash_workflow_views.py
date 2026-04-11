@@ -139,13 +139,32 @@ class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                 )
                 
                 # Create CREDIT entry to the source account (capital/revenue)
-                # Default to 100001 if not specified, but user should select a source account
                 source_account = receipt.credit_account
                 if not source_account:
-                    source_account = Account.objects.get(
-                        entity=request.entity,
-                        account_number='100001'  # Default to cash if nothing selected
-                    )
+                    # Try to find a capital account as fallback
+                    source_account = None
+                    
+                    # Try standard capital/equity account numbers in order
+                    for account_num in ['70601', '70600', '7000', '700']:
+                        source_account = Account.objects.filter(
+                            entity=request.entity,
+                            account_number=account_num
+                        ).first()
+                        if source_account:
+                            break
+                    
+                    # If no capital account, try to find any equity account
+                    if not source_account:
+                        source_account = Account.objects.filter(
+                            entity=request.entity,
+                            account_number__startswith='7'  # Equity accounts
+                        ).order_by('account_number').first()
+                    
+                    # If still nothing, raise error
+                    if not source_account:
+                        raise Account.DoesNotExist(
+                            'No suitable capital/source account found. Please select a source account (capital/revenue) for this receipt.'
+                        )
                 
                 LedgerEntry.objects.create(
                     entity=request.entity,
@@ -176,8 +195,8 @@ class CashReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                 )
                 
                 messages.success(request, 'Cash receipt authorized and posted to GL!')
-            except Account.DoesNotExist:
-                messages.error(request, 'Cash account (100001) not found in system!')
+            except Account.DoesNotExist as e:
+                messages.error(request, str(e) if str(e) != 'Account matching query does not exist.' else 'Capital account not found in system!')
             except Exception as e:
                 messages.error(request, f'Error authorizing receipt: {str(e)}')
         
@@ -254,14 +273,34 @@ class CashPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
         
         with transaction.atomic():
             try:
-                # Use provided credit_account or fallback to cash account 100001
+                # Use provided credit_account or find suitable fallback
                 if payment.credit_account:
                     cash_account = payment.credit_account
                 else:
-                    cash_account = Account.objects.get(
-                        entity=request.entity,
-                        account_number='100001'  # Cash account
-                    )
+                    # Try to find a cash account (100001 or 10101 style accounts)
+                    cash_account = None
+                    
+                    # Try standard cash account numbers in order
+                    for account_num in ['100001', '10101', '1110', '100']:
+                        cash_account = Account.objects.filter(
+                            entity=request.entity,
+                            account_number=account_num
+                        ).first()
+                        if cash_account:
+                            break
+                    
+                    # If still no cash account, get any account from Asset class
+                    if not cash_account:
+                        cash_account = Account.objects.filter(
+                            entity=request.entity,
+                            account_number__startswith='1'  # Asset accounts
+                        ).order_by('account_number').first()
+                    
+                    # If still nothing, raise error
+                    if not cash_account:
+                        raise Account.DoesNotExist(
+                            'No suitable cash/bank account found. Please select a credit account for this payment.'
+                        )
                 
                 # Create DEBIT entry to expense/capital account (expense/withdrawal increases)
                 LedgerEntry.objects.create(
@@ -304,8 +343,8 @@ class CashPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                 )
                 
                 messages.success(request, 'Cash payment authorized and posted to GL!')
-            except Account.DoesNotExist:
-                messages.error(request, 'Cash account (100001) not found in system!')
+            except Account.DoesNotExist as e:
+                messages.error(request, str(e) if str(e) != 'Account matching query does not exist.' else 'Cash account not found in system!')
             except Exception as e:
                 messages.error(request, f'Error authorizing payment: {str(e)}')
         
@@ -383,14 +422,34 @@ class BankReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
         
         with transaction.atomic():
             try:
-                # Use provided credit_account or fallback to cash account 100001
+                # Use provided credit_account or find suitable fallback
                 if receipt.credit_account:
                     bank_account = receipt.credit_account
                 else:
-                    bank_account = Account.objects.get(
-                        entity=request.entity,
-                        account_number='100001'  # Cash account
-                    )
+                    # Try to find a cash account (100001 or 10101 style accounts)
+                    bank_account = None
+                    
+                    # Try standard cash account numbers in order
+                    for account_num in ['100001', '10101', '1110', '100']:
+                        bank_account = Account.objects.filter(
+                            entity=request.entity,
+                            account_number=account_num
+                        ).first()
+                        if bank_account:
+                            break
+                    
+                    # If still no bank account, get any account from Asset class
+                    if not bank_account:
+                        bank_account = Account.objects.filter(
+                            entity=request.entity,
+                            account_number__startswith='1'  # Asset accounts
+                        ).order_by('account_number').first()
+                    
+                    # If still nothing, raise error
+                    if not bank_account:
+                        raise Account.DoesNotExist(
+                            'No suitable bank/cash account found. Please select a credit account for this receipt.'
+                        )
                 
                 # Create debit entry
                 LedgerEntry.objects.create(
@@ -433,8 +492,8 @@ class BankReceiptAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                 )
                 
                 messages.success(request, 'Bank receipt authorized and posted to GL!')
-            except Account.DoesNotExist:
-                messages.error(request, 'Bank account (1000) not found in system!')
+            except Account.DoesNotExist as e:
+                messages.error(request, str(e) if str(e) != 'Account matching query does not exist.' else 'Bank account not found in system!')
             except Exception as e:
                 messages.error(request, f'Error authorizing receipt: {str(e)}')
         
@@ -511,19 +570,16 @@ class BankPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
         
         with transaction.atomic():
             try:
-                # Use provided credit_account or fallback to cash account 100001
-                if payment.credit_account:
-                    bank_account = payment.credit_account
-                else:
-                    bank_account = Account.objects.get(
-                        entity=request.entity,
-                        account_number='100001'  # Cash account
-                    )
+                # Use provided account as debit (expense/bank being paid from)
+                # Use provided credit_account as credit (bank/asset account)
+                if not payment.account:
+                    messages.error(request, 'Payment account (debit account) is required')
+                    return redirect('accounting:bank_payment_list')
                 
-                # Create debit entry
+                # Create DEBIT entry to expense/purchase account (expense increases)
                 LedgerEntry.objects.create(
                     entity=request.entity,
-                    account=bank_account,
+                    account=payment.account,  # DEBIT account = expense/purchase
                     entry_type='DEBIT',
                     amount=payment.debit_amount,
                     description=f"Bank Payment: {payment.description}",
@@ -533,10 +589,38 @@ class BankPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                     workflow_status='AUTHORIZED'
                 )
                 
-                # Create credit entry
+                # Create CREDIT entry to bank account (asset decreases)
+                if payment.credit_account:
+                    bank_account = payment.credit_account
+                else:
+                    # Try to find a bank account (100001 or 13020 style accounts)
+                    bank_account = None
+                    
+                    # Try standard bank account numbers in order
+                    for account_num in ['100001', '10101', '13020', '1120', '1']:
+                        bank_account = Account.objects.filter(
+                            entity=request.entity,
+                            account_number=account_num
+                        ).first()
+                        if bank_account:
+                            break
+                    
+                    # If still no bank account, get any account from Asset class
+                    if not bank_account:
+                        bank_account = Account.objects.filter(
+                            entity=request.entity,
+                            account_number__startswith='1'  # Asset accounts
+                        ).order_by('account_number').first()
+                    
+                    # If still nothing, raise error
+                    if not bank_account:
+                        raise Account.DoesNotExist(
+                            'No suitable bank/cash account found. Please select a credit account for this payment.'
+                        )
+                
                 LedgerEntry.objects.create(
                     entity=request.entity,
-                    account=payment.account,
+                    account=bank_account,  # CREDIT account = bank/cash account
                     entry_type='CREDIT',
                     amount=payment.credit_amount,
                     description=f"Bank Payment: {payment.description}",
@@ -561,8 +645,8 @@ class BankPaymentAuthorizationView(LoginRequiredMixin, SessionEntityMixin, View)
                 )
                 
                 messages.success(request, 'Bank payment authorized and posted to GL!')
-            except Account.DoesNotExist:
-                messages.error(request, 'Bank account (1000) not found in system!')
+            except Account.DoesNotExist as e:
+                messages.error(request, str(e) if str(e) != 'Account matching query does not exist.' else 'Bank account not found in system!')
             except Exception as e:
                 messages.error(request, f'Error authorizing payment: {str(e)}')
         

@@ -62,7 +62,7 @@
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h3 class="card-title mb-0">Code: 100001</h3>
+                    <h3 class="card-title mb-0">Code: 10101</h3>
                     <small class="text-muted">Cash Account</small>
                 </div>
             </div>
@@ -108,8 +108,8 @@
                         <th>Description</th>
                         <th>Debit</th>
                         <th>Credit</th>
-                        <th>Amount</th>
-                        <th>Workflow Status</th>
+                        <th class="text-center">Amount</th>
+                        <th class="text-center">Workflow Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -119,10 +119,14 @@
                             <td>{{ payment.date|date:"M d, Y" }}</td>
                             <td>{{ payment.description|truncatewords:10 }}</td>
                             <td>
-                                <small>
-                                    <strong>{{ payment.account.account_number }}</strong><br>
-                                    {{ payment.account.name }}
-                                </small>
+                                {% if payment.account %}
+                                    <small>
+                                        <strong>{{ payment.account.account_number }}</strong><br>
+                                        {{ payment.account.name }}
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">—</small>
+                                {% endif %}
                             </td>
                             <td>
                                 <small>
@@ -134,7 +138,7 @@
                                     {% endif %}
                                 </small>
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <div>
                                     <span class="badge bg-info">{{ payment.debit_amount|floatformat:2 }}</span>
                                     {% if payment.currency %}
@@ -142,7 +146,7 @@
                                     {% endif %}
                                 </div>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 {% if payment.workflow_status == 'DRAFT' %}
                                     <span class="badge bg-secondary">Draft</span>
                                 {% elif payment.workflow_status == 'PENDING_APPROVAL' %}

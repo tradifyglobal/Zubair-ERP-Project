@@ -66,10 +66,13 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="id_main_account" class="form-label">{{ form.main_account.label }}</label>
-                                    {{ form.main_account }}
-                                    {% if form.main_account.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.main_account.errors }}</div>
+                                    <label for="id_cash_account" class="form-label">{{ form.cash_account.label }}</label>
+                                    {{ form.cash_account }}
+                                    {% if form.cash_account.help_text %}
+                                        <small class="form-text text-muted d-block">{{ form.cash_account.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.cash_account.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.cash_account.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -85,15 +88,6 @@
                         </div>
 
                         <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_main_credit_account" class="form-label">{{ form.main_credit_account.label }}</label>
-                                    {{ form.main_credit_account }}
-                                    {% if form.main_credit_account.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.main_credit_account.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="id_credit_account" class="form-label">{{ form.credit_account.label }}</label>
@@ -439,87 +433,18 @@
         const mainAccountSelect = document.getElementById('id_main_account');
         const subAccountSelect = document.getElementById('id_account');
 
+        // Cascading dropdown disabled - show all accounts instead of filtered sub-accounts
+        // This allows users to select any account, not just child accounts of the main account
         if (mainAccountSelect) {
-            mainAccountSelect.addEventListener('change', function() {
-                const mainAccountId = this.value;
-                
-                if (!mainAccountId) {
-                    // Clear sub-accounts dropdown
-                    subAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                    return;
-                }
-
-                // Fetch sub-accounts for selected main account
-                fetch(`/accounting/api/get-sub-accounts/?main_account_id=${mainAccountId}&entity_id=${entityId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Clear and populate sub-accounts dropdown
-                            subAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                            
-                            if (data.main_account_fallback) {
-                                // No sub-accounts exist, show main account as option
-                                subAccountSelect.innerHTML = '<option value="">-- Select Account --</option>';
-                            }
-                            
-                            data.sub_accounts.forEach(account => {
-                                const option = document.createElement('option');
-                                option.value = account.id;
-                                option.textContent = `${account.account_number} - ${account.name}`;
-                                subAccountSelect.appendChild(option);
-                            });
-                            
-                            // Auto-select if only one option (main account fallback)
-                            if (data.main_account_fallback && data.sub_accounts.length === 1) {
-                                subAccountSelect.value = data.sub_accounts[0].id;
-                            }
-                            
-                            // Reinitialize Select2 if it exists
-                            if (typeof $ !== 'undefined' && $.fn.select2) {
-                                $(subAccountSelect).select2();
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error fetching sub-accounts:', error));
-            });
+            // Removed cascading logic to show all accounts
         }
 
-        // Cascading dropdown for credit accounts
+        // Cascading dropdown for credit accounts disabled - show all accounts instead
         const mainCreditAccountSelect = document.getElementById('id_main_credit_account');
         const subCreditAccountSelect = document.getElementById('id_credit_account');
 
         if (mainCreditAccountSelect) {
-            mainCreditAccountSelect.addEventListener('change', function() {
-                const mainAccountId = this.value;
-                
-                if (!mainAccountId) {
-                    // Clear sub-accounts dropdown
-                    subCreditAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                    return;
-                }
-
-                // Fetch sub-accounts for selected main account
-                fetch(`/accounting/api/get-sub-accounts/?main_account_id=${mainAccountId}&entity_id=${entityId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Clear and populate sub-accounts dropdown
-                            subCreditAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                            data.sub_accounts.forEach(account => {
-                                const option = document.createElement('option');
-                                option.value = account.id;
-                                option.textContent = `${account.account_number} - ${account.name}`;
-                                subCreditAccountSelect.appendChild(option);
-                            });
-
-                            // Reinitialize Select2 if it exists
-                            if (typeof $ !== 'undefined' && $.fn.select2) {
-                                $(subCreditAccountSelect).select2();
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error fetching sub-accounts:', error));
-            });
+            // Removed cascading logic to show all accounts
         }
     });
 

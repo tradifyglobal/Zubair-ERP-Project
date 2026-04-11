@@ -37,7 +37,7 @@
         <div class="col-12">
             <div class="card card-form-container">
                 <div class="card-body">
-                    <form method="post" class="needs-validation" novalidate>
+                    <form method="post" action="{% url 'accounting:cash_payment_create' %}" class="needs-validation" novalidate>
                         {% csrf_token %}
                         <!-- Hidden field for entity ID to pass to JavaScript -->
                         <input type="hidden" id="entity_id_hidden" value="{{ entity_id }}">
@@ -66,11 +66,12 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="id_main_account" class="form-label">{{ form.main_account.label }}</label>
-                                    {{ form.main_account }}
-                                    {% if form.main_account.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.main_account.errors }}</div>
+                                    <label for="id_cash_account" class="form-label">{{ form.cash_account.label }}</label>
+                                    {{ form.cash_account }}
+                                    {% if form.cash_account.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.cash_account.errors }}</div>
                                     {% endif %}
+                                    <small class="form-text text-muted">{{ form.cash_account.help_text }}</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -85,15 +86,6 @@
                         </div>
 
                         <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_main_credit_account" class="form-label">{{ form.main_credit_account.label }}</label>
-                                    {{ form.main_credit_account }}
-                                    {% if form.main_credit_account.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.main_credit_account.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="id_credit_account" class="form-label">{{ form.credit_account.label }}</label>
@@ -419,70 +411,48 @@
 </style>
 
 <script>
-    // Form validation
+    // Form validation and CSRF token refresh
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.querySelector('.needs-validation');
+        const csrfTokenElement = document.querySelector('[name="csrfmiddlewaretoken"]');
+        
         form.addEventListener('submit', function(event) {
+            console.log('Form submit event fired');
+            console.log('Form valid:', form.checkValidity());
+            
             if (!form.checkValidity()) {
+                console.log('Form is invalid - preventing submission');
                 event.preventDefault();
                 event.stopPropagation();
+                form.classList.add('was-validated');
+                return false;
             }
+            
+            console.log('Form is valid - preparing submission');
             form.classList.add('was-validated');
+            
+            // Ensure CSRF token is included - get it from the DOM
+            if (csrfTokenElement) {
+                console.log('CSRF token found in form:', csrfTokenElement.value ? 'YES' : 'NO');
+            } else {
+                console.log('WARNING: CSRF token element not found in form');
+            }
+            
+            // Allow form submission to proceed normally
+            // Browser will include both the CSRF token and cookies
+            return true;
         }, false);
+
 
         // Get entity ID from form or session
         const entityId = document.querySelector('[name="entity"]')?.value || 
                          document.body.getAttribute('data-entity-id') ||
                          '{{ request.entity.id }}';
 
-        // Cascading dropdown for debit accounts
-        const mainAccountSelect = document.getElementById('id_main_account');
-        const subAccountSelect = document.getElementById('id_account');
-
-        if (mainAccountSelect) {
-            mainAccountSelect.addEventListener('change', function() {
-                const mainAccountId = this.value;
-                
-                if (!mainAccountId) {
-                    // Clear sub-accounts dropdown
-                    subAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                    return;
-                }
-
-                // Fetch sub-accounts for selected main account
-                fetch(`/accounting/api/get-sub-accounts/?main_account_id=${mainAccountId}&entity_id=${entityId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Clear and populate sub-accounts dropdown
-                            subAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                            
-                            if (data.main_account_fallback) {
-                                // No sub-accounts exist, show main account as option
-                                subAccountSelect.innerHTML = '<option value="">-- Select Account --</option>';
-                            }
-                            
-                            data.sub_accounts.forEach(account => {
-                                const option = document.createElement('option');
-                                option.value = account.id;
-                                option.textContent = `${account.account_number} - ${account.name}`;
-                                subAccountSelect.appendChild(option);
-                            });
-                            
-                            // Auto-select if only one option (main account fallback)
-                            if (data.main_account_fallback && data.sub_accounts.length === 1) {
-                                subAccountSelect.value = data.sub_accounts[0].id;
-                            }
-                            
-                            // Reinitialize Select2 if it exists
-                            if (typeof $ !== 'undefined' && $.fn.select2) {
-                                $(subAccountSelect).select2();
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error fetching sub-accounts:', error));
-            });
-        }
+        // Cascading dropdown for debit accounts - NOTE: 'account' field was removed
+        // This section is no longer needed since debit sub-account field was removed
+        // const mainAccountSelect = document.getElementById('id_main_account');
+        // const subAccountSelect = document.getElementById('id_account');  // This field no longer exists!
 
         // Cascading dropdown for credit accounts
         const mainCreditAccountSelect = document.getElementById('id_main_credit_account');

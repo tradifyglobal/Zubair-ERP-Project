@@ -74,7 +74,7 @@ class JournalVoucherLineForm(forms.ModelForm):
     class Meta:
         model = JournalVoucherLine
         fields = [
-            'line_number', 'account', 'sub_account', 'entry_type', 'amount', 
+            'line_number', 'account', 'entry_type', 'amount', 
             'description',
             'cost_center', 'project', 'department'
         ]
@@ -84,9 +84,6 @@ class JournalVoucherLineForm(forms.ModelForm):
                 'min': '1'
             }),
             'account': forms.Select(attrs={
-                'class': 'form-select form-select-sm'
-            }),
-            'sub_account': forms.Select(attrs={
                 'class': 'form-select form-select-sm'
             }),
             'entry_type': forms.Select(attrs={

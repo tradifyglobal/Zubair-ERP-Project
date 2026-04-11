@@ -36,10 +36,14 @@ class CashReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             initial = kwargs.get('initial', {})
             initial['date'] = datetime.now().date()
             kwargs['initial'] = initial
-        # Get entity from session
+        # Get entity from session first, then fallback to request.entity (set by SessionEntityMixin)
         entity_id = self.request.session.get('selected_entity_id')
+        entity = None
         if entity_id:
             entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        if not entity and hasattr(self.request, 'entity'):
+            entity = self.request.entity
+        if entity:
             kwargs['entity'] = entity
         return kwargs
     
@@ -146,10 +150,21 @@ class CashReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             {'name': 'Cash Receipts', 'url': 'cash_receipt_list'},
             {'name': 'New Receipt', 'url': '#'},
         ]
-        # Add entity_id for reference number generation
-        entity_id = self.request.session.get('selected_entity_id')
-        if entity_id:
-            context['entity_id'] = entity_id
+        # Add entity_id for reference number generation and account filtering
+        # Always ensure entity_id is available - use session first, then fallback to request.entity
+        session_entity_id = self.request.session.get('selected_entity_id')
+        request_entity_id = getattr(self.request, 'entity', None)
+        
+        # Use session entity if available, otherwise use request.entity
+        if session_entity_id:
+            entity_id = session_entity_id
+        elif request_entity_id and hasattr(request_entity_id, 'id'):
+            entity_id = request_entity_id.id
+        else:
+            # Fallback to first active entity if nothing else works
+            entity_id = Entity.objects.filter(is_active=True).first().id if Entity.objects.filter(is_active=True).exists() else 1
+        
+        context['entity_id'] = entity_id
         return context
 
 
@@ -649,14 +664,15 @@ def get_sub_accounts_api(request):
         if has_sub_accounts:
             # Group accounts by first-level parent if they have a parent
             for account in sub_accounts:
+                # Check if this account has sub-accounts
+                has_children = account.sub_accounts.exists() if hasattr(account, 'sub_accounts') else False
                 account_data = {
                     'id': account.id,
                     'account_number': account.account_number,
                     'name': account.name,
                     'account_type': account.account_type,
                     'display_name': f"{account.account_number} - {account.name}",
-                    'is_parent': account.is_parent,
-                    'parent_id': account.parent_account.id if account.parent_account else None
+                    'has_children': has_children  # True if account has sub-accounts
                 }
                 accounts_list.append(account_data)
                 
@@ -673,7 +689,7 @@ def get_sub_accounts_api(request):
                 'name': main_account.name,
                 'account_type': main_account.account_type,
                 'display_name': f"{main_account.account_number} - {main_account.name}",
-                'is_parent': main_account.is_parent
+                'has_children': False
             }
             accounts_list = [main_account_data]
             grouped_accounts[main_account.name] = [main_account_data]

@@ -6,6 +6,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.http import JsonResponse
 from decimal import Decimal
 from .models import (
     Entity, Account, LedgerEntry, TrialBalance, ProfitLossReport, BalanceSheet,
@@ -179,6 +180,36 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
                 context['total_contributions'] = 0
                 context['total_shareholdings'] = 0
             
+            # International Transfer Tracking statistics
+            try:
+                from accounting.models import InternationalTransferTracking
+                from django.db.models import Sum, Q
+                
+                # Get all international transfers for this entity's capital contributions
+                entity_capital_ids = CapitalContribution.objects.filter(entity=entity).values_list('id', flat=True)
+                transfers = InternationalTransferTracking.objects.filter(capital_contribution_id__in=entity_capital_ids)
+                
+                context['total_international_transfers'] = transfers.count()
+                context['total_transferred_amount'] = transfers.aggregate(Sum('source_amount'))['source_amount__sum'] or 0
+                
+                # Breakdown by status
+                context['transfers_by_status'] = {
+                    'pending': transfers.filter(transfer_status='PENDING_ABROAD').count(),
+                    'in_transit': transfers.filter(transfer_status='IN_TRANSIT').count(),
+                    'received': transfers.filter(transfer_status='RECEIVED_LOCALLY').count(),
+                    'converted': transfers.filter(transfer_status='CONVERTED').count(),
+                    'posted': transfers.filter(transfer_status='POSTED_TO_GL').count(),
+                    'cancelled': transfers.filter(transfer_status='CANCELLED').count(),
+                }
+                
+                # Recent international transfers
+                context['recent_international_transfers'] = transfers.order_by('-date_sent_from_shareholder')[:5]
+            except:
+                context['total_international_transfers'] = 0
+                context['total_transferred_amount'] = 0
+                context['transfers_by_status'] = {}
+                context['recent_international_transfers'] = []
+            
             # Pending review tasks for current user in this entity
             try:
                 context['entity_pending_reviews_1'] = CapitalContribution.objects.filter(
@@ -219,68 +250,10 @@ class DashboardView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
                 context['pending_payrolls'] = 0
                 context['pending_leave_requests'] = 0
             
-            # P2P (Procure-to-Pay) module statistics
-            try:
-                from procurement.models import PurchaseOrder, GoodsReceipt, VendorBill, VendorPayment
-                from accounting.models import GLEntry
-                
-                context['p2p_total_pos'] = PurchaseOrder.objects.filter(entity=entity).count()
-                context['p2p_total_grns'] = GoodsReceipt.objects.filter(entity=entity).count()
-                context['p2p_total_invoices'] = VendorBill.objects.filter(entity=entity).count()
-                context['p2p_total_payments'] = VendorPayment.objects.filter(entity=entity).count()
-                context['p2p_gl_posted_payments'] = VendorPayment.objects.filter(
-                    entity=entity,
-                    gl_entry__isnull=False
-                ).count()
-                context['p2p_pending_gl'] = VendorPayment.objects.filter(
-                    entity=entity,
-                    is_approved=True,
-                    gl_entry__isnull=True
-                ).count()
-                
-                # P2P Financial Metrics
-                from django.db.models import Sum
-                po_total = PurchaseOrder.objects.filter(entity=entity).aggregate(
-                    total=Sum('total_amount')
-                )['total'] or Decimal('0.00')
-                invoice_total = VendorBill.objects.filter(entity=entity).aggregate(
-                    total=Sum('total_amount')
-                )['total'] or Decimal('0.00')
-                payment_total = VendorPayment.objects.filter(entity=entity).aggregate(
-                    total=Sum('payment_amount')
-                )['total'] or Decimal('0.00')
-                
-                context['p2p_po_amount'] = float(po_total)
-                context['p2p_invoice_amount'] = float(invoice_total)
-                context['p2p_payment_amount'] = float(payment_total)
-            except:
-                # P2P module not available or not configured
-                context['p2p_total_pos'] = 0
-                context['p2p_total_grns'] = 0
-                context['p2p_total_invoices'] = 0
-                context['p2p_total_payments'] = 0
-                context['p2p_gl_posted_payments'] = 0
-                context['p2p_pending_gl'] = 0
-                context['p2p_po_amount'] = 0.0
-                context['p2p_invoice_amount'] = 0.0
-                context['p2p_payment_amount'] = 0.0
-            
             # Chart data: Account Type Distribution
             try:
                 account_types = entity.accounts.values('account_type').annotate(count=models.Count('id'))
-                account_type_display = {
-                    'ASSET': 'Asset',
-                    'LIABILITY': 'Liability',
-                    'EQUITY': 'Equity',
-                    'INCOME': 'Income',
-                    'EXPENSE': 'Expense',
-                    'SALES': 'Sales',
-                    'PURCHASES': 'Purchases',
-                }
-                account_type_labels = [
-                    account_type_display.get(at['account_type'], at['account_type'])
-                    for at in account_types
-                ]
+                account_type_labels = [at['account_type'] for at in account_types]
                 account_type_counts = [at['count'] for at in account_types]
             except:
                 account_type_labels = []
@@ -657,11 +630,11 @@ class AccountListView(SessionEntityMixin, LoginRequiredMixin, ListView):
             credits = entries.filter(entry_type='CREDIT').aggregate(total=Sum('amount'))['total'] or Decimal('0')
             
             # Calculate current balance based on account type
-            # Assets/Expenses/Purchases have normal debit balance (DR - CR)
-            # Liabilities/Equity/Income/Sales have normal credit balance (CR - DR)
+            # Assets, Expenses, and Purchases have normal debit balance (DR - CR)
+            # Liabilities, Equity, and Income have normal credit balance (CR - DR)
             if account.account_type in ['ASSET', 'EXPENSE', 'PURCHASES']:
                 balance = debits - credits + account.opening_balance
-            else:  # LIABILITY, EQUITY, INCOME, SALES
+            else:  # LIABILITY, EQUITY, INCOME
                 balance = credits - debits + account.opening_balance
             
             item['total_debits'] = debits
@@ -718,7 +691,7 @@ class AccountListView(SessionEntityMixin, LoginRequiredMixin, ListView):
                 # Recalculate balance with children included
                 if account.account_type in ['ASSET', 'EXPENSE', 'PURCHASES']:
                     new_balance = total_debits - total_credits + account.opening_balance
-                else:  # LIABILITY, EQUITY, INCOME, SALES
+                else:  # LIABILITY, EQUITY, INCOME
                     new_balance = total_credits - total_debits + account.opening_balance
                 
                 item['total_debits'] = total_debits
@@ -797,7 +770,7 @@ class AccountDetailView(LoginRequiredMixin, DetailView):
                 else:  # CREDIT
                     running_balance -= entry.amount
             else:
-                # For credit-based accounts (Liabilities, Equity, Income, Sales): Credit positive, Debit negative
+                # For credit-based accounts (Liabilities, Equity, Revenue): Credit positive, Debit negative
                 if entry.entry_type == 'CREDIT':
                     running_balance += entry.amount
                 else:  # DEBIT
@@ -837,10 +810,12 @@ class LedgerEntryListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        from datetime import datetime
-        from decimal import Decimal
-        
         queryset = super().get_queryset()
+        
+        # Filter by account number if provided
+        account_number = self.request.GET.get('account_number', '').strip()
+        if account_number:
+            queryset = queryset.filter(account__account_number=account_number)
         
         # Filter by search term if provided
         search = self.request.GET.get('search', '').strip()
@@ -850,52 +825,6 @@ class LedgerEntryListView(SessionEntityMixin, LoginRequiredMixin, ListView):
                 models.Q(reference_number__icontains=search) |
                 models.Q(description__icontains=search)
             )
-        
-        # Filter by account number if provided
-        account_number = self.request.GET.get('account_number', '').strip()
-        if account_number:
-            queryset = queryset.filter(account__account_number__icontains=account_number)
-        
-        # Filter by reference if provided
-        reference = self.request.GET.get('reference', '').strip()
-        if reference:
-            queryset = queryset.filter(reference_number__icontains=reference)
-        
-        # Filter by date range if provided
-        from_date = self.request.GET.get('from_date', '').strip()
-        to_date = self.request.GET.get('to_date', '').strip()
-        
-        if from_date:
-            try:
-                from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
-                queryset = queryset.filter(entry_date__gte=from_date_obj)
-            except ValueError:
-                pass  # Invalid date format, skip this filter
-        
-        if to_date:
-            try:
-                to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
-                queryset = queryset.filter(entry_date__lte=to_date_obj)
-            except ValueError:
-                pass  # Invalid date format, skip this filter
-        
-        # Filter by amount range if provided
-        from_amount = self.request.GET.get('from_amount', '').strip()
-        to_amount = self.request.GET.get('to_amount', '').strip()
-        
-        if from_amount:
-            try:
-                from_amount_val = Decimal(from_amount)
-                queryset = queryset.filter(amount__gte=from_amount_val)
-            except:
-                pass  # Invalid amount, skip this filter
-        
-        if to_amount:
-            try:
-                to_amount_val = Decimal(to_amount)
-                queryset = queryset.filter(amount__lte=to_amount_val)
-            except:
-                pass  # Invalid amount, skip this filter
         
         # Filter by entry type if provided
         entry_type = self.request.GET.get('entry_type', '').strip()
@@ -921,6 +850,15 @@ class LedgerEntryListView(SessionEntityMixin, LoginRequiredMixin, ListView):
         # Get total counts for debugging
         entity_id = self.request.session.get('selected_entity_id')
         
+        # Get all accounts for the entity for the filter dropdown
+        if entity_id:
+            context['accounts'] = Account.objects.filter(
+                entity_id=entity_id, 
+                is_active=True
+            ).order_by('account_number')
+        else:
+            context['accounts'] = Account.objects.none()
+        
         # Counts for CURRENT entity only
         all_entries = LedgerEntry.objects.filter(entity_id=entity_id)
         context['total_entries'] = all_entries.count()
@@ -936,13 +874,52 @@ class LedgerEntryListView(SessionEntityMixin, LoginRequiredMixin, ListView):
         context['approved_all_entities'] = all_entries_total.filter(workflow_status='APPROVED').count()
         context['authorized_all_entities'] = all_entries_total.filter(workflow_status='AUTHORIZED').count()
         
-        # Get list of active accounts for dropdown filter
-        from accounting.models import Account
-        accounts = Account.objects.filter(
-            entity_id=entity_id,
-            is_active=True
-        ).order_by('account_number')
-        context['accounts'] = accounts
+        # Calculate debit, credit, and running balance for each entry
+        from decimal import Decimal
+        entries = context['entries']
+        
+        # Group entries by account to calculate running balance per account
+        account_balances = {}
+        entries_with_details = []
+        
+        for entry in entries:
+            # Add debit/credit amounts
+            if entry.entry_type == 'DEBIT':
+                debit_amount = entry.amount
+                credit_amount = Decimal('0.00')
+            else:  # CREDIT
+                debit_amount = Decimal('0.00')
+                credit_amount = entry.amount
+            
+            # Calculate running balance for this account
+            account_id = entry.account.id
+            if account_id not in account_balances:
+                # Initialize with opening balance
+                opening_balance = entry.account.opening_balance or Decimal('0.00')
+                account_balances[account_id] = Decimal(str(opening_balance))
+            
+            # Update running balance
+            is_debit_based = entry.account.account_type in ['ASSET', 'EXPENSE', 'PURCHASES']
+            if is_debit_based:
+                if entry.entry_type == 'DEBIT':
+                    account_balances[account_id] += debit_amount
+                else:
+                    account_balances[account_id] -= credit_amount
+            else:
+                if entry.entry_type == 'CREDIT':
+                    account_balances[account_id] += credit_amount
+                else:
+                    account_balances[account_id] -= debit_amount
+            
+            entries_with_details.append({
+                'entry': entry,
+                'debit_amount': debit_amount,
+                'credit_amount': credit_amount,
+                'running_balance': account_balances[account_id]
+            })
+        
+        # Store enhanced entries back to context
+        context['entries'] = entries_with_details
         
         return context
 
@@ -1077,6 +1054,14 @@ class TrialBalanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     context_object_name = 'trial_balances'
     paginate_by = 20
 
+    def dispatch(self, request, *args, **kwargs):
+        """Add no-cache headers to ensure page always syncs with latest data."""
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+
     def get_queryset(self):
         # SessionEntityMixin automatically filters by session entity
         queryset = super().get_queryset()  # This applies entity filtering from SessionEntityMixin
@@ -1085,11 +1070,6 @@ class TrialBalanceListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         entity = self.request.entity  # From SessionEntityMixin
-        
-        # Add difference calculation to trial balance records
-        trial_balances = context.get('trial_balances', [])
-        for tb in trial_balances:
-            tb.difference = abs(tb.total_debits - tb.total_credits)
         
         # Generate trial balance for today (or latest available date)
         if entity:
@@ -1132,6 +1112,14 @@ class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     context_object_name = 'reports'
     paginate_by = 20
 
+    def dispatch(self, request, *args, **kwargs):
+        """Add no-cache headers to ensure page always syncs with latest data."""
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
+
     def get_queryset(self):
         # SessionEntityMixin automatically filters by session entity
         queryset = super().get_queryset()
@@ -1153,10 +1141,10 @@ class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
             period_end = today
             
             try:
-                # Check if entity has income/expense/sales/purchases transactions
+                # Check if entity has income/expense transactions
                 income_expense_entries = LedgerEntry.objects.filter(
                     entity=entity,
-                    account__account_type__in=['INCOME', 'EXPENSE', 'SALES', 'PURCHASES']
+                    account__account_type__in=['INCOME', 'EXPENSE']
                 )
                 
                 if income_expense_entries.exists():
@@ -1180,8 +1168,8 @@ class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
                         context['income_details'] = pl_data.get('income_details', [])
                         context['expense_details'] = pl_data.get('expense_details', [])
                 else:
-                    # No income/expense/sales/purchases accounts - explain why no P&L
-                    context['no_pl_reason'] = 'No income, sales, expense, or purchase transactions found. P&L reports require revenue and expense account activity.'
+                    # No income/expense accounts - explain why no P&L
+                    context['no_pl_reason'] = 'No income or expense transactions found. P&L reports require revenue and expense account activity.'
                     
             except Exception as e:
                 context['pl_error'] = str(e)
@@ -1192,12 +1180,12 @@ class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
         """Calculate P&L from ledger entries."""
         from decimal import Decimal
         
-        # Get entries in the period for income/expense/sales/purchases accounts only
+        # Get entries in the period for income/expense accounts only
         entries = LedgerEntry.objects.filter(
             entity=entity,
             entry_date__gte=period_start,
             entry_date__lte=period_end,
-            account__account_type__in=['INCOME', 'EXPENSE', 'SALES', 'PURCHASES']
+            account__account_type__in=['INCOME', 'EXPENSE']
         )
         
         if entries.count() == 0:
@@ -1228,7 +1216,7 @@ class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
             account = acc_data['account']
             net_balance = acc_data['debit_total'] - acc_data['credit_total']
             
-            if account.account_type in ['INCOME', 'SALES'] and net_balance < 0:
+            if account.account_type == 'INCOME' and net_balance < 0:
                 income_amount = abs(net_balance)
                 total_income += income_amount
                 income_details.append({
@@ -1236,7 +1224,7 @@ class ProfitLossListView(SessionEntityMixin, LoginRequiredMixin, ListView):
                     'number': account.account_number,
                     'amount': income_amount
                 })
-            elif account.account_type in ['EXPENSE', 'PURCHASES'] and net_balance > 0:
+            elif account.account_type == 'EXPENSE' and net_balance > 0:
                 total_expenses += net_balance
                 expense_details.append({
                     'name': account.name,
@@ -1259,6 +1247,14 @@ class BalanceSheetListView(SessionEntityMixin, LoginRequiredMixin, ListView):
     template_name = 'accounting/balance_sheet_list.html'
     context_object_name = 'balance_sheets'
     paginate_by = 20
+
+    def dispatch(self, request, *args, **kwargs):
+        """Add no-cache headers to ensure page always syncs with latest data."""
+        response = super().dispatch(request, *args, **kwargs)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
     def get_queryset(self):
         # SessionEntityMixin automatically filters by session entity
@@ -2666,6 +2662,35 @@ class QuickAddVendorView(PermissionRequiredMixin, FormView):
         return context
 
 
+class GenerateVendorCodeView(LoginRequiredMixin, View):
+    """API endpoint to generate next vendor code for current entity."""
+    
+    def get(self, request):
+        """Return next vendor code as JSON."""
+        from .vendor_utils import generate_next_vendor_code
+        
+        # Get entity from session
+        entity_id = request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        
+        if not entity:
+            return JsonResponse({
+                'error': 'No entity selected or entity not found'
+            }, status=404)
+        
+        try:
+            vendor_code = generate_next_vendor_code(entity)
+            return JsonResponse({
+                'vendor_code': vendor_code,
+                'entity_id': entity.id,
+                'entity_name': entity.name
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error generating vendor code: {str(e)}'
+            }, status=500)
+
+
 # ============ QUICK ADD VIEWS FOR ACCOUNTS ============
 class QuickAddAccountView(PermissionRequiredMixin, FormView):
     """Quick add account from dashboard."""
@@ -3302,172 +3327,6 @@ class GetAccountShareholderAPIView(View):
             return JsonResponse({'investor_name': '', 'error': str(e)}, status=400)
 
 
-class InternationalCapitalReportView(SessionEntityMixin, LoginRequiredMixin, ListView):
-    """View for international capital investments report with transfer tracking."""
-    model = CapitalContribution
-    template_name = 'accounting/international_capital_report.html'
-    context_object_name = 'transfers'
-    paginate_by = 20
-
-    def get_queryset(self):
-        entity_id = self.request.session.get('selected_entity_id')
-        # Only show contributions that have international transfer tracking
-        queryset = CapitalContribution.objects.filter(
-            international_transfer__isnull=False
-        ).select_related(
-            'entity',
-            'stakeholder',
-            'currency',
-            'international_transfer'
-        )
-        if entity_id:
-            queryset = queryset.filter(entity_id=entity_id)
-        return queryset.order_by('-contribution_date')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        contributions = self.get_queryset()
-        
-        # Calculate summary tiles based on transfer tracking status
-        context['total_transfers'] = contributions.count()
-        
-        pending_abroad = 0
-        in_transit = 0
-        received_locally = 0
-        converted = 0
-        posted_to_gl = 0
-        
-        for contrib in contributions:
-            if hasattr(contrib, 'international_transfer') and contrib.international_transfer:
-                transfer = contrib.international_transfer
-                if transfer.transfer_status == 'PENDING_ABROAD':
-                    pending_abroad += 1
-                elif transfer.transfer_status == 'IN_TRANSIT':
-                    in_transit += 1
-                elif transfer.transfer_status == 'RECEIVED_LOCALLY':
-                    received_locally += 1
-                elif transfer.transfer_status == 'CONVERTED':
-                    converted += 1
-                elif transfer.transfer_status == 'POSTED_TO_GL':
-                    posted_to_gl += 1
-        
-        context['pending_abroad'] = pending_abroad
-        context['in_transit'] = in_transit
-        context['received_locally'] = received_locally
-        context['converted'] = converted
-        context['posted_to_gl'] = posted_to_gl
-        
-        # Calculate summary metrics
-        from decimal import Decimal
-        context['total_source_amount'] = sum(
-            Decimal(str(c.amount)) for c in contributions if c.amount
-        ) or Decimal('0')
-        
-        context['total_destination_amount'] = sum(
-            Decimal(str(c.amount_company_currency)) for c in contributions if c.amount_company_currency
-        ) or Decimal('0')
-        
-        # Calculate weighted average exchange rate
-        exchange_rate_sum = Decimal('0')
-        valid_rates_count = 0
-        for c in contributions:
-            if c.exchange_rate and c.exchange_rate > 0:
-                exchange_rate_sum += Decimal(str(c.exchange_rate))
-                valid_rates_count += 1
-        
-        if valid_rates_count > 0:
-            context['weighted_avg_exchange_rate'] = exchange_rate_sum / Decimal(str(valid_rates_count))
-        else:
-            context['weighted_avg_exchange_rate'] = Decimal('0')
-        
-        # Add detailed transfer data with transfer tracking info
-        from datetime import date
-        transfer_details = []
-        for contribution in contributions:
-            transfer = contribution.international_transfer if hasattr(contribution, 'international_transfer') else None
-            
-            days_in_transit = 0
-            if transfer and transfer.date_sent_from_shareholder:
-                if transfer.date_received_in_foreign_bank:
-                    days_in_transit = (transfer.date_received_in_foreign_bank - transfer.date_sent_from_shareholder).days
-                else:
-                    days_in_transit = (date.today() - transfer.date_sent_from_shareholder).days
-            
-            transfer_details.append({
-                'transfer': transfer,
-                'contribution': contribution,
-                'days_in_transit': days_in_transit,
-                'shareholder_name': contribution.stakeholder.full_name if contribution.stakeholder else 'N/A',
-                'status_display': transfer.get_transfer_status_display() if transfer else 'Not Tracked',
-            })
-        
-        context['transfer_details'] = transfer_details
-        
-        return context
-
-
-class AddInternationalTransferView(SessionEntityMixin, LoginRequiredMixin, View):
-    """Compatibility endpoint to create an international transfer from POST payload."""
-
-    def get(self, request, *args, **kwargs):
-        messages.info(request, 'Submit international transfer data using the capital contribution workflow form.')
-        return redirect('accounting:capital_contribution_list')
-
-    def post(self, request, *args, **kwargs):
-        contribution_id = request.POST.get('capital_contribution_id')
-        entity_id = request.session.get('selected_entity_id')
-
-        if not contribution_id:
-            messages.error(request, 'capital_contribution_id is required.')
-            return redirect('accounting:capital_contribution_list')
-
-        contribution = CapitalContribution.objects.filter(id=contribution_id).first()
-        if not contribution:
-            messages.error(request, 'Capital contribution not found.')
-            return redirect('accounting:capital_contribution_list')
-
-        if entity_id and contribution.entity_id != entity_id:
-            messages.error(request, 'Selected contribution does not belong to current entity.')
-            return redirect('accounting:capital_contribution_list')
-
-        required = [
-            'source_country', 'source_currency_code', 'source_amount',
-            'destination_country', 'destination_currency_code', 'destination_amount'
-        ]
-        missing = [key for key in required if not request.POST.get(key)]
-        if missing:
-            messages.error(request, f"Missing required fields: {', '.join(missing)}")
-            return redirect('accounting:capital_contribution_list')
-
-        transfer, created = InternationalTransferTracking.objects.update_or_create(
-            capital_contribution=contribution,
-            defaults={
-                'source_country': request.POST.get('source_country'),
-                'source_bank_name': request.POST.get('source_bank_name') or None,
-                'source_bank_account': request.POST.get('source_bank_account') or None,
-                'source_currency_code': request.POST.get('source_currency_code'),
-                'source_amount': request.POST.get('source_amount'),
-                'destination_country': request.POST.get('destination_country'),
-                'destination_bank_name': request.POST.get('destination_bank_name') or None,
-                'destination_bank_account': request.POST.get('destination_bank_account') or None,
-                'destination_currency_code': request.POST.get('destination_currency_code'),
-                'destination_amount': request.POST.get('destination_amount'),
-                'exchange_rate_used': request.POST.get('exchange_rate_used') or None,
-                'transfer_reference': request.POST.get('transfer_reference') or None,
-                'intermediary_bank_name': request.POST.get('intermediary_bank_name') or None,
-                'intermediary_reference': request.POST.get('intermediary_reference') or None,
-                'notes': request.POST.get('notes') or None,
-            }
-        )
-
-        if created:
-            messages.success(request, 'International transfer created successfully.')
-        else:
-            messages.success(request, 'International transfer updated successfully.')
-
-        return redirect('accounting:international_capital_report')
-
-
 # ============ AJAX API ENDPOINTS ============
 
 from django.http import JsonResponse
@@ -3548,3 +3407,263 @@ def user_guide_download(request):
     else:
         messages.error(request, 'User guide file not found.')
         return redirect('accounting:dashboard')
+
+
+# ============================================================================
+# INTERNATIONAL CAPITAL INVESTMENT REPORT VIEW
+# ============================================================================
+
+class InternationalCapitalReportView(SessionEntityMixin, LoginRequiredMixin, ListView):
+    """Report for tracking international capital investments across borders."""
+    model = InternationalTransferTracking
+    template_name = 'accounting/international_capital_report.html'
+    context_object_name = 'international_transfers'
+    paginate_by = 25
+    
+    def post(self, request, *args, **kwargs):
+        """Handle form submission to create new international transfer."""
+        from decimal import Decimal
+        from django.http import JsonResponse
+        
+        try:
+            entity = request.entity
+            
+            # Get capital contribution
+            capital_contribution_id = request.POST.get('capital_contribution_id')
+            if not capital_contribution_id:
+                return JsonResponse({'error': 'Capital contribution is required'}, status=400)
+            
+            try:
+                capital_contribution = CapitalContribution.objects.get(
+                    id=capital_contribution_id,
+                    entity=entity
+                )
+            except CapitalContribution.DoesNotExist:
+                return JsonResponse({'error': 'Invalid capital contribution'}, status=400)
+            
+            # Check if transfer already exists for this contribution
+            if InternationalTransferTracking.objects.filter(capital_contribution=capital_contribution).exists():
+                return JsonResponse({'error': 'Transfer record already exists for this contribution'}, status=400)
+            
+            # Validate required fields
+            required_fields = ['source_amount', 'destination_amount', 'exchange_rate_used', 'date_sent_from_shareholder']
+            for field in required_fields:
+                if not request.POST.get(field):
+                    return JsonResponse({'error': f'{field} is required'}, status=400)
+            
+            # Create transfer record
+            transfer = InternationalTransferTracking.objects.create(
+                capital_contribution=capital_contribution,
+                source_country=request.POST.get('source_country', 'Canada'),
+                source_bank_name=request.POST.get('source_bank_name', ''),
+                source_bank_account=request.POST.get('source_bank_account', ''),
+                source_currency_code=request.POST.get('source_currency_code', 'CAD'),
+                source_amount=Decimal(request.POST.get('source_amount', 0)),
+                destination_country=request.POST.get('destination_country', 'India'),
+                destination_bank_name=request.POST.get('destination_bank_name', ''),
+                destination_bank_account=request.POST.get('destination_bank_account', ''),
+                destination_currency_code=request.POST.get('destination_currency_code', 'INR'),
+                destination_amount=Decimal(request.POST.get('destination_amount', 0)),
+                exchange_rate_used=Decimal(request.POST.get('exchange_rate_used', 0)),
+                conversion_date=request.POST.get('conversion_date') or None,
+                intermediary_bank_name=request.POST.get('intermediary_bank_name', ''),
+                intermediary_reference=request.POST.get('intermediary_reference', ''),
+                date_sent_from_shareholder=request.POST.get('date_sent_from_shareholder'),
+                date_received_in_foreign_bank=request.POST.get('date_received_in_foreign_bank') or None,
+                date_transferred_to_local_bank=request.POST.get('date_transferred_to_local_bank') or None,
+                date_posted_to_gl=request.POST.get('date_posted_to_gl') or None,
+                transfer_status=request.POST.get('transfer_status', 'PENDING_ABROAD'),
+                transfer_reference=request.POST.get('transfer_reference', ''),
+                notes=request.POST.get('notes', ''),
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Transfer record created successfully',
+                'transfer_id': transfer.id
+            })
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    def get_queryset(self):
+        """Get all international transfers for the current entity."""
+        entity = self.request.entity
+        queryset = InternationalTransferTracking.objects.filter(
+            capital_contribution__entity=entity
+        ).select_related(
+            'capital_contribution',
+            'capital_contribution__stakeholder',
+            'capital_contribution__currency',
+            'capital_contribution__currency_destination'
+        ).order_by('-created_at')
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity = self.request.entity
+        
+        # Get capital contributions without transfers for the form dropdown
+        from django.db.models import Exists, OuterRef
+        existing_transfers = InternationalTransferTracking.objects.filter(
+            capital_contribution_id=OuterRef('pk')
+        )
+        available_contributions = CapitalContribution.objects.filter(
+            entity=entity
+        ).exclude(Exists(existing_transfers)).select_related('stakeholder')
+        
+        context['available_contributions'] = available_contributions
+        
+        # Get all international transfers for summary statistics
+        transfers = InternationalTransferTracking.objects.filter(
+            capital_contribution__entity=entity
+        ).select_related('capital_contribution')
+        
+        # Calculate summary statistics
+        summary = {
+            'total_transfers': transfers.count(),
+            'pending_abroad': transfers.filter(transfer_status='PENDING_ABROAD').count(),
+            'in_transit': transfers.filter(transfer_status='IN_TRANSIT').count(),
+            'received_locally': transfers.filter(transfer_status='RECEIVED_LOCALLY').count(),
+            'converted': transfers.filter(transfer_status='CONVERTED').count(),
+            'posted_to_gl': transfers.filter(transfer_status='POSTED_TO_GL').count(),
+            'cancelled': transfers.filter(transfer_status='CANCELLED').count(),
+        }
+        
+        # Calculate total amounts by status
+        from django.db.models import Sum
+        
+        # Only calculate if there are transfers
+        if transfers.exists():
+            totals_by_status = transfers.values('transfer_status').annotate(
+                total_source=Sum('source_amount'),
+                total_destination=Sum('destination_amount'),
+                count=models.Count('id')
+            ).order_by('transfer_status')
+            
+            summary['totals_by_status'] = {item['transfer_status']: item for item in totals_by_status}
+            
+            # Calculate grand totals
+            summary['grand_total_source'] = sum(t.source_amount for t in transfers if t.source_amount)
+            summary['grand_total_destination'] = sum(t.destination_amount for t in transfers if t.destination_amount)
+            
+            # Calculate average exchange rate (weighted by destination amount)
+            total_dest_amount = summary['grand_total_destination']
+            if total_dest_amount > 0:
+                weighted_rate = sum(
+                    (t.exchange_rate_used or 0) * (t.destination_amount or 0)
+                    for t in transfers if t.exchange_rate_used and t.destination_amount
+                ) / total_dest_amount
+                summary['weighted_avg_exchange_rate'] = round(weighted_rate, 4)
+        
+        # Get country-wise summary
+        country_summary = transfers.values('source_country', 'destination_country').annotate(
+            count=models.Count('id'),
+            total_source=Sum('source_amount'),
+            total_destination=Sum('destination_amount')
+        ).order_by('-count')
+        
+        summary['country_summary'] = list(country_summary)
+        
+        # Get shareholder-wise summary
+        shareholder_summary = transfers.values(
+            'capital_contribution__stakeholder__first_name',
+            'capital_contribution__stakeholder__last_name'
+        ).annotate(
+            count=models.Count('id'),
+            total_source=Sum('source_amount'),
+            total_destination=Sum('destination_amount')
+        ).order_by('-count')
+        
+        summary['shareholder_summary'] = list(shareholder_summary)
+        
+        context['summary'] = summary
+        return context
+
+
+class AddInternationalTransferView(SessionEntityMixin, LoginRequiredMixin, TemplateView):
+    """Form page for adding new international transfer."""
+    template_name = 'accounting/add_international_transfer.html'
+    
+    def post(self, request, *args, **kwargs):
+        """Handle form submission to create new international transfer."""
+        from decimal import Decimal
+        
+        try:
+            entity = request.entity
+            
+            # Get capital contribution
+            capital_contribution_id = request.POST.get('capital_contribution_id')
+            if not capital_contribution_id:
+                return JsonResponse({'error': 'Capital contribution is required'}, status=400)
+            
+            try:
+                capital_contribution = CapitalContribution.objects.get(
+                    id=capital_contribution_id,
+                    entity=entity
+                )
+            except CapitalContribution.DoesNotExist:
+                return JsonResponse({'error': 'Invalid capital contribution'}, status=400)
+            
+            # Check if transfer already exists for this contribution
+            if InternationalTransferTracking.objects.filter(capital_contribution=capital_contribution).exists():
+                return JsonResponse({'error': 'Transfer record already exists for this contribution'}, status=400)
+            
+            # Validate required fields
+            required_fields = ['source_amount', 'destination_amount', 'exchange_rate_used', 'date_sent_from_shareholder']
+            for field in required_fields:
+                if not request.POST.get(field):
+                    return JsonResponse({'error': f'{field} is required'}, status=400)
+            
+            # Create transfer record
+            transfer = InternationalTransferTracking.objects.create(
+                capital_contribution=capital_contribution,
+                source_country=request.POST.get('source_country', 'Canada'),
+                source_bank_name=request.POST.get('source_bank_name', ''),
+                source_bank_account=request.POST.get('source_bank_account', ''),
+                source_currency_code=request.POST.get('source_currency_code', 'CAD'),
+                source_amount=Decimal(request.POST.get('source_amount', 0)),
+                destination_country=request.POST.get('destination_country', 'India'),
+                destination_bank_name=request.POST.get('destination_bank_name', ''),
+                destination_bank_account=request.POST.get('destination_bank_account', ''),
+                destination_currency_code=request.POST.get('destination_currency_code', 'INR'),
+                destination_amount=Decimal(request.POST.get('destination_amount', 0)),
+                exchange_rate_used=Decimal(request.POST.get('exchange_rate_used', 0)),
+                conversion_date=request.POST.get('conversion_date') or None,
+                intermediary_bank_name=request.POST.get('intermediary_bank_name', ''),
+                intermediary_reference=request.POST.get('intermediary_reference', ''),
+                date_sent_from_shareholder=request.POST.get('date_sent_from_shareholder'),
+                date_received_in_foreign_bank=request.POST.get('date_received_in_foreign_bank') or None,
+                date_transferred_to_local_bank=request.POST.get('date_transferred_to_local_bank') or None,
+                date_posted_to_gl=request.POST.get('date_posted_to_gl') or None,
+                transfer_status=request.POST.get('transfer_status', 'PENDING_ABROAD'),
+                transfer_reference=request.POST.get('transfer_reference', ''),
+                notes=request.POST.get('notes', ''),
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Transfer record created successfully',
+                'transfer_id': transfer.id,
+                'redirect_url': reverse_lazy('accounting:international_capital_report')
+            })
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        entity = self.request.entity
+        
+        # Get capital contributions without transfers for the form dropdown
+        from django.db.models import Exists, OuterRef
+        existing_transfers = InternationalTransferTracking.objects.filter(
+            capital_contribution_id=OuterRef('pk')
+        )
+        available_contributions = CapitalContribution.objects.filter(
+            entity=entity
+        ).exclude(Exists(existing_transfers)).select_related('stakeholder')
+        
+        context['available_contributions'] = available_contributions
+        return context
+

@@ -7,253 +7,198 @@
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
-    <!-- Breadcrumb -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="#">Cash Management</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'accounting:cash_receipt_list' %}">Cash Receipts</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card card-header-shadow">
-                <div class="card-header">
-                    <h5 class="mb-0">{{ page_title }}</h5>
+            <!-- Breadcrumb -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="#">Cash Management</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'accounting:cash_receipt_list' %}">Cash Receipts</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+                        </ol>
+                    </nav>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Form Card with Responsive Scroll -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card card-form-container">
-                <div class="card-body">
-                    <form method="post" class="needs-validation" novalidate>
-                        {% csrf_token %}
-                        <!-- Hidden field for entity ID to pass to JavaScript -->
-                        <input type="hidden" id="entity_id_hidden" value="{{ entity_id }}">
-
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_date" class="form-label">{{ form.date.label }}</label>
-                                    {{ form.date }}
-                                    {% if form.date.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.date.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_reference_number" class="form-label">{{ form.reference_number.label }}</label>
-                                    {{ form.reference_number }}
-                                    {% if form.reference_number.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.reference_number.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card card-header-shadow">
+                        <div class="card-header">
+                            <h5 class="mb-0">{{ page_title }}</h5>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_main_account" class="form-label">{{ form.main_account.label }}</label>
-                                    {{ form.main_account }}
-                                    {% if form.main_account.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.main_account.errors }}</div>
-                                    {% endif %}
-                                    <small class="form-text text-muted d-block mt-2">{{ form.main_account.help_text }}</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_account" class="form-label">{{ form.account.label }}</label>
-                                    {{ form.account }}
-                                    {% if form.account.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.account.errors }}</div>
-                                    {% endif %}
-                                    <small class="form-text text-muted d-block mt-2" id="sub_account_hint">Select a main account first to see all sub-accounts with hierarchy</small>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" class="needs-validation" novalidate>
+                                {% csrf_token %}
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_main_credit_account" class="form-label">{{ form.main_credit_account.label }}</label>
-                                    {{ form.main_credit_account }}
-                                    {% if form.main_credit_account.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.main_credit_account.errors }}</div>
-                                    {% endif %}
-                                    <small class="form-text text-muted d-block mt-2">{{ form.main_credit_account.help_text }}</small>
+                                <!-- Row 1: Date & Reference -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_date" class="form-label">{{ form.date.label }}</label>
+                                            {{ form.date }}
+                                            {% if form.date.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.date.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_reference_number" class="form-label">{{ form.reference_number.label }}</label>
+                                            {{ form.reference_number }}
+                                            {% if form.reference_number.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.reference_number.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_credit_account" class="form-label">{{ form.credit_account.label }}</label>
-                                    {{ form.credit_account }}
-                                    {% if form.credit_account.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.credit_account.errors }}</div>
-                                    {% endif %}
-                                    <small class="form-text text-muted d-block mt-2">{{ form.credit_account.help_text }}</small>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_stakeholder" class="form-label">{{ form.stakeholder.label }}</label>
-                                    {{ form.stakeholder }}
-                                    {% if form.stakeholder.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.stakeholder.errors }}</div>
-                                    {% endif %}
-                                    <small class="form-text text-muted">{{ form.stakeholder.help_text }}</small>
+                                <!-- Row 2: Main Cash Account & Sub Account & Credit Account -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_cash_account" class="form-label">{{ form.cash_account.label }}</label>
+                                            {{ form.cash_account }}
+                                            {% if form.cash_account.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.cash_account.errors }}</div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">{{ form.cash_account.help_text }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_account" class="form-label">{{ form.account.label }}</label>
+                                            {{ form.account }}
+                                            {% if form.account.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.account.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <!-- Empty column for spacing -->
-                            </div>
-                        </div>
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_currency" class="form-label">{{ form.currency.label }}</label>
-                                    {{ form.currency }}
-                                    {% if form.currency.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.currency.errors }}</div>
-                                    {% endif %}
+                                <!-- Row 2b: Credit Account -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_credit_account" class="form-label">{{ form.credit_account.label }}</label>
+                                            {{ form.credit_account }}
+                                            {% if form.credit_account.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.credit_account.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6" id="exchange_rate_section" style="display: none;">
-                                <div class="form-group mb-3">
-                                    <label for="id_exchange_rate" class="form-label">{{ form.exchange_rate.label }}</label>
-                                    {{ form.exchange_rate }}
-                                    {% if form.exchange_rate.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.exchange_rate.errors }}</div>
-                                    {% endif %}
-                                    <div class="form-text">{{ form.exchange_rate.help_text }}</div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Converted Amount Display -->
-                        <div class="row mb-4" id="converted_amounts_section" style="display: none;">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_converted_debit_amount" class="form-label">{{ form.converted_debit_amount.label }}</label>
-                                    {{ form.converted_debit_amount }}
-                                    <div class="form-text">{{ form.converted_debit_amount.help_text }}</div>
+                                <!-- Row 3: Currency & Stakeholder -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_currency" class="form-label">{{ form.currency.label }}</label>
+                                            {{ form.currency }}
+                                            {% if form.currency.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.currency.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_stakeholder" class="form-label">{{ form.stakeholder.label }}</label>
+                                            {{ form.stakeholder }}
+                                            {% if form.stakeholder.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.stakeholder.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_converted_credit_amount" class="form-label">{{ form.converted_credit_amount.label }}</label>
-                                    {{ form.converted_credit_amount }}
-                                    <div class="form-text">{{ form.converted_credit_amount.help_text }}</div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="id_description" class="form-label">{{ form.description.label }}</label>
-                                    {{ form.description }}
-                                    {% if form.description.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
-                                    {% endif %}
+                                <!-- Row 4: Description -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="form-group mb-3">
+                                            <label for="id_description" class="form-label">{{ form.description.label }}</label>
+                                            {{ form.description }}
+                                            {% if form.description.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_debit_amount" class="form-label">{{ form.debit_amount.label }}</label>
-                                    {{ form.debit_amount }}
-                                    {% if form.debit_amount.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.debit_amount.errors }}</div>
-                                    {% endif %}
+                                <!-- Row 5: Debit & Credit Amounts -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_debit_amount" class="form-label">{{ form.debit_amount.label }}</label>
+                                            {{ form.debit_amount }}
+                                            {% if form.debit_amount.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.debit_amount.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="id_credit_amount" class="form-label">{{ form.credit_amount.label }}</label>
+                                            {{ form.credit_amount }}
+                                            {% if form.credit_amount.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.credit_amount.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="id_credit_amount" class="form-label">{{ form.credit_amount.label }}</label>
-                                    {{ form.credit_amount }}
-                                    {% if form.credit_amount.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.credit_amount.errors }}</div>
-                                    {% endif %}
+
+                                <!-- Row 6: Notes -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="form-group mb-3">
+                                            <label for="id_notes" class="form-label">{{ form.notes.label }}</label>
+                                            {{ form.notes }}
+                                            {% if form.notes.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="id_notes" class="form-label">{{ form.notes.label }}</label>
-                                    {{ form.notes }}
-                                    {% if form.notes.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Non-field Errors -->
-                        {% if form.non_field_errors %}
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                {% for error in form.non_field_errors %}
-                                    <div>{{ error }}</div>
-                                {% endfor %}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endif %}
-
-                        <!-- Form Actions -->
-                        <div class="row mt-5">
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save Receipt
-                                </button>
-                                
-                                {% if object.pk %}
-                                    <!-- View & Print Dropdown -->
-                                    <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item" href="{% url 'accounting:cash_receipt_detail' object.pk %}" target="_blank">
-                                                    <i class="fas fa-external-link-alt"></i> View Receipt
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="{% url 'accounting:cash_receipt_print' object.pk %}" target="_blank">
-                                                    <i class="fas fa-print"></i> Print Receipt
-                                                </a>
-                                            </li>
-                                        </ul>
+                                <!-- Non-field Errors -->
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        {% for error in form.non_field_errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 {% endif %}
-                                
-                                <a href="{% url 'accounting:cash_receipt_list' %}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Cancel
-                                </a>
-                            </div>
+
+                                <!-- Form Actions -->
+                                <div class="row mt-5">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Save Receipt
+                                        </button>
+                                        
+                                        {% if object.pk %}
+                                            <a href="{% url 'accounting:cash_receipt_detail' object.pk %}" class="btn btn-info">
+                                                <i class="fas fa-eye"></i> View Receipt
+                                            </a>
+                                        {% endif %}
+                                        
+                                        <a href="{% url 'accounting:cash_receipt_list' %}" class="btn btn-secondary">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -274,7 +219,6 @@
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
 
-    /* Make form action buttons sticky and always accessible */
     .row.mt-5 {
         position: sticky !important;
         bottom: 0 !important;
@@ -287,135 +231,22 @@
         box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
     }
 
-    /* Responsive form container for small screens */
     @media (max-width: 768px) {
-        .container-xxl {
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-            overflow-x: auto;
-        }
-        
-        .card-form-container {
-            overflow: visible;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .card-body {
-            padding: 1rem;
-        }
-        
-        .row {
-            margin-left: -0.375rem;
-            margin-right: -0.375rem;
-        }
-        
-        .col-md-6,
-        .col-12 {
-            padding-left: 0.375rem;
-            padding-right: 0.375rem;
-        }
-        
-        .form-control,
-        .form-select {
+        .form-control, .form-select {
             font-size: 16px;
         }
-        
-        .breadcrumb {
-            font-size: 0.875rem;
-            margin-bottom: 0.75rem;
-        }
-        
-        .card-header {
-            padding: 0.75rem 1rem;
-        }
-        
-        h5 {
-            font-size: 1.1rem;
-        }
-        
         .btn {
             width: 100%;
             margin-bottom: 0.5rem;
         }
-        
-        .btn + .btn {
-            margin-top: 0.5rem;
-        }
     }
     
-    /* Extra small screens */
-    @media (max-width: 576px) {
-        .container-xxl {
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-        }
-        
-        .card-form-container {
-            overflow: visible;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .card-body {
-            padding: 0.75rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1rem !important;
-        }
-        
-        .row {
-            margin-left: -0.25rem;
-            margin-right: -0.25rem;
-        }
-        
-        .col-md-6,
-        .col-12 {
-            padding-left: 0.25rem;
-            padding-right: 0.25rem;
-        }
-        
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .invalid-feedback {
-            font-size: 0.75rem;
-        }
-
-        /* Sticky buttons on small screens */
-        .row.mt-5 {
-            position: sticky !important;
-            bottom: 0 !important;
-            z-index: 10 !important;
-            background-color: #fff !important;
-            padding: 1rem 0.75rem !important;
-            margin-left: -0.75rem !important;
-            margin-right: -0.75rem !important;
-            margin-bottom: -0.75rem !important;
-            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
-        }
-    }
-    
-    /* Ensure content is never cut off */
     body {
         overflow-x: hidden;
-    }
-    
-    /* Card form container - use browser default scrollbar */
-    .card-form-container {
-        scroll-behavior: smooth;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        scrollbar-width: auto !important;
-        -ms-overflow-style: auto !important;
     }
 </style>
 
 <script>
-    // Form validation
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.querySelector('.needs-validation');
         form.addEventListener('submit', function(event) {
@@ -426,300 +257,13 @@
             form.classList.add('was-validated');
         }, false);
 
-        // Get entity ID from hidden input field
-        const entityId = document.getElementById('entity_id_hidden')?.value || 
-                         document.querySelector('[name="entity"]')?.value || 
-                         document.body.getAttribute('data-entity-id') ||
-                         '{{ request.entity.id }}';
-        
-        console.log('Entity ID:', entityId);
-
-        // Helper function to populate sub-accounts dropdown with enhanced grouping and visibility
-        function populateSubAccounts(mainAccountId, subAccountSelect, hintElement, currentValue = null) {
-            if (!mainAccountId) {
-                subAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                subAccountSelect.disabled = true;
-                if (hintElement) {
-                    hintElement.textContent = 'Select a main account to populate sub-accounts';
-                    hintElement.classList.remove('text-success', 'text-warning', 'text-danger');
-                    hintElement.classList.add('text-muted');
-                }
-                if (typeof $ !== 'undefined' && $.fn.select2) {
-                    $(subAccountSelect).select2();
-                }
-                return;
-            }
-
-            // Fetch sub-accounts for selected main account with enhanced grouping
-            const apiUrl = `/accounting/api/get-sub-accounts/?main_account_id=${mainAccountId}&entity_id=${entityId}`;
-            console.log('Fetching enhanced sub-accounts from:', apiUrl);
-            
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Enhanced sub-accounts response:', data);
-                    if (data.success) {
-                        // Clear dropdown and start fresh
-                        subAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                        
-                        // Create optgroups for better hierarchy visualization
-                        if (data.grouped_accounts && Object.keys(data.grouped_accounts).length > 0) {
-                            Object.entries(data.grouped_accounts).forEach(([groupName, accounts]) => {
-                                // Create optgroup
-                                const optgroup = document.createElement('optgroup');
-                                optgroup.label = `📊 ${groupName}`;
-                                
-                                // Add accounts to the optgroup
-                                accounts.forEach(account => {
-                                    const option = document.createElement('option');
-                                    option.value = account.id;
-                                    
-                                    // Enhanced display with visual indicators
-                                    const displayText = account.is_parent ? 
-                                        `📁 ${account.account_number} - ${account.name}` :
-                                        `   ├─ ${account.account_number} - ${account.name}`;
-                                    
-                                    option.textContent = displayText;
-                                    
-                                    // Pre-select if editing and this was the original value
-                                    if (currentValue && account.id == currentValue) {
-                                        option.selected = true;
-                                    }
-                                    
-                                    optgroup.appendChild(option);
-                                });
-                                
-                                subAccountSelect.appendChild(optgroup);
-                            });
-                            
-                            // Auto-select if only one option (main account fallback)
-                            if (data.main_account_fallback && data.accounts.length === 1 && !currentValue) {
-                                subAccountSelect.value = data.accounts[0].id;
-                            }
-                            
-                            subAccountSelect.disabled = false;
-                            if (hintElement) {
-                                const accountWord = data.count === 1 ? 'account' : 'accounts';
-                                const message = data.main_account_fallback ? 
-                                    `✓ ${data.main_account.account_number} - ${data.main_account.name} (no sub-accounts)` :
-                                    `✓ ${data.count} ${accountWord} available under ${data.main_account.account_number}`;
-                                hintElement.textContent = message;
-                                hintElement.classList.remove('text-muted', 'text-warning', 'text-danger');
-                                hintElement.classList.add('text-success');
-                            }
-                        } else {
-                            subAccountSelect.disabled = true;
-                            if (hintElement) {
-                                hintElement.textContent = 'No accounts found for this main account';
-                                hintElement.classList.remove('text-muted', 'text-success', 'text-danger');
-                                hintElement.classList.add('text-warning');
-                            }
-                        }
-                        
-                        // Reinitialize Select2 if it exists for better dropdown styling
-                        if (typeof $ !== 'undefined' && $.fn.select2) {
-                            $(subAccountSelect).select2({
-                                width: '100%',
-                                allowClear: false
-                            });
-                        }
-                    } else {
-                        if (hintElement) {
-                            hintElement.textContent = `Error: ${data.message || 'Unable to load accounts'}`;
-                            hintElement.classList.remove('text-muted', 'text-success', 'text-warning');
-                            hintElement.classList.add('text-danger');
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching sub-accounts:', error);
-                    if (hintElement) {
-                        hintElement.textContent = 'Error loading sub-accounts. Please try again.';
-                        hintElement.classList.remove('text-muted', 'text-success', 'text-warning');
-                        hintElement.classList.add('text-danger');
-                    }
-                });
-        }
-
-        // Cascading dropdown for debit accounts
-        const mainAccountSelect = document.getElementById('id_main_account');
-        const subAccountSelect = document.getElementById('id_account');
-        const subAccountHint = document.getElementById('sub_account_hint');
-
-        if (mainAccountSelect && subAccountSelect) {
-            // On page load, if a sub-account is already selected, populate the sub-accounts list
-            const currentSubAccountId = subAccountSelect?.value;
-            if (currentSubAccountId && mainAccountSelect.value) {
-                populateSubAccounts(mainAccountSelect.value, subAccountSelect, subAccountHint, currentSubAccountId);
-            } else {
-                // Start with disabled sub-accounts
-                subAccountSelect.disabled = true;
-            }
-            
-            // On change, fetch new sub-accounts
-            mainAccountSelect.addEventListener('change', function() {
-                populateSubAccounts(this.value, subAccountSelect, subAccountHint);
+        // Initialize Select2 if available
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                allowClear: true
             });
         }
-
-        // Cascading dropdown for credit accounts with enhanced visibility
-        const mainCreditAccountSelect = document.getElementById('id_main_credit_account');
-        const subCreditAccountSelect = document.getElementById('id_credit_account');
-
-        if (mainCreditAccountSelect) {
-            mainCreditAccountSelect.addEventListener('change', function() {
-                const mainAccountId = this.value;
-                
-                if (!mainAccountId) {
-                    // Clear sub-accounts dropdown
-                    subCreditAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                    subCreditAccountSelect.disabled = true;
-                    return;
-                }
-
-                // Fetch sub-accounts for selected main account with enhanced grouping
-                fetch(`/accounting/api/get-sub-accounts/?main_account_id=${mainAccountId}&entity_id=${entityId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Clear dropdown and start fresh
-                            subCreditAccountSelect.innerHTML = '<option value="">-- Select Sub-Account --</option>';
-                            
-                            // Create optgroups for better hierarchy visualization
-                            if (data.grouped_accounts && Object.keys(data.grouped_accounts).length > 0) {
-                                Object.entries(data.grouped_accounts).forEach(([groupName, accounts]) => {
-                                    // Create optgroup
-                                    const optgroup = document.createElement('optgroup');
-                                    optgroup.label = `📊 ${groupName}`;
-                                    
-                                    // Add accounts to the optgroup
-                                    accounts.forEach(account => {
-                                        const option = document.createElement('option');
-                                        option.value = account.id;
-                                        
-                                        // Enhanced display with visual indicators
-                                        const displayText = account.is_parent ? 
-                                            `📁 ${account.account_number} - ${account.name}` :
-                                            `   ├─ ${account.account_number} - ${account.name}`;
-                                        
-                                        option.textContent = displayText;
-                                        optgroup.appendChild(option);
-                                    });
-                                    
-                                    subCreditAccountSelect.appendChild(optgroup);
-                                });
-                                
-                                subCreditAccountSelect.disabled = false;
-                            } else {
-                                subCreditAccountSelect.disabled = true;
-                            }
-                            
-                            // Reinitialize Select2 if it exists for better dropdown styling
-                            if (typeof $ !== 'undefined' && $.fn.select2) {
-                                $(subCreditAccountSelect).select2({
-                                    width: '100%',
-                                    allowClear: false
-                                });
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error fetching sub-accounts:', error));
-            });
-        }
-    });
-
-    // Auto-generate reference number on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        const referenceNumberField = document.getElementById('id_reference_number');
-        
-        if (referenceNumberField && !referenceNumberField.value) {
-            // Get entity ID from hidden input field
-            const entityId = document.getElementById('entity_id_hidden')?.value;
-            
-            if (entityId) {
-                fetch(`/accounting/api/generate-reference-number/?form_type=cash_receipt&entity_id=${entityId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.reference_number) {
-                            referenceNumberField.value = data.reference_number;
-                        }
-                    })
-                    .catch(error => console.error('Error generating reference number:', error));
-            }
-        }
-    });
-
-    // Currency Exchange Rate Functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const currencySelect = document.getElementById('id_currency');
-        const exchangeRateSection = document.getElementById('exchange_rate_section');
-        const exchangeRateInput = document.getElementById('id_exchange_rate');
-        const convertedAmountsSection = document.getElementById('converted_amounts_section');
-        const debitAmountInput = document.getElementById('id_debit_amount');
-        const creditAmountInput = document.getElementById('id_credit_amount');
-        const convertedDebitInput = document.getElementById('id_converted_debit_amount');
-        const convertedCreditInput = document.getElementById('id_converted_credit_amount');
-        
-        // Entity currency ID - this should be passed from the backend
-        const entityCurrencyId = '{{ request.entity.currency.id|default:"" }}';
-        
-        function toggleExchangeRateFields() {
-            const selectedCurrency = currencySelect.value;
-            
-            if (selectedCurrency && selectedCurrency !== entityCurrencyId) {
-                // Different currency selected - show exchange rate fields
-                exchangeRateSection.style.display = 'block';
-                convertedAmountsSection.style.display = 'block';
-                exchangeRateInput.style.display = 'block';
-                convertedDebitInput.style.display = 'block';
-                convertedCreditInput.style.display = 'block';
-                
-                // Set exchange rate field as required
-                exchangeRateInput.required = true;
-                
-                // Calculate converted amounts if exchange rate and amounts are available
-                calculateConvertedAmounts();
-            } else {
-                // Same currency or no currency - hide exchange rate fields
-                exchangeRateSection.style.display = 'none';
-                convertedAmountsSection.style.display = 'none';
-                exchangeRateInput.style.display = 'none';
-                convertedDebitInput.style.display = 'none';
-                convertedCreditInput.style.display = 'none';
-                
-                // Remove required attribute
-                exchangeRateInput.required = false;
-                
-                // Clear exchange rate
-                exchangeRateInput.value = '1.000000';
-                convertedDebitInput.value = '';
-                convertedCreditInput.value = '';
-            }
-        }
-        
-        function calculateConvertedAmounts() {
-            const exchangeRate = parseFloat(exchangeRateInput.value);
-            const debitAmount = parseFloat(debitAmountInput.value);
-            const creditAmount = parseFloat(creditAmountInput.value);
-            
-            if (exchangeRate > 0) {
-                if (debitAmount > 0) {
-                    convertedDebitInput.value = (debitAmount * exchangeRate).toFixed(2);
-                }
-                if (creditAmount > 0) {
-                    convertedCreditInput.value = (creditAmount * exchangeRate).toFixed(2);
-                }
-            }
-        }
-        
-        // Event listeners
-        currencySelect.addEventListener('change', toggleExchangeRateFields);
-        exchangeRateInput.addEventListener('input', calculateConvertedAmounts);
-        debitAmountInput.addEventListener('input', calculateConvertedAmounts);
-        creditAmountInput.addEventListener('input', calculateConvertedAmounts);
-        
-        // Initialize on page load
-        toggleExchangeRateFields();
     });
 </script>
 {% endblock %}

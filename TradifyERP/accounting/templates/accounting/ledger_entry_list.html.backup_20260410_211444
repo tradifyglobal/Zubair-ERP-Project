@@ -1,0 +1,289 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load permission_tags %}
+{% block head_title%}
+    <title>Ledger Entries | TradifyERP</title>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Ledger Entries</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Ledger Entries</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Debug Info Alert -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+                        <small>
+                            <strong>THIS ENTITY:</strong> {{ total_entries }} total | Draft: {{ draft_count }} | Pending: {{ pending_count }} | Approved: {{ approved_count }} | Authorized: {{ authorized_count }} | Rejected: {{ rejected_count }}
+                            <br>
+                            <strong style="color: orange;">ALL ENTITIES (Debug):</strong> {{ total_all_entities }} total | Approved: {{ approved_all_entities }} | Authorized: {{ authorized_all_entities }}
+                        </small>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Search & Filters</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" class="row g-2">
+                                <!-- Row 1: Basic Search and Date Filters -->
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>Text Search</strong></small></label>
+                                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by account or reference" value="{{ request.GET.search|default:'' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>From Date</strong></small></label>
+                                    <input type="date" name="from_date" class="form-control form-control-sm" value="{{ request.GET.from_date|default:'' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>To Date</strong></small></label>
+                                    <input type="date" name="to_date" class="form-control form-control-sm" value="{{ request.GET.to_date|default:'' }}">
+                                </div>
+                                
+                                <!-- Row 2: Account Number and Reference -->
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>Account Number</strong></small></label>
+                                    <select name="account_number" class="form-select form-select-sm">
+                                        <option value="">-- All Accounts --</option>
+                                        {% for account in accounts %}
+                                            <option value="{{ account.account_number }}" {% if request.GET.account_number == account.account_number %}selected{% endif %}>
+                                                {{ account.account_number }} - {{ account.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>Reference</strong></small></label>
+                                    <input type="text" name="reference" class="form-control form-control-sm" placeholder="Reference number" value="{{ request.GET.reference|default:'' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><small><strong>Entry Type</strong></small></label>
+                                    <select name="entry_type" class="form-select form-select-sm">
+                                        <option value="">All Types</option>
+                                        <option value="DEBIT" {% if request.GET.entry_type == 'DEBIT' %}selected{% endif %}>Debit</option>
+                                        <option value="CREDIT" {% if request.GET.entry_type == 'CREDIT' %}selected{% endif %}>Credit</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Row 3: Amount Range and Status -->
+                                <div class="col-md-3">
+                                    <label class="form-label"><small><strong>From Amount</strong></small></label>
+                                    <input type="number" name="from_amount" class="form-control form-control-sm" placeholder="Min amount" step="0.01" value="{{ request.GET.from_amount|default:'' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label"><small><strong>To Amount</strong></small></label>
+                                    <input type="number" name="to_amount" class="form-control form-control-sm" placeholder="Max amount" step="0.01" value="{{ request.GET.to_amount|default:'' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><small><strong>Status</strong></small></label>
+                                    <select name="status" class="form-select form-select-sm">
+                                        <option value="" {% if not request.GET.status %}selected{% endif %}>Approved & Authorized (default)</option>
+                                        <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                                        <option value="PENDING_APPROVAL" {% if request.GET.status == 'PENDING_APPROVAL' %}selected{% endif %}>Pending Approval</option>
+                                        <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved Only</option>
+                                        <option value="AUTHORIZED" {% if request.GET.status == 'AUTHORIZED' %}selected{% endif %}>Authorized Only</option>
+                                        <option value="REJECTED" {% if request.GET.status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                                        <option value="all" {% if request.GET.status == 'all' %}selected{% endif %}>All Statuses</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Row 4: Buttons -->
+                                <div class="col-12">
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="ri-search-line"></i> Search & Filter
+                                        </button>
+                                        <a href="{% url 'accounting:ledger_entry_list' %}" class="btn btn-light btn-sm">
+                                            <i class="ri-refresh-line"></i> Reset All Filters
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ledger Entries Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Entries ({{ entries|length }})</h4>
+                            <div class="flex-shrink-0">
+                                <a href="{% url 'accounting:ledger_entry_create' %}" class="btn btn-sm btn-primary">
+                                    <i class="mdi mdi-plus"></i> New Entry
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body px-0">
+                            {% if entries %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Account</th>
+                                            <th>Account #</th>
+                                            <th>Type</th>
+                                            <th>Currency Info</th>
+                                            <th>Amount</th>
+                                            <th>Reference</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for entry in entries %}
+                                        <tr>
+                                            <td>
+                                                <small>{{ entry.entry_date|date:"d M Y" }}</small>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'accounting:account_detail' entry.account.id %}">
+                                                    {{ entry.account.name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <strong>{{ entry.account.account_number }}</strong>
+                                            </td>
+                                            <td>
+                                                {% if entry.entry_type == 'DEBIT' %}
+                                                    <span class="badge bg-danger-subtle text-danger">DEBIT</span>
+                                                {% else %}
+                                                    <span class="badge bg-success-subtle text-success">CREDIT</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if entry.account.entity %}
+                                                    <div class="small">
+                                                        <strong>Entity:</strong> 
+                                                        {% if entry.account.entity.company_currency %}
+                                                            {{ entry.account.entity.company_currency.code }}
+                                                        {% else %}
+                                                            <span class="text-muted">Not Set</span>
+                                                        {% endif %}
+                                                        <br><span class="text-muted">Single Currency</span>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted small">No Entity</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ entry.amount }}</strong>
+                                                    {% if entry.account.entity.company_currency %}
+                                                        <br><small class="text-muted">{{ entry.account.entity.company_currency.code }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {{ entry.reference_number|default:"—" }}
+                                            </td>
+                                            <td>
+                                                {% if entry.workflow_status == 'AUTHORIZED' %}
+                                                    <span class="badge bg-success">Authorized</span>
+                                                {% elif entry.workflow_status == 'APPROVED' %}
+                                                    <span class="badge bg-info">Approved</span>
+                                                {% elif entry.workflow_status == 'PENDING_APPROVAL' %}
+                                                    <span class="badge bg-warning">Pending</span>
+                                                {% elif entry.workflow_status == 'REJECTED' %}
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ entry.workflow_status|default:"Draft" }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'accounting:ledger_entry_detail' entry.id %}" class="btn btn-sm btn-info" title="View Entry">
+                                                        <i class="mdi mdi-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'accounting:ledger_entry_print' entry.id %}" class="btn btn-sm btn-secondary" title="Print Entry" target="_blank">
+                                                        <i class="mdi mdi-printer"></i>
+                                                    </a>
+                                                    {% if entry.workflow_status != 'AUTHORIZED' %}
+                                                    <a href="{% url 'accounting:ledger_entry_edit_workflow' entry.id %}" class="btn btn-sm btn-warning" title="Edit Workflow">
+                                                        <i class="mdi mdi-pencil"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <nav class="d-flex justify-content-center mt-4">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                            {% else %}
+                            <div class="alert alert-info m-3" role="alert">
+                                <i class="mdi mdi-information-outline"></i> No ledger entries found.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+</div>
+{% endblock %}

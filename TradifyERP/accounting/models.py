@@ -72,7 +72,6 @@ class Account(models.Model):
         ('EQUITY', 'Equity'),
         ('INCOME', 'Income'),
         ('EXPENSE', 'Expense'),
-        ('SALES', 'Sales'),
         ('PURCHASES', 'Purchases'),
     ]
 
@@ -204,6 +203,11 @@ class TrialBalance(models.Model):
 
     def __str__(self):
         return f"Trial Balance - {self.entity.code} as of {self.as_of_date}"
+    
+    @property
+    def difference(self):
+        """Calculate the difference between debits and credits."""
+        return abs(self.total_debits - self.total_credits)
 
 
 class ProfitLossReport(models.Model):
@@ -1247,8 +1251,8 @@ class CapitalContribution(models.Model):
 
 
 class InternationalTransferTracking(models.Model):
-    """Track international transfer details for capital contributions."""
-
+    """Track international capital transfers between banks/countries."""
+    
     TRANSFER_STATUS_CHOICES = [
         ('PENDING_ABROAD', 'Pending in Foreign Bank'),
         ('IN_TRANSIT', 'In Transit'),
@@ -1257,59 +1261,87 @@ class InternationalTransferTracking(models.Model):
         ('POSTED_TO_GL', 'Posted to General Ledger'),
         ('CANCELLED', 'Cancelled'),
     ]
-
+    
+    # Link to investment
     capital_contribution = models.OneToOneField(
-        CapitalContribution,
+        'accounting.CapitalContribution',
         on_delete=models.CASCADE,
         related_name='international_transfer'
     )
-
-    source_country = models.CharField(max_length=100, help_text='Country code or name where shareholder is located')
-    source_bank_name = models.CharField(max_length=255, blank=True, null=True, help_text='Name of the bank in source country')
-    source_bank_account = models.CharField(max_length=100, blank=True, null=True, help_text='Account number in source country bank')
-    source_currency_code = models.CharField(max_length=3, help_text='Currency code (e.g., CAD, USD, GBP)')
-    source_amount = models.DecimalField(max_digits=15, decimal_places=2, help_text='Amount received from shareholder in source currency')
-
-    destination_country = models.CharField(max_length=100, help_text='Country where funds are transferred (e.g., India)')
-    destination_bank_name = models.CharField(max_length=255, blank=True, null=True, help_text='Name of the bank in destination country')
-    destination_bank_account = models.CharField(max_length=100, blank=True, null=True, help_text='Account number in destination country bank')
-    destination_currency_code = models.CharField(max_length=3, help_text='Destination currency code (e.g., INR)')
-    destination_amount = models.DecimalField(max_digits=15, decimal_places=2, help_text='Amount received in destination currency after conversion')
-
-    exchange_rate_used = models.DecimalField(max_digits=10, decimal_places=4, blank=True, null=True, help_text='Exchange rate used for currency conversion')
-    conversion_date = models.DateField(blank=True, null=True, help_text='Date when currency conversion was done')
-    date_sent_from_shareholder = models.DateField(blank=True, null=True, help_text='Date when shareholder sent the funds')
-    date_received_in_foreign_bank = models.DateField(blank=True, null=True, help_text='Date when funds were received in foreign bank')
-    date_transferred_to_local_bank = models.DateField(blank=True, null=True, help_text='Date when funds were transferred to local bank in India')
-    date_posted_to_gl = models.DateField(blank=True, null=True, help_text='Date when the transaction was posted to general ledger')
-
+    
+    # Source (Shareholder's Country & Bank)
+    source_country = models.CharField(max_length=100, default='Canada')
+    source_bank_name = models.CharField(max_length=255)
+    source_bank_account = models.CharField(max_length=100)
+    source_currency_code = models.CharField(max_length=3, default='CAD')
+    source_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    
+    # Destination (Company's Country & Bank)
+    destination_country = models.CharField(max_length=100, default='India')
+    destination_bank_name = models.CharField(max_length=255)
+    destination_bank_account = models.CharField(max_length=100)
+    destination_currency_code = models.CharField(max_length=3, default='INR')
+    destination_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    
+    # Conversion Details
+    exchange_rate_used = models.DecimalField(max_digits=18, decimal_places=6)
+    conversion_date = models.DateField(null=True, blank=True)
+    
+    # Intermediary (if applicable)
+    intermediary_bank_name = models.CharField(max_length=255, blank=True, null=True)
+    intermediary_reference = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Transfer Timeline
+    date_sent_from_shareholder = models.DateField()
+    date_received_in_foreign_bank = models.DateField(null=True, blank=True)
+    date_transferred_to_local_bank = models.DateField(null=True, blank=True)
+    date_posted_to_gl = models.DateField(null=True, blank=True)
+    
+    # Status & Tracking
     transfer_status = models.CharField(
         max_length=20,
         choices=TRANSFER_STATUS_CHOICES,
-        default='PENDING_ABROAD',
-        help_text='Current status of the transfer'
+        default='PENDING_ABROAD'
     )
-
-    transfer_reference = models.CharField(max_length=255, blank=True, null=True, help_text='Wire transfer reference number or transaction ID')
-    intermediary_bank_name = models.CharField(max_length=255, blank=True, null=True, help_text='Name of intermediary bank if transfer involved multiple legs')
-    intermediary_reference = models.CharField(max_length=100, blank=True, null=True)
-
-    remittance_proof = models.FileField(upload_to='international_transfers/', blank=True, null=True, help_text='Upload proof of remittance (e.g., wire transfer receipt)')
-    conversion_receipt = models.FileField(upload_to='international_transfers/', blank=True, null=True, help_text='Upload currency conversion receipt')
-
-    notes = models.TextField(blank=True, null=True, help_text='Additional notes or comments about the transfer')
-
+    transfer_reference = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Documentation
+    remittance_proof = models.FileField(
+        upload_to='remittance_proofs/%Y/%m/',
+        null=True, blank=True,
+        help_text='Proof of transfer (wire confirmation, etc.)'
+    )
+    conversion_receipt = models.FileField(
+        upload_to='conversion_receipts/%Y/%m/',
+        null=True, blank=True,
+        help_text='Conversion/Exchange receipt'
+    )
+    
+    # Notes
+    notes = models.TextField(blank=True, null=True)
+    
+    # Tracking
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
-        verbose_name = 'International Transfer Tracking'
-        verbose_name_plural = 'International Transfer Trackings'
-        ordering = ['-created_at']
-
+        verbose_name = "International Transfer Tracking"
+        verbose_name_plural = "International Transfer Trackings"
+        ordering = ['-date_sent_from_shareholder']
+    
     def __str__(self):
-        return f"{self.capital_contribution.id} - {self.source_amount} {self.source_currency_code}"
-
+        return f"{self.source_country} ({self.source_currency_code}) → {self.destination_country} ({self.destination_currency_code}) - {self.transfer_status}"
+    
+    def get_conversion_status(self):
+        """Get current status of the transfer."""
+        from django.utils import timezone
+        return {
+            'stage': self.get_transfer_status_display(),
+            'source_amount': f"{self.source_amount} {self.source_currency_code}",
+            'destination_amount': f"{self.destination_amount} {self.destination_currency_code}",
+            'rate': self.exchange_rate_used,
+            'days_in_transit': (timezone.now().date() - self.date_sent_from_shareholder).days if self.date_sent_from_shareholder else 0
+        }
 
 
 class Shareholding(models.Model):
@@ -1771,8 +1803,6 @@ class JournalVoucher(models.Model):
     Employee Payments, and all manual Payment/Receipt entries
     """
     VOUCHER_TYPE_CHOICES = [
-        ('SALES', 'Sales'),
-        ('PURCHASE', 'Purchase'),
         ('SALES_RETURN', 'Sales Return'),
         ('PURCHASE_RETURN', 'Purchase Return'),
         ('PAYMENT', 'Payment'),
@@ -1925,12 +1955,15 @@ class JournalVoucherLine(models.Model):
     voucher = models.ForeignKey(JournalVoucher, on_delete=models.CASCADE, related_name='lines')
     line_number = models.IntegerField(help_text="Line sequence number")
     account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='journal_lines')
-    sub_account = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True, 
-                                   related_name='journal_sub_lines',
-                                   help_text="Sub-account for detailed tracking (cascades from main account)")
     entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     description = models.TextField(blank=True, null=True, help_text="Line item description")
+    
+    # Optional linking fields
+    stakeholder = models.ForeignKey(Stakeholder, on_delete=models.SET_NULL, null=True, blank=True, 
+                                   help_text="Link to shareholder if applicable")
+    employee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='employee_journal_lines', help_text="Link to employee if applicable")
     
     # Dimensions for reporting
     cost_center = models.CharField(max_length=100, blank=True, null=True)

@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Cash Flow Variance Analysis | TradifyERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-0">📊 Variance Analysis</h1>
+            <p class="text-muted mt-2">Actual vs. Forecasted Cash Flows for {{ statement.start_date }} to {{ statement.end_date }}</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'cash_flow_detail' statement.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Statement
+            </a>
+        </div>
+    </div>
+
+    <!-- Variance Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 mb-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <small class="text-muted">Operating Activities</small>
+                    <h5 class="mt-2" style="color: {% if forecast_summary.OPERATING.variance > 0 %}green{% else %}red{% endif %}">
+                        {% if forecast_summary.OPERATING.variance > 0 %}+{% endif %}{{ forecast_summary.OPERATING.variance_pct|floatformat:1 }}%
+                    </h5>
+                    <small class="text-muted">
+                        Variance: ₹{{ forecast_summary.OPERATING.variance|floatformat:0|intcomma }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 mb-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <small class="text-muted">Investing Activities</small>
+                    <h5 class="mt-2" style="color: {% if forecast_summary.INVESTING.variance > 0 %}green{% else %}red{% endif %}">
+                        {% if forecast_summary.INVESTING.variance > 0 %}+{% endif %}{{ forecast_summary.INVESTING.variance_pct|floatformat:1 }}%
+                    </h5>
+                    <small class="text-muted">
+                        Variance: ₹{{ forecast_summary.INVESTING.variance|floatformat:0|intcomma }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 mb-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <small class="text-muted">Financing Activities</small>
+                    <h5 class="mt-2" style="color: {% if forecast_summary.FINANCING.variance > 0 %}green{% else %}red{% endif %}">
+                        {% if forecast_summary.FINANCING.variance > 0 %}+{% endif %}{{ forecast_summary.FINANCING.variance_pct|floatformat:1 }}%
+                    </h5>
+                    <small class="text-muted">
+                        Variance: ₹{{ forecast_summary.FINANCING.variance|floatformat:0|intcomma }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 mb-3">
+            <div class="card bg-light border-dark">
+                <div class="card-body">
+                    <small class="text-muted">Overall Variance</small>
+                    <h5 class="mt-2" style="color: {% if forecast_summary.OPERATING.variance|add:forecast_summary.INVESTING.variance|add:forecast_summary.FINANCING.variance > 0 %}green{% else %}red{% endif %}">
+                        {% if forecast_summary.OPERATING.variance|add:forecast_summary.INVESTING.variance|add:forecast_summary.FINANCING.variance > 0 %}+{% endif %}₹{{ forecast_summary.OPERATING.variance|add:forecast_summary.INVESTING.variance|add:forecast_summary.FINANCING.variance|floatformat:0|intcomma }}
+                    </h5>
+                    <small class="text-muted">Total difference from forecast</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Variance Analysis -->
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Operating Activities Variance -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-arrow-down-circle"></i> Operating Activities Variance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th>Metric</th>
+                                    <th class="text-end">Forecast</th>
+                                    <th class="text-end">Actual</th>
+                                    <th class="text-end">Variance</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Cash Flow</strong></td>
+                                    <td class="text-end">₹{{ forecast_summary.OPERATING.forecast|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">₹{{ forecast_summary.OPERATING.actual|floatformat:0|intcomma }}</td>
+                                    <td class="text-end" style="color: {% if forecast_summary.OPERATING.variance > 0 %}green{% else %}red{% endif %}">
+                                        {% if forecast_summary.OPERATING.variance > 0 %}+{% endif %}₹{{ forecast_summary.OPERATING.variance|floatformat:0|intcomma }}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if forecast_summary.OPERATING.variance_pct > 10 %}
+                                        <span class="badge bg-danger">Unfavorable</span>
+                                        {% elif forecast_summary.OPERATING.variance_pct < -10 %}
+                                        <span class="badge bg-warning">Review</span>
+                                        {% else %}
+                                        <span class="badge bg-success">On Track</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if variance_analysis.operating_variance_pct > 0 %}
+                    <p class="text-muted mb-0">
+                        <small><i class="bi bi-info-circle"></i> Operating cash flow exceeded forecast by {{ variance_analysis.operating_variance_pct|floatformat:1 }}%</small>
+                    </p>
+                    {% else %}
+                    <p class="text-muted mb-0">
+                        <small><i class="bi bi-info-circle"></i> Operating cash flow fell short of forecast by {{ variance_analysis.operating_variance_pct|floatformat:1|abs }}%</small>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Investing Activities Variance -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Investing Activities Variance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th>Metric</th>
+                                    <th class="text-end">Forecast</th>
+                                    <th class="text-end">Actual</th>
+                                    <th class="text-end">Variance</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Cash Flow</strong></td>
+                                    <td class="text-end">₹{{ forecast_summary.INVESTING.forecast|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">₹{{ forecast_summary.INVESTING.actual|floatformat:0|intcomma }}</td>
+                                    <td class="text-end" style="color: {% if forecast_summary.INVESTING.variance > 0 %}green{% else %}red{% endif %}">
+                                        {% if forecast_summary.INVESTING.variance > 0 %}+{% endif %}₹{{ forecast_summary.INVESTING.variance|floatformat:0|intcomma }}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if forecast_summary.INVESTING.variance_pct|abs > 20 %}
+                                        <span class="badge bg-danger">Unfavorable</span>
+                                        {% elif forecast_summary.INVESTING.variance_pct|abs > 10 %}
+                                        <span class="badge bg-warning">Monitor</span>
+                                        {% else %}
+                                        <span class="badge bg-success">On Track</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if variance_analysis.investing_variance_pct > 0 %}
+                    <p class="text-muted mb-0">
+                        <small><i class="bi bi-info-circle"></i> Investing activities exceeded forecast by {{ variance_analysis.investing_variance_pct|floatformat:1 }}%</small>
+                    </p>
+                    {% else %}
+                    <p class="text-muted mb-0">
+                        <small><i class="bi bi-info-circle"></i> Investing activities fell short of forecast by {{ variance_analysis.investing_variance_pct|floatformat:1|abs }}%</small>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Financing Activities Variance -->
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-coin"></i> Financing Activities Variance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th>Metric</th>
+                                    <th class="text-end">Forecast</th>
+                                    <th class="text-end">Actual</th>
+                                    <th class="text-end">Variance</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Cash Flow</strong></td>
+                                    <td class="text-end">₹{{ forecast_summary.FINANCING.forecast|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">₹{{ forecast_summary.FINANCING.actual|floatformat:0|intcomma }}</td>
+                                    <td class="text-end" style="color: {% if forecast_summary.FINANCING.variance > 0 %}green{% else %}red{% endif %}">
+                                        {% if forecast_summary.FINANCING.variance > 0 %}+{% endif %}₹{{ forecast_summary.FINANCING.variance|floatformat:0|intcomma }}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if forecast_summary.FINANCING.variance_pct|abs > 15 %}
+                                        <span class="badge bg-danger">Unfavorable</span>
+                                        {% elif forecast_summary.FINANCING.variance_pct|abs > 5 %}
+                                        <span class="badge bg-warning">Monitor</span>
+                                        {% else %}
+                                        <span class="badge bg-success">On Track</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if variance_analysis.financing_variance_pct > 0 %}
+                    <p class="text-muted mb-0">
+                        <small><i class="bi bi-info-circle"></i> Financing activities exceeded forecast by {{ variance_analysis.financing_variance_pct|floatformat:1 }}%</small>
+                    </p>
+                    {% else %}
+                    <p class="text-muted mb-0">
+                        <small><i class="bi bi-info-circle"></i> Financing activities fell short of forecast by {{ variance_analysis.financing_variance_pct|floatformat:1|abs }}%</small>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Analysis Summary -->
+        <div class="col-lg-4">
+            <!-- Variance Interpretation -->
+            <div class="card mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">📈 Interpretation Guide</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Positive Variance</small>
+                        <p class="mb-1">Better than forecast (more inflows or fewer outflows)</p>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <small class="text-muted">Negative Variance</small>
+                        <p class="mb-1">Worse than forecast (fewer inflows or more outflows)</p>
+                    </div>
+                    <hr>
+                    <div>
+                        <small class="text-muted">< ±5%</small>
+                        <p class="mb-0">Forecast is accurate and reliable</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variance by Threshold -->
+            <div class="card mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">🎯 Variance Thresholds</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item">
+                            <span class="badge bg-success">On Track</span>
+                            <small class="text-muted">Between ±5%</small>
+                        </div>
+                        <div class="list-group-item">
+                            <span class="badge bg-warning">Monitor</span>
+                            <small class="text-muted">Between ±5% and ±15%</small>
+                        </div>
+                        <div class="list-group-item">
+                            <span class="badge bg-danger">Investigate</span>
+                            <small class="text-muted">Beyond ±15%</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Root Cause Analysis -->
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">🔍 Next Steps</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Review accounts with largest variances</li>
+                        <li>Analyze unusual transactions</li>
+                        <li>Update future forecasts based on learnings</li>
+                        <li>Document root causes in notes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Notes -->
+    {% if variance_analysis.variance_explanation %}
+    <div class="card mt-4">
+        <div class="card-header bg-dark text-white">
+            <h6 class="mb-0">📝 Management Notes</h6>
+        </div>
+        <div class="card-body">
+            {{ variance_analysis.variance_explanation|linebreaks }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }
+    
+    .border-info { border-left: 4px solid #0dcaf0 !important; }
+    .border-warning { border-left: 4px solid #ffc107 !important; }
+    .border-danger { border-left: 4px solid #dc3545 !important; }
+</style>
+{% endblock %}

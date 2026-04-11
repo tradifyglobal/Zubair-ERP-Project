@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Cash Flow Statements | TradifyERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-0">📊 Cash Flow Statements</h1>
+            <p class="text-muted mt-2">Entity: <strong>{{ entity.name }}</strong></p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'cash_flow_generate' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Generate Statement
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    {% if latest_statement %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light border-info">
+                <div class="card-body">
+                    <small class="text-muted">Latest Period</small>
+                    <h6 class="card-title">{{ latest_statement.start_date }} to {{ latest_statement.end_date }}</h6>
+                    <div class="text-info">{{ latest_statement.period_type }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-success">
+                <div class="card-body">
+                    <small class="text-muted">Operating Cash Flow</small>
+                    <h6 class="card-title" style="color: {% if latest_statement.net_operating_cash_flow > 0 %}green{% else %}red{% endif %}">
+                        ₹{{ latest_statement.net_operating_cash_flow|floatformat:0|intcomma }}
+                    </h6>
+                    <small class="text-muted">Inflows: ₹{{ latest_statement.operating_inflows|floatformat:0|intcomma }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-warning">
+                <div class="card-body">
+                    <small class="text-muted">Investing Cash Flow</small>
+                    <h6 class="card-title" style="color: {% if latest_statement.net_investing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                        ₹{{ latest_statement.net_investing_cash_flow|floatformat:0|intcomma }}
+                    </h6>
+                    <small class="text-muted">Outflows: ₹{{ latest_statement.investing_outflows|floatformat:0|intcomma }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-danger">
+                <div class="card-body">
+                    <small class="text-muted">Financing Cash Flow</small>
+                    <h6 class="card-title" style="color: {% if latest_statement.net_financing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                        ₹{{ latest_statement.net_financing_cash_flow|floatformat:0|intcomma }}
+                    </h6>
+                    <small class="text-muted">Inflows: ₹{{ latest_statement.financing_inflows|floatformat:0|intcomma }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">📈 12-Month Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 border-end">
+                            <small class="text-muted">Total Recent Inflows</small>
+                            <h6 class="text-success">₹{{ total_recent_inflows|floatformat:0|intcomma }}</h6>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Total Recent Outflows</small>
+                            <h6 class="text-danger">₹{{ total_recent_outflows|floatformat:0|intcomma }}</h6>
+                        </div>
+                    </div>
+                    <div class="border-top pt-3 mt-3">
+                        <small class="text-muted">Average Monthly Net Flow</small>
+                        <h5 style="color: {% if avg_net_monthly_flow > 0 %}green{% else %}red{% endif %}">
+                            ₹{{ avg_net_monthly_flow|floatformat:0|intcomma }}
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">🔄 Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <a href="{% url 'cash_flow_comparison' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-diagram-2"></i> Compare Periods
+                        </a>
+                    </p>
+                    <p class="mb-2">
+                        <a href="{% url 'cash_flow_variance' %}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-percent"></i> Variance Analysis
+                        </a>
+                    </p>
+                    <p class="mb-0">
+                        <a href="{% url 'cash_position_list' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-cash-coin"></i> Back to Dashboard
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statements Table -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">📋 All Statements</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th>Period</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Operating Flow</th>
+                        <th>Investing Flow</th>
+                        <th>Financing Flow</th>
+                        <th>Net Change</th>
+                        <th>Closing Balance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for statement in object_list %}
+                    <tr>
+                        <td>
+                            <strong>{{ statement.start_date }} to {{ statement.end_date }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ statement.get_period_type_display }}</span>
+                        </td>
+                        <td>
+                            {% if statement.is_reconciled %}
+                                <span class="badge bg-success">✓ Reconciled</span>
+                            {% elif statement.is_balanced %}
+                                <span class="badge bg-info">✓ Balanced</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td style="color: {% if statement.net_operating_cash_flow > 0 %}green{% else %}red{% endif %}">
+                            {% if statement.net_operating_cash_flow > 0 %}+{% endif %}₹{{ statement.net_operating_cash_flow|floatformat:0|intcomma }}
+                        </td>
+                        <td style="color: {% if statement.net_investing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                            {% if statement.net_investing_cash_flow > 0 %}+{% endif %}₹{{ statement.net_investing_cash_flow|floatformat:0|intcomma }}
+                        </td>
+                        <td style="color: {% if statement.net_financing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                            {% if statement.net_financing_cash_flow > 0 %}+{% endif %}₹{{ statement.net_financing_cash_flow|floatformat:0|intcomma }}
+                        </td>
+                        <td style="color: {% if statement.total_net_cash_flow > 0 %}green{% else %}red{% endif %}; font-weight: bold;">
+                            {% if statement.total_net_cash_flow > 0 %}+{% endif %}₹{{ statement.total_net_cash_flow|floatformat:0|intcomma }}
+                        </td>
+                        <td style="background-color: #f0f0f0; font-weight: bold;">
+                            ₹{{ statement.closing_balance|floatformat:0|intcomma }}
+                        </td>
+                        <td>
+                            <a href="{% url 'cash_flow_detail' statement.id %}" class="btn btn-sm btn-outline-primary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'cash_flow_variance' statement.id %}" class="btn btn-sm btn-outline-warning" title="Variance">
+                                <i class="bi bi-percent"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                            <p class="mt-2">No cash flow statements yet. <a href="{% url 'cash_flow_generate' %}">Generate one now</a></p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">← Previous</a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next →</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }
+    
+    .border-info { border-left: 4px solid #0dcaf0 !important; }
+    .border-success { border-left: 4px solid #198754 !important; }
+    .border-warning { border-left: 4px solid #ffc107 !important; }
+    .border-danger { border-left: 4px solid #dc3545 !important; }
+    
+    table tr:hover {
+        background-color: #f9f9f9;
+    }
+</style>
+{% endblock %}
