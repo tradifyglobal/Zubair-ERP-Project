@@ -809,6 +809,25 @@ class ManufacturingDashboardView(SessionEntityMixin, LoginRequiredMixin, Templat
         
         total_po_cost = pending_po_cost + completed_po_cost
         
+        # Raw Materials metrics (from raw_materials module)
+        try:
+            from raw_materials.models import RawMaterial as RawMaterialModel, Supplier, RawMaterialCategory, Stock
+            
+            total_raw_materials = RawMaterialModel.objects.filter(is_active=True).count()
+            total_suppliers = Supplier.objects.filter(is_active=True).count()
+            total_categories = RawMaterialCategory.objects.filter(is_active=True).count()
+            
+            # Low stock items from raw_materials
+            low_stock_items = Stock.objects.filter(
+                quantity_on_hand__lt=F('minimum_stock_level')
+            ).count()
+        except ImportError:
+            # If raw_materials module is not available, set defaults
+            total_raw_materials = 0
+            total_suppliers = 0
+            total_categories = 0
+            low_stock_items = 0
+        
         context.update({
             'total_orders': total_orders,
             'open_orders': open_orders,
@@ -818,6 +837,10 @@ class ManufacturingDashboardView(SessionEntityMixin, LoginRequiredMixin, Templat
             'total_po_cost': total_po_cost,
             'pending_po_cost': pending_po_cost,
             'completed_po_cost': completed_po_cost,
+            'total_raw_materials': total_raw_materials,
+            'total_suppliers': total_suppliers,
+            'total_categories': total_categories,
+            'low_stock_items': low_stock_items,
             'csrf_token': get_token(self.request),
         })
         

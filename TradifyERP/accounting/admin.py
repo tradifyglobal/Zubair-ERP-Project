@@ -9,8 +9,9 @@ from .models import (
     Customer, Vendor, VendorInvoice, VendorPayment,
     FixedAsset, DeferredExpense, DeferredRevenue,
     PeriodLock, AuditLog,
-    Stakeholder, CapitalContribution, Shareholding, UserEntity,
-    CashReceiptLine, CashPaymentLine, BankReceiptLine, BankPaymentLine
+    Stakeholder, CapitalContribution, Shareholding, UserEntity, ReportAccess,
+    CashReceiptLine, CashPaymentLine, BankReceiptLine, BankPaymentLine,
+    JournalVoucher, JournalVoucherLine
 )
 from .models_theme import Theme, UserThemePreference
 from .module_permissions import ModulePermission
@@ -571,3 +572,187 @@ class UserThemePreferenceAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         """Prevent deletion - preferences are tied to user."""
         return False
+
+
+# ==================== Journal Voucher Admin ====================
+
+class JournalVoucherLineInline(admin.TabularInline):
+    """Inline admin for Journal Voucher Lines"""
+    model = JournalVoucherLine
+    extra = 1
+    fields = ('line_number', 'account', 'entry_type', 'amount', 'description', 'cost_center', 'project', 'department')
+    raw_id_fields = ('account',)
+    
+    def get_queryset(self, request):
+        """Order lines by line number"""
+        qs = super().get_queryset(request)
+        return qs.order_by('line_number')
+
+
+@admin.register(JournalVoucher)
+class JournalVoucherAdmin(admin.ModelAdmin):
+    """Admin interface for Journal Vouchers"""
+    list_display = ('voucher_number', 'voucher_date', 'voucher_type', 'entity', 'status', 'total_debit', 'total_credit')
+    list_filter = ('voucher_type', 'status', 'voucher_date', 'entity')
+    search_fields = ('voucher_number', 'description', 'reference_number')
+    readonly_fields = ('voucher_number', 'created_at', 'updated_at', 'posted_date', 'posted_by', 'created_by')
+    inlines = [JournalVoucherLineInline]
+    date_hierarchy = 'voucher_date'
+    
+    fieldsets = (
+        ('Voucher Information', {
+            'fields': ('voucher_number', 'voucher_date', 'voucher_type', 'reference_number', 'reference_type', 'entity')
+        }),
+        ('Details', {
+            'fields': ('description', 'notes', 'attachment', 'status')
+        }),
+        ('Approvals', {
+            'fields': ('prepared_by', 'approved_by', 'posted_by'),
+            'classes': ('collapse',)
+        }),
+        ('System', {
+            'fields': ('created_by', 'created_at', 'updated_at', 'posted_date'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def total_debit(self, obj):
+        """Display total debit amount"""
+        return f"₹{obj.get_total_debit():,.2f}"
+    total_debit.short_description = 'Total Debit'
+    
+    def total_credit(self, obj):
+        """Display total credit amount"""
+        return f"₹{obj.get_total_credit():,.2f}"
+    total_credit.short_description = 'Total Credit'
+
+
+@admin.register(JournalVoucherLine)
+class JournalVoucherLineAdmin(admin.ModelAdmin):
+    """Admin interface for Journal Voucher Lines (standalone access)"""
+    list_display = ('voucher', 'line_number', 'account', 'entry_type', 'amount', 'description')
+    list_filter = ('entry_type', 'voucher__entity', 'voucher__voucher_date')
+    search_fields = ('voucher__voucher_number', 'description', 'account__name')
+    readonly_fields = ('voucher', 'created_at', 'updated_at')
+    raw_id_fields = ('account',)
+    
+    fieldsets = (
+        ('Voucher & Line', {
+            'fields': ('voucher', 'line_number')
+        }),
+        ('Accounts', {
+            'fields': ('account', 'sub_account', 'entry_type')
+        }),
+        ('Amount & Description', {
+            'fields': ('amount', 'description')
+        }),
+        ('Dimensions', {
+            'fields': ('cost_center', 'project', 'department'),
+            'classes': ('collapse',)
+        }),
+        ('System', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        """Lines should be added via inline in Journal Voucher admin"""
+        return False
+
+
+# ==================== Report Access Control ====================
+
+class ReportAccessInline(admin.TabularInline):
+    """Inline admin for report access - allows managing report permissions in User admin."""
+    model = ReportAccess
+    fk_name = 'user'
+    extra = 1
+    fields = ('report_type', 'access_level', 'entity', 'is_active', 'expiry_date')
+    can_delete = True
+    
+    def get_queryset(self, request):
+        """Show active permissions first."""
+        qs = super().get_queryset(request)
+        return qs.select_related('user', 'entity').order_by('-is_active', 'report_type')
+
+
+@admin.register(ReportAccess)
+class ReportAccessAdmin(admin.ModelAdmin):
+    """Admin interface for managing report access control."""
+    list_display = ('user', 'report_type_display', 'access_level_display', 'entity_display', 'is_active', 'expiry_status', 'granted_at')
+    list_filter = ('report_type', 'access_level', 'entity', 'is_active', 'granted_at')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
+    readonly_fields = ('granted_at', 'granted_by_display')
+    date_hierarchy = 'granted_at'
+    
+    fieldsets = (
+        ('User & Report', {
+            'fields': ('user', 'report_type', 'entity')
+        }),
+        ('Access Settings', {
+            'fields': ('access_level', 'is_active', 'expiry_date')
+        }),
+        ('Audit Trail', {
+            'fields': ('granted_at', 'granted_by_display'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        """Optimize queryset."""
+        qs = super().get_queryset(request)
+        return qs.select_related('user', 'entity', 'granted_by').order_by('-granted_at')
+    
+    def report_type_display(self, obj):
+        """Display report name instead of code."""
+        return dict(ReportAccess.REPORT_CHOICES).get(obj.report_type, obj.report_type)
+    report_type_display.short_description = 'Report'
+    report_type_display.admin_order_field = 'report_type'
+    
+    def access_level_display(self, obj):
+        """Display access level with color."""
+        colors = {
+            'view_only': 'gray',
+            'edit': 'blue',
+            'full_access': 'green'
+        }
+        color = colors.get(obj.access_level, 'gray')
+        label = dict(ReportAccess.ACCESS_LEVEL_CHOICES).get(obj.access_level, obj.access_level)
+        return f'<span style="color: {color}; font-weight: bold;">{label}</span>'
+    access_level_display.short_description = 'Access Level'
+    access_level_display.allow_tags = True
+    
+    def entity_display(self, obj):
+        """Display entity or 'All Entities'."""
+        return obj.entity.name if obj.entity else 'All Entities'
+    entity_display.short_description = 'Entity'
+    entity_display.admin_order_field = 'entity'
+    
+    def expiry_status(self, obj):
+        """Display expiry status."""
+        if not obj.expiry_date:
+            return '✓ No expiry'
+        
+        from datetime import date
+        if obj.expiry_date < date.today():
+            return f'❌ Expired ({obj.expiry_date})'
+        else:
+            days_left = (obj.expiry_date - date.today()).days
+            if days_left <= 7:
+                return f'⚠️ {days_left} days left'
+            return f'✓ {days_left} days left'
+    expiry_status.short_description = 'Expiry'
+    
+    def granted_by_display(self, obj):
+        """Display who granted the access."""
+        if obj.granted_by:
+            return f"{obj.granted_by.get_full_name()} ({obj.granted_by.username})"
+        return "System"
+    granted_by_display.short_description = 'Granted By'
+    
+    def save_model(self, request, obj, form, change):
+        """Set granted_by to current user if not set."""
+        if not obj.granted_by:
+            obj.granted_by = request.user
+        super().save_model(request, obj, form, change)

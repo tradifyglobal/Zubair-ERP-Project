@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Cash Flow Statement | TradifyERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-0">📊 Cash Flow Statement</h1>
+            <p class="text-muted mt-2">Period: <strong>{{ statement.start_date }} to {{ statement.end_date }}</strong></p>
+        </div>
+        <div class="col-auto text-end">
+            <div class="btn-group">
+                <a href="{% url 'cash_flow_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                {% if statement.variance_analysis %}
+                <a href="{% url 'cash_flow_variance' statement.id %}" class="btn btn-outline-warning">
+                    <i class="bi bi-percent"></i> Variance Analysis
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Status & Reconciliation -->
+    <div class="row mb-3">
+        <div class="col-auto">
+            {% if statement.is_reconciled %}
+            <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Reconciled</span>
+            {% elif statement.is_balanced %}
+            <span class="badge bg-info fs-6"><i class="bi bi-check-circle"></i> Balanced</span>
+            {% else %}
+            <span class="badge bg-warning fs-6"><i class="bi bi-exclamation-circle"></i> Pending</span>
+            {% endif %}
+        </div>
+        <div class="col-auto">
+            <small class="text-muted">Generated: {{ statement.created_at|date:"M d, Y H:i" }}</small>
+        </div>
+    </div>
+
+    <!-- Cash Flow Statement Structure -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-0">
+                    <table class="table table-bordered mb-0" style="font-size: 0.95rem;">
+                        <tbody>
+                            <!-- OPERATING ACTIVITIES -->
+                            <tr style="background-color: #e7f3ff;">
+                                <td colspan="3" style="font-weight: bold; padding: 12px;">
+                                    <i class="bi bi-arrow-down-circle"></i> OPERATING ACTIVITIES
+                                </td>
+                            </tr>
+                            
+                            {% for item in line_items_by_category.OPERATING %}
+                            <tr>
+                                <td style="padding-left: 2rem; width: 60%;">{{ item.description }}</td>
+                                <td class="text-end" style="width: 20%;">
+                                    {% if item.is_inflow %}
+                                    <span style="color: green;">₹{{ item.amount|floatformat:0|intcomma }}</span>
+                                    {% else %}
+                                    <span style="color: red;">(₹{{ item.amount|floatformat:0|intcomma }})</span>
+                                    {% endif %}
+                                </td>
+                                <td></td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <tr style="background-color: #f0f0f0; font-weight: bold;">
+                                <td style="padding-left: 2rem;">Cash from Operations</td>
+                                <td class="text-end">
+                                    ₹{{ statement.operating_inflows|floatformat:0|intcomma }}
+                                </td>
+                                <td class="text-end">
+                                    <span style="color: {% if statement.net_operating_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                        ₹{{ statement.net_operating_cash_flow|floatformat:0|intcomma }}
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- INVESTING ACTIVITIES -->
+                            <tr style="background-color: #fff3e0;">
+                                <td colspan="3" style="font-weight: bold; padding: 12px; margin-top: 10px;">
+                                    <i class="bi bi-graph-up"></i> INVESTING ACTIVITIES
+                                </td>
+                            </tr>
+                            
+                            {% for item in line_items_by_category.INVESTING %}
+                            <tr>
+                                <td style="padding-left: 2rem; width: 60%;">{{ item.description }}</td>
+                                <td class="text-end" style="width: 20%;">
+                                    {% if item.is_inflow %}
+                                    <span style="color: green;">₹{{ item.amount|floatformat:0|intcomma }}</span>
+                                    {% else %}
+                                    <span style="color: red;">(₹{{ item.amount|floatformat:0|intcomma }})</span>
+                                    {% endif %}
+                                </td>
+                                <td></td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <tr style="background-color: #f0f0f0; font-weight: bold;">
+                                <td style="padding-left: 2rem;">Cash from Investing</td>
+                                <td class="text-end">
+                                    ₹{{ statement.investing_inflows|floatformat:0|intcomma }}
+                                </td>
+                                <td class="text-end">
+                                    <span style="color: {% if statement.net_investing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                        ₹{{ statement.net_investing_cash_flow|floatformat:0|intcomma }}
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- FINANCING ACTIVITIES -->
+                            <tr style="background-color: #f0e7f6;">
+                                <td colspan="3" style="font-weight: bold; padding: 12px; margin-top: 10px;">
+                                    <i class="bi bi-coin"></i> FINANCING ACTIVITIES
+                                </td>
+                            </tr>
+                            
+                            {% for item in line_items_by_category.FINANCING %}
+                            <tr>
+                                <td style="padding-left: 2rem; width: 60%;">{{ item.description }}</td>
+                                <td class="text-end" style="width: 20%;">
+                                    {% if item.is_inflow %}
+                                    <span style="color: green;">₹{{ item.amount|floatformat:0|intcomma }}</span>
+                                    {% else %}
+                                    <span style="color: red;">(₹{{ item.amount|floatformat:0|intcomma }})</span>
+                                    {% endif %}
+                                </td>
+                                <td></td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <tr style="background-color: #f0f0f0; font-weight: bold;">
+                                <td style="padding-left: 2rem;">Cash from Financing</td>
+                                <td class="text-end">
+                                    ₹{{ statement.financing_inflows|floatformat:0|intcomma }}
+                                </td>
+                                <td class="text-end">
+                                    <span style="color: {% if statement.net_financing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                        ₹{{ statement.net_financing_cash_flow|floatformat:0|intcomma }}
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- SUMMARY -->
+                            <tr style="background-color: #e8f5e9; font-weight: bold; font-size: 1.05rem;">
+                                <td style="padding-left: 2rem;">NET CHANGE IN CASH</td>
+                                <td class="text-end">
+                                    ₹{{ total_inflows|floatformat:0|intcomma }}
+                                </td>
+                                <td class="text-end">
+                                    <span style="color: {% if statement.total_net_cash_flow > 0 %}darkgreen{% else %}darkred{% endif %}">
+                                        ₹{{ statement.total_net_cash_flow|floatformat:0|intcomma }}
+                                    </span>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td style="padding-left: 2rem;">Plus: Opening Balance</td>
+                                <td class="text-end"></td>
+                                <td class="text-end">
+                                    ₹{{ statement.opening_balance|floatformat:0|intcomma }}
+                                </td>
+                            </tr>
+                            
+                            <tr style="background-color: #e3f2fd; font-weight: bold; font-size: 1.05rem;">
+                                <td style="padding-left: 2rem;">ENDING CASH BALANCE</td>
+                                <td class="text-end"></td>
+                                <td class="text-end">
+                                    ₹{{ statement.closing_balance|floatformat:0|intcomma }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="col-lg-4">
+            <!-- Summary Metrics -->
+            <div class="card mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">📈 Summary Metrics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Total Inflows</small>
+                        <div style="font-size: 1.3rem; color: green; font-weight: bold;">
+                            ₹{{ total_inflows|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <small class="text-muted">Total Outflows</small>
+                        <div style="font-size: 1.3rem; color: red; font-weight: bold;">
+                            ₹{{ total_outflows|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <hr>
+                    <div>
+                        <small class="text-muted">Net Change</small>
+                        <div style="font-size: 1.3rem; font-weight: bold; color: {% if statement.total_net_cash_flow > 0 %}green{% else %}red{% endif %}">
+                            ₹{{ statement.total_net_cash_flow|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Validation -->
+            <div class="card mb-3 {% if statement.is_balanced %}border-success{% else %}border-warning{% endif %}">
+                <div class="card-header {% if statement.is_balanced %}bg-success{% else %}bg-warning{% endif %} text-white">
+                    <h6 class="mb-0">✓ Balance Check</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Opening Balance</small>
+                        <div>₹{{ statement.opening_balance|floatformat:0|intcomma }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">+ Net Cash Flow</small>
+                        <div>₹{{ statement.total_net_cash_flow|floatformat:0|intcomma }}</div>
+                    </div>
+                    <hr>
+                    <div class="mb-2">
+                        <small class="text-muted">Expected Closing</small>
+                        <div style="font-weight: bold;">
+                            ₹{{ statement.closing_balance|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <div class="alert alert-{% if statement.is_balanced %}success{% else %}warning{% endif %} mb-0 py-2">
+                        {% if statement.is_balanced %}
+                        <i class="bi bi-check-circle"></i> Statement is balanced
+                        {% else %}
+                        <i class="bi bi-exclamation-triangle"></i> Variance detected
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Reconciliation -->
+            {% if statement.bank_closing_balance %}
+            <div class="card mb-3 {% if statement.is_reconciled %}border-success{% else %}border-warning{% endif %}">
+                <div class="card-header {% if statement.is_reconciled %}bg-success{% else %}bg-warning{% endif %} text-white">
+                    <h6 class="mb-0">🏦 Bank Reconciliation</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">GL Closing Balance</small>
+                        <div>₹{{ statement.closing_balance|floatformat:0|intcomma }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Bank Closing Balance</small>
+                        <div>₹{{ statement.bank_closing_balance|floatformat:0|intcomma }}</div>
+                    </div>
+                    <hr>
+                    <div class="mb-2">
+                        <small class="text-muted">Difference</small>
+                        <div style="font-weight: bold; color: {% if reconciliation_difference == 0 %}green{% else %}red{% endif %}">
+                            ₹{{ reconciliation_difference|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                    <div class="alert alert-{% if statement.is_reconciled %}success{% else %}warning{% endif %} mb-0 py-2">
+                        {% if statement.is_reconciled %}
+                        <i class="bi bi-check-circle"></i> Fully reconciled
+                        {% else %}
+                        <i class="bi bi-exclamation-triangle"></i> Requires reconciliation
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Variance Analysis -->
+            {% if variance_analysis %}
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">📊 Variance Analysis</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Operating</small>
+                        <div>
+                            <i class="bi bi-{% if variance_analysis.operating_variance > 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                            {{ variance_analysis.operating_variance_pct }}%
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Investing</small>
+                        <div>
+                            <i class="bi bi-{% if variance_analysis.investing_variance > 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                            {{ variance_analysis.investing_variance_pct }}%
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Financing</small>
+                        <div>
+                            <i class="bi bi-{% if variance_analysis.financing_variance > 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                            {{ variance_analysis.financing_variance_pct }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Notes -->
+    {% if statement.notes %}
+    <div class="card mt-4">
+        <div class="card-header bg-dark text-white">
+            <h6 class="mb-0">📝 Notes</h6>
+        </div>
+        <div class="card-body">
+            {{ statement.notes|linebreaks }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }
+    
+    table td {
+        vertical-align: middle;
+        padding: 8px 12px !important;
+    }
+</style>
+{% endblock %}

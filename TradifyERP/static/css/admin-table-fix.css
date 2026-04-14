@@ -1,0 +1,68 @@
+/* Fix for Django admin cash payment line table display */
+
+/* Make sure tables are visible */
+#changelist table {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#changelist table thead {
+    display: table-header-group;
+}
+
+#changelist table tbody {
+    display: table-row-group;
+}
+
+/* Override any table row hiding */
+#changelist table tbody tr {
+    display: table-row !important;
+    visibility: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    opacity: 1 !important;
+}
+
+/* Make sure all table cells are visible */
+#changelist table td,
+#changelist table th {
+    display: table-cell !important;
+    padding: 5px 10px;
+}
+
+/* Override any carousel/slider that hides extra rows */
+#changelist table tbody tr:nth-child(n+2) {
+    display: table-row !important;
+    visibility: visible !important;
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+/* Hide any carousel/slider controls if present */
+[class*="carousel"],
+[class*="slider"],
+[class*="step"] {
+    display: none !important;
+}
+
+/* Results container styling */
+.results {
+    display: block !important;
+    width: 100%;
+}
+
+/* Changelist filter styling */
+#changelist-filter {
+    display: block !important;
+    float: right;
+}
+
+/* Changelist content styling */
+#changelist .results {
+    margin-right: 240px;
+}
+

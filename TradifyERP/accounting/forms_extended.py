@@ -5,7 +5,7 @@ from .models import (
     TaxRate, DeferredExpense, DeferredRevenue, FixedAsset, ReconciliationRecord,
     Customer, Vendor, VendorInvoice, VendorPayment, CashFlowForecast,
     TrialBalance, ProfitLossReport, BalanceSheet, TaxTransaction, TaxSummary,
-    PeriodLock, ReconciliationEntry, ReconciliationMatch, AuditLog
+    PeriodLock, ReconciliationEntry, ReconciliationMatch, AuditLog, InternationalTransferTracking
 )
 
 
@@ -403,3 +403,65 @@ class QuickAddReconciliationMatchForm(forms.ModelForm):
             'ledger_entry_amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
             'variance': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
         }
+
+
+class InternationalTransferForm(forms.ModelForm):
+    """Form for managing international capital transfer tracking."""
+    class Meta:
+        model = InternationalTransferTracking
+        fields = [
+            'source_country', 'source_bank_name', 'source_bank_account', 'source_currency_code', 'source_amount',
+            'destination_country', 'destination_bank_name', 'destination_bank_account', 'destination_currency_code', 'destination_amount',
+            'exchange_rate_used', 'conversion_date', 'date_sent_from_shareholder', 'date_received_in_foreign_bank',
+            'date_transferred_to_local_bank', 'date_posted_to_gl', 'transfer_status', 'transfer_reference',
+            'intermediary_bank_name', 'intermediary_reference', 'remittance_proof', 'conversion_receipt', 'notes'
+        ]
+        widgets = {
+            # Source Country Section
+            'source_country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Canada, USA, UAE, Oman, Saudi Arabia'}),
+            'source_bank_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bank name in source country'}),
+            'source_bank_account': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Account number'}),
+            'source_currency_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'CAD, USD, AED, OMR, SAR, etc.', 'maxlength': '3'}),
+            'source_amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01', 'min': '0'}),
+            
+            # Destination Country Section (India)
+            'destination_country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., India', 'readonly': 'readonly'}),
+            'destination_bank_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bank name in India'}),
+            'destination_bank_account': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Account number'}),
+            'destination_currency_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'INR', 'maxlength': '3', 'readonly': 'readonly'}),
+            'destination_amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01', 'min': '0'}),
+            
+            # Exchange Rate
+            'exchange_rate_used': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 65.4800', 'step': '0.0001', 'min': '0'}),
+            'conversion_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            
+            # Transfer Dates
+            'date_sent_from_shareholder': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'date_received_in_foreign_bank': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'date_transferred_to_local_bank': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'date_posted_to_gl': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            
+            # Transfer Status
+            'transfer_status': forms.Select(attrs={'class': 'form-select'}),
+            
+            # Reference Numbers
+            'transfer_reference': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Wire transfer reference or transaction ID'}),
+            'intermediary_bank_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'If transfer involved multiple banks'}),
+            'intermediary_reference': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Intermediary bank reference'}),
+            
+            # File Uploads
+            'remittance_proof': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.jpg,.jpeg,.png,.doc,.docx'}),
+            'conversion_receipt': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.jpg,.jpeg,.png,.doc,.docx'}),
+            
+            # Notes
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Additional notes or comments about the transfer'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set India as default destination
+        self.fields['destination_country'].initial = 'India'
+        self.fields['destination_currency_code'].initial = 'INR'
+        # Make destination fields read-only
+        self.fields['destination_country'].disabled = True
+        self.fields['destination_currency_code'].disabled = True

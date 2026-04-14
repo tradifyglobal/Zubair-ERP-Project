@@ -5,7 +5,11 @@ SessionEntityMixin - Automatically filter views by session-selected entity
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import ListView
-from accounting.models import Entity, UserEntity
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404, HttpResponseForbidden
+from django.db import models
+from accounting.models import Entity, UserEntity, ReportAccess
+from datetime import date
 
 
 class SessionEntityMixin:
@@ -114,5 +118,99 @@ class SessionEntityMixin:
         else:
             user_entities = UserEntity.objects.filter(user=self.request.user, entity__is_active=True).select_related('entity')
             context['all_entities'] = [ue.entity for ue in user_entities] if user_entities.exists() else []
+        
+        return context
+
+
+class ReportAccessMixin(LoginRequiredMixin):
+    """
+    Mixin to control user access to specific reports.
+    
+    Usage in views:
+        class MyReportView(ReportAccessMixin, TemplateView):
+            report_type = 'shareholder_investment'  # From ReportAccess.REPORT_CHOICES
+            template_name = 'my_report.html'
+    
+    Features:
+    - Restricts access to users with explicit ReportAccess grant
+    - Supports multiple access levels: view_only, edit, full_access
+    - Superusers always have access
+    - Returns 403 Forbidden if user lacks permission
+    - Passes access_level to template context for UI adjustments
+    """
+    
+    report_type = None  # Must be set in subclass
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Check if user has access to this report."""
+        # Allow superusers full access
+        if request.user.is_superuser:
+            request.report_access_level = 'full_access'
+            return super().dispatch(request, *args, **kwargs)
+        
+        if not self.report_type:
+            raise ValueError(f"{self.__class__.__name__} must define report_type attribute")
+        
+        # Get current entity
+        entity_id = request.session.get('selected_entity_id')
+        entity = None
+        if entity_id:
+            try:
+                entity = Entity.objects.get(id=entity_id, is_active=True)
+            except Entity.DoesNotExist:
+                pass
+        
+        # Check if this report has access restrictions
+        report_has_restrictions = ReportAccess.objects.filter(
+            report_type=self.report_type
+        ).exists()
+        
+        if not report_has_restrictions:
+            # No restrictions on this report, everyone can access
+            request.report_access_level = 'full_access'
+            return super().dispatch(request, *args, **kwargs)
+        
+        # Report has restrictions, check user's access
+        access = ReportAccess.objects.filter(
+            user=request.user,
+            report_type=self.report_type,
+            is_active=True
+        )
+        
+        # Check entity-specific or all-entity access
+        if entity:
+            access = access.filter(
+                models.Q(entity=entity) | models.Q(entity__isnull=True)
+            )
+        else:
+            access = access.filter(entity__isnull=True)
+        
+        access = access.first()
+        
+        if not access:
+            # User doesn't have access to this report
+            return HttpResponseForbidden(
+                f"You don't have access to this report. Please contact your administrator."
+            )
+        
+        # Check if access is still valid (not expired)
+        if not access.is_valid():
+            return HttpResponseForbidden(
+                f"Your access to this report has expired or been revoked. Please contact your administrator."
+            )
+        
+        # Access granted, store access level for template use
+        request.report_access_level = access.access_level
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        """Add access level to template context."""
+        context = super().get_context_data(**kwargs)
+        context['report_access_level'] = getattr(self.request, 'report_access_level', 'view_only')
+        
+        # Add helper booleans for template
+        context['can_edit'] = context['report_access_level'] in ['edit', 'full_access']
+        context['can_export'] = context['report_access_level'] in ['full_access']
+        context['can_view'] = True
         
         return context

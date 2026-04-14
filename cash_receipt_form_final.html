@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Accounting{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="#">Cash Management</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounting:cash_receipt_list' %}">Cash Receipts</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-header-shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ page_title }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Row 1: Date & Reference -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_date" class="form-label">{{ form.date.label }}</label>
+                                    {{ form.date }}
+                                    {% if form.date.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_reference_number" class="form-label">{{ form.reference_number.label }}</label>
+                                    {{ form.reference_number }}
+                                    {% if form.reference_number.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.reference_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Main Cash Account & Debit Account -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_cash_account" class="form-label">{{ form.cash_account.label }}</label>
+                                    {{ form.cash_account }}
+                                    {% if form.cash_account.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.cash_account.errors }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">The cash account that will receive the money</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_account" class="form-label">{{ form.account.label }}</label>
+                                    {{ form.account }}
+                                    {% if form.account.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.account.errors }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">The specific source account (will be debited)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Currency & Stakeholder -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_currency" class="form-label">{{ form.currency.label }}</label>
+                                    {{ form.currency }}
+                                    {% if form.currency.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.currency.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_stakeholder" class="form-label">{{ form.stakeholder.label }}</label>
+                                    {{ form.stakeholder }}
+                                    {% if form.stakeholder.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.stakeholder.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 4: Description -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="id_description" class="form-label">{{ form.description.label }}</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 5: Debit & Credit Amounts -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_debit_amount" class="form-label">{{ form.debit_amount.label }}</label>
+                                    {{ form.debit_amount }}
+                                    {% if form.debit_amount.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.debit_amount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_credit_amount" class="form-label">{{ form.credit_amount.label }}</label>
+                                    {{ form.credit_amount }}
+                                    {% if form.credit_amount.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.credit_amount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 6: Notes -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="id_notes" class="form-label">{{ form.notes.label }}</label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Non-field Errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endif %}
+
+                        <!-- Form Actions -->
+                        <div class="row mt-5">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Receipt
+                                </button>
+                                {% if object %}
+                                    <a href="{% url 'accounting:cash_receipt_detail' object.pk %}" class="btn btn-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'accounting:cash_receipt_list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<style>
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+    }
+    
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.querySelector('.needs-validation');
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        }
+
+        // Initialize Select2 for all dropdowns
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('.select2').select2({
+                width: '100%',
+                allowClear: true
+            });
+        }
+    });
+</script>
+
+{% endblock %}

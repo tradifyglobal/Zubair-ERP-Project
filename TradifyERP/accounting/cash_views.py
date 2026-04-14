@@ -36,10 +36,14 @@ class CashReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             initial = kwargs.get('initial', {})
             initial['date'] = datetime.now().date()
             kwargs['initial'] = initial
-        # Get entity from session
+        # Get entity from session first, then fallback to request.entity (set by SessionEntityMixin)
         entity_id = self.request.session.get('selected_entity_id')
+        entity = None
         if entity_id:
             entity = Entity.objects.filter(id=entity_id, is_active=True).first()
+        if not entity and hasattr(self.request, 'entity'):
+            entity = self.request.entity
+        if entity:
             kwargs['entity'] = entity
         return kwargs
     
@@ -146,10 +150,21 @@ class CashReceiptCreateView(LoginRequiredMixin, SessionEntityMixin, CreateView):
             {'name': 'Cash Receipts', 'url': 'cash_receipt_list'},
             {'name': 'New Receipt', 'url': '#'},
         ]
-        # Add entity_id for reference number generation
-        entity_id = self.request.session.get('selected_entity_id')
-        if entity_id:
-            context['entity_id'] = entity_id
+        # Add entity_id for reference number generation and account filtering
+        # Always ensure entity_id is available - use session first, then fallback to request.entity
+        session_entity_id = self.request.session.get('selected_entity_id')
+        request_entity_id = getattr(self.request, 'entity', None)
+        
+        # Use session entity if available, otherwise use request.entity
+        if session_entity_id:
+            entity_id = session_entity_id
+        elif request_entity_id and hasattr(request_entity_id, 'id'):
+            entity_id = request_entity_id.id
+        else:
+            # Fallback to first active entity if nothing else works
+            entity_id = Entity.objects.filter(is_active=True).first().id if Entity.objects.filter(is_active=True).exists() else 1
+        
+        context['entity_id'] = entity_id
         return context
 
 
@@ -579,8 +594,8 @@ class BankPaymentPrintView(LoginRequiredMixin, SessionEntityMixin, DetailView):
 @csrf_exempt
 def get_sub_accounts_api(request):
     """
-    API endpoint to get sub-accounts for a given main account.
-    Used by JavaScript to populate cascading dropdown.
+    API endpoint to get sub-accounts for a given main account with enhanced grouping and visibility.
+    Used by JavaScript to populate cascading dropdown with optgroups for better hierarchy visualization.
     
     Query params:
         - main_account_id: ID of the main account
@@ -588,10 +603,26 @@ def get_sub_accounts_api(request):
     
     Returns JSON: {
         'success': bool,
-        'sub_accounts': [
-            {'id': 1, 'account_number': '3100-01', 'name': 'Account Name'},
+        'main_account': {'id': 1, 'account_number': '100', 'name': 'Cash', 'account_type': 'ASSET'},
+        'accounts': [
+            {
+                'id': 1,
+                'account_number': '100001',
+                'name': 'Bank Account',
+                'account_type': 'ASSET',
+                'display_name': '100001 - Bank Account',
+                'is_parent': false
+            },
             ...
-        ]
+        ],
+        'grouped_accounts': {
+            'Parent Account Name': [
+                {'id': 2, 'account_number': '100002', 'name': 'Cash in Hand', ...},
+                ...
+            ]
+        },
+        'has_sub_accounts': bool,
+        'main_account_fallback': bool
     }
     """
     try:
@@ -604,7 +635,7 @@ def get_sub_accounts_api(request):
                 'message': 'main_account_id and entity_id are required'
             }, status=400)
         
-        # Get the main account
+        # Get the main account with full details
         main_account = Account.objects.filter(
             id=main_account_id,
             entity_id=entity_id,
@@ -622,22 +653,61 @@ def get_sub_accounts_api(request):
             parent_account=main_account,
             entity_id=entity_id,
             is_active=True
-        ).order_by('account_number').values('id', 'account_number', 'name')
+        ).order_by('account_number')
         
-        # If no sub-accounts exist, include the main account itself as an option
-        accounts_list = list(sub_accounts)
-        if not accounts_list:
-            accounts_list = [{
+        # Prepare accounts list with enhanced display information
+        accounts_list = []
+        grouped_accounts = {}
+        
+        has_sub_accounts = sub_accounts.exists()
+        
+        if has_sub_accounts:
+            # Group accounts by first-level parent if they have a parent
+            for account in sub_accounts:
+                # Check if this account has sub-accounts
+                has_children = account.sub_accounts.exists() if hasattr(account, 'sub_accounts') else False
+                account_data = {
+                    'id': account.id,
+                    'account_number': account.account_number,
+                    'name': account.name,
+                    'account_type': account.account_type,
+                    'display_name': f"{account.account_number} - {account.name}",
+                    'has_children': has_children  # True if account has sub-accounts
+                }
+                accounts_list.append(account_data)
+                
+                # Group for optgroup display
+                parent_key = main_account.name  # Group all under main account name
+                if parent_key not in grouped_accounts:
+                    grouped_accounts[parent_key] = []
+                grouped_accounts[parent_key].append(account_data)
+        else:
+            # No sub-accounts exist, include the main account itself as an option
+            main_account_data = {
                 'id': main_account.id,
                 'account_number': main_account.account_number,
-                'name': main_account.name
-            }]
+                'name': main_account.name,
+                'account_type': main_account.account_type,
+                'display_name': f"{main_account.account_number} - {main_account.name}",
+                'has_children': False
+            }
+            accounts_list = [main_account_data]
+            grouped_accounts[main_account.name] = [main_account_data]
         
         return JsonResponse({
             'success': True,
-            'sub_accounts': accounts_list,
-            'has_sub_accounts': len(sub_accounts) > 0,
-            'main_account_fallback': not bool(sub_accounts)
+            'main_account': {
+                'id': main_account.id,
+                'account_number': main_account.account_number,
+                'name': main_account.name,
+                'account_type': main_account.account_type,
+                'display_name': f"{main_account.account_number} - {main_account.name}"
+            },
+            'accounts': accounts_list,
+            'grouped_accounts': grouped_accounts,
+            'has_sub_accounts': has_sub_accounts,
+            'main_account_fallback': not has_sub_accounts,
+            'count': len(accounts_list)
         })
     
     except Exception as e:

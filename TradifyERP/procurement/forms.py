@@ -6,6 +6,7 @@ from .models import (
     PurchaseOrder, POLineItem, GoodsReceipt, GoodsReceiptLineItem,
     ThreeWayMatching, RequestForQuotation, VendorQuotation
 )
+from raw_materials.models import RawMaterial, Supplier as RawMaterialSupplier
 
 
 class PurchaseOrderForm(forms.ModelForm):
@@ -226,3 +227,112 @@ class BulkPurchaseOrderForm(forms.Form):
         from accounting.models import Entity
         super().__init__(*args, **kwargs)
         self.fields['entity'].queryset = Entity.objects.all()
+
+
+class RawMaterialPurchaseOrderForm(forms.ModelForm):
+    """Specialized form for creating POs for raw materials"""
+    
+    supplier = forms.ModelChoiceField(
+        queryset=RawMaterialSupplier.objects.filter(is_active=True).order_by('name'),
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'id': 'id_supplier',
+            'required': 'required'
+        }),
+        label='Supplier',
+        required=True
+    )
+    
+    # Product dropdown - shows what this supplier supplies (informational, optional)
+    supplier_products = forms.ModelChoiceField(
+        queryset=RawMaterial.objects.filter(is_active=True).order_by('name'),
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'id': 'id_supplier_products',
+        }),
+        label='Products from Supplier',
+        required=False,
+        help_text='View products this supplier supplies (line items added after PO creation)'
+    )
+    
+    class Meta:
+        model = PurchaseOrder
+        fields = ('supplier', 'entity', 'po_number', 'expected_delivery_date', 'payment_terms', 'total_amount')
+        widgets = {
+            'entity': forms.Select(attrs={'class': 'form-select', 'required': 'required'}),
+            'po_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., PO-RM-2026-001'}),
+            'expected_delivery_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'payment_terms': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Net 30'}),
+            'total_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set vendor from raw material supplier if provided
+        if 'supplier' in self.initial:
+            supplier = self.initial.get('supplier')
+            # Try to match with Vendor if exists
+            from accounting.models import Vendor
+            try:
+                vendor = Vendor.objects.get(name__iexact=supplier.name)
+                self.initial['vendor'] = vendor
+            except Vendor.DoesNotExist:
+                pass
+    
+    def save(self, commit=True):
+        # Get or create vendor from supplier
+        from accounting.models import Vendor
+        supplier = self.cleaned_data.get('supplier')
+        
+        vendor, _ = Vendor.objects.get_or_create(
+            name=supplier.name,
+            defaults={
+                'vendor_code': supplier.supplier_code,
+                'email': supplier.email,
+                'phone': supplier.phone,
+                'address': supplier.address,
+            }
+        )
+        
+        self.instance.vendor = vendor
+        return super().save(commit)
+
+
+class RawMaterialPOLineItemForm(forms.ModelForm):
+    """Form for adding raw material items to a PO"""
+    
+    raw_material = forms.ModelChoiceField(
+        queryset=RawMaterial.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_raw_material'}),
+        label='Raw Material',
+        required=True
+    )
+    
+    class Meta:
+        model = POLineItem
+        fields = ('raw_material', 'quantity_ordered', 'unit_price')
+        widgets = {
+            'quantity_ordered': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01', 'placeholder': 'Quantity'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'placeholder': 'Unit Price'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.raw_material:
+            self.fields['unit_price'].initial = self.instance.raw_material.current_unit_price
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        raw_material = self.cleaned_data.get('raw_material')
+        
+        # Set description from raw material
+        instance.description = f"{raw_material.product_code} - {raw_material.name} ({raw_material.unit_of_measure})"
+        
+        # Calculate line total
+        quantity = self.cleaned_data.get('quantity_ordered', 0)
+        unit_price = self.cleaned_data.get('unit_price', 0)
+        instance.line_total = quantity * unit_price
+        
+        if commit:
+            instance.save()
+        return instance

@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}International Capital Investments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header with Add Button -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="h2">International Capital Investments</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'accounting:international_capital_add' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Record
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Tiles -->
+    <div class="row mb-4">
+        <!-- Total Transfers -->
+        <div class="col-md-6 col-lg-2 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">Total Transfers</h6>
+                    <h2 class="mb-0">
+                        <span class="text-primary">{{ total_transfers }}</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Abroad -->
+        <div class="col-md-6 col-lg-2 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">⏳ Pending Abroad</h6>
+                    <h2 class="mb-0">
+                        <span class="badge rounded-pill" style="background-color: #FDB750; color: white; font-size: 1.5rem;">{{ pending_abroad }}</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- In Transit -->
+        <div class="col-md-6 col-lg-2 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">📦 In Transit</h6>
+                    <h2 class="mb-0">
+                        <span class="badge rounded-pill" style="background-color: #4BA3FF; color: white; font-size: 1.5rem;">{{ in_transit }}</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Received Locally -->
+        <div class="col-md-6 col-lg-2 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">✓ Received</h6>
+                    <h2 class="mb-0">
+                        <span class="badge rounded-pill" style="background-color: #71DD37; color: white; font-size: 1.5rem;">{{ received_locally }}</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Converted -->
+        <div class="col-md-6 col-lg-2 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">💱 Converted</h6>
+                    <h2 class="mb-0">
+                        <span class="badge rounded-pill" style="background-color: #4BA3FF; color: white; font-size: 1.5rem;">{{ converted }}</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Posted -->
+        <div class="col-md-6 col-lg-2 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">📝 Posted</h6>
+                    <h2 class="mb-0">
+                        <span class="badge rounded-pill" style="background-color: #999999; color: white; font-size: 1.5rem;">{{ posted_to_gl }}</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row mb-4">
+        <!-- Source Amount -->
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">Source Amount (Shareholder's Country)</h6>
+                    <h3 class="text-dark mb-1">{{ total_source_amount|floatformat:2 }}</h3>
+                    <small class="text-muted">Total foreign currency received from shareholders</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Destination Amount -->
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">Destination Amount (₹ INR)</h6>
+                    <h3 class="text-dark mb-1">₹ {{ total_destination_amount|floatformat:2 }}</h3>
+                    <small class="text-muted">Total amount in local currency posted to GL</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weighted Avg Exchange Rate -->
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2">Weighted Avg Exchange Rate</h6>
+                    <h3 class="text-dark mb-1">{{ weighted_avg_exchange_rate|floatformat:4 }}</h3>
+                    <small class="text-muted">Average conversion rate for all transfers</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Details Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light border-0">
+            <h5 class="mb-0">International Transfer Details</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Shareholder</th>
+                            <th>Source Bank</th>
+                            <th>Destination Bank</th>
+                            <th>Source Amount</th>
+                            <th>₹ INR Amount</th>
+                            <th>Exchange Rate</th>
+                            <th>Transfer Status</th>
+                            <th>Days in Transit</th>
+                            <th>Date Sent</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in transfer_details %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.shareholder_name }}</strong>
+                            </td>
+                            <td>
+                                <div>{{ item.transfer.source_bank_name|default:"—" }}</div>
+                                <small class="text-muted">{{ item.transfer.source_country }}</small>
+                            </td>
+                            <td>
+                                <div>{{ item.transfer.destination_bank_name|default:"—" }}</div>
+                                <small class="text-muted">{{ item.transfer.destination_country }}</small>
+                            </td>
+                            <td>
+                                <strong>{{ item.transfer.source_currency_code }} {{ item.transfer.source_amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                <strong>₹ {{ item.transfer.destination_amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                {{ item.transfer.exchange_rate_used|floatformat:4|default:"—" }}
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if item.transfer.transfer_status == 'PENDING_ABROAD' %}
+                                        bg-warning text-dark
+                                    {% elif item.transfer.transfer_status == 'IN_TRANSIT' %}
+                                        bg-info
+                                    {% elif item.transfer.transfer_status == 'RECEIVED_LOCALLY' %}
+                                        bg-success
+                                    {% elif item.transfer.transfer_status == 'CONVERTED' %}
+                                        bg-primary
+                                    {% elif item.transfer.transfer_status == 'POSTED_TO_GL' %}
+                                        bg-secondary
+                                    {% else %}
+                                        bg-danger
+                                    {% endif %}
+                                ">
+                                    {{ item.status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-center d-block">
+                                    {% if item.days_in_transit > 0 %}
+                                        {{ item.days_in_transit }} days
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if item.transfer.date_sent_from_shareholder %}
+                                    {{ item.transfer.date_sent_from_shareholder|date:"M d, Y" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'accounting:capital_contribution_detail' item.contribution.id %}">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'accounting:capital_contribution_edit' item.contribution.id %}">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                        </li>
+                                        {% if item.transfer.remittance_proof %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ item.transfer.remittance_proof.url }}" download>
+                                                <i class="fas fa-download"></i> Remittance Proof
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        {% if item.transfer.conversion_receipt %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ item.transfer.conversion_receipt.url }}" download>
+                                                <i class="fas fa-download"></i> Conversion Receipt
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-muted">
+                                <i class="fas fa-inbox"></i> No international transfers recorded yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .badge {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

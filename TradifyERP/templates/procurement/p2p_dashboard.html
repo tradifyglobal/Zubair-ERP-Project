@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}P2P Dashboard - Procure-to-Pay Pipeline{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4">Procure-to-Pay (P2P) Dashboard</h1>
+            <p class="text-muted">Complete procurement pipeline with GL posting status</p>
+        </div>
+    </div>
+
+    <!-- Entity Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <label>Filter by Entity:</label>
+                    <select id="entityFilter" class="form-control form-control-lg">
+                        <option value="">All Entities</option>
+                        {% for entity in entities %}
+                            <option value="{{ entity.id }}" {% if entity.id|stringformat:"s" == selected_entity_id %}selected{% endif %}>
+                                {{ entity.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P2P Pipeline Cards -->
+    <div class="row mb-4">
+        <!-- Purchase Orders -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow">
+                <div class="card-body">
+                    <div class="text-primary font-weight-bold text-uppercase mb-1">Purchase Orders</div>
+                    <div class="h3 mb-0">{{ dashboard_data.pipeline.purchase_orders.total_count }}</div>
+                    <small class="text-muted">Amount: {{ dashboard_data.pipeline.purchase_orders.total_amount|floatformat:2 }}</small>
+                    <div class="mt-3">
+                        <small class="d-block text-muted">Status: {{ dashboard_data.pipeline.purchase_orders.status }}</small>
+                        <small class="text-warning">⚠️ No GL entries at PO stage</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goods Receipts -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow">
+                <div class="card-body">
+                    <div class="text-success font-weight-bold text-uppercase mb-1">Goods Receipts</div>
+                    <div class="h3 mb-0">{{ dashboard_data.pipeline.goods_receipts.total_count }}</div>
+                    <small class="text-muted">Amount: {{ dashboard_data.pipeline.goods_receipts.total_amount|floatformat:2 }}</small>
+                    <div class="mt-3">
+                        <small class="d-block">GL Posted: <span class="badge badge-success">{{ dashboard_data.pipeline.goods_receipts.gl_posted_count }}</span></small>
+                        <small class="text-muted">{{ dashboard_data.pipeline.goods_receipts.status }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Invoices -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow">
+                <div class="card-body">
+                    <div class="text-info font-weight-bold text-uppercase mb-1">Vendor Invoices</div>
+                    <div class="h3 mb-0">{{ dashboard_data.pipeline.vendor_invoices.total_count }}</div>
+                    <small class="text-muted">Amount: {{ dashboard_data.pipeline.vendor_invoices.total_amount|floatformat:2 }}</small>
+                    <div class="mt-3">
+                        <small class="d-block">GL Posted: <span class="badge badge-info">{{ dashboard_data.pipeline.vendor_invoices.gl_posted_count }}</span></small>
+                        <small class="text-muted">{{ dashboard_data.pipeline.vendor_invoices.status }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Payments -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow">
+                <div class="card-body">
+                    <div class="text-warning font-weight-bold text-uppercase mb-1">Vendor Payments</div>
+                    <div class="h3 mb-0">{{ dashboard_data.pipeline.vendor_payments.total_count }}</div>
+                    <small class="text-muted">Amount: {{ dashboard_data.pipeline.vendor_payments.total_amount|floatformat:2 }}</small>
+                    <div class="mt-3">
+                        <small class="d-block">GL Posted: <span class="badge badge-warning">{{ dashboard_data.pipeline.vendor_payments.gl_posted_count }}</span></small>
+                        <small class="text-muted">{{ dashboard_data.pipeline.vendor_payments.status }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P2P Flow Diagram -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5>P2P Flow with GL Entries</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <div class="h5">1. PO Created</div>
+                                <div class="text-muted small">No GL entries</div>
+                                <div class="text-danger">❌ GL Impact: None</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <div class="h5">2. GRN Accepted</div>
+                                <div class="text-muted small">Goods received</div>
+                                <div class="text-success">✅ GL: DR Inventory / CR GR/IR</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <div class="h5">3. Invoice Matched</div>
+                                <div class="text-muted small">3-way match complete</div>
+                                <div class="text-success">✅ GL: DR GR/IR / CR AP</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <div class="h5">4. Payment Made</div>
+                                <div class="text-muted small">Paid to supplier</div>
+                                <div class="text-success">✅ GL: DR AP / CR Bank</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Breakdown Tables -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6>PO Status Breakdown</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>Draft</td>
+                            <td><span class="badge badge-secondary">{{ dashboard_data.pipeline.purchase_orders.breakdown.DRAFT }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Issued</td>
+                            <td><span class="badge badge-primary">{{ dashboard_data.pipeline.purchase_orders.breakdown.ISSUED }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Received</td>
+                            <td><span class="badge badge-info">{{ dashboard_data.pipeline.purchase_orders.breakdown.RECEIVED }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Closed</td>
+                            <td><span class="badge badge-success">{{ dashboard_data.pipeline.purchase_orders.breakdown.CLOSED }}</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6>GRN GL Posting Status</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>Created</td>
+                            <td><span class="badge badge-secondary">{{ dashboard_data.pipeline.goods_receipts.breakdown.CREATED }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Accepted (ready for GL)</td>
+                            <td><span class="badge badge-warning">{{ dashboard_data.pipeline.goods_receipts.breakdown.ACCEPTED }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>GL Posted</td>
+                            <td><span class="badge badge-success">{{ dashboard_data.pipeline.goods_receipts.breakdown.GL_POSTED }}</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Invoice GL Posting Status</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>Draft</td>
+                            <td><span class="badge badge-secondary">{{ dashboard_data.pipeline.vendor_invoices.breakdown.DRAFT }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Approved</td>
+                            <td><span class="badge badge-primary">{{ dashboard_data.pipeline.vendor_invoices.breakdown.APPROVED }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Matched (3-way)</td>
+                            <td><span class="badge badge-info">{{ dashboard_data.pipeline.vendor_invoices.breakdown.MATCHED }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>GL Posted</td>
+                            <td><span class="badge badge-success">{{ dashboard_data.pipeline.vendor_invoices.breakdown.GL_POSTED }}</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Payment GL Posting Status</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>Pending</td>
+                            <td><span class="badge badge-secondary">{{ dashboard_data.pipeline.vendor_payments.breakdown.PENDING }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Authorized</td>
+                            <td><span class="badge badge-primary">{{ dashboard_data.pipeline.vendor_payments.breakdown.AUTHORIZED }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>Paid (ready for GL)</td>
+                            <td><span class="badge badge-warning">{{ dashboard_data.pipeline.vendor_payments.breakdown.PAID }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>GL Posted</td>
+                            <td><span class="badge badge-success">{{ dashboard_data.pipeline.vendor_payments.breakdown.GL_POSTED }}</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Documents -->
+    <div class="row">
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Recent Purchase Orders</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>PO #</th>
+                                <th>Supplier</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for po in recent_pos %}
+                            <tr>
+                                <td><a href="{% url 'po_detail' po.id %}">{{ po.po_number }}</a></td>
+                                <td>{{ po.supplier.name }}</td>
+                                <td>{{ po.total_amount|floatformat:2 }}</td>
+                                <td><span class="badge badge-primary">{{ po.status }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No POs</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Recent Goods Receipts</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>GRN #</th>
+                                <th>PO #</th>
+                                <th>Status</th>
+                                <th>GL Entry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grn in recent_grns %}
+                            <tr>
+                                <td><a href="{% url 'grn_detail' grn.id %}">{{ grn.receipt_number }}</a></td>
+                                <td>{{ grn.purchase_order.po_number }}</td>
+                                <td><span class="badge badge-info">{{ grn.status }}</span></td>
+                                <td>
+                                    {% if grn.gl_entry %}
+                                        <span class="badge badge-success">✓</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No GRNs</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Recent Vendor Invoices</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Supplier</th>
+                                <th>Status</th>
+                                <th>GL Entry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in recent_invoices %}
+                            <tr>
+                                <td><a href="{% url 'vendor_bill_detail' invoice.id %}">{{ invoice.bill_number }}</a></td>
+                                <td>{{ invoice.supplier.name }}</td>
+                                <td><span class="badge badge-info">{{ invoice.status }}</span></td>
+                                <td>
+                                    {% if invoice.gl_entry %}
+                                        <span class="badge badge-success">✓</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No Invoices</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Recent Vendor Payments</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Payment #</th>
+                                <th>Supplier</th>
+                                <th>Amount</th>
+                                <th>GL Entry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in recent_payments %}
+                            <tr>
+                                <td><a href="{% url 'vendor_payment_detail' payment.id %}">{{ payment.payment_number }}</a></td>
+                                <td>{{ payment.supplier.name }}</td>
+                                <td>{{ payment.amount_paid|floatformat:2 }}</td>
+                                <td>
+                                    {% if payment.gl_entry %}
+                                        <span class="badge badge-success">✓</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No Payments</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .border-left-primary { border-left: 0.25rem solid #004085 !important; }
+    .border-left-success { border-left: 0.25rem solid #155724 !important; }
+    .border-left-info { border-left: 0.25rem solid #0c5460 !important; }
+    .border-left-warning { border-left: 0.25rem solid #856404 !important; }
+
+    /* Default styles for high resolution (2560x1440) */
+    .container-fluid {
+        max-width: 100%;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    /* Media query for 1920x1080 and lower resolution displays */
+    @media (max-width: 1920px) {
+        .container-fluid {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        h1.display-4 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card {
+            margin-bottom: 0.75rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem !important;
+        }
+
+        .mb-3 {
+            margin-bottom: 0.75rem !important;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .card-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        .table th, .table td {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .table-responsive {
+            max-width: 100%;
+        }
+
+        /* Adjust col widths for 1920 resolution */
+        .col-lg-3 {
+            flex: 0 0 calc(50% - 0.375rem);
+            max-width: calc(50% - 0.375rem);
+        }
+
+        .col-lg-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        small {
+            font-size: 0.8rem;
+        }
+
+        .h3 {
+            font-size: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 0.5rem;
+        }
+
+        .text-uppercase {
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+    }
+
+    /* Media query for tablets and smaller displays */
+    @media (max-width: 1366px) {
+        .container-fluid {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        h1.display-4 {
+            font-size: 1.75rem;
+        }
+
+        .col-lg-3 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .col-lg-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .card-body {
+            padding: 0.75rem;
+        }
+
+        .table th, .table td {
+            padding: 0.4rem;
+            font-size: 0.75rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 0.75rem !important;
+        }
+    }
+
+    /* Media query for small devices */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        h1.display-4 {
+            font-size: 1.5rem;
+        }
+
+        .card {
+            margin-bottom: 0.5rem;
+        }
+
+        .card-body {
+            padding: 0.5rem;
+        }
+
+        .card-header {
+            padding: 0.5rem;
+        }
+
+        .table th, .table td {
+            padding: 0.3rem;
+            font-size: 0.7rem;
+        }
+
+        .h3 {
+            font-size: 1.2rem;
+        }
+
+        small {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<script>
+    document.getElementById('entityFilter').addEventListener('change', function(e) {
+        const entityId = e.target.value;
+        const url = new URL(window.location);
+        if (entityId) {
+            url.searchParams.set('entity_id', entityId);
+        } else {
+            url.searchParams.delete('entity_id');
+        }
+        window.location = url.toString();
+    });
+</script>
+
+{% endblock %}

@@ -12,7 +12,8 @@ from .models import (
 )
 from .forms import (
     PurchaseOrderForm, POLineItemForm, GoodsReceiptForm, GoodsReceiptLineItemForm,
-    RequestForQuotationForm, VendorQuotationForm, ThreeWayMatchingForm
+    RequestForQuotationForm, VendorQuotationForm, ThreeWayMatchingForm,
+    RawMaterialPurchaseOrderForm, RawMaterialPOLineItemForm
 )
 from .gl_integration import create_po_gl_entries, create_gr_gl_entries, create_po_payment_gl_entries, reverse_po_gl_entries
 
@@ -346,4 +347,46 @@ class ThreeWayMatchingDetailView(SessionEntityMixin, LoginRequiredMixin, DetailV
     template_name = 'procurement/threewymatching_detail.html'
     context_object_name = 'match'
     login_url = 'login'
+
+
+class RawMaterialPurchaseOrderCreateView(SessionEntityMixin, LoginRequiredMixin, CreateView):
+    """Create a PO for raw materials with supplier selection."""
+    model = PurchaseOrder
+    form_class = RawMaterialPurchaseOrderForm
+    template_name = 'procurement/rawmaterial_po_form.html'
+    success_url = reverse_lazy('procurement:po_list')
+    login_url = 'login'
+    
+    def form_valid(self, form):
+        # Set the created_by user
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Create Raw Material Purchase Order'
+        context['form_type'] = 'raw_material'
+        return context
+
+
+class RawMaterialPOLineItemAddView(SessionEntityMixin, LoginRequiredMixin, CreateView):
+    """Add raw material line items to a PO."""
+    model = POLineItem
+    form_class = RawMaterialPOLineItemForm
+    template_name = 'procurement/rawmaterial_polineitem_form.html'
+    login_url = 'login'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        po_id = self.kwargs.get('po_id')
+        context['po'] = PurchaseOrder.objects.get(id=po_id)
+        return context
+    
+    def form_valid(self, form):
+        po_id = self.kwargs.get('po_id')
+        form.instance.po = PurchaseOrder.objects.get(id=po_id)
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('procurement:po_detail', kwargs={'pk': self.kwargs.get('po_id')})
 

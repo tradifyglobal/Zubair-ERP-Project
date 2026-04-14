@@ -1,0 +1,610 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit {% else %}Add {% endif %}Supplier{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title">{{ title|default:"Supplier" }}</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:dashboard' %}">Raw Materials</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:supplier_list' %}">Suppliers</a></li>
+                    <li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}Add{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5>{% if form.instance.pk %}Edit Supplier{% else %}Add New Supplier{% endif %}</h5>
+                    {% if supplier_code %}
+                    <small class="text-muted">Supplier Code: {{ supplier_code }}</small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="mdi mdi-information"></i> Basic Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    Supplier Name <span class="text-danger">*</span>
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.contact_person.id_for_label }}" class="form-label">
+                                    Contact Person
+                                </label>
+                                {{ form.contact_person }}
+                                {% if form.contact_person.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.contact_person.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.supplier_code.id_for_label }}" class="form-label">
+                                    Supplier Code <span class="text-danger">*</span>
+                                </label>
+                                {{ form.supplier_code }}
+                                {% if form.supplier_code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.supplier_code.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Unique identifier (e.g., SUPP-001)</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                    Phone
+                                </label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.phone.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    Email <span class="text-danger">*</span>
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Address Information -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="mdi mdi-map-marker"></i> Address Information
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">
+                                    Address <span class="text-danger">*</span>
+                                </label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.address.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">
+                                    City <span class="text-danger">*</span>
+                                </label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.city.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.state.id_for_label }}" class="form-label">
+                                    State/Province <span class="text-danger">*</span>
+                                </label>
+                                {{ form.state }}
+                                {% if form.state.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.state.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">
+                                    Country <span class="text-danger">*</span>
+                                </label>
+                                {{ form.country }}
+                                {% if form.country.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.country.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Business Terms -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="mdi mdi-file-document"></i> Business Terms
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.payment_terms.id_for_label }}" class="form-label">
+                                    Payment Terms
+                                </label>
+                                {{ form.payment_terms }}
+                                {% if form.payment_terms.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.payment_terms.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.credit_limit.id_for_label }}" class="form-label">
+                                    Credit Limit
+                                </label>
+                                {{ form.credit_limit }}
+                                {% if form.credit_limit.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.credit_limit.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.currency.id_for_label }}" class="form-label">
+                                    Currency
+                                </label>
+                                {{ form.currency }}
+                                {% if form.currency.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.currency.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quality_rating.id_for_label }}" class="form-label">
+                                    Quality Rating (0-10)
+                                </label>
+                                {{ form.quality_rating }}
+                                {% if form.quality_rating.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quality_rating.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h6 class="mb-3 text-primary">
+                            <i class="mdi mdi-toggle-switch"></i> Status
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Active Supplier
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <a href="{% url 'raw_materials:supplier_list' %}" class="btn btn-secondary me-2">
+                                    <i class="mdi mdi-close"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-check"></i> {{ button_text|default:"Save" }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products Management Section (only in edit mode) -->
+            {% if form.instance.pk %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="mdi mdi-package-multiple"></i> Products Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Current Products -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-success">
+                                <i class="mdi mdi-check-circle"></i> Currently Supplied ({{ supplied_materials.count }})
+                            </h6>
+                            <div id="supplied-products" class="list-group">
+                                {% if supplied_materials %}
+                                    {% for material in supplied_materials %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center" 
+                                         data-material-id="{{ material.id }}">
+                                        <div>
+                                            <h6 class="mb-0">{{ material.product_code }}</h6>
+                                            <small class="text-muted">{{ material.name }} ({{ material.get_unit_of_measure_display }})</small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-danger remove-product" 
+                                                data-material-id="{{ material.id }}">
+                                            <i class="mdi mdi-trash"></i>
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                <p class="text-muted">No products assigned yet</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Available Products -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-info">
+                                <i class="mdi mdi-plus-circle"></i> Available to Add
+                            </h6>
+                            {% if available_materials %}
+                            <div class="input-group mb-3">
+                                <input type="text" id="product-search" class="form-control" 
+                                       placeholder="Search products...">
+                            </div>
+                            <div id="available-products" class="list-group" style="max-height: 400px; overflow-y: auto;">
+                                {% for material in available_materials %}
+                                <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center add-product-btn"
+                                        data-material-id="{{ material.id }}" data-material-name="{{ material.product_code }} - {{ material.name }}">
+                                    <div class="text-start">
+                                        <h6 class="mb-0">{{ material.product_code }}</h6>
+                                        <small class="text-muted">{{ material.name }} ({{ material.get_unit_of_measure_display }})</small>
+                                    </div>
+                                    <i class="mdi mdi-plus-circle text-success"></i>
+                                </button>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-muted">All available products are already assigned</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select, textarea {
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .form-control:focus, .form-select:focus, textarea:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    label {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    hr {
+        margin: 1.5rem 0;
+        border: none;
+        border-top: 1px solid #e3e6f0;
+    }
+
+    /* Product Management Styles */
+    .add-product-btn {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .add-product-btn:hover {
+        background-color: #e7f3ff;
+        border-left: 4px solid #007bff;
+    }
+
+    .remove-product {
+        transition: all 0.2s ease;
+    }
+
+    .remove-product:hover {
+        transform: scale(1.1);
+    }
+
+    .list-group-item.fade-out {
+        animation: fadeOut 0.3s ease;
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+    }
+
+    #available-products .list-group-item:nth-child(n+11) {
+        display: none;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const supplierId = '{{ form.instance.pk }}';
+    const suppliedContainer = document.getElementById('supplied-products');
+    const availableContainer = document.getElementById('available-products');
+    const productSearch = document.getElementById('product-search');
+    
+    // Build the endpoint URL
+    const updateEndpoint = '{% url "raw_materials:update_supplier_product" %}';
+    
+    // Get CSRF token from hidden form input (more reliable than cookie)
+    const csrfInput = document.querySelector('[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfInput ? csrfInput.value : '';
+    
+    console.log('Supplier ID:', supplierId);
+    console.log('Update Endpoint:', updateEndpoint);
+    console.log('CSRF Token from form:', csrfToken ? 'Found (' + csrfToken.substring(0, 10) + '...)' : 'NOT FOUND');
+
+    // Handle adding products with event delegation
+    if (availableContainer) {
+        availableContainer.addEventListener('click', function(e) {
+            const btn = e.target.closest('.add-product-btn');
+            if (btn) {
+                e.preventDefault();
+                const materialId = btn.dataset.materialId;
+                const materialName = btn.dataset.materialName;
+                addProduct(materialId, materialName, btn);
+            }
+        });
+    }
+
+    // Handle removing products with event delegation
+    if (suppliedContainer) {
+        suppliedContainer.addEventListener('click', function(e) {
+            const btn = e.target.closest('.remove-product');
+            if (btn) {
+                e.preventDefault();
+                const materialId = btn.dataset.materialId;
+                const row = btn.closest('[data-material-id]');
+                removeProduct(materialId, row);
+            }
+        });
+    }
+
+    // Search functionality
+    if (productSearch) {
+        productSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const products = availableContainer.querySelectorAll('.list-group-item');
+            
+            products.forEach(product => {
+                const text = product.textContent.toLowerCase();
+                product.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
+        });
+    }
+
+    function addProduct(materialId, materialName, button) {
+        console.log('Adding product:', materialId, 'to supplier:', supplierId);
+        console.log('CSRF Token present:', csrfToken ? 'Yes' : 'NO - ERROR!');
+
+        const formData = new FormData();
+        formData.append('supplier_id', supplierId);
+        formData.append('material_id', materialId);
+        formData.append('action', 'add');
+        if (csrfToken) {
+            formData.append('csrfmiddlewaretoken', csrfToken);
+        }
+
+        fetch(updateEndpoint, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
+            body: formData
+        })
+        .then(response => {
+            console.log('Add - Response status:', response.status);
+            console.log('Add - Response headers content-type:', response.headers.get('content-type'));
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Add - Response error body:', text);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                // Add to supplied list
+                const item = document.createElement('div');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                item.setAttribute('data-material-id', materialId);
+                item.innerHTML = `
+                    <div>
+                        <h6 class="mb-0">${materialName.split(' - ')[0]}</h6>
+                        <small class="text-muted">${materialName}</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger remove-product" 
+                            data-material-id="${materialId}">
+                        <i class="mdi mdi-trash"></i>
+                    </button>
+                `;
+                suppliedContainer.appendChild(item);
+
+                // Hide from available
+                button.style.display = 'none';
+
+                // Show success message
+                showAlert('success', data.message);
+            } else {
+                showAlert('danger', data.error || 'Error adding product');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Error adding product: ' + error.message);
+        });
+    }
+
+    function removeProduct(materialId, row) {
+        console.log('Removing product:', materialId, 'from supplier:', supplierId);
+        console.log('CSRF Token present:', csrfToken ? 'Yes' : 'NO - ERROR!');
+
+        const formData = new FormData();
+        formData.append('supplier_id', supplierId);
+        formData.append('material_id', materialId);
+        formData.append('action', 'remove');
+        if (csrfToken) {
+            formData.append('csrfmiddlewaretoken', csrfToken);
+        }
+
+        fetch(updateEndpoint, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
+            body: formData
+        })
+        .then(response => {
+            console.log('Remove - Response status:', response.status);
+            console.log('Remove - Response headers content-type:', response.headers.get('content-type'));
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Remove - Response error body:', text);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                // Fade out and remove
+                row.classList.add('fade-out');
+                setTimeout(() => {
+                    row.remove();
+                }, 300);
+
+                // Show product in available again
+                const availableBtn = document.querySelector(`button[data-material-id="${materialId}"]`);
+                if (availableBtn) {
+                    availableBtn.style.display = 'flex';
+                }
+
+                showAlert('success', data.message);
+            } else {
+                showAlert('danger', data.error || 'Error removing product');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Error removing product: ' + error.message);
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        console.log(`CSRF Token: ${cookieValue ? 'Found' : 'Not found'}`);
+        return cookieValue;
+    }
+
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.style.marginTop = '10px';
+        alertDiv.innerHTML = `
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <i class="mdi mdi-${type === 'success' ? 'check-circle' : 'alert-circle'}"></i> ${message}
+        `;
+        
+        // Insert at the top of the card body
+        const cardBody = document.querySelector('.card:has(#supplied-products) .card-body');
+        if (cardBody) {
+            cardBody.insertBefore(alertDiv, cardBody.firstChild);
+        } else {
+            document.body.insertBefore(alertDiv, document.body.firstChild);
+        }
+
+        // Auto dismiss after 4 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 4000);
+    }
+});
+</script>
+{% endblock %}

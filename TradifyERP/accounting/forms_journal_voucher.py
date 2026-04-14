@@ -75,7 +75,7 @@ class JournalVoucherLineForm(forms.ModelForm):
         model = JournalVoucherLine
         fields = [
             'line_number', 'account', 'entry_type', 'amount', 
-            'description', 'stakeholder', 'employee',
+            'description',
             'cost_center', 'project', 'department'
         ]
         widgets = {
@@ -97,12 +97,6 @@ class JournalVoucherLineForm(forms.ModelForm):
             'description': forms.TextInput(attrs={
                 'class': 'form-control form-control-sm',
                 'placeholder': 'Line description (optional)'
-            }),
-            'stakeholder': forms.Select(attrs={
-                'class': 'form-select form-select-sm'
-            }),
-            'employee': forms.Select(attrs={
-                'class': 'form-select form-select-sm'
             }),
             'cost_center': forms.TextInput(attrs={
                 'class': 'form-control form-control-sm',
@@ -128,14 +122,9 @@ class JournalVoucherLineForm(forms.ModelForm):
                 entity=self.entity, 
                 is_active=True
             ).order_by('account_number')
-            self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
-                entity=self.entity
-            ).order_by('first_name', 'company_name')
         
         # Make optional fields not required
         self.fields['description'].required = False
-        self.fields['stakeholder'].required = False
-        self.fields['employee'].required = False
         self.fields['cost_center'].required = False
         self.fields['project'].required = False
         self.fields['department'].required = False

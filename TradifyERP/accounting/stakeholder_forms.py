@@ -247,24 +247,36 @@ class CapitalContributionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
+        # Get entity_id from instance, initial data, or form data
+        entity_id = None
+        if self.instance and hasattr(self.instance, 'entity_id'):
+            entity_id = self.instance.entity_id
+        elif self.initial and 'entity' in self.initial:
+            entity = self.initial.get('entity')
+            entity_id = entity.id if hasattr(entity, 'id') else entity
+        
+        # If still no entity, try to get the first active entity
+        if not entity_id:
+            from accounting.models import Entity
+            active_entity = Entity.objects.filter(is_active=True).first()
+            if active_entity:
+                entity_id = active_entity.id
+        
         # Filter stakeholder and bank profiles by entity
-        if self.instance:
-            # Check if instance has entity_id (might be set but not loaded yet)
-            entity_id = getattr(self.instance, 'entity_id', None) or (self.instance.entity_id if hasattr(self.instance, 'entity_id') else None)
-            if entity_id:
-                # Filter stakeholders to only show active stakeholders from the current entity
-                if 'stakeholder' in self.fields:
-                    self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
-                        entity_id=entity_id,
-                        status='ACTIVE'
-                    ).order_by('first_name', 'last_name')
-                
-                # Filter bank profiles to only show those from the current entity
-                if 'payment_bank_account' in self.fields:
-                    self.fields['payment_bank_account'].queryset = BankProfile.objects.filter(
-                        entity_id=entity_id,
-                        is_active=True
-                    ).order_by('bank_name')
+        if entity_id:
+            # Filter stakeholders to only show active stakeholders from the current entity
+            if 'stakeholder' in self.fields:
+                self.fields['stakeholder'].queryset = Stakeholder.objects.filter(
+                    entity_id=entity_id,
+                    status='ACTIVE'
+                ).order_by('first_name', 'last_name')
+            
+            # Filter bank profiles to only show those from the current entity
+            if 'payment_bank_account' in self.fields:
+                self.fields['payment_bank_account'].queryset = BankProfile.objects.filter(
+                    entity_id=entity_id,
+                    is_active=True
+                ).order_by('bank_name')
         
         # Set default contribution_date if not editing an existing instance
         if not self.instance.pk and 'contribution_date' in self.fields:
@@ -466,6 +478,167 @@ class ShareholdingForm(forms.ModelForm):
                     Column('notes', css_class='col-md-12'),
                 )
             ),
+        )
+
+
+class InternationalTransferTrackingForm(forms.ModelForm):
+    """Form for creating/editing international transfer tracking."""
+    
+    # Add editable entity field dropdown to select which entity this transfer belongs to
+    entity = forms.ModelChoiceField(
+        label='Transfer Entity',
+        queryset=None,  # Will be set in __init__
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        }),
+        help_text='The business entity that this international transfer belongs to. Select the correct entity if different from contribution.'
+    )
+    
+    class Meta:
+        from accounting.models import InternationalTransferTracking
+        model = InternationalTransferTracking
+        fields = [
+            'capital_contribution',
+            'source_country', 'source_bank_name', 'source_bank_account', 
+            'source_currency_code', 'source_amount',
+            'destination_country', 'destination_bank_name', 'destination_bank_account',
+            'destination_currency_code', 'destination_amount',
+            'exchange_rate_used', 'conversion_date',
+            'date_sent_from_shareholder', 'date_received_in_foreign_bank',
+            'date_transferred_to_local_bank', 'date_posted_to_gl',
+            'transfer_status', 'transfer_reference', 'intermediary_bank_name',
+            'intermediary_reference', 'remittance_proof', 'conversion_receipt', 'notes'
+        ]
+        widgets = {
+            'capital_contribution': forms.Select(attrs={'class': 'form-control'}),
+            'source_country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Canada, USA'}),
+            'source_bank_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'source_bank_account': forms.TextInput(attrs={'class': 'form-control'}),
+            'source_currency_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., CAD, USD'}),
+            'source_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'destination_country': forms.TextInput(attrs={'class': 'form-control', 'value': 'India'}),
+            'destination_bank_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'destination_bank_account': forms.TextInput(attrs={'class': 'form-control'}),
+            'destination_currency_code': forms.TextInput(attrs={'class': 'form-control', 'value': 'INR'}),
+            'destination_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'exchange_rate_used': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.0001'}),
+            'conversion_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date_sent_from_shareholder': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date_received_in_foreign_bank': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date_transferred_to_local_bank': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date_posted_to_gl': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'transfer_status': forms.Select(attrs={'class': 'form-control'}),
+            'transfer_reference': forms.TextInput(attrs={'class': 'form-control'}),
+            'intermediary_bank_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'intermediary_reference': forms.TextInput(attrs={'class': 'form-control'}),
+            'remittance_proof': forms.FileInput(attrs={'class': 'form-control'}),
+            'conversion_receipt': forms.FileInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from accounting.models import Entity
+        
+        # Make capital_contribution optional - will be set by view when creating from contribution detail
+        if 'capital_contribution' in self.fields:
+            self.fields['capital_contribution'].required = False
+        
+        # Set entity queryset to all active entities
+        if 'entity' in self.fields:
+            self.fields['entity'].queryset = Entity.objects.filter(is_active=True).order_by('name')
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Fieldset(
+                'Investment Link',
+                Row(
+                    Column('capital_contribution', css_class='col-md-12'),
+                ),
+                Row(
+                    Column('entity', css_class='col-md-12'),
+                )
+            ),
+            Fieldset(
+                'Source Information (Shareholder\'s Country)',
+                Row(
+                    Column('source_country', css_class='col-md-6'),
+                    Column('source_currency_code', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('source_bank_name', css_class='col-md-6'),
+                    Column('source_bank_account', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('source_amount', css_class='col-md-12'),
+                )
+            ),
+            Fieldset(
+                'Destination Information (Local)',
+                Row(
+                    Column('destination_country', css_class='col-md-6'),
+                    Column('destination_currency_code', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('destination_bank_name', css_class='col-md-6'),
+                    Column('destination_bank_account', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('destination_amount', css_class='col-md-12'),
+                )
+            ),
+            Fieldset(
+                'Conversion Details',
+                Row(
+                    Column('exchange_rate_used', css_class='col-md-4'),
+                    Column('conversion_date', css_class='col-md-8'),
+                )
+            ),
+            Fieldset(
+                'Transfer Timeline',
+                Row(
+                    Column('date_sent_from_shareholder', css_class='col-md-6'),
+                    Column('date_received_in_foreign_bank', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('date_transferred_to_local_bank', css_class='col-md-6'),
+                    Column('date_posted_to_gl', css_class='col-md-6'),
+                )
+            ),
+            Fieldset(
+                'Transfer Status & Reference',
+                Row(
+                    Column('transfer_status', css_class='col-md-6'),
+                    Column('transfer_reference', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('intermediary_bank_name', css_class='col-md-6'),
+                    Column('intermediary_reference', css_class='col-md-6'),
+                )
+            ),
+            Fieldset(
+                'Documentation',
+                Row(
+                    Column('remittance_proof', css_class='col-md-6'),
+                    Column('conversion_receipt', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('notes', css_class='col-md-12'),
+                )
+            ),
+            HTML('''
+            <div class="row mt-4">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="mdi mdi-content-save"></i> Create Transfer Tracking
+                    </button>
+                    <a href="{% url 'accounting:international_capital_report' %}" class="btn btn-secondary ms-2">
+                        <i class="mdi mdi-arrow-left"></i> Cancel
+                    </a>
+                </div>
+            </div>
+            '''),
         )
 
 

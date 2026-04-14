@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Raw Material Purchase Order{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title">Create Raw Material Purchase Order</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'procurement:dashboard' %}">Procurement</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'procurement:po_list' %}">Purchase Orders</a></li>
+                    <li class="breadcrumb-item active">Create Raw Material PO</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        <i class="mdi mdi-tree"></i> New Raw Material Purchase Order
+                    </h5>
+                    <small class="text-muted">Select supplier and add materials to create a PO</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <!-- Supplier Selection -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.supplier.id_for_label }}" class="form-label">
+                                    Select Supplier <span class="text-danger">*</span>
+                                </label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.supplier.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Choose the supplier for this raw material PO</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.entity.id_for_label }}" class="form-label">
+                                    Entity <span class="text-danger">*</span>
+                                </label>
+                                {{ form.entity }}
+                                {% if form.entity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.entity.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Supplier Products (Informational) -->
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.supplier_products.id_for_label }}" class="form-label">
+                                    Products from Supplier
+                                </label>
+                                {{ form.supplier_products }}
+                                {% if form.supplier_products.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.supplier_products.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">{{ form.supplier_products.help_text }}</small>
+                            </div>
+                        </div>
+
+                        <!-- PO Details -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="mdi mdi-document"></i> PO Details
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.po_number.id_for_label }}" class="form-label">
+                                    PO Number <span class="text-danger">*</span>
+                                </label>
+                                {{ form.po_number }}
+                                {% if form.po_number.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.po_number.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">e.g., PO-RM-2026-001</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.expected_delivery_date.id_for_label }}" class="form-label">
+                                    Expected Delivery Date
+                                </label>
+                                {{ form.expected_delivery_date }}
+                                {% if form.expected_delivery_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.expected_delivery_date.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.payment_terms.id_for_label }}" class="form-label">
+                                    Payment Terms
+                                </label>
+                                {{ form.payment_terms }}
+                                {% if form.payment_terms.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.payment_terms.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.total_amount.id_for_label }}" class="form-label">
+                                    Total Amount <span class="text-danger">*</span>
+                                </label>
+                                {{ form.total_amount }}
+                                {% if form.total_amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.total_amount.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <a href="{% url 'procurement:po_list' %}" class="btn btn-secondary me-2">
+                                    <i class="mdi mdi-close"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-check"></i> Create Purchase Order
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="mt-4 pt-4 border-top">
+                        <p class="text-muted">
+                            <strong>Next:</strong> After creating the PO, you'll be able to add raw material line items and manage the order.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select, textarea {
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .form-control:focus, .form-select:focus, textarea:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    label {
+        font-weight: 500;
+        color: #333;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const supplierSelect = document.getElementById('id_supplier');
+    const productsSelect = document.getElementById('id_supplier_products');
+    
+    console.log('PO Form loaded - supplier selection ready');
+    console.log('Note: Accounting entries will be created at Goods Receipt stage, not at PO creation');
+    
+    if (supplierSelect) {
+        supplierSelect.addEventListener('change', function() {
+            const supplierId = this.value;
+            console.log('Supplier selected:', supplierId);
+            
+            if (!supplierId) {
+                // Clear products dropdown
+                productsSelect.innerHTML = '<option value="">Select supplier first</option>';
+                return;
+            }
+            
+            // Fetch products for the selected supplier
+            const endpoint = "{% url 'raw_materials:products_by_supplier' %}?supplier_id=" + supplierId;
+            console.log('Fetching products from:', endpoint);
+            
+            fetch(endpoint)
+                .then(response => {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Products received:', data);
+                    
+                    // Clear existing options
+                    productsSelect.innerHTML = '<option value="">-- Select to view details --</option>';
+                    
+                    if (data.products && data.products.length > 0) {
+                        data.products.forEach(product => {
+                            const option = document.createElement('option');
+                            option.value = product.id;
+                            option.textContent = `${product.name} (${product.product_code}) - ₹${product.current_unit_price}/${product.unit_of_measure}`;
+                            productsSelect.appendChild(option);
+                        });
+                        console.log(`Loaded ${data.products.length} products for supplier`);
+                    } else {
+                        const option = document.createElement('option');
+                        option.disabled = true;
+                        option.textContent = '-- No products available for this supplier --';
+                        productsSelect.appendChild(option);
+                        console.log('No products found for this supplier');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading products:', error);
+                    productsSelect.innerHTML = '<option value="">Error loading products</option>';
+                });
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Create Cash Flow Statement | TradifyERP{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-0">📊 Generate Cash Flow Statement</h1>
+            <p class="text-muted mt-2">Entity: <strong>{{ entity.name }}</strong></p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'cash_flow_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Form -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">📋 Statement Parameters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="generateForm">
+                        {% csrf_token %}
+                        
+                        <!-- Period Type -->
+                        <div class="mb-3">
+                            <label for="periodType" class="form-label">Period Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="periodType" name="period_type" required>
+                                <option value="DAILY">Daily</option>
+                                <option value="WEEKLY">Weekly</option>
+                                <option value="MONTHLY" selected>Monthly</option>
+                                <option value="QUARTERLY">Quarterly</option>
+                                <option value="ANNUAL">Annual</option>
+                            </select>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="startDate" class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="startDate" name="start_date" 
+                                       value="{{ generation_period.start_date|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="endDate" class="form-label">End Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="endDate" name="end_date" 
+                                       value="{{ generation_period.end_date|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeDetailLines" name="include_details" checked>
+                                <label class="form-check-label" for="includeDetailLines">
+                                    Include detailed line items
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeVariance" name="include_variance" checked>
+                                <label class="form-check-label" for="includeVariance">
+                                    Calculate variance analysis
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="overwriteExisting" name="overwrite">
+                                <label class="form-check-label" for="overwriteExisting">
+                                    Overwrite existing statement (if any)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Add any notes or explanations..."></textarea>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Generate Statement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help -->
+            <div class="card mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">ℹ️ About Cash Flow Statements</h6>
+                </div>
+                <div class="card-body">
+                    <p>A cash flow statement shows how cash moves in and out of your business over a specific period.</p>
+                    
+                    <h6 class="mt-3">Three Main Categories:</h6>
+                    <ul>
+                        <li><strong>Operating Activities:</strong> Day-to-day business activities (sales, expenses)</li>
+                        <li><strong>Investing Activities:</strong> Asset purchases/sales, investments</li>
+                        <li><strong>Financing Activities:</strong> Loans, capital contributions, dividends</li>
+                    </ul>
+
+                    <p class="mt-3 mb-0">
+                        <small class="text-muted">The system automatically generates statements from your General Ledger data.</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">👁️ Preview (Current Period)</h5>
+                </div>
+                <div class="card-body">
+                    {% if preview_data %}
+                        <!-- Operating -->
+                        <div class="mb-3">
+                            <strong style="color: #0066cc;">Operating Activities</strong>
+                            <div class="d-flex justify-content-between">
+                                <span>Inflows:</span>
+                                <span style="color: green;">
+                                    ₹{{ preview_data.OPERATING.inflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Outflows:</span>
+                                <span style="color: red;">
+                                    ₹{{ preview_data.OPERATING.outflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between" style="font-weight: bold;">
+                                <span>Net:</span>
+                                <span style="color: {% if preview_data.OPERATING.inflows > preview_data.OPERATING.outflows %}green{% else %}red{% endif %}">
+                                    ₹{{ preview_data.OPERATING.inflows|add:preview_data.OPERATING.outflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Investing -->
+                        <div class="mb-3">
+                            <strong style="color: #ff9800;">Investing Activities</strong>
+                            <div class="d-flex justify-content-between">
+                                <span>Inflows:</span>
+                                <span style="color: green;">
+                                    ₹{{ preview_data.INVESTING.inflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Outflows:</span>
+                                <span style="color: red;">
+                                    ₹{{ preview_data.INVESTING.outflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between" style="font-weight: bold;">
+                                <span>Net:</span>
+                                <span style="color: {% if preview_data.INVESTING.inflows > preview_data.INVESTING.outflows %}green{% else %}red{% endif %}">
+                                    ₹{{ preview_data.INVESTING.inflows|add:preview_data.INVESTING.outflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Financing -->
+                        <div class="mb-3">
+                            <strong style="color: #9c27b0;">Financing Activities</strong>
+                            <div class="d-flex justify-content-between">
+                                <span>Inflows:</span>
+                                <span style="color: green;">
+                                    ₹{{ preview_data.FINANCING.inflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Outflows:</span>
+                                <span style="color: red;">
+                                    ₹{{ preview_data.FINANCING.outflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between" style="font-weight: bold;">
+                                <span>Net:</span>
+                                <span style="color: {% if preview_data.FINANCING.inflows > preview_data.FINANCING.outflows %}green{% else %}red{% endif %}">
+                                    ₹{{ preview_data.FINANCING.inflows|add:preview_data.FINANCING.outflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Total -->
+                        <div style="background-color: #f5f5f5; padding: 12px; border-radius: 4px;">
+                            <div class="d-flex justify-content-between" style="font-weight: bold; font-size: 1.1rem;">
+                                <span>Total Net Cash Flow:</span>
+                                <span style="color: {% if preview_data.OPERATING.inflows|add:preview_data.INVESTING.inflows|add:preview_data.FINANCING.inflows > preview_data.OPERATING.outflows|add:preview_data.INVESTING.outflows|add:preview_data.FINANCING.outflows %}green{% else %}red{% endif %}">
+                                    ₹{{ preview_data.OPERATING.inflows|add:preview_data.INVESTING.inflows|add:preview_data.FINANCING.inflows|add:preview_data.OPERATING.outflows|add:preview_data.INVESTING.outflows|add:preview_data.FINANCING.outflows|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No data available for the selected period
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Statements -->
+            <div class="card mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">📚 Quick Templates</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setCurrentMonth()">
+                            <i class="bi bi-calendar-event"></i> This Month
+                        </button>
+                    </p>
+                    <p class="mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setLastMonth()">
+                            <i class="bi bi-calendar-event"></i> Last Month
+                        </button>
+                    </p>
+                    <p class="mb-0">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setYearToDate()">
+                            <i class="bi bi-calendar-event"></i> Year-to-Date
+                        </button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setCurrentMonth() {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('startDate').value = start.toISOString().split('T')[0];
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+    document.getElementById('periodType').value = 'MONTHLY';
+}
+
+function setLastMonth() {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const end = new Date(today.getFullYear(), today.getMonth(), 0);
+    document.getElementById('startDate').value = start.toISOString().split('T')[0];
+    document.getElementById('endDate').value = end.toISOString().split('T')[0];
+    document.getElementById('periodType').value = 'MONTHLY';
+}
+
+function setYearToDate() {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), 0, 1);
+    document.getElementById('startDate').value = start.toISOString().split('T')[0];
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+    document.getElementById('periodType').value = 'ANNUAL';
+}
+
+// Handle form submission
+document.getElementById('generateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Generating...';
+    
+    fetch('', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: new FormData(this)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.statement_url;
+        } else {
+            alert('Error: ' + data.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Generate Statement';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while generating the statement');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Generate Statement';
+    });
+});
+</script>
+
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }
+</style>
+{% endblock %}

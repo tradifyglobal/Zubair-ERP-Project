@@ -410,6 +410,19 @@
                                             <span>Add Shares</span>
                                         </a>
                                     </li>
+
+                                    <!-- Investment Tracking -->
+                                    <li class="menu-title">Investment Tracking</li>
+                                    <li>
+                                        <a href="{% url 'accounting:international_capital_report' %}">
+                                            <span>International Capital Transfers</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'shareholder:investment_report' %}">
+                                            <span>Investment Report</span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
                             {% endif %}
@@ -749,6 +762,34 @@
                                         </a>
                                     </li>
 
+                                    <!-- Raw Materials Management -->
+                                    <li class="menu-title">Raw Materials</li>
+                                    <li>
+                                        <a href="{% url 'raw_materials:dashboard' %}">
+                                            <span>Dashboard</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'raw_materials:material_list' %}">
+                                            <span>Raw Materials</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'raw_materials:supplier_list' %}">
+                                            <span>Suppliers</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'raw_materials:stock_levels' %}">
+                                            <span>Stock Levels</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'raw_materials:category_list' %}">
+                                            <span>Categories</span>
+                                        </a>
+                                    </li>
+
                                     <!-- Products -->
                                     <li class="menu-title">Products</li>
                                     <li>
@@ -793,6 +834,91 @@
                                     <li>
                                         <a href="{% url 'inventory:low_stock_report' %}">
                                             <span>Low Stock Report</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            {% endif %}
+
+                            {% if user|has_module_permission:'procurement' %}
+                            <li class="menu-title" data-key="t-procurement-app">Procurement</li>
+
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="truck"></i>
+                                    <span data-key="t-procurement">Procurement</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    <!-- Dashboard -->
+                                    <li class="menu-title">Dashboard</li>
+                                    <li>
+                                        <a href="{% url 'procurement:dashboard' %}">
+                                            <span>Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Procure-to-Pay (P2P) -->
+                                    <li class="menu-title">Procure-to-Pay (P2P)</li>
+                                    <li>
+                                        <a href="{% url 'procurement:p2p_dashboard' %}">
+                                            <i class="mdi mdi-truck-fast me-2"></i><span>P2P Dashboard</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'procurement:p2p_dashboard' %}">
+                                            <span>Pipeline View</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Purchase Orders -->
+                                    <li class="menu-title">Purchase Orders</li>
+                                    <li>
+                                        <a href="{% url 'procurement:po_list' %}">
+                                            <span>All Purchase Orders</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'procurement:po_create' %}">
+                                            <span>Create Purchase Order</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'procurement:rm_po_create' %}">
+                                            <i class="mdi mdi-tree me-2"></i><span>Create Raw Material PO</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Requests & Quotations -->
+                                    <li class="menu-title">Requests & Quotes</li>
+                                    <li>
+                                        <a href="{% url 'procurement:rfq_list' %}">
+                                            <span>Request for Quotation</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'procurement:quotation_list' %}">
+                                            <span>Vendor Quotations</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Goods Receipt -->
+                                    <li class="menu-title">Goods Receipt</li>
+                                    <li>
+                                        <a href="{% url 'procurement:receipt_list' %}">
+                                            <span>All Receipts</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'procurement:receipt_create' %}">
+                                            <span>Create Receipt</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- 3-Way Matching -->
+                                    <li class="menu-title">Invoice Matching</li>
+                                    <li>
+                                        <a href="{% url 'procurement:matching_list' %}">
+                                            <span>3-Way Matching</span>
                                         </a>
                                     </li>
                                 </ul>

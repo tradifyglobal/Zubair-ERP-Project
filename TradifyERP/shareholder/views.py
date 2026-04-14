@@ -5,9 +5,9 @@ from django.urls import reverse_lazy
 from django.db.models import Sum, Count, Q
 from django.contrib import messages
 from django.http import JsonResponse
-from accounting.models import Stakeholder, CapitalContribution, Shareholding, Entity, ShareholderInvestmentLimit
+from accounting.models import Stakeholder, CapitalContribution, Shareholding, Entity, ShareholderInvestmentLimit, InternationalTransferTracking, LedgerEntry, Account, ShareholderPaymentCommitment
 from accounting.stakeholder_forms import StakeholderForm, CapitalContributionForm, ShareholdingForm
-from accounting.mixins import SessionEntityMixin
+from accounting.mixins import SessionEntityMixin, ReportAccessMixin
 from shareholder.import_export import (
     export_shareholders_csv, export_shareholders_excel,
     import_shareholders_csv, import_shareholders_excel,
@@ -19,9 +19,10 @@ from shareholder.notifications import get_all_pending_for_user
 
 # ==================== Shareholder Dashboard ====================
 
-class ShareholderDashboardView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+class ShareholderDashboardView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'shareholder/dashboard.html'
     permission_required = 'accounting.view_stakeholder'
+    report_type = 'shareholder_dashboard'  # For ReportAccessMixin
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -52,16 +53,138 @@ class ShareholderDashboardView(SessionEntityMixin, LoginRequiredMixin, Permissio
         context['total_contributions'] = contributions.count()
         context['total_shareholdings'] = shareholdings.count()
         
-        # Calculate totals - only from APPROVED contributions
-        total_capital = sum(float(cc.amount_company_currency or 0) for cc in contributions)
-        context['total_capital_invested'] = total_capital
+        # Calculate total_capital_invested from GL account balances (same as investment report)
+        # This ensures dashboard matches the investment report page
+        from decimal import Decimal
+        from accounting.models import LedgerEntry, Account
+        
+        total_capital_invested = Decimal('0')
+        if entity:
+            stakeholder_capital_accounts = Account.objects.filter(
+                entity=entity,
+                account_type='EQUITY',
+                is_active=True
+            ).filter(
+                Q(account_number__startswith='SHR-') |
+                Q(name__iendswith=' - Capital')
+            )
+
+            account_ids = list(stakeholder_capital_accounts.values_list('id', flat=True))
+            ledger_sums = LedgerEntry.objects.filter(
+                entity=entity,
+                is_posted=True,
+                account_id__in=account_ids
+            ).values('account_id', 'entry_type').annotate(total=Sum('amount'))
+
+            debit_map = {}
+            credit_map = {}
+            for row in ledger_sums:
+                if row['entry_type'] == 'DEBIT':
+                    debit_map[row['account_id']] = row['total'] or Decimal('0')
+                elif row['entry_type'] == 'CREDIT':
+                    credit_map[row['account_id']] = row['total'] or Decimal('0')
+
+            for account in stakeholder_capital_accounts:
+                debits = debit_map.get(account.id, Decimal('0'))
+                credits = credit_map.get(account.id, Decimal('0'))
+                # EQUITY balance rule: CR - DR + opening
+                balance = (credits - debits) + (account.opening_balance or Decimal('0'))
+                total_capital_invested += balance
+        
+        context['total_capital_invested'] = float(total_capital_invested) if total_capital_invested else 0
         context['total_shares'] = shareholdings.aggregate(total=Sum('number_of_shares'))['total'] or 0
         
-        # Top shareholders by contribution - only APPROVED contributions
-        context['top_contributors'] = stakeholders.annotate(
-            total_contributed=Sum('capital_contributions__amount_company_currency', 
-                                filter=Q(capital_contributions__workflow_status='APPROVED'))
-        ).filter(total_contributed__isnull=False).order_by('-total_contributed')[:5]
+        # Calculate total_balance_to_invest from investment limits (matching investment report)
+        # This represents the total amount still pending to be invested across all shareholders
+        total_balance_to_invest = Decimal('0')
+        if entity:
+            limits = ShareholderInvestmentLimit.objects.filter(entity=entity, is_active=True)
+            
+            def normalize_name(name):
+                if not name:
+                    return ''
+                value = ' '.join(str(name).split())
+                if value.lower().endswith(' - capital'):
+                    value = value[:-10]
+                return value.strip().lower()
+            
+            # Build invested amounts map (same as investment report)
+            stakeholder_capital_accounts = Account.objects.filter(
+                entity=entity,
+                account_type='EQUITY',
+                is_active=True
+            ).filter(
+                Q(account_number__startswith='SHR-') |
+                Q(name__iendswith=' - Capital')
+            )
+
+            account_ids = list(stakeholder_capital_accounts.values_list('id', flat=True))
+            ledger_sums = LedgerEntry.objects.filter(
+                entity=entity,
+                is_posted=True,
+                account_id__in=account_ids
+            ).values('account_id', 'entry_type').annotate(total=Sum('amount'))
+
+            debit_map = {}
+            credit_map = {}
+            for row in ledger_sums:
+                if row['entry_type'] == 'DEBIT':
+                    debit_map[row['account_id']] = row['total'] or Decimal('0')
+                elif row['entry_type'] == 'CREDIT':
+                    credit_map[row['account_id']] = row['total'] or Decimal('0')
+
+            invested_by_name = {}
+            for account in stakeholder_capital_accounts:
+                debits = debit_map.get(account.id, Decimal('0'))
+                credits = credit_map.get(account.id, Decimal('0'))
+                balance = (credits - debits) + (account.opening_balance or Decimal('0'))
+                key = normalize_name(account.name)
+                if not key:
+                    continue
+                invested_by_name[key] = invested_by_name.get(key, Decimal('0')) + balance
+            
+            # Calculate balance_to_invest for each investment limit and sum them
+            for limit in limits:
+                actual_invested_amount = invested_by_name.get(
+                    normalize_name(limit.stakeholder.full_name),
+                    Decimal('0')
+                )
+                target_amount = Decimal(str(limit.target_investment_amount))
+                invested_amount = Decimal(str(actual_invested_amount))
+                balance_to_invest = target_amount - invested_amount
+                
+                if balance_to_invest > 0:
+                    total_balance_to_invest += balance_to_invest
+        
+        context['total_balance_to_invest'] = float(total_balance_to_invest) if total_balance_to_invest else 0
+        
+        # Top shareholders by investment progress percentage (matching investment report)
+        top_contributors_list = []
+        if entity:
+            limits = ShareholderInvestmentLimit.objects.filter(entity=entity, is_active=True)
+            
+            # Re-use the normalize_name and invested_by_name from above to avoid recalculation
+            for limit in limits:
+                actual_invested_amount = invested_by_name.get(
+                    normalize_name(limit.stakeholder.full_name),
+                    Decimal('0')
+                )
+                target_amount = Decimal(str(limit.target_investment_amount))
+                invested_amount = Decimal(str(actual_invested_amount))
+                invested_percentage = float((invested_amount / target_amount * 100)) if target_amount > 0 else 0
+                
+                top_contributors_list.append({
+                    'stakeholder': limit.stakeholder,
+                    'invested_amount': float(invested_amount),
+                    'target_amount': float(target_amount),
+                    'invested_percentage': invested_percentage,
+                })
+            
+            # Sort by invested_percentage in descending order and get top 5
+            top_contributors_list.sort(key=lambda x: x['invested_percentage'], reverse=True)
+            context['top_contributors'] = top_contributors_list[:5]
+        else:
+            context['top_contributors'] = []
         
         # Share type distribution
         context['share_distribution'] = shareholdings.values('share_type').annotate(
@@ -69,8 +192,15 @@ class ShareholderDashboardView(SessionEntityMixin, LoginRequiredMixin, Permissio
             total_shares=Sum('number_of_shares')
         ).order_by('-total_shares')
         
-        # Recent contributions - only APPROVED
-        context['recent_contributions'] = contributions.select_related('stakeholder').order_by('-contribution_date')[:5]
+        # Recent contributions - show last 5 contributions (all statuses except REJECTED)
+        if entity_id:
+            recent_contributions_query = CapitalContribution.objects.filter(
+                entity_id=entity_id
+            ).exclude(workflow_status='REJECTED')
+        else:
+            recent_contributions_query = CapitalContribution.objects.all().exclude(workflow_status='REJECTED')
+        
+        context['recent_contributions'] = recent_contributions_query.select_related('stakeholder').order_by('-contribution_date')[:5]
         
         # Pending contributions - those in SUBMITTED or REVIEWED status (awaiting approval)
         if entity_id:
@@ -673,10 +803,11 @@ from accounting.models import ShareholderInvestmentLimit, ShareholderPaymentComm
 from shareholder.forms import ShareholderInvestmentLimitForm, ShareholderPaymentCommitmentForm
 
 
-class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+class ShareholderInvestmentReportView(ReportAccessMixin, SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     """Report showing investment status for all shareholders."""
     template_name = 'shareholder/investment_report.html'
     permission_required = 'accounting.view_stakeholder'
+    report_type = 'shareholder_investment'  # For ReportAccessMixin
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -688,10 +819,90 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
             return context
         
         from decimal import Decimal
-        from accounting.models import CapitalContribution
+        from accounting.models import CapitalContribution, Account, LedgerEntry
+
+        def normalize_name(name):
+            if not name:
+                return ''
+            value = ' '.join(str(name).split())
+            if value.lower().endswith(' - capital'):
+                value = value[:-10]
+            return value.strip().lower()
+
+        # Build invested amounts from Chart of Accounts/posted GL (same source as accounts page).
+        stakeholder_capital_accounts = Account.objects.filter(
+            entity=entity,
+            account_type='EQUITY',
+            is_active=True
+        ).filter(
+            Q(account_number__startswith='SHR-') |
+            Q(name__iendswith=' - Capital')
+        )
+
+        account_ids = list(stakeholder_capital_accounts.values_list('id', flat=True))
+        ledger_sums = LedgerEntry.objects.filter(
+            entity=entity,
+            is_posted=True,
+            account_id__in=account_ids
+        ).values('account_id', 'entry_type').annotate(total=Sum('amount'))
+
+        debit_map = {}
+        credit_map = {}
+        for row in ledger_sums:
+            if row['entry_type'] == 'DEBIT':
+                debit_map[row['account_id']] = row['total'] or Decimal('0')
+            elif row['entry_type'] == 'CREDIT':
+                credit_map[row['account_id']] = row['total'] or Decimal('0')
+
+        invested_by_name = {}
+        for account in stakeholder_capital_accounts:
+            debits = debit_map.get(account.id, Decimal('0'))
+            credits = credit_map.get(account.id, Decimal('0'))
+            # EQUITY balance rule used by accounts page: CR - DR + opening
+            balance = (credits - debits) + (account.opening_balance or Decimal('0'))
+
+            key = normalize_name(account.name)
+            if not key:
+                continue
+            invested_by_name[key] = invested_by_name.get(key, Decimal('0')) + balance
         
         investment_data = []
         processed_stakeholders = set()  # Track processed stakeholders to avoid duplicates
+        
+        # Get international transfers for all stakeholders to calculate pending in foreign bank
+        from accounting.models import InternationalTransferTracking
+        
+        # Build a map of pending in foreign bank amounts per stakeholder
+        # Include all non-cancelled, non-posted transfers (these are still pending)
+        # Note: Handle multi-entity stakeholder mapping by email
+        pending_in_foreign_bank_by_stakeholder = {}
+        
+        # Get ALL international transfers (not filtered by entity) and map to current entity stakeholders by email
+        # This handles cases where transfers are from different entities but stakeholders exist in multiple entities
+        intl_transfers = InternationalTransferTracking.objects.filter(
+            transfer_status__in=['PENDING_ABROAD', 'IN_TRANSIT', 'RECEIVED_LOCALLY', 'CONVERTED']
+        ).select_related('capital_contribution__stakeholder')
+        
+        for transfer in intl_transfers:
+            transfer_stakeholder = transfer.capital_contribution.stakeholder
+            destination_amount = transfer.destination_amount
+            
+            # Find matching stakeholder in current entity by email
+            # This handles cases where stakeholder exists in multiple entities with different IDs
+            matching_stakeholder = Stakeholder.objects.filter(
+                entity=entity,
+                email=transfer_stakeholder.email
+            ).first()
+            
+            # Use current entity's stakeholder if found, otherwise use transfer's stakeholder
+            target_stakeholder = matching_stakeholder if matching_stakeholder else transfer_stakeholder
+            target_stakeholder_id = target_stakeholder.id
+            
+            if target_stakeholder_id not in pending_in_foreign_bank_by_stakeholder:
+                pending_in_foreign_bank_by_stakeholder[target_stakeholder_id] = Decimal('0')
+            # Add destination_amount (INR Amount from international capital report) to pending total
+            if destination_amount:
+                pending_in_foreign_bank_by_stakeholder[target_stakeholder_id] += Decimal(str(destination_amount))
         
         # First: Get all investment limits for this entity
         limits = ShareholderInvestmentLimit.objects.filter(entity=entity, is_active=True)
@@ -715,8 +926,11 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
                     status='PAID'
                 ).order_by('-actual_payment_date').first()
             
-            # Use the stakeholder's total_invested property (includes completed contributions + paid commitments)
-            actual_invested_amount = limit.stakeholder.total_invested
+            # Use account balances so report matches /accounting/accounts/ values.
+            actual_invested_amount = invested_by_name.get(
+                normalize_name(limit.stakeholder.full_name),
+                Decimal('0')
+            )
             # Convert to Decimal for calculation consistency
             target_amount = Decimal(str(limit.target_investment_amount))
             invested_amount = Decimal(str(actual_invested_amount))
@@ -731,6 +945,9 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
                 pending_commitments = None
                 paid_commitment = None
             
+            # Get pending in foreign bank from international transfers (INR Amount column from international capital report)
+            pending_foreign_bank = pending_in_foreign_bank_by_stakeholder.get(limit.stakeholder.id, Decimal('0'))
+            
             investment_data.append({
                 'stakeholder': limit.stakeholder,
                 'target_amount': limit.target_investment_amount,
@@ -744,6 +961,7 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
                 'next_payment_id': pending_commitments.id if pending_commitments else (paid_commitment.id if paid_commitment else None),
                 'payment_status': pending_commitments.status if pending_commitments else (paid_commitment.status if paid_commitment else None),
                 'is_completed': is_completed,
+                'pending_in_foreign_bank': pending_foreign_bank,
             })
         
         # Second: Get stakeholders with capital contributions but no investment limit
@@ -757,7 +975,13 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
                 processed_stakeholders.add(stakeholder_id)
                 
                 stakeholder = Stakeholder.objects.get(id=stakeholder_id)
-                actual_invested_amount = stakeholder.total_invested
+                actual_invested_amount = invested_by_name.get(
+                    normalize_name(stakeholder.full_name),
+                    Decimal('0')
+                )
+                
+                # Get pending in foreign bank from international transfers
+                pending_foreign_bank = pending_in_foreign_bank_by_stakeholder.get(stakeholder_id, Decimal('0'))
                 
                 # For contributions without investment limit, show invested amount with no target
                 investment_data.append({
@@ -773,14 +997,40 @@ class ShareholderInvestmentReportView(SessionEntityMixin, LoginRequiredMixin, Pe
                     'next_payment_id': None,
                     'payment_status': None,
                     'is_completed': True,  # No target = considered complete
+                    'pending_in_foreign_bank': pending_foreign_bank,
                 })
         
         # Sort by stakeholder name
         investment_data.sort(key=lambda x: x['stakeholder'].full_name)
         
+        # Calculate totals for the tiles
+        total_invested_amount = Decimal('0')
+        total_pending_in_foreign_bank = Decimal('0')
+        total_balance_to_invest = Decimal('0')
+        total_target_investment = Decimal('0')
+        
+        for inv in investment_data:
+            # Total invested amount
+            total_invested_amount += Decimal(str(inv['invested_amount']))
+            
+            # Total pending in foreign bank (from international transfers destination_amount)
+            total_pending_in_foreign_bank += Decimal(str(inv.get('pending_in_foreign_bank', Decimal('0'))))
+            
+            # Total balance to invest
+            if inv['balance_to_invest']:
+                total_balance_to_invest += Decimal(str(inv['balance_to_invest']))
+            
+            # Total target investment
+            if inv['target_amount']:
+                total_target_investment += Decimal(str(inv['target_amount']))
+        
         context['investment_data'] = investment_data
         context['entity'] = entity
         context['total_shareholders'] = len(investment_data)
+        context['total_invested_amount'] = total_invested_amount
+        context['total_pending_in_foreign_bank'] = total_pending_in_foreign_bank
+        context['total_balance_to_invest'] = total_balance_to_invest
+        context['total_target_investment'] = total_target_investment
         return context
 
 
@@ -794,6 +1044,7 @@ class ShareholderInvestmentLimitCreateView(SessionEntityMixin, LoginRequiredMixi
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
         entity_id = self.request.session.get('selected_entity_id')
         if entity_id:
             # Set entity_id on instance before form initialization
@@ -821,6 +1072,11 @@ class ShareholderInvestmentLimitUpdateView(SessionEntityMixin, LoginRequiredMixi
         form.instance.update_totals()
         return super().form_valid(form)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
+
 
 class ShareholderPaymentCommitmentCreateView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     """Create shareholder payment commitment."""
@@ -832,6 +1088,7 @@ class ShareholderPaymentCommitmentCreateView(SessionEntityMixin, LoginRequiredMi
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
         entity_id = self.request.session.get('selected_entity_id')
         if entity_id:
             # Set entity_id on instance before form initialization
@@ -870,6 +1127,11 @@ class ShareholderPaymentCommitmentUpdateView(SessionEntityMixin, LoginRequiredMi
                 pass
         
         return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
 
 # ==================== Import/Export Views ====================
@@ -1066,3 +1328,137 @@ class NotificationAPIView(LoginRequiredMixin, View):
             'review_items': review_items,
             'approval_items': approval_items,
         })
+
+
+class InternationalTransferDataSyncAPIView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, View):
+    """
+    API endpoint to verify and refresh "Pending in Foreign Bank" data sync from 
+    international capital report (InternationalTransferTracking.destination_amount)
+    to shareholder investment report.
+    """
+    permission_required = 'accounting.view_stakeholder'
+    
+    def get(self, request):
+        """
+        Get current sync status and sample data.
+        Returns JSON with statistics about international transfers and pending amounts.
+        """
+        from decimal import Decimal
+        
+        entity_id = request.session.get('selected_entity_id')
+        entity = Entity.objects.filter(id=entity_id).first() if entity_id else None
+        
+        if not entity:
+            return JsonResponse({
+                'success': False,
+                'error': 'Entity not found in session',
+                'message': 'Please select an entity first'
+            }, status=400)
+        
+        # Get all international transfers with pending amounts
+        synced_transfers = InternationalTransferTracking.objects.filter(
+            capital_contribution__entity=entity,
+            transfer_status__in=['PENDING_ABROAD', 'IN_TRANSIT', 'RECEIVED_LOCALLY', 'CONVERTED']
+        ).select_related(
+            'capital_contribution__stakeholder'
+        ).values_list(
+            'capital_contribution__stakeholder__first_name',
+            'capital_contribution__stakeholder__last_name',
+            'capital_contribution__stakeholder__id',
+            'destination_amount',
+            'transfer_status',
+            'source_amount',
+            'exchange_rate_used'
+        )
+        
+        # Build summary statistics
+        pending_by_stakeholder = {}
+        total_pending_inr = Decimal('0')
+        transfer_details = []
+        
+        for stakeholder_first, stakeholder_last, stakeholder_id, dest_amount, status, source_amount, rate in synced_transfers:
+            stakeholder_name = f"{stakeholder_first} {stakeholder_last}".strip()
+            
+            if stakeholder_id not in pending_by_stakeholder:
+                pending_by_stakeholder[stakeholder_id] = {
+                    'stakeholder_name': stakeholder_name,
+                    'total_pending_inr': Decimal('0'),
+                    'transfer_count': 0,
+                    'transfers': []
+                }
+            
+            # Add to total
+            if dest_amount:
+                pending_by_stakeholder[stakeholder_id]['total_pending_inr'] += Decimal(str(dest_amount))
+                total_pending_inr += Decimal(str(dest_amount))
+            
+            pending_by_stakeholder[stakeholder_id]['transfer_count'] += 1
+            
+            # Add transfer detail
+            pending_by_stakeholder[stakeholder_id]['transfers'].append({
+                'status': status,
+                'source_amount': float(source_amount) if source_amount else 0,
+                'destination_amount_inr': float(dest_amount) if dest_amount else 0,
+                'exchange_rate': float(rate) if rate else 0
+            })
+            
+            transfer_details.append({
+                'stakeholder': stakeholder_name,
+                'status': status,
+                'source_amount': float(source_amount) if source_amount else 0,
+                'destination_amount_inr': float(dest_amount) if dest_amount else 0,
+                'exchange_rate': float(rate) if rate else 0
+            })
+        
+        # Format pending_by_stakeholder for JSON
+        pending_summary = []
+        for stakeholder_id, data in pending_by_stakeholder.items():
+            pending_summary.append({
+                'stakeholder_id': stakeholder_id,
+                'stakeholder_name': data['stakeholder_name'],
+                'total_pending_inr': float(data['total_pending_inr']),
+                'transfer_count': data['transfer_count'],
+            })
+        
+        # Get total stakeholders with international transfers
+        total_stakeholders_with_transfers = len(pending_by_stakeholder)
+        total_transfers = sum(data['transfer_count'] for data in pending_by_stakeholder.values())
+        
+        return JsonResponse({
+            'success': True,
+            'entity': entity.name,
+            'sync_status': 'ACTIVE - Data auto-syncs from international capital report',
+            'statistics': {
+                'total_pending_inr': float(total_pending_inr),
+                'total_stakeholders_with_pending': total_stakeholders_with_transfers,
+                'total_transfers_pending': total_transfers,
+                'transfer_statuses_included': ['PENDING_ABROAD', 'IN_TRANSIT', 'RECEIVED_LOCALLY', 'CONVERTED'],
+                'transfer_statuses_excluded': ['POSTED_TO_GL', 'CANCELLED']
+            },
+            'pending_by_stakeholder': pending_summary,
+            'transfer_details': transfer_details[:10]  # First 10 transfers
+        })
+
+
+
+class InternationalCapitalTransfersView(SessionEntityMixin, LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """Compatibility view for legacy international transfer URL."""
+    template_name = 'shareholder/investment_report.html'
+    context_object_name = 'international_transfers'
+    permission_required = 'accounting.view_capitalcontribution'
+
+    def get_queryset(self):
+        entity_id = self.request.session.get('selected_entity_id')
+        queryset = InternationalTransferTracking.objects.select_related(
+            'capital_contribution',
+            'capital_contribution__stakeholder',
+            'capital_contribution__entity'
+        )
+        if entity_id:
+            queryset = queryset.filter(capital_contribution__entity_id=entity_id)
+        return queryset.order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['entity'] = Entity.objects.filter(id=self.request.session.get('selected_entity_id')).first()
+        return context

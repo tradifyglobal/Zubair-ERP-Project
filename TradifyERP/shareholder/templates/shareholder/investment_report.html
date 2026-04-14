@@ -41,6 +41,7 @@
                                     <th>Currency Info</th>
                                     <th>Target Investment</th>
                                     <th>Invested Amount</th>
+                                    <th>Pending in Foreign Bank</th>
                                     <th>Balance to Invest</th>
                                     <th>Progress</th>
                                     <th>Next Payment</th>
@@ -85,6 +86,20 @@
                                             {% endif %}
                                             {{ investment.invested_amount|floatformat:2 }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        {% if investment.pending_in_foreign_bank and investment.pending_in_foreign_bank > 0 %}
+                                            <span class="badge bg-info">
+                                                {% if investment.currency %}
+                                                    {{ investment.currency.symbol }}
+                                                {% else %}
+                                                    ₹
+                                                {% endif %}
+                                                {{ investment.pending_in_foreign_bank|floatformat:2 }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if investment.balance_to_invest %}
@@ -172,62 +187,32 @@
                 <div class="col-md-3">
                     <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title text-muted">Total Shareholders</h6>
-                            <h3>{{ investment_data|length }}</h3>
+                            <h6 class="card-title text-muted">Total Invested Amount</h6>
+                            <h3 class="text-success">₹{{ total_invested_amount|floatformat:2 }}</h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title text-muted">Fully Invested</h6>
-                            <h3>
-                                {% widthratio investment_data|length 1 1 as total %}
-                                {% with completed=0 %}
-                                {% for inv in investment_data %}
-                                    {% if inv.balance_to_invest <= 0 %}
-                                        <span style="display:none">{% widthratio 1 1 1 %}</span>
-                                    {% endif %}
-                                {% endfor %}
-                                {% endwith %}
-                                {{ investment_data|length }}
-                            </h3>
+                            <h6 class="card-title text-muted">Total Balance to Invest</h6>
+                            <h3 class="text-warning">₹{{ total_balance_to_invest|floatformat:2 }}</h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title text-muted">Overdue Payments</h6>
-                            <h3 class="text-danger">
-                                {% with overdue_count=0 %}
-                                {% for inv in investment_data %}
-                                    {% if inv.is_overdue %}
-                                        {{ overdue_count|add:1 }}
-                                    {% endif %}
-                                {% endfor %}
-                                0
-                                {% endwith %}
-                            </h3>
+                            <h6 class="card-title text-muted">Total Pending in Foreign Bank</h6>
+                            <h3 class="text-info">₹{{ total_pending_in_foreign_bank|floatformat:2 }}</h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title text-muted">Average Progress</h6>
-                            <h3>
-                                {% with total_progress=0 %}
-                                {% for inv in investment_data %}
-                                    <span style="display:none">{{ total_progress|add:inv.invested_percentage }}</span>
-                                {% endfor %}
-                                {% if investment_data %}
-                                    {% widthratio total_progress investment_data|length 1 %}%
-                                {% else %}
-                                    0%
-                                {% endif %}
-                                {% endwith %}
-                            </h3>
+                            <h6 class="card-title text-muted">Total Target Investment</h6>
+                            <h3>₹{{ total_target_investment|floatformat:2 }}</h3>
                         </div>
                     </div>
                 </div>

@@ -72,6 +72,7 @@ class Account(models.Model):
         ('EQUITY', 'Equity'),
         ('INCOME', 'Income'),
         ('EXPENSE', 'Expense'),
+        ('PURCHASES', 'Purchases'),
     ]
 
     account_number = models.CharField(max_length=50)
@@ -202,6 +203,11 @@ class TrialBalance(models.Model):
 
     def __str__(self):
         return f"Trial Balance - {self.entity.code} as of {self.as_of_date}"
+    
+    @property
+    def difference(self):
+        """Calculate the difference between debits and credits."""
+        return abs(self.total_debits - self.total_credits)
 
 
 class ProfitLossReport(models.Model):
@@ -1244,6 +1250,99 @@ class CapitalContribution(models.Model):
             self._create_ledger_entry()
 
 
+class InternationalTransferTracking(models.Model):
+    """Track international capital transfers between banks/countries."""
+    
+    TRANSFER_STATUS_CHOICES = [
+        ('PENDING_ABROAD', 'Pending in Foreign Bank'),
+        ('IN_TRANSIT', 'In Transit'),
+        ('RECEIVED_LOCALLY', 'Received in Local Bank'),
+        ('CONVERTED', 'Converted to Local Currency'),
+        ('POSTED_TO_GL', 'Posted to General Ledger'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    # Link to investment
+    capital_contribution = models.OneToOneField(
+        'accounting.CapitalContribution',
+        on_delete=models.CASCADE,
+        related_name='international_transfer'
+    )
+    
+    # Source (Shareholder's Country & Bank)
+    source_country = models.CharField(max_length=100, default='Canada')
+    source_bank_name = models.CharField(max_length=255)
+    source_bank_account = models.CharField(max_length=100)
+    source_currency_code = models.CharField(max_length=3, default='CAD')
+    source_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    
+    # Destination (Company's Country & Bank)
+    destination_country = models.CharField(max_length=100, default='India')
+    destination_bank_name = models.CharField(max_length=255)
+    destination_bank_account = models.CharField(max_length=100)
+    destination_currency_code = models.CharField(max_length=3, default='INR')
+    destination_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    
+    # Conversion Details
+    exchange_rate_used = models.DecimalField(max_digits=18, decimal_places=6)
+    conversion_date = models.DateField(null=True, blank=True)
+    
+    # Intermediary (if applicable)
+    intermediary_bank_name = models.CharField(max_length=255, blank=True, null=True)
+    intermediary_reference = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Transfer Timeline
+    date_sent_from_shareholder = models.DateField()
+    date_received_in_foreign_bank = models.DateField(null=True, blank=True)
+    date_transferred_to_local_bank = models.DateField(null=True, blank=True)
+    date_posted_to_gl = models.DateField(null=True, blank=True)
+    
+    # Status & Tracking
+    transfer_status = models.CharField(
+        max_length=20,
+        choices=TRANSFER_STATUS_CHOICES,
+        default='PENDING_ABROAD'
+    )
+    transfer_reference = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Documentation
+    remittance_proof = models.FileField(
+        upload_to='remittance_proofs/%Y/%m/',
+        null=True, blank=True,
+        help_text='Proof of transfer (wire confirmation, etc.)'
+    )
+    conversion_receipt = models.FileField(
+        upload_to='conversion_receipts/%Y/%m/',
+        null=True, blank=True,
+        help_text='Conversion/Exchange receipt'
+    )
+    
+    # Notes
+    notes = models.TextField(blank=True, null=True)
+    
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "International Transfer Tracking"
+        verbose_name_plural = "International Transfer Trackings"
+        ordering = ['-date_sent_from_shareholder']
+    
+    def __str__(self):
+        return f"{self.source_country} ({self.source_currency_code}) → {self.destination_country} ({self.destination_currency_code}) - {self.transfer_status}"
+    
+    def get_conversion_status(self):
+        """Get current status of the transfer."""
+        from django.utils import timezone
+        return {
+            'stage': self.get_transfer_status_display(),
+            'source_amount': f"{self.source_amount} {self.source_currency_code}",
+            'destination_amount': f"{self.destination_amount} {self.destination_currency_code}",
+            'rate': self.exchange_rate_used,
+            'days_in_transit': (timezone.now().date() - self.date_sent_from_shareholder).days if self.date_sent_from_shareholder else 0
+        }
+
 
 class Shareholding(models.Model):
     """Share holdings/equity stakes by stakeholders."""
@@ -1883,6 +1982,67 @@ class JournalVoucherLine(models.Model):
     
     def __str__(self):
         return f"{self.voucher.voucher_number} - Line {self.line_number}: {self.account.name} ({self.entry_type}) ₹{self.amount}"
+
+
+class ReportAccess(models.Model):
+    """
+    Control user access to specific reports.
+    
+    If a report is not listed here, all users can view it (backward compatible).
+    If a report is listed, only assigned users can view it.
+    """
+    REPORT_CHOICES = [
+        ('accounts', 'Accounts Report'),
+        ('trial_balance', 'Trial Balance Report'),
+        ('profit_loss', 'Profit & Loss Report'),
+        ('balance_sheet', 'Balance Sheet Report'),
+        ('cash_flow', 'Cash Flow Report'),
+        ('shareholder_investment', 'Shareholder Investment Report'),
+        ('capital_contributions', 'Capital Contributions Report'),
+        ('ledger_analysis', 'Ledger Analysis Report'),
+        ('cash_transactions', 'Cash Transactions Report'),
+        ('bank_transactions', 'Bank Transactions Report'),
+        ('journal_voucher', 'Journal Voucher Report'),
+        ('stakeholder_report', 'Stakeholder Report'),
+        ('accounting_dashboard', 'Accounting Dashboard'),
+        ('shareholder_dashboard', 'Shareholder Dashboard'),
+    ]
+    
+    ACCESS_LEVEL_CHOICES = [
+        ('view_only', 'View Only'),
+        ('edit', 'Edit'),
+        ('full_access', 'Full Access'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='report_access')
+    report_type = models.CharField(max_length=50, choices=REPORT_CHOICES)
+    access_level = models.CharField(max_length=20, choices=ACCESS_LEVEL_CHOICES, default='view_only',
+                                   help_text="View Only: Can only view, Edit: Can edit, Full Access: Can view, edit, and export")
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, null=True, blank=True,
+                              help_text="Leave blank for access to all entities")
+    is_active = models.BooleanField(default=True)
+    granted_at = models.DateTimeField(auto_now_add=True)
+    granted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='report_access_grants')
+    expiry_date = models.DateField(null=True, blank=True, help_text="Leave blank for no expiry")
+    
+    class Meta:
+        unique_together = ('user', 'report_type', 'entity')
+        verbose_name = 'Report Access'
+        verbose_name_plural = 'Report Access'
+        ordering = ['-granted_at']
+    
+    def __str__(self):
+        entity_str = f" ({self.entity.name})" if self.entity else " (All Entities)"
+        return f"{self.user.username} - {self.get_report_type_display()}{entity_str} - {self.access_level}"
+    
+    def is_valid(self):
+        """Check if access is still valid (not expired and active)."""
+        from datetime import date
+        if not self.is_active:
+            return False
+        if self.expiry_date and self.expiry_date < date.today():
+            return False
+        return True
 
 
 # Import RBAC models to register them with Django ORM

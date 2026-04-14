@@ -73,11 +73,17 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="text-muted d-block text-truncate">Pending Contributions</span>
-                                <h4 class="my-2">{{ pending_contributions }}</h4>
+                                <span class="text-muted d-block text-truncate">Total Balance to Invest</span>
+                                <h4 class="my-2">
+                                    {% if entity.company_currency %}
+                                        {{ entity.company_currency.symbol }}{{ total_balance_to_invest|floatformat:2 }}
+                                    {% else %}
+                                        ${{ total_balance_to_invest|floatformat:2 }}
+                                    {% endif %}
+                                </h4>
                             </div>
                             <div class="avatar-md bg-light rounded">
-                                <i data-feather="alert-circle" class="avatar-title font-size-24 text-danger"></i>
+                                <i data-feather="trending-up" class="avatar-title font-size-24 text-info"></i>
                             </div>
                         </div>
                     </div>
@@ -120,44 +126,54 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Top Contributors</h5>
-                        <a href="{% url 'shareholder:stakeholder-list' %}" class="btn btn-sm btn-secondary">View All</a>
+                        <a href="{% url 'shareholder:investment_report' %}" class="btn btn-sm btn-secondary">View All</a>
                     </div>
                     <div class="card-body">
                         {% if top_contributors %}
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Shareholder</th>
-                                            <th class="text-end">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for shareholder in top_contributors %}
-                                            <tr>
-                                                <td>
-                                                    <a href="{% url 'shareholder:stakeholder-detail' shareholder.pk %}" class="text-primary">
-                                                        {{ shareholder.first_name }} {{ shareholder.last_name }}
+                            <div class="space-y-3">
+                                {% for contributor in top_contributors %}
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <p class="text-truncate mb-0">
+                                                    <a href="{% url 'shareholder:stakeholder-detail' contributor.stakeholder.pk %}" class="text-primary">
+                                                        {{ contributor.stakeholder.first_name }} {{ contributor.stakeholder.last_name }}
                                                     </a>
-                                                </td>
-                                                <td class="text-end text-success">
-                                                    <strong>
-                                                        {% if entity.company_currency %}
-                                                            {{ entity.company_currency.symbol }}
-                                                        {% else %}
-                                                            $
-                                                        {% endif %}
-                                                        {{ shareholder.total_contributed|floatformat:2 }}
-                                                    </strong>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                                </p>
+                                                <small class="text-muted d-block">
+                                                    {% if entity.company_currency %}
+                                                        {{ entity.company_currency.symbol }}{{ contributor.invested_amount|floatformat:2 }} / {{ entity.company_currency.symbol }}{{ contributor.target_amount|floatformat:2 }}
+                                                    {% else %}
+                                                        ${{ contributor.invested_amount|floatformat:2 }} / ${{ contributor.target_amount|floatformat:2 }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                            <span class="badge bg-primary">{{ contributor.invested_percentage|floatformat:1 }}%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar
+                                                {% if contributor.invested_percentage < 25 %}
+                                                    bg-danger
+                                                {% elif contributor.invested_percentage < 50 %}
+                                                    bg-warning
+                                                {% elif contributor.invested_percentage < 75 %}
+                                                    bg-info
+                                                {% else %}
+                                                    bg-success
+                                                {% endif %}" 
+                                                role="progressbar" 
+                                                style="width: {{ contributor.invested_percentage }}%;" 
+                                                aria-valuenow="{{ contributor.invested_percentage }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
                         {% else %}
                             <div class="text-center py-4">
-                                <p class="text-muted mb-0">No contributions recorded yet</p>
+                                <p class="text-muted mb-0">No investment targets set yet</p>
                             </div>
                         {% endif %}
                     </div>
@@ -216,38 +232,45 @@
                     </div>
                     <div class="card-body">
                         {% if recent_contributions %}
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Shareholder</th>
-                                            <th>Date</th>
-                                            <th class="text-end">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for contribution in recent_contributions %}
-                                            <tr>
-                                                <td>
-                                                    <a href="{% url 'shareholder:stakeholder-detail' contribution.stakeholder.pk %}" class="text-primary">
+                            <div class="space-y-2">
+                                {% for contribution in recent_contributions %}
+                                    <div class="border-bottom pb-3 mb-3" {% if forloop.last %}style="border-bottom: none;"{% endif %}>
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <p class="mb-1">
+                                                    <a href="{% url 'shareholder:stakeholder-detail' contribution.stakeholder.pk %}" class="text-primary font-weight-bold">
                                                         {{ contribution.stakeholder.first_name }} {{ contribution.stakeholder.last_name }}
                                                     </a>
-                                                </td>
-                                                <td>{{ contribution.contribution_date|date:"M d, Y" }}</td>
-                                                <td class="text-end">
-                                                    <span class="badge bg-success">
-                                                        {% if entity.company_currency %}
-                                                            {{ entity.company_currency.symbol }}
-                                                        {% else %}
-                                                            $
-                                                        {% endif %}
-                                                        {{ contribution.amount_company_currency|floatformat:2 }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                                </p>
+                                                <small class="text-muted d-block">{{ contribution.contribution_date|date:"M d, Y" }}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="badge bg-success mb-2">
+                                                    {% if entity.company_currency %}
+                                                        {{ entity.company_currency.symbol }}{{ contribution.amount_company_currency|floatformat:2 }}
+                                                    {% else %}
+                                                        ${{ contribution.amount_company_currency|floatformat:2 }}
+                                                    {% endif %}
+                                                </div>
+                                                <div class="badge 
+                                                    {% if contribution.workflow_status == 'APPROVED' %}
+                                                        bg-success
+                                                    {% elif contribution.workflow_status == 'POSTED' %}
+                                                        bg-info
+                                                    {% elif contribution.workflow_status == 'REVIEWED' %}
+                                                        bg-warning
+                                                    {% elif contribution.workflow_status == 'SUBMITTED' %}
+                                                        bg-secondary
+                                                    {% elif contribution.workflow_status == 'REJECTED' %}
+                                                        bg-danger
+                                                    {% endif %}
+                                                    d-block">
+                                                    {{ contribution.workflow_status }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
                         {% else %}
                             <div class="text-center py-4">

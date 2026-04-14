@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Stock - {{ raw_material.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-title-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="page-title">{{ title }}</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:dashboard' %}">Raw Materials</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'raw_materials:stock_levels' %}">Stock Levels</a></li>
+                    <li class="breadcrumb-item active">Edit Stock</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Stock Information for {{ raw_material.name }}</h5>
+                    <small class="text-muted">Product Code: {{ raw_material.product_code }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <!-- Quantity Information -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="mdi mdi-package-variant"></i> Quantity Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quantity_on_hand.id_for_label }}" class="form-label">
+                                    Quantity On Hand <span class="text-danger">*</span>
+                                </label>
+                                {{ form.quantity_on_hand }}
+                                {% if form.quantity_on_hand.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity_on_hand.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Current physical inventory</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quantity_reserved.id_for_label }}" class="form-label">
+                                    Quantity Reserved <span class="text-danger">*</span>
+                                </label>
+                                {{ form.quantity_reserved }}
+                                {% if form.quantity_reserved.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity_reserved.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Allocated for orders</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quantity_damaged.id_for_label }}" class="form-label">
+                                    Quantity Damaged <span class="text-danger">*</span>
+                                </label>
+                                {{ form.quantity_damaged }}
+                                {% if form.quantity_damaged.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity_damaged.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Items not usable</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.warehouse_location.id_for_label }}" class="form-label">
+                                    Warehouse Location
+                                </label>
+                                {{ form.warehouse_location }}
+                                {% if form.warehouse_location.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.warehouse_location.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Physical location in warehouse</small>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Stock Level Information -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="mdi mdi-alert-circle"></i> Stock Level Thresholds
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.minimum_stock_level.id_for_label }}" class="form-label">
+                                    Minimum Stock Level <span class="text-danger">*</span>
+                                </label>
+                                {{ form.minimum_stock_level }}
+                                {% if form.minimum_stock_level.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.minimum_stock_level.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Alert when below this level</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.maximum_stock_level.id_for_label }}" class="form-label">
+                                    Maximum Stock Level <span class="text-danger">*</span>
+                                </label>
+                                {{ form.maximum_stock_level }}
+                                {% if form.maximum_stock_level.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.maximum_stock_level.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Optimal storage limit</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.reorder_quantity.id_for_label }}" class="form-label">
+                                    Reorder Quantity <span class="text-danger">*</span>
+                                </label>
+                                {{ form.reorder_quantity }}
+                                {% if form.reorder_quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.reorder_quantity.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Quantity to order when reordering</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.lead_time_days.id_for_label }}" class="form-label">
+                                    Lead Time (Days) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.lead_time_days }}
+                                {% if form.lead_time_days.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.lead_time_days.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Days needed for delivery</small>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Costing Information -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="mdi mdi-currency-usd"></i> Costing Information
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.standard_cost.id_for_label }}" class="form-label">
+                                    Standard Cost <span class="text-danger">*</span>
+                                </label>
+                                {{ form.standard_cost }}
+                                {% if form.standard_cost.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.standard_cost.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Cost per unit</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.valuation_method.id_for_label }}" class="form-label">
+                                    Valuation Method <span class="text-danger">*</span>
+                                </label>
+                                {{ form.valuation_method }}
+                                {% if form.valuation_method.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.valuation_method.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Method for inventory valuation</small>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Status Card -->
+                        <div class="alert alert-info mb-3">
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    <h6 class="mb-2">Available Qty</h6>
+                                    <h5 class="text-primary">{{ object.quantity_on_hand|default:0 }}</h5>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h6 class="mb-2">Reserved Qty</h6>
+                                    <h5 class="text-warning">{{ object.quantity_reserved|default:0 }}</h5>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h6 class="mb-2">Damaged Qty</h6>
+                                    <h5 class="text-danger">{{ object.quantity_damaged|default:0 }}</h5>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h6 class="mb-2">Net Available</h6>
+                                    <h5 class="text-success">{{ net_available_qty|default:0 }}</h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <a href="{% url 'raw_materials:stock_levels' %}" class="btn btn-secondary me-2">
+                                    <i class="mdi mdi-close"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-check"></i> Update Stock
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    label {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    hr {
+        margin: 1.5rem 0;
+        border: none;
+        border-top: 1px solid #e3e6f0;
+    }
+</style>
+{% endblock %}

@@ -48,4 +48,5 @@ urlpatterns = [
     
     # API Endpoints
     path('api/notifications/', views.NotificationAPIView.as_view(), name='api-notifications'),
+    path('api/international-transfers/sync/', views.InternationalTransferDataSyncAPIView.as_view(), name='api-intl-transfer-sync'),
 ]

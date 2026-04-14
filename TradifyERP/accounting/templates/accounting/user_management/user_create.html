@@ -88,6 +88,14 @@
                                     {{ form.non_field_errors }}
                                 </div>
                                 {% endif %}
+                                
+                                {% if current_entity %}
+                                <div class="alert alert-info mb-3">
+                                    <i class="mdi mdi-information-outline me-2"></i>
+                                    <strong>Entity-Based User Management:</strong> The username must be unique within <strong>{{ current_entity.name }}</strong> only. 
+                                    You can create a user with the same username in other entities.
+                                </div>
+                                {% endif %}
 
                                 <div class="mb-3">
                                     <label class="form-label">{{ form.username.label }}</label>
@@ -95,6 +103,9 @@
                                     {% if form.username.errors %}
                                     <div class="text-danger small">{{ form.username.errors }}</div>
                                     {% endif %}
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="mdi mdi-help-circle"></i> This username must be unique only within the current entity.
+                                    </small>
                                 </div>
 
                                 <div class="row">

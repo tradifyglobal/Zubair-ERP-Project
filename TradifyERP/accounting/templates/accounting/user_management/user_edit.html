@@ -110,6 +110,14 @@
                                     {{ form.non_field_errors }}
                                 </div>
                                 {% endif %}
+                                
+                                {% if current_entity and object %}
+                                <div class="alert alert-info mb-3">
+                                    <i class="mdi mdi-information-outline me-2"></i>
+                                    <strong>Entity-Based User Management:</strong> Username uniqueness is enforced per entity ({{ current_entity.name }}). 
+                                    The same username can exist in other entities.
+                                </div>
+                                {% endif %}
 
                                 <div class="mb-3">
                                     <label class="form-label">{{ form.username.label }}</label>
@@ -117,6 +125,9 @@
                                     {% if form.username.errors %}
                                     <div class="text-danger small">{{ form.username.errors }}</div>
                                     {% endif %}
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="mdi mdi-help-circle"></i> Username must be unique within the current entity only.
+                                    </small>
                                 </div>
 
                                 <div class="row">

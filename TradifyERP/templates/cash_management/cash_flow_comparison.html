@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Cash Flow Comparison | TradifyERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-0">📊 Period Comparison Analysis</h1>
+            <p class="text-muted mt-2">Comparative cash flow analysis for {{ entity.name }}</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'cash_flow_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    {% if statements|length > 1 %}
+    <!-- 12-Month Trend Charts -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">📈 12-Month Cash Flow Trends</h5>
+                </div>
+                <div class="card-body" id="trendsChart" style="min-height: 300px;">
+                    <!-- Chart will be rendered here -->
+                    <canvas id="trendCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period Comparison Table -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">📋 Monthly Summary (Last 12 Months)</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th>Period</th>
+                                <th class="text-end">Operating</th>
+                                <th class="text-end">Investing</th>
+                                <th class="text-end">Financing</th>
+                                <th class="text-end">Net Change</th>
+                                <th class="text-end">Closing Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stmt in statements %}
+                            <tr onclick="window.location='{% url 'cash_flow_detail' stmt.id %}';" style="cursor: pointer;">
+                                <td>
+                                    <strong>{{ stmt.start_date|date:'M Y' }}</strong>
+                                </td>
+                                <td class="text-end">
+                                    <span style="color: {% if stmt.net_operating_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                        {% if stmt.net_operating_cash_flow > 0 %}+{% endif %}₹{{ stmt.net_operating_cash_flow|floatformat:0|intcomma }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span style="color: {% if stmt.net_investing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                        {% if stmt.net_investing_cash_flow > 0 %}+{% endif %}₹{{ stmt.net_investing_cash_flow|floatformat:0|intcomma }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span style="color: {% if stmt.net_financing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                        {% if stmt.net_financing_cash_flow > 0 %}+{% endif %}₹{{ stmt.net_financing_cash_flow|floatformat:0|intcomma }}
+                                    </span>
+                                </td>
+                                <td class="text-end" style="font-weight: bold; color: {% if stmt.total_net_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                    {% if stmt.total_net_cash_flow > 0 %}+{% endif %}₹{{ stmt.total_net_cash_flow|floatformat:0|intcomma }}
+                                </td>
+                                <td class="text-end" style="background-color: #f0f0f0; font-weight: bold;">
+                                    ₹{{ stmt.closing_balance|floatformat:0|intcomma }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year-over-Year Comparison -->
+    {% if yoy_comparison %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">📊 Year-over-Year Comparison</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Operating Column -->
+                        <div class="col-lg-3">
+                            <h6 style="color: #0066cc;">Operating Activities</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><small class="text-muted">Current:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.current_period.net_operating_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                            ₹{{ yoy_comparison.current_period.net_operating_cash_flow|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><small class="text-muted">Year Ago:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.year_ago.net_operating_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                            ₹{{ yoy_comparison.year_ago.net_operating_cash_flow|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                    <tr style="background-color: #f0f0f0; font-weight: bold;">
+                                        <td><small>Change:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.operating_change > 0 %}green{% else %}red{% endif %}">
+                                            {% if yoy_comparison.operating_change > 0 %}+{% endif %}₹{{ yoy_comparison.operating_change|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Investing Column -->
+                        <div class="col-lg-3">
+                            <h6 style="color: #ff9800;">Investing Activities</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><small class="text-muted">Current:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.current_period.net_investing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                            ₹{{ yoy_comparison.current_period.net_investing_cash_flow|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><small class="text-muted">Year Ago:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.year_ago.net_investing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                            ₹{{ yoy_comparison.year_ago.net_investing_cash_flow|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                    <tr style="background-color: #f0f0f0; font-weight: bold;">
+                                        <td><small>Change:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.investing_change > 0 %}green{% else %}red{% endif %}">
+                                            {% if yoy_comparison.investing_change > 0 %}+{% endif %}₹{{ yoy_comparison.investing_change|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Financing Column -->
+                        <div class="col-lg-3">
+                            <h6 style="color: #9c27b0;">Financing Activities</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><small class="text-muted">Current:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.current_period.net_financing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                            ₹{{ yoy_comparison.current_period.net_financing_cash_flow|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><small class="text-muted">Year Ago:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.year_ago.net_financing_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                            ₹{{ yoy_comparison.year_ago.net_financing_cash_flow|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                    <tr style="background-color: #f0f0f0; font-weight: bold;">
+                                        <td><small>Change:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.financing_change > 0 %}green{% else %}red{% endif %}">
+                                            {% if yoy_comparison.financing_change > 0 %}+{% endif %}₹{{ yoy_comparison.financing_change|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Summary Column -->
+                        <div class="col-lg-3">
+                            <h6 style="color: #333;">Summary</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><small class="text-muted">Current Total:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.current_period.total_net_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                            ₹{{ yoy_comparison.current_period.total_net_cash_flow|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><small class="text-muted">Prior Year:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.year_ago.total_net_cash_flow > 0 %}green{% else %}red{% endif %}">
+                                            ₹{{ yoy_comparison.year_ago.total_net_cash_flow|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                    <tr style="background-color: #f0f0f0; font-weight: bold;">
+                                        <td><small>YoY Change:</small></td>
+                                        <td class="text-end" style="color: {% if yoy_comparison.operating_change|add:yoy_comparison.investing_change|add:yoy_comparison.financing_change > 0 %}green{% else %}red{% endif %}">
+                                            {% if yoy_comparison.operating_change|add:yoy_comparison.investing_change|add:yoy_comparison.financing_change > 0 %}+{% endif %}₹{{ yoy_comparison.operating_change|add:yoy_comparison.investing_change|add:yoy_comparison.financing_change|floatformat:0|intcomma }}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Data Message -->
+    <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle"></i> 
+        <strong>Only one statement available.</strong> Generate additional statements to enable period comparison and trend analysis.
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Generate trend chart if data available
+{% if statements|length > 1 %}
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('trendCanvas').getContext('2d');
+    
+    const statementData = {{ statements|safe }};
+    const labels = statementData.map(s => new Date(s.start_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+    const operatingData = statementData.map(s => s.net_operating_cash_flow);
+    const investingData = statementData.map(s => s.net_investing_cash_flow);
+    const finangData = statementData.map(s => s.net_financing_cash_flow);
+    
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Operating Activities',
+                    data: operatingData,
+                    borderColor: '#0066cc',
+                    backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Investing Activities',
+                    data: investingData,
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Financing Activities',
+                    data: finangData,
+                    borderColor: '#9c27b0',
+                    backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+{% endif %}
+</script>
+
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }
+    
+    table tr:hover {
+        background-color: #f9f9f9;
+    }
+</style>
+{% endblock %}

@@ -127,6 +127,7 @@
                                         <a href="{% url 'shareholder:shareholding-create' %}" class="dropdown-item">Add Shares</a>
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Investment Tracking</div>
+                                        <a href="{% url 'accounting:international_capital_report' %}" class="dropdown-item"><i class="feather-globe me-2"></i>International Capital Transfers</a>
                                         <a href="{% url 'shareholder:investment_report' %}" class="dropdown-item"><i class="feather-trending-up me-2"></i>Investment Report</a>
                                     </div>
                                 </li>
@@ -291,6 +292,13 @@
                                         <div class="dropdown-header">Dashboard</div>
                                         <a href="{% url 'inventory:dashboard' %}" class="dropdown-item">Inventory Dashboard</a>
                                         <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Raw Materials</div>
+                                        <a href="{% url 'raw_materials:dashboard' %}" class="dropdown-item">Dashboard</a>
+                                        <a href="{% url 'raw_materials:material_list' %}" class="dropdown-item">Raw Materials</a>
+                                        <a href="{% url 'raw_materials:supplier_list' %}" class="dropdown-item">Suppliers</a>
+                                        <a href="{% url 'raw_materials:stock_levels' %}" class="dropdown-item">Stock Levels</a>
+                                        <a href="{% url 'raw_materials:category_list' %}" class="dropdown-item">Categories</a>
+                                        <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Products</div>
                                         <a href="{% url 'inventory:product_list' %}" class="dropdown-item">All Products</a>
                                         <a href="{% url 'inventory:product_create' %}" class="dropdown-item">Add Product</a>
@@ -315,23 +323,25 @@
                                         <i data-feather="truck"></i><span data-key="t-procurement">Procurement</span> <div class="arrow-down"></div>
                                     </a>
                                     <div class="dropdown-menu" aria-labelledby="topnav-procurement">
-                                        <div class="dropdown-header">Dashboard</div>
-                                        <a href="{% url 'procurement:dashboard' %}" class="dropdown-item">Procurement Dashboard</a>
+                                        <div class="dropdown-header"><i class="mdi mdi-truck-fast me-1"></i>P2P Dashboard</div>
+                                        <a href="/procurement/p2p/" class="dropdown-item">Dashboard Overview</a>
+                                        <a href="/procurement/p2p/" class="dropdown-item ps-4"><i class="mdi mdi-connection me-2"></i>Pipeline View</a>
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-header">Purchase Orders</div>
                                         <a href="{% url 'procurement:po_list' %}" class="dropdown-item">All POs</a>
                                         <a href="{% url 'procurement:po_create' %}" class="dropdown-item">Create PO</a>
+                                        <a href="{% url 'procurement:rm_po_create' %}" class="dropdown-item"><i class="mdi mdi-tree me-2"></i>Create Raw Material PO</a>
                                         <div class="dropdown-divider"></div>
-                                        <div class="dropdown-header">Goods Receipts</div>
-                                        <a href="{% url 'procurement:receipt_list' %}" class="dropdown-item">All Receipts</a>
-                                        <a href="{% url 'procurement:receipt_create' %}" class="dropdown-item">Create Receipt</a>
-                                        <div class="dropdown-divider"></div>
-                                        <div class="dropdown-header">RFQ & Quotations</div>
+                                        <div class="dropdown-header">Requests & Quotes</div>
                                         <a href="{% url 'procurement:rfq_list' %}" class="dropdown-item">Request for Quotation</a>
                                         <a href="{% url 'procurement:rfq_create' %}" class="dropdown-item">Create RFQ</a>
                                         <a href="{% url 'procurement:quotation_list' %}" class="dropdown-item">Vendor Quotations</a>
                                         <div class="dropdown-divider"></div>
-                                        <div class="dropdown-header">Matching</div>
+                                        <div class="dropdown-header">Goods Receipt</div>
+                                        <a href="{% url 'procurement:receipt_list' %}" class="dropdown-item">All Receipts</a>
+                                        <a href="{% url 'procurement:receipt_create' %}" class="dropdown-item">Create Receipt</a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-header">Invoice Matching</div>
                                         <a href="{% url 'procurement:matching_list' %}" class="dropdown-item">3-Way Matching</a>
                                     </div>
                                 </li>

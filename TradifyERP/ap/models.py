@@ -121,6 +121,9 @@ class VendorBillLineItem(models.Model):
     # Tax
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    tax_type = models.CharField(max_length=50, blank=True, null=True, help_text="e.g., GST, VAT, Sales Tax, Excise")
+    tax_account = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True, related_name='bill_line_taxes', help_text="Input Tax Recoverable or Tax Expense account")
+    tax_recoverable = models.BooleanField(default=True, help_text="Is the tax recoverable/creditable?")
     
     # Notes
     notes = models.TextField(blank=True, null=True)

@@ -1,0 +1,220 @@
+s p{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Add International Capital Transfer{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h2">Record International Capital Transfer</h1>
+            <p class="text-muted">Select an existing capital contribution to track its international transfer, or create a new one</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Two Options Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <!-- Option 1: Select Existing Contribution -->
+                    {% if has_contributions %}
+                    <div class="mb-4">
+                        <h5 class="mb-3 fw-bold">🔍 Option 1: Track Existing Capital Contribution</h5>
+                        <p class="text-muted mb-3">
+                            Select a capital contribution that you've already recorded to start tracking its international transfer
+                        </p>
+                        
+                        {% if all_contributions %}
+                        <form method="POST" class="needs-validation">
+                            {% csrf_token %}
+                            <div class="form-group mb-3">
+                                <label for="contribution_select" class="form-label fw-bold">
+                                    {% if entity %}Select Capital Contribution - {{ entity.name }}:{% else %}Select Capital Contribution:{% endif %}
+                                </label>
+                                <select 
+                                    class="form-select form-select-lg" 
+                                    id="contribution_select" 
+                                    name="contribution_id" 
+                                    required
+                                    onchange="updateContributionDetails()"
+                                >
+                                    <option value="">-- Choose a capital contribution --</option>
+                                    {% for contrib in all_contributions %}
+                                    <option value="{{ contrib.id }}" data-amount="{{ contrib.amount }}" data-currency="{{ contrib.currency.code }}" data-stakeholder="{{ contrib.stakeholder.full_name }}">
+                                        {{ contrib.stakeholder.full_name }} - {{ contrib.amount }} {{ contrib.currency.code }} ({{ contrib.contribution_date|date:"M d, Y" }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted d-block mt-2">
+                                    {% if entity %}<strong>Entity:</strong> {{ entity.name }}<br>{% endif %}
+                                    Showing {{ all_contributions.count }} capital contribution{{ all_contributions.count|pluralize }}
+                                </small>
+                            </div>
+
+                            <!-- Contribution Details Preview -->
+                            <div id="contribution_details" class="alert alert-info d-none mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Shareholder:</small>
+                                        <div id="detail_stakeholder" class="fw-bold">-</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Foreign Amount:</small>
+                                        <div id="detail_amount" class="fw-bold">-</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                name="action" 
+                                value="select" 
+                                class="btn btn-primary btn-lg"
+                                onclick="return validateSelection()"
+                            >
+                                <i class="fas fa-arrow-right me-2"></i>Continue to Track Transfer
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No capital contributions found. Please create one first.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="row my-4">
+                        <div class="col-12">
+                            <hr class="my-4">
+                            <div class="text-center text-muted fw-bold">OR</div>
+                            <hr class="my-4">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Option 2: Create New Contribution -->
+                    <div>
+                        <h5 class="mb-3 fw-bold">➕ {% if has_contributions %}Option 2: {% else %}Create {% endif %}New Capital Contribution</h5>
+                        <p class="text-muted mb-3">
+                            Create a new capital contribution record to track a foreign currency investment
+                        </p>
+                        
+                        <form method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button 
+                                type="submit" 
+                                name="action" 
+                                value="create_new" 
+                                class="btn btn-success btn-lg"
+                            >
+                                <i class="fas fa-plus me-2"></i>Create New Capital Contribution
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Info -->
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">📋 How International Transfer Tracking Works</h6>
+                    <ol class="mb-0">
+                        <li class="mb-2">
+                            <strong>Create or Select:</strong> Start with a capital contribution in foreign currency (or create one)
+                        </li>
+                        <li class="mb-2">
+                            <strong>Track Journey:</strong> Record the transfer status as it moves through:
+                            <br><small class="text-muted">Pending Abroad → In Transit → Received Locally → Converted → Posted to GL</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Monitor Status:</strong> View all transfers on the International Capital Report with real-time status
+                        </li>
+                        <li>
+                            <strong>Post to GL:</strong> Once converted to INR, post the transaction to the general ledger
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">📊 Current Status</h6>
+                </div>
+                <div class="card-body">
+                    {% if entity %}
+                    <div class="mb-3">
+                        <small class="text-muted">Entity:</small>
+                        <div class="fw-bold">{{ entity.name }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Capital Contributions:</small>
+                        <div class="fw-bold">{{ all_contributions.count }}</div>
+                    </div>
+                    <div>
+                        <small class="text-muted">Active Transfers:</small>
+                        <div class="fw-bold">0</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <a href="{% url 'accounting:international_capital_report' %}" class="btn btn-outline-secondary w-100">
+                <i class="fas fa-arrow-left me-2"></i>Back to Report
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateContributionDetails() {
+    const selectElement = document.getElementById('contribution_select');
+    const detailsDiv = document.getElementById('contribution_details');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    
+    if (selectElement.value) {
+        document.getElementById('detail_stakeholder').textContent = selectedOption.getAttribute('data-stakeholder');
+        const amount = selectedOption.getAttribute('data-amount');
+        const currency = selectedOption.getAttribute('data-currency');
+        document.getElementById('detail_amount').textContent = `${amount} ${currency}`;
+        detailsDiv.classList.remove('d-none');
+    } else {
+        detailsDiv.classList.add('d-none');
+    }
+}
+
+function validateSelection() {
+    const selectElement = document.getElementById('contribution_select');
+    if (!selectElement.value) {
+        alert('Please select a capital contribution');
+        return false;
+    }
+    return true;
+}
+</script>
+
+<style>
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.form-select-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+.card {
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+</style>
+{% endblock %}

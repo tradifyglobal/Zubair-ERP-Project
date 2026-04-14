@@ -40,6 +40,8 @@ urlpatterns = [
     path('hr/', include('hr.urls')),
     # Manufacturing module
     path('manufacturing/', include('manufacturing.urls')),
+    # Raw Materials module
+    path('raw_materials/', include('raw_materials.urls')),
     # Sales module
     path('sales/', include('sales.urls')),
     # Inventory module
